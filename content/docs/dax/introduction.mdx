@@ -1,0 +1,269 @@
+---
+title: DAX Introduction
+description: Learn how Data Analysis Expressions (DAX) creates calculations and business logic in Power BI.
+---
+
+# DAX Introduction
+
+Data Analysis Expressions (DAX) is the formula language used in Power BI to create calculations, measures, and analytical logic.
+
+DAX allows developers to transform business requirements into dynamic calculations that respond to report filters and user interactions.
+
+Common uses of DAX include:
+
+- Creating measures
+- Performing calculations
+- Analyzing trends over time
+- Comparing results
+- Building business metrics
+
+## What Is DAX?
+
+DAX is similar to Excel formulas but designed for relational data models.
+
+While Excel formulas typically work with individual cells, DAX works with:
+
+- Tables
+- Columns
+- Relationships
+- Filter context
+
+Example:
+
+```dax
+Total Sales =
+SUM(Sales[SalesAmount])
+```
+
+A measure calculates a result dynamically based on the current filter context.
+
+For example:
+
+```text
+No Filter
+    |
+    v
+All Sales Records
+    |
+    v
+Total Sales = $500,000
+
+
+Filter:
+Category = Bikes
+
+    |
+    v
+
+Filtered Sales Records
+
+    |
+    v
+
+Total Sales = $150,000
+```
+
+The same measure returns different results depending on the filters applied in a report.
+
+---
+
+## Measures vs Calculated Columns
+
+Power BI calculations are mainly created using:
+
+- Measures
+- Calculated Columns
+- Calculated Tables
+
+## Measures
+
+Measures are dynamic calculations evaluated when a report is viewed.
+
+Example:
+
+```dax
+Total Quantity =
+SUM(Sales[Quantity])
+```
+
+Measures:
+
+- Respond to filters and slicers
+- Do not store results in the model
+- Calculate when needed
+- Are commonly used in visuals
+
+Example:
+
+| Filter | Result |
+|---|---:|
+| All Products | $500,000 |
+| Bikes | $150,000 |
+| 2026 | $220,000 |
+
+The formula remains the same.
+
+The filter context changes.
+
+---
+
+## Calculated Columns
+
+Calculated columns create values stored inside a table.
+
+Example:
+
+```dax
+Sales Amount =
+Sales[Quantity] * Sales[Unit Price]
+```
+
+Calculated columns:
+
+- Evaluate row by row
+- Store results during refresh
+- Increase model size
+- Are useful for grouping and categories
+
+Example:
+
+| Quantity | Unit Price | Sales Amount |
+|---|---:|---:|
+| 5 | $50 | $250 |
+| 3 | $75 | $225 |
+
+---
+
+## DAX and the Data Model
+
+DAX is most effective when built on a well-designed Power BI data model.
+
+A typical model looks like this:
+
+```text
+        DimProduct
+             |
+             |
+DimCustomer--FactSales--DimDate
+             |
+             |
+          DimStore
+```
+
+Relationships allow filters to flow from dimension tables to the fact table.
+
+When a user selects:
+
+- A product
+- A customer
+- A year
+- A region
+
+Power BI automatically filters the fact table before evaluating the DAX measure.
+
+---
+
+## Understanding Filter Context
+
+Filter context is one of the most important concepts in DAX.
+
+A measure does not calculate a single fixed value.
+
+Instead, it evaluates only the rows currently visible after filters have been applied.
+
+Example:
+
+```dax
+Total Sales =
+SUM(FactSales[SalesAmount])
+```
+
+The measure can produce different results depending on the report context.
+
+| Report Filter | Result |
+|---|---:|
+| All Products | $500,000 |
+| Category = Bikes | $150,000 |
+| Year = 2026 | $220,000 |
+| Region = North | $98,000 |
+
+The formula never changes.
+
+Only the filter context changes.
+
+---
+
+## Common DAX Functions
+
+DAX contains hundreds of functions, but a small group is used in most reports.
+
+| Function | Purpose |
+|---|---|
+| `SUM()` | Adds values |
+| `AVERAGE()` | Calculates averages |
+| `COUNTROWS()` | Counts table rows |
+| `DISTINCTCOUNT()` | Counts unique values |
+| `IF()` | Performs logical tests |
+| `CALCULATE()` | Changes filter context |
+| `FILTER()` | Returns filtered tables |
+| `RELATED()` | Retrieves values from related tables |
+
+As you progress through this documentation, you'll learn each of these functions in detail.
+
+---
+
+## Best Practices
+
+When writing DAX:
+
+- Build reusable base measures.
+- Use meaningful measure names.
+- Keep calculations simple whenever possible.
+- Prefer measures over calculated columns for reporting.
+- Organize measures into display folders.
+- Test calculations using different report filters.
+
+Good DAX is usually simple, readable, and reusable.
+
+---
+
+## Common Beginner Mistakes
+
+Avoid these common problems:
+
+- Writing one very large measure instead of several reusable measures.
+- Creating calculated columns when a measure is sufficient.
+- Ignoring filter context.
+- Using duplicate calculations throughout the model.
+- Giving measures unclear names.
+
+Small, focused measures are easier to maintain and troubleshoot.
+
+---
+
+## Summary
+
+DAX is the analytical engine behind Power BI.
+
+It allows you to:
+
+- Create business metrics
+- Build KPIs
+- Analyze trends
+- Compare time periods
+- Respond dynamically to report filters
+
+Combined with a strong data model, DAX enables interactive reports that answer complex business questions with simple, reusable calculations.
+
+---
+
+## Next Steps
+
+Continue your DAX journey:
+
+- [DAX Basics](/docs/dax/basics)
+- [Measures](/docs/dax/measures)
+- [Calculated Columns](/docs/dax/calculated-columns)
+- [Filter Context](/docs/dax/filter-context)
+- [CALCULATE Function](/docs/dax/calculate)
+- [Time Intelligence](/docs/dax/time-intelligence)

@@ -1,0 +1,423 @@
+---
+title: Measures
+description: Learn how Power BI measures create dynamic calculations using DAX.
+---
+
+# Measures
+
+Measures are the most important type of calculation in Power BI.
+
+A measure performs a calculation dynamically based on the current filter context. Unlike calculated columns, measures are **not stored** in the data model. Instead, they are evaluated each time a visual or report requests a result.
+
+Measures are commonly used to calculate:
+
+- Sales
+- Revenue
+- Profit
+- Percentages
+- KPIs
+- Running totals
+- Year-to-date values
+
+---
+
+## What Is a Measure?
+
+A measure is a reusable DAX expression.
+
+General syntax:
+
+```text
+Measure Name =
+Expression
+```
+
+Example:
+
+```dax
+Total Sales =
+SUM(FactSales[SalesAmount])
+```
+
+The measure calculates the total sales for the current report context.
+
+---
+
+## Creating a Measure
+
+Measures are created from a table in the Fields pane.
+
+After a measure is created, it can be reused in:
+
+- Tables
+- Matrix visuals
+- Cards
+- Charts
+- KPIs
+- Other DAX measures
+
+One measure can support dozens of report visuals.
+
+---
+
+## How Measures Work
+
+Measures are evaluated after Power BI applies report filters.
+
+Example:
+
+```text
+User selects:
+
+Year = 2026
+Category = Bikes
+
+        |
+        v
+
+Power BI filters FactSales
+
+        |
+        v
+
+Measure evaluates only visible rows
+
+        |
+        v
+
+Returns Total Sales
+```
+
+The DAX formula never changes.
+
+Only the rows being evaluated change.
+
+---
+
+## Simple Measure Example
+
+```dax
+Total Quantity =
+SUM(FactSales[Quantity])
+```
+
+Power BI adds together every visible value in the **Quantity** column.
+
+If a slicer filters the report to a single year, only that year's values are included.
+
+---
+
+## Measures Can Build on Other Measures
+
+One of the biggest advantages of DAX is reusability.
+
+Example:
+
+```dax
+Total Sales =
+SUM(FactSales[SalesAmount])
+```
+
+```dax
+Total Cost =
+SUM(FactSales[Cost])
+```
+
+```dax
+Profit =
+[Total Sales] - [Total Cost]
+```
+
+Rather than repeating calculations, measures can reference existing measures.
+
+This makes models easier to maintain.
+
+---
+
+## Common Measure Functions
+
+Most Power BI reports use a relatively small group of DAX aggregation functions.
+
+| Function | Purpose |
+|---|---|
+| `SUM()` | Adds values |
+| `AVERAGE()` | Calculates the average |
+| `MIN()` | Returns the smallest value |
+| `MAX()` | Returns the largest value |
+| `COUNT()` | Counts non-blank values |
+| `COUNTROWS()` | Counts table rows |
+| `DISTINCTCOUNT()` | Counts unique values |
+
+Example:
+
+```dax
+Average Sales =
+AVERAGE(FactSales[SalesAmount])
+```
+
+Example:
+
+```dax
+Customer Count =
+DISTINCTCOUNT(FactSales[CustomerKey])
+```
+
+These functions form the foundation for many business calculations.
+
+---
+
+## Measures Respond to Filter Context
+
+Measures automatically respond to report filters, slicers, and relationships.
+
+Suppose the report contains this measure:
+
+```dax
+Total Sales =
+SUM(FactSales[SalesAmount])
+```
+
+The result changes depending on the report context.
+
+| Report Filter | Total Sales |
+|---|---:|
+| All Products | $500,000 |
+| Bikes | $150,000 |
+| Accessories | $85,000 |
+| Year = 2026 | $220,000 |
+
+The DAX expression never changes.
+
+Only the rows being evaluated change.
+
+---
+
+## Reusing Measures
+
+One measure can be used inside another measure.
+
+Example:
+
+```dax
+Total Sales =
+SUM(FactSales[SalesAmount])
+```
+
+```dax
+Total Cost =
+SUM(FactSales[Cost])
+```
+
+```dax
+Gross Profit =
+[Total Sales] - [Total Cost]
+```
+
+Building calculations this way creates reusable business logic and makes maintenance much easier.
+
+---
+
+## Formatting Measures
+
+Measures should always be formatted appropriately.
+
+Examples:
+
+| Measure | Recommended Format |
+|---|---|
+| Sales | Currency |
+| Quantity | Whole Number |
+| Margin % | Percentage |
+| Average Cost | Currency |
+| Growth Rate | Percentage |
+
+Formatting improves report readability without changing the calculation itself.
+
+---
+
+## Naming Conventions
+
+Good measure names make reports easier to understand.
+
+Recommended:
+
+```text
+Total Sales
+Average Sales
+Gross Profit
+Profit Margin
+Order Count
+```
+
+Avoid:
+
+```text
+Measure1
+Sales2
+Calc
+NewMeasure
+```
+
+Choose names that clearly describe the business calculation.
+
+---
+
+## Organizing Measures
+
+As a model grows, measures should be organized into display folders.
+
+Example:
+
+```text
+Measures
+
+├── Sales
+│   ├── Total Sales
+│   ├── Average Sales
+│   └── Sales YTD
+│
+├── Profit
+│   ├── Gross Profit
+│   ├── Profit Margin
+│   └── Gross Margin %
+│
+└── Customers
+    ├── Customer Count
+    └── Average Customer Spend
+```
+
+A well-organized model is easier for report developers to navigate.
+
+---
+
+## Common Beginner Mistakes
+
+Avoid these common issues:
+
+- Creating calculated columns instead of measures.
+- Repeating the same calculation in multiple measures.
+- Giving measures unclear names.
+- Creating one extremely large measure instead of several reusable measures.
+- Forgetting to format measures correctly.
+
+Simple, reusable measures are easier to maintain and debug.
+
+---
+
+## Performance Best Practices
+
+Well-designed measures improve both report performance and maintainability.
+
+Follow these recommendations:
+
+- Build reusable base measures.
+- Keep calculations focused on one business concept.
+- Avoid repeating the same DAX logic.
+- Use variables (`VAR`) to simplify complex calculations.
+- Format measures consistently.
+- Organize measures into display folders.
+
+A small collection of reusable measures is usually better than one large, complex formula.
+
+---
+
+## Using Variables
+
+Variables make DAX easier to read and often improve performance.
+
+Instead of repeating calculations, store intermediate results in variables.
+
+Example:
+
+```dax
+Profit Margin =
+VAR Revenue =
+    [Total Sales]
+
+VAR Profit =
+    [Gross Profit]
+
+RETURN
+    DIVIDE(
+        Profit,
+        Revenue
+    )
+```
+
+Benefits of variables include:
+
+- Cleaner code
+- Easier debugging
+- Better readability
+- Reduced repeated calculations
+
+---
+
+## Real-World Business Measures
+
+Measures are used to answer common business questions.
+
+Examples include:
+
+| Business Question | Example Measure |
+|---|---|
+| How much did we sell? | Total Sales |
+| How much profit did we make? | Gross Profit |
+| What is our profit margin? | Profit Margin |
+| How many customers purchased? | Customer Count |
+| What was the average order value? | Average Order Value |
+| How much have sales grown? | Sales Growth % |
+
+Most Power BI dashboards are built using dozens—or even hundreds—of reusable measures.
+
+---
+
+## Measure Dependencies
+
+Measures can reference other measures to build more advanced calculations.
+
+Example:
+
+```text
+Total Sales
+      │
+      ▼
+Gross Profit
+      │
+      ▼
+Profit Margin
+      │
+      ▼
+Gross Margin %
+```
+
+Building calculations in layers keeps your model organized and reduces duplicated logic.
+
+---
+
+## Summary
+
+Measures are the foundation of analytical reporting in Power BI.
+
+Unlike calculated columns, measures:
+
+- Are evaluated dynamically.
+- Respond to filter context.
+- Can be reused across reports.
+- Do not increase model size.
+- Support interactive dashboards.
+
+A well-designed semantic model usually contains many small, reusable measures rather than a few large, complicated formulas.
+
+---
+
+## Next Steps
+
+Continue learning DAX:
+
+- [Calculated Columns](/docs/dax/calculated-columns)
+- [Filter Context](/docs/dax/filter-context)
+- [Row Context](/docs/dax/row-context)
+- [CALCULATE](/docs/dax/calculate)
+- [Variables (VAR)](/docs/dax/variables)
+- [Time Intelligence](/docs/dax/time-intelligence)

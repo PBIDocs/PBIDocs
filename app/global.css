@@ -1,0 +1,94 @@
+@import 'tailwindcss';
+@import 'fumadocs-ui/css/neutral.css';
+@import 'fumadocs-ui/css/preset.css';
+@import "./docs.css";
+
+
+:root {
+  /* pbidocs brand */
+  --primary: oklch(62.3% 0.214 259.815); /* blue-500 */
+  --primary-hover: oklch(54.6% 0.245 262.881); /* blue-600 */
+  --primary-muted: oklch(70.7% 0.165 254.624); /* blue-400 */
+
+  /* dark documentation theme */
+  --background: oklch(14.5% 0 0);
+  --foreground: oklch(98.5% 0 0);
+  --border: oklch(27.4% 0.006 286.033);
+  --muted: oklch(70.5% 0.015 286.067);
+
+}
+
+
+html {
+  scrollbar-gutter: stable;
+}
+
+html > body[data-scroll-locked] {
+  margin-right: 0px !important;
+  --removed-body-scroll-bar-size: 0px !important;
+}
+
+
+/* Documentation links only */
+.prose p a,
+.prose li a {
+  color: var(--primary);
+  text-decoration: none;
+  position: relative;
+  font-weight: 500;
+}
+.prose p a::after,
+.prose li a::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -3px;
+  width: 0;
+  height: 1px;
+  background: currentColor;
+  transition: width 200ms ease;
+}
+.prose p a:hover::after,
+.prose li a:hover::after {
+  width: 100%;
+}
+.prose p a:hover,
+.prose li a:hover {
+  color: var(--primary-muted);
+}
+
+/* Heading anchor underline */
+.prose h1 a,
+.prose h2 a,
+.prose h3 a,
+.prose h4 a {
+  text-decoration: none;
+  position: relative;
+}
+.prose h1 a::after,
+.prose h2 a::after,
+.prose h3 a::after,
+.prose h4 a::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -4px;
+  width: 0;
+  height: 2px;
+  background: var(--primary);
+  transition: width 250ms ease;
+}
+.prose h1 a:hover::after,
+.prose h2 a:hover::after,
+.prose h3 a:hover::after,
+.prose h4 a:hover::after {
+  width: 100%;
+}
+/* code highlighting */
+.prose code {
+  background: color-mix(in srgb, currentColor 8%, transparent);
+  border-radius: 0.35rem;
+  padding: 0.15rem 0.35rem;
+  font-size: 0.875em;
+  font-weight: 500;
+}

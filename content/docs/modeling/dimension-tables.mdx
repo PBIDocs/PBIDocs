@@ -1,0 +1,380 @@
+---
+title: Dimension Tables
+description: Learn how Power BI dimension tables organize descriptive data for filtering, grouping, and analysis.
+---
+
+# Dimension Tables
+
+Dimension tables provide context for the data stored in fact tables.
+
+While fact tables store business events and measurements, dimension tables describe the people, products, locations, and dates involved in those events.
+
+A star schema typically contains:
+
+```text
+              DimDate
+                 |
+                 |
+DimCustomer --- FactSales --- DimProduct
+                 |
+                 |
+              DimStore
+```
+
+The fact table answers:
+
+> What happened?
+
+The dimension tables answer:
+
+> Who, what, where, and when did it happen?
+
+---
+
+## What Is a Dimension Table?
+
+A dimension table contains descriptive information used for:
+
+- Filtering reports
+- Grouping data
+- Creating hierarchies
+- Adding business context
+
+Example:
+
+```text
+DimProduct
+
+ProductKey
+ProductName
+Category
+Brand
+Size
+```
+
+The dimension table does not contain transactions.
+
+It describes the entities connected to transactions.
+
+---
+
+## Dimension Table Structure
+
+A typical dimension table contains:
+
+- A unique key column
+- Descriptive attributes
+- Business categories
+
+Example:
+
+### DimProduct
+
+| Column | Description |
+|---|---|
+| `<code>ProductKey</code>` | Unique product identifier |
+| `<code>ProductName</code>` | Product description |
+| `<code>Category</code>` | Product grouping |
+| `<code>Brand</code>` | Manufacturer |
+
+Example data:
+
+| ProductKey | ProductName | Category | Brand |
+|---|---|---|---|
+| 1001 | All Terrain Tire | Off Road | Brand A |
+| 1002 | Highway Tire | Commercial | Brand B |
+
+---
+
+## Common Dimension Tables
+
+Most Power BI models contain several common dimensions.
+
+## Date Dimension
+
+A date table supports time-based analysis.
+
+Example:
+
+```text
+DimDate
+
+DateKey
+Date
+Year
+Month
+Quarter
+```
+
+Used for:
+
+- Year-to-date calculations
+- Monthly trends
+- Period comparisons
+- Time intelligence functions
+
+Example:
+
+```dax
+Sales YTD =
+TOTALYTD(
+    [Total Sales],
+    DimDate[Date]
+)
+```
+
+---
+
+## Product Dimension
+
+A product dimension describes items being analyzed.
+
+Example:
+
+```text
+DimProduct
+
+ProductKey
+ProductName
+Category
+Brand
+```
+
+Allows analysis by:
+
+- Product
+- Category
+- Brand
+- Product group
+
+Example:
+
+```
+Category = "Off Road"
+
+filters:
+
+FactSales
+```
+
+---
+
+## Customer Dimension
+
+A customer dimension stores customer attributes.
+
+Example:
+
+```text
+DimCustomer
+
+CustomerKey
+CustomerName
+Region
+Segment
+```
+
+Allows analysis such as:
+
+- Sales by region
+- Revenue by customer segment
+- Customer performance
+
+---
+
+## Dimension Keys
+
+Dimension tables require a unique key.
+
+Example:
+
+```text
+DimProduct
+
+ProductKey | ProductName
+-----------|------------
+1001       | Tire A
+1002       | Tire B
+```
+
+The key connects to the fact table:
+
+```text
+DimProduct
+     |
+     | ProductKey
+     |
+FactSales
+```
+
+The fact table stores the key, not the description.
+
+Example:
+
+FactSales:
+
+| ProductKey | Quantity |
+|---|---:|
+| 1001 | 5 |
+| 1001 | 3 |
+| 1002 | 8 |
+
+---
+
+## Why Not Store Everything in One Table?
+
+A common beginner mistake is creating one large flat table.
+
+Example:
+
+```text
+SalesData
+
+Date
+Customer Name
+Customer Region
+Product
+Category
+Brand
+Quantity
+Sales Amount
+```
+
+Problems:
+
+- Duplicate information
+- Larger model size
+- More difficult maintenance
+- More complicated DAX
+- Poorer performance
+
+Instead:
+
+```text
+DimCustomer
+
+Customer information
+
+
+DimProduct
+
+Product information
+
+
+FactSales
+
+Sales transactions
+```
+
+Each table has a clear responsibility.
+
+---
+
+## Dimension Table Best Practices
+
+Follow these guidelines:
+
+### Use Clear Names
+
+Recommended:
+
+```text
+DimDate
+DimCustomer
+DimProduct
+```
+
+Avoid:
+
+```text
+Table1
+Customer_Final
+Product_New
+```
+
+---
+
+### Keep Attributes in Dimensions
+
+Good:
+
+```text
+DimProduct
+
+Category
+Brand
+Size
+```
+
+Avoid:
+
+```text
+FactSales
+
+Category
+Brand
+Size
+```
+
+---
+
+### Create Reusable Dimensions
+
+A shared dimension can support multiple fact tables.
+
+Example:
+
+```text
+             DimDate
+                |
+        ----------------
+        |              |
+    FactSales    FactInventory
+```
+
+The same date table can analyze multiple business processes.
+
+---
+
+## Slowly Changing Dimensions
+
+In enterprise models, dimension values can change over time.
+
+Examples:
+
+- Customer changes region
+- Product changes category
+- Employee changes department
+
+Slowly changing dimensions preserve historical information.
+
+Learn more:
+
+[Slowly Changing Dimensions](/docs/modeling/slowly-changing-dimensions)
+
+---
+
+## Dimension Table Checklist
+
+A good dimension table should:
+
+- Have a unique key
+- Contain descriptive attributes
+- Avoid transaction data
+- Support filtering and grouping
+- Connect to fact tables through relationships
+
+---
+
+## Next Steps
+
+Continue learning Power BI data modeling:
+
+- [Relationships](/docs/modeling/relationships)
+- [Date Tables](/docs/modeling/date-tables)
+
+Advanced Topics:
+
+- [Slowly Changing Dimensions](/docs/modeling/slowly-changing-dimensions)
+- [Bridge Tables](/docs/modeling/bridge-tables)
+- [Many-to-Many Relationships](/docs/modeling/many-to-many)

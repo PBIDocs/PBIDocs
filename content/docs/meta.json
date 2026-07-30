@@ -1,0 +1,12 @@
+{
+  "pages": [
+    "getting-started",
+    "ai-power-bi",
+    "dax",
+    "modeling",
+    "power-query",
+    "visuals",
+    "power-bi-service",
+    "dax-patterns"
+  ]
+}

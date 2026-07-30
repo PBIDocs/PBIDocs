@@ -1,0 +1,424 @@
+---
+title: Relationships
+description: Learn how Power BI relationships connect fact tables and dimension tables to create interactive data models.
+---
+
+# Relationships
+
+Relationships define how tables connect inside a Power BI data model.
+
+They allow filters and calculations to move between tables.
+
+In a star schema:
+
+- Dimension tables filter fact tables.
+- Fact tables store the business events.
+- Relationships connect the two.
+
+Example:
+
+```text
+              DimDate
+                 |
+                 |
+DimCustomer --- FactSales --- DimProduct
+                 |
+                 |
+              DimStore
+```
+
+Without relationships, Power BI treats tables as separate datasets.
+
+---
+
+## How Relationships Work
+
+A relationship connects two tables using matching columns.
+
+Example:
+
+```text
+DimProduct
+
+ProductKey
+ProductName
+Category
+```
+
+connects to:
+
+```text
+FactSales
+
+ProductKey
+Quantity
+SalesAmount
+```
+
+The shared column:
+
+```text
+ProductKey
+```
+
+creates the relationship.
+
+---
+
+## One-to-Many Relationships
+
+The most common Power BI relationship is:
+
+```text
+Dimension Table
+       |
+       | 1 : Many
+       |
+Fact Table
+```
+
+Example:
+
+```text
+DimProduct
+
+ProductKey | ProductName
+-----------|------------
+1001       | Tire A
+1002       | Tire B
+```
+
+Fact table:
+
+```text
+FactSales
+
+ProductKey | SalesAmount
+-----------|------------
+1001       | 250
+1001       | 400
+1002       | 180
+```
+
+One product can have many sales records.
+
+---
+
+## Relationship Cardinality
+
+Cardinality describes how rows match between tables.
+
+Power BI supports:
+
+## One-to-Many (1:*)
+
+Most common relationship.
+
+Example:
+
+```text
+DimCustomer
+     |
+     | 1 : Many
+     |
+FactSales
+```
+
+One customer can have many sales transactions.
+
+---
+
+## One-to-One (1:1)
+
+Both tables contain unique values.
+
+Example:
+
+```text
+Employee
+    |
+    | 1 : 1
+    |
+EmployeeDetails
+```
+
+This is less common in analytical models.
+
+---
+
+## Many-to-Many (*:*)
+
+Both tables contain duplicate values.
+
+Example:
+
+```text
+Customers
+
+Customer A
+Customer B
+
+
+Products
+
+Product A
+Product B
+```
+
+Many-to-many relationships can create:
+
+- Ambiguous filtering
+- Unexpected calculations
+- Complex DAX
+
+Use carefully.
+
+---
+
+## Filter Direction
+
+Relationships control how filters travel.
+
+Example:
+
+```text
+DimProduct
+     |
+     v
+FactSales
+```
+
+Selecting:
+
+```text
+Category = "Off Road"
+```
+
+filters:
+
+```text
+DimProduct
+
+↓
+
+FactSales
+```
+
+The result:
+
+```text
+Only Off Road sales are calculated.
+```
+
+---
+
+## Single Direction Filtering
+
+Recommended for most star schemas.
+
+Example:
+
+```text
+DimProduct
+      |
+      v
+FactSales
+```
+
+Filters move from dimension to fact.
+
+Benefits:
+
+- Easier to understand
+- Better performance
+- Fewer ambiguous paths
+
+---
+
+## Both Direction Filtering
+
+Power BI allows filters to travel both directions.
+
+Example:
+
+```text
+DimProduct
+      ↕
+FactSales
+```
+
+Use carefully.
+
+Problems can include:
+
+- Circular relationships
+- Ambiguous filter paths
+- Incorrect results
+
+Most enterprise models avoid unnecessary bidirectional filtering.
+
+---
+
+## Active and Inactive Relationships
+
+A table can contain multiple relationships.
+
+Example:
+
+```text
+FactSales
+
+OrderDateKey
+ShipDateKey
+```
+
+Both connect to:
+
+```text
+DimDate
+```
+
+However, only one relationship can be active.
+
+Example:
+
+```text
+FactSales[OrderDateKey]
+
+        Active
+
+DimDate[DateKey]
+```
+
+The other relationship becomes inactive.
+
+Use DAX to activate inactive relationships:
+
+```dax
+Sales by Ship Date =
+CALCULATE(
+    [Total Sales],
+    USERELATIONSHIP(
+        FactSales[ShipDateKey],
+        DimDate[DateKey]
+    )
+)
+```
+
+---
+
+## Relationship Best Practices
+
+Follow these guidelines:
+
+- Use one-to-many relationships whenever possible.
+- Filter from dimensions to facts.
+- Avoid unnecessary bidirectional filtering.
+- Use clear key columns.
+- Maintain a star schema structure.
+
+Recommended:
+
+```text
+DimCustomer
+      |
+      |
+FactSales
+      |
+      |
+DimProduct
+```
+
+Avoid:
+
+```text
+FactSales
+      |
+      |
+FactInventory
+```
+
+Instead:
+
+```text
+        DimProduct
+             |
+FactSales ---+
+             |
+FactInventory
+```
+
+---
+
+## Common Relationship Mistakes
+
+### Missing Relationships
+
+Symptoms:
+
+- Incorrect totals
+- Filters do not work
+- Visuals show unexpected results
+
+---
+
+### Incorrect Cardinality
+
+Example:
+
+Setting:
+
+```text
+Many-to-Many
+```
+
+when the model should be:
+
+```text
+One-to-Many
+```
+
+can create calculation problems.
+
+---
+
+### Multiple Filter Paths
+
+Example:
+
+```text
+DimCustomer
+      |
+FactSales
+      |
+DimProduct
+```
+
+plus another path between tables can create ambiguity.
+
+---
+
+## Relationship Checklist
+
+A good Power BI model should have:
+
+- Clear relationships
+- Proper cardinality
+- Dimension-to-fact filtering
+- Minimal bidirectional relationships
+- Consistent key columns
+
+---
+
+## Next Steps
+
+Continue learning Power BI data modeling:
+
+- [Date Tables](/docs/modeling/date-tables)
+- [Measures and DAX](/docs/modeling/measures-dax)
+
+Advanced Topics:
+
+- [Slowly Changing Dimensions](/docs/modeling/slowly-changing-dimensions)
+- [Bridge Tables](/docs/modeling/bridge-tables)
+- [Many-to-Many Relationships](/docs/modeling/many-to-many)

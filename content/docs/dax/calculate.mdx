@@ -1,0 +1,18 @@
+---
+title: Calculate
+description: Power BI documentation.
+---
+
+# CALCULATE Function
+
+`CALCULATE` is one of the most important functions in DAX.
+
+It allows you to modify filter context when evaluating a calculation.
+
+## Example
+
+```sql
+Total Sales =
+CALCULATE(
+    SUM(Sales[Amount])
+)

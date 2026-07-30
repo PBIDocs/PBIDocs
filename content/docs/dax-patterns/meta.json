@@ -1,0 +1,9 @@
+{
+  "title": "DAX Patterns",
+  "pages": [
+    "totals",
+    "ranking",
+    "percent-of-total",
+    "running-total"
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "title": "Power BI Service",
+  "pages": [
+    "workspaces",
+    "dashboards",
+    "refresh",
+    "security"
+  ]
+}

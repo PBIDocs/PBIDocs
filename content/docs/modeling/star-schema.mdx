@@ -1,0 +1,326 @@
+---
+title: Star Schema Design
+description: Learn how Power BI star schemas organize fact and dimension tables for efficient reporting and analytics.
+---
+
+# Star Schema Design
+
+A star schema is the recommended data modeling pattern for Power BI.
+
+It organizes data into:
+
+- A central **fact table** containing business events.
+- Multiple **dimension tables** containing descriptive information.
+
+The structure resembles a star:
+
+```text
+                 DimDate
+                    |
+                    |
+DimCustomer ---- FactSales ---- DimProduct
+                    |
+                    |
+                 DimStore
+```
+
+The fact table sits in the center.
+
+Dimension tables surround the fact table and provide context for analysis.
+
+---
+
+## Why Use a Star Schema?
+
+A well-designed star schema improves:
+
+- Report performance
+- DAX simplicity
+- Data consistency
+- Model maintainability
+- User understanding
+
+Power BI works best when the model structure matches the business process.
+
+Example:
+
+A sales process contains:
+
+- Customers purchasing products
+- Products being sold
+- Sales occurring on specific dates
+- Transactions happening at locations
+
+A star schema represents these business events clearly.
+
+---
+
+## Star Schema Components
+
+A Power BI star schema contains two main table types:
+
+## Fact Tables
+
+Fact tables store measurable business events.
+
+Examples:
+
+- Sales transactions
+- Production output
+- Inventory movements
+- Service calls
+
+Example:
+
+```text
+FactSales
+
+SalesKey
+DateKey
+CustomerKey
+ProductKey
+Quantity
+SalesAmount
+```
+
+Fact tables usually contain:
+
+- Numeric values
+- Transaction records
+- Foreign keys
+
+---
+
+## Dimension Tables
+
+Dimension tables describe the business entities connected to facts.
+
+Examples:
+
+```text
+DimDate
+DimCustomer
+DimProduct
+DimStore
+```
+
+They contain descriptive attributes used for:
+
+- Filtering
+- Grouping
+- Slicing reports
+
+Example:
+
+```text
+DimProduct
+
+ProductKey
+ProductName
+Category
+Brand
+```
+
+---
+
+## Relationship Pattern
+
+Star schemas typically use one-to-many relationships.
+
+Example:
+
+```text
+DimProduct
+     |
+     | 1 : Many
+     |
+FactSales
+```
+
+The dimension table contains unique values.
+
+The fact table contains repeated transactions.
+
+Example:
+
+DimProduct:
+
+| ProductKey | ProductName |
+|---|---|
+| 1001 | Tire A |
+| 1002 | Tire B |
+
+FactSales:
+
+| ProductKey | Quantity |
+|---|---|
+| 1001 | 10 |
+| 1001 | 5 |
+| 1002 | 8 |
+
+The relationship allows Power BI to filter sales by product.
+
+---
+
+## Star Schema vs Flat Tables
+
+A common mistake is storing everything in one large table.
+
+Example:
+
+```text
+SalesData
+
+Date
+Customer Name
+Customer Region
+Product
+Category
+Quantity
+Sales Amount
+Store
+```
+
+Problems:
+
+- Duplicate information
+- Larger file size
+- More difficult DAX
+- Poorer model performance
+
+A star schema separates these responsibilities.
+
+Example:
+
+```text
+DimCustomer
+
+CustomerKey
+CustomerName
+Region
+
+
+FactSales
+
+CustomerKey
+ProductKey
+DateKey
+SalesAmount
+
+
+DimProduct
+
+ProductKey
+ProductName
+Category
+```
+
+---
+
+## Benefits for DAX
+
+Star schemas make DAX easier because filter context flows predictably.
+
+Example:
+
+```sql
+Total Sales =
+SUM(FactSales[SalesAmount])
+```
+
+A user selecting:
+
+```
+Category = "Off Road"
+```
+
+automatically filters:
+
+```
+DimProduct
+      |
+      v
+FactSales
+```
+
+The measure returns only matching sales.
+
+---
+
+## Star Schema Best Practices
+
+Follow these guidelines:
+
+- Keep one fact table for each business process.
+- Use dimension tables for filtering.
+- Avoid unnecessary relationships.
+- Create clear table names.
+- Use surrogate keys when appropriate.
+- Keep dimensions independent.
+
+Recommended naming:
+
+```
+FactSales
+FactInventory
+
+DimDate
+DimProduct
+DimCustomer
+```
+
+---
+
+## Common Modeling Mistakes
+
+Avoid:
+
+### Multiple Fact Tables Without Purpose
+
+Example:
+
+```
+Sales
+Sales_New
+Sales_Final
+Sales_Updated
+```
+
+This creates confusion and inconsistent reporting.
+
+---
+
+### Direct Fact-to-Fact Relationships
+
+Avoid:
+
+```text
+FactSales
+    |
+FactInventory
+```
+
+Instead use shared dimensions:
+
+```text
+        DimDate
+          |
+FactSales     FactInventory
+```
+
+---
+
+## Next Steps
+
+Continue learning Power BI data modeling:
+
+- [Fact Tables](/docs/modeling/fact-tables)
+- [Dimension Tables](/docs/modeling/dimension-tables)
+- [Relationships](/docs/modeling/relationships)
+- [Date Tables](/docs/modeling/date-tables)
+
+Advanced Topics:
+
+- [Slowly Changing Dimensions](/docs/modeling/slowly-changing-dimensions)
+- [Bridge Tables](/docs/modeling/bridge-tables)
+- [Many-to-Many Relationships](/docs/modeling/many-to-many)

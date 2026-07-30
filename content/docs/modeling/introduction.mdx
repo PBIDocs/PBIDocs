@@ -1,0 +1,488 @@
+---
+title: Data Modeling Introduction
+description: Learn how Power BI data models organize data using tables, relationships, star schemas, and semantic models.
+---
+
+# Data Modeling Introduction
+
+A Power BI data model defines how data is structured, connected, and prepared for analysis.
+
+A well-designed model creates a strong foundation for:
+
+- Report performance
+- Simple DAX calculations
+- Accurate analytics
+- Reusable reporting solutions
+
+Power BI models are built using tables, relationships, columns, and measures.
+
+Common model objects include:
+
+- `<code>Fact Tables</code>` — Store measurable business events.
+- `<code>Dimension Tables</code>` — Provide descriptive information for filtering.
+- `<code>Relationships</code>` — Connect tables together.
+- `<code>Measures</code>` — Calculate business logic using DAX.
+
+---
+
+## The Power BI Data Model
+
+A typical Power BI solution follows this flow:
+
+```text
+Data Sources
+     |
+     v
+Power Query
+     |
+     v
+Data Model
+     |
+     v
+DAX Measures
+     |
+     v
+Reports & Dashboards
+```
+
+Each layer has a specific purpose:
+
+| Layer | Purpose |
+|---|---|
+| Data Sources | Connect to databases, files, APIs, Excel workbooks, and cloud services |
+| Power Query | Clean, transform, and prepare data using M |
+| Data Model | Create tables, columns, relationships, and semantic structures |
+| DAX Measures | Create calculations and business logic |
+| Reports & Dashboards | Present insights through interactive visualizations |
+
+---
+
+## Why Data Modeling Matters
+
+Data modeling is the foundation of a successful Power BI solution.
+
+A well-designed model improves:
+
+- Report performance
+- DAX simplicity
+- Data accuracy
+- Reusable analytics
+
+A poorly designed model can create:
+
+- Complex DAX formulas
+- Slow report performance
+- Duplicate data
+- Incorrect filtering behavior
+
+For example, a sales analysis may require reporting by:
+
+- Product
+- Customer
+- Region
+- Date
+
+Instead of storing everything in one large table, Power BI separates information into related tables.
+
+This creates a structured model that is easier to maintain and analyze.
+
+---
+
+# Star Schema Design
+
+Most Power BI models use a star schema.
+
+A star schema contains:
+
+- One central `Fact Table`
+- Multiple surrounding `Dimension Tables`
+
+Example:
+
+```text
+                 DimDate
+                    |
+                    |
+DimCustomer ---- FactSales ---- DimProduct
+                    |
+                    |
+                 DimStore
+```
+
+The fact table stores business events.
+
+The dimension tables provide descriptive information used for filtering and grouping.
+
+# Fact Tables
+
+Fact tables contain measurable business events and transactions.
+
+A fact table usually contains:
+
+- Numeric values
+- Transaction records
+- Foreign keys that connect to dimensions
+
+Example:
+
+`FactSales`
+
+| Column | Description |
+|---|---|
+| `SalesAmount` | Revenue generated |
+| `Quantity` | Units sold |
+| `DateKey` | Links to calendar table |
+| `ProductKey` | Links to product table |
+| `CustomerKey` | Links to customer table |
+
+Example rows:
+
+| DateKey | ProductKey | Quantity | SalesAmount |
+|---|---|---|---:|
+| 20260101 | 1001 | 5 | $250 |
+| 20260102 | 1002 | 3 | $180 |
+
+Fact tables answer questions such as:
+
+- How many units were sold?
+- What was the total revenue?
+- How many transactions occurred?
+
+---
+
+# Dimension Tables
+
+Dimension tables provide descriptive information used for filtering, grouping, and analysis.
+
+---
+
+# Fact Tables
+
+Fact tables contain measurable business events and transactions.
+
+A fact table usually contains:
+
+- Numeric values
+- Transaction records
+- Foreign keys that connect to dimensions
+
+Example:
+
+`FactSales`
+
+| Column | Description |
+|---|---|
+| `SalesAmount` | Revenue generated |
+| `Quantity` | Units sold |
+| `DateKey` | Links to calendar table |
+| `ProductKey` | Links to product table |
+| `CustomerKey` | Links to customer table |
+
+Example rows:
+
+| DateKey | ProductKey | Quantity | SalesAmount |
+|---|---|---|---:|
+| 20260101 | 1001 | 5 | $250 |
+| 20260102 | 1002 | 3 | $180 |
+
+Fact tables answer questions such as:
+
+- How many units were sold?
+- What was the total revenue?
+- How many transactions occurred?
+
+---
+
+# Dimension Tables
+
+Dimension tables provide descriptive information used for filtering, grouping, and analysis.
+
+## DimDate
+
+A date dimension supports time-based reporting.
+
+Example:
+
+| Column | Description |
+|---|---|
+| `DateKey` | Unique date identifier |
+| `Date` | Calendar date |
+| `Year` | Reporting year |
+| `Month` | Month name |
+| `Quarter` | Calendar quarter |
+
+Common analysis:
+
+- Sales by year
+- Sales by month
+- Year-to-date calculations
+
+---
+
+## DimProduct
+
+Product dimensions describe items being analyzed.
+
+Example:
+
+| Column | Description |
+|---|---|
+| `ProductKey` | Unique product identifier |
+| `ProductName` | Product description |
+| `Category` | Product grouping |
+| `Brand` | Product manufacturer |
+
+Example filtering:
+
+```text
+Category = Bikes
+```
+
+returns only related sales records from `FactSales`.
+
+---
+
+## DimCustomer
+
+Customer dimensions describe who is purchasing products.
+
+Example:
+
+| Column | Description |
+|---|---|
+| `CustomerKey` | Unique customer identifier |
+| `CustomerName` | Customer description |
+| `Region` | Geographic area |
+| `Segment` | Customer category |
+
+Dimensions allow users to slice and filter reports without duplicating information in fact tables.
+
+---
+
+# Relationships
+
+Relationships connect tables together inside the Power BI data model.
+
+A common relationship pattern is:
+
+```text
+DimProduct
+
+     1
+
+     |
+
+     |
+
+     *
+
+FactSales
+```
+
+This represents a one-to-many relationship:
+
+- One product can have many sales records.
+- Each sales record belongs to one product.
+
+The dimension table filters the fact table.
+
+Example:
+
+Selecting:
+
+```text
+Category = Bikes
+```
+
+filters:
+
+```text
+FactSales
+```
+
+and returns only bike-related sales.
+
+---
+
+# Measures and DAX
+
+Measures calculate values dynamically based on the current filter context.
+
+Example:
+
+```sql
+Total Sales =
+SUM(FactSales[SalesAmount])
+```
+
+The same measure can return different results depending on report selections.
+
+Example:
+
+| Filter | Result |
+|---|---:|
+| All Products | $500,000 |
+| Bikes Only | $150,000 |
+| 2026 Only | $220,000 |
+
+Measures are preferred over repeating calculations throughout reports because they provide reusable business logic.
+
+---
+
+## Data Modeling Best Practices
+
+A strong Power BI model follows a few important design principles.
+
+### Use a Star Schema
+
+Whenever possible, organize your model using:
+
+- One central fact table
+- Multiple dimension tables
+- Simple relationships
+
+Example:
+
+```text
+                 DimDate
+                    |
+                    |
+DimCustomer ---- FactSales ---- DimProduct
+                    |
+                    |
+                 DimStore
+```
+
+This structure improves:
+
+- Query performance
+- DAX simplicity
+- Model understanding
+- Report scalability
+
+---
+
+## Naming Conventions
+
+Clear naming makes models easier to maintain.
+
+Recommended naming patterns:
+
+| Object | Example |
+|---|---|
+| Fact table | `FactSales` |
+| Dimension table | `DimCustomer` |
+| Date table | `DimDate` |
+| Measure | `Total Sales` |
+| Key column | `CustomerKey` |
+
+Avoid unclear names such as:
+
+- Table1
+- Query2
+- Column123
+
+A well-named model is easier for both developers and report users to understand.
+
+---
+
+## Common Modeling Mistakes
+
+### One Large Flat Table
+
+A common beginner approach is storing everything in one table.
+
+Example:
+
+```text
+Sales
+ ├── Sales Amount
+ ├── Customer Name
+ ├── Product Name
+ ├── Product Category
+ ├── Store
+ └── Date
+```
+
+This may work for small datasets, but creates problems as models grow.
+
+Problems:
+
+- Duplicate information
+- Larger file size
+- Slower refresh times
+- More complicated DAX calculations
+
+A better approach is separating data into related tables:
+
+```text
+FactSales
+
++
+
+DimCustomer
+
++
+
+DimProduct
+
++
+
+DimDate
+```
+
+---
+
+## Avoid Unnecessary Relationships
+
+Too many relationships can make a model difficult to understand.
+
+Problems include:
+
+- Ambiguous filter paths
+- Unexpected calculation results
+- Difficult troubleshooting
+
+A simple model with clear relationships is usually easier to maintain.
+
+---
+
+## Semantic Models
+
+Power BI semantic models provide a reusable analytical layer between data and reports.
+
+A semantic model contains:
+
+- Tables
+- Relationships
+- Measures
+- Calculated columns
+- Business definitions
+
+Multiple reports can use the same semantic model.
+
+Example:
+
+```
+Semantic Model
+        |
+        |
+ -----------------
+ |       |       |
+Sales   Finance  Operations
+Report  Report   Report
+```
+
+This creates consistency because all reports use the same business logic.
+
+---
+
+## Next Steps
+
+Continue learning Power BI data modeling:
+
+- [Star Schema Design](/docs/modeling/star-schema)
+- [Fact Tables](/docs/modeling/fact-tables)
+- [Dimension Tables](/docs/modeling/dimensions)
+- [Relationships](/docs/modeling/relationships)
+- [Date Tables](/docs/modeling/date-tables)

@@ -1,0 +1,487 @@
+---
+title: Filter Context
+description: Learn how filter context controls DAX calculations and why it is the foundation of Power BI measures.
+---
+
+# Filter Context
+
+Filter context is one of the most important concepts in DAX.
+
+Every measure in Power BI is evaluated within a filter context. Understanding how filters affect calculations is essential for writing accurate and efficient DAX.
+
+Many DAX functions—including `CALCULATE()`, `ALL()`, and Time Intelligence functions—depend on filter context.
+
+---
+
+## What Is Filter Context?
+
+Filter context is the collection of filters applied before a DAX expression is evaluated.
+
+Filters can come from:
+
+- Report slicers
+- Page filters
+- Visual filters
+- Relationships
+- Rows and columns in a visual
+- DAX functions
+
+Power BI first determines which rows are visible.
+
+Only then is the DAX measure evaluated.
+
+---
+
+## How Filter Context Works
+
+A typical report follows this process:
+
+```text
+User selects filters
+        |
+        v
+Power BI filters the model
+        |
+        v
+Visible rows are determined
+        |
+        v
+DAX measure is evaluated
+        |
+        v
+Result is displayed
+```
+
+The measure never changes.
+
+Only the rows being evaluated change.
+
+---
+
+## Simple Example
+
+Suppose we have this measure:
+
+```dax
+Total Sales =
+SUM(FactSales[SalesAmount])
+```
+
+If no filters exist:
+
+| Category | Sales |
+|---|---:|
+| Bikes | $150,000 |
+| Accessories | $80,000 |
+| Clothing | $40,000 |
+
+The measure returns:
+
+```text
+$270,000
+```
+
+Now suppose the report is filtered to:
+
+```text
+Category = Bikes
+```
+
+Only Bike sales remain visible.
+
+The same measure now returns:
+
+```text
+$150,000
+```
+
+The DAX formula did not change.
+
+Only the filter context changed.
+
+---
+
+## Sources of Filter Context
+
+Several parts of Power BI can apply filters simultaneously.
+
+Example:
+
+```text
+Report Filter
+      +
+Page Filter
+      +
+Visual Filter
+      +
+Slicer
+      +
+Relationships
+
+↓
+
+Filter Context
+```
+
+Every active filter contributes to the final result.
+
+---
+
+## Visuals Create Filter Context
+
+Every visual automatically creates its own filter context.
+
+Example:
+
+```
+Product Category      Total Sales
+
+Bikes                 $150,000
+Accessories            $80,000
+Clothing               $40,000
+```
+
+Although only one measure is used:
+
+```dax
+Total Sales =
+SUM(FactSales[SalesAmount])
+```
+
+Power BI evaluates it separately for every category shown in the visual.
+
+Each row has its own filter context.
+
+---
+
+## Relationships Create Filter Context
+
+Relationships allow filters to flow between tables.
+
+Consider this simple star schema:
+
+```text
+             DimDate
+                |
+                |
+DimCustomer -- FactSales -- DimProduct
+                |
+                |
+             DimStore
+```
+
+Suppose a report contains this measure:
+
+```dax
+Total Sales =
+SUM(FactSales[SalesAmount])
+```
+
+If a user selects:
+
+```text
+Category = Bikes
+```
+
+Power BI filters **DimProduct**.
+
+That filter then flows through the relationship into **FactSales**, leaving only Bike sales visible before the measure is calculated.
+
+---
+
+## Multiple Filters
+
+A report rarely has only one filter.
+
+For example:
+
+```text
+Category = Bikes
+
+Year = 2026
+
+Region = West
+```
+
+Power BI combines all active filters before evaluating the measure.
+
+```text
+Category
+     +
+Year
+     +
+Region
+
+↓
+
+Visible FactSales Rows
+
+↓
+
+Measure Evaluation
+```
+
+The result includes only rows matching **all** active filters.
+
+---
+
+## Slicers Create Filter Context
+
+Slicers are one of the most common sources of filter context.
+
+Example:
+
+```
+Year
+
+☐ 2024
+☐ 2025
+☑ 2026
+```
+
+When the user selects **2026**, every connected visual is filtered automatically.
+
+Measures recalculate immediately using only data from 2026.
+
+No changes to the DAX formula are required.
+
+---
+
+## Visuals Apply Their Own Filters
+
+Every visual evaluates measures independently.
+
+Example:
+
+| Category | Total Sales |
+|---|---:|
+| Bikes | $150,000 |
+| Accessories | $80,000 |
+| Clothing | $40,000 |
+
+Power BI executes the same measure three separate times.
+
+For the **Bikes** row:
+
+```text
+Filter Context
+
+Category = Bikes
+```
+
+For the **Accessories** row:
+
+```text
+Filter Context
+
+Category = Accessories
+```
+
+For the **Clothing** row:
+
+```text
+Filter Context
+
+Category = Clothing
+```
+
+The measure is identical.
+
+Only the filter context changes.
+
+---
+
+## Cross-Filtering Between Visuals
+
+Visuals can also filter one another.
+
+Suppose a report contains:
+
+- A bar chart by Category
+- A table of Sales
+- A KPI card
+
+When the user clicks **Bikes** in the bar chart:
+
+```text
+Bar Chart
+
+↓
+
+Category = Bikes
+
+↓
+
+Table updates
+
+↓
+
+KPI updates
+
+↓
+
+Measures recalculate
+```
+
+Power BI automatically creates a new filter context for every affected visual.
+
+---
+
+## Why One Measure Returns Different Results
+
+Consider this measure:
+
+```dax
+Total Sales =
+SUM(FactSales[SalesAmount])
+```
+
+Depending on where it appears, it may return completely different values.
+
+| Location | Result |
+|---|---:|
+| Card (All Data) | $500,000 |
+| Bikes Row | $150,000 |
+| 2026 Column | $220,000 |
+| West Region | $98,000 |
+
+The formula never changes.
+
+The surrounding filter context determines the result.
+
+---
+
+## Removing Filters
+
+Sometimes you want a calculation to ignore one or more filters.
+
+The `ALL()` function removes filters from a table or column.
+
+Example:
+
+```dax
+Total Sales (All Products) =
+CALCULATE(
+    [Total Sales],
+    ALL(DimProduct)
+)
+```
+
+Even if the report is filtered to **Bikes**, this measure returns sales for **all products**.
+
+This is commonly used when calculating percentages of totals.
+
+---
+
+## Modifying Filter Context
+
+One of the most powerful features of DAX is the ability to change the current filter context.
+
+The `CALCULATE()` function evaluates an expression using a modified set of filters.
+
+Example:
+
+```dax
+Bike Sales =
+CALCULATE(
+    [Total Sales],
+    DimProduct[Category] = "Bikes"
+)
+```
+
+Regardless of the report filters, this measure always evaluates sales for the **Bikes** category.
+
+Understanding how `CALCULATE()` changes filter context is one of the most important DAX skills.
+
+---
+
+## Example: Percent of Total Sales
+
+Filter context is often modified to compare a filtered value against the overall total.
+
+Example:
+
+```dax
+Percent of Total =
+DIVIDE(
+    [Total Sales],
+    CALCULATE(
+        [Total Sales],
+        ALL(DimProduct)
+    )
+)
+```
+
+If Bikes account for $150,000 of $500,000 total sales, the measure returns:
+
+```text
+30%
+```
+
+The numerator respects the current filter context.
+
+The denominator removes the product filter and returns the overall total.
+
+---
+
+## Common Beginner Mistakes
+
+Many new DAX developers misunderstand filter context.
+
+Common mistakes include:
+
+- Assuming measures always return one fixed value.
+- Forgetting that visuals automatically create filter context.
+- Ignoring relationships between tables.
+- Using calculated columns when a measure is required.
+- Expecting `CALCULATE()` to work without understanding filter context.
+
+Learning filter context first makes advanced DAX much easier.
+
+---
+
+## Best Practices
+
+Keep these guidelines in mind:
+
+- Build a clean star schema.
+- Use dimension tables for filtering.
+- Create reusable measures.
+- Test calculations with different slicers.
+- Understand the current filter context before writing complex DAX.
+- Modify filters only when necessary.
+
+Most complex DAX formulas become much easier to understand once you identify the active filter context.
+
+---
+
+## Summary
+
+Filter context determines **which rows are visible** before a DAX measure is evaluated.
+
+It can be created by:
+
+- Report filters
+- Page filters
+- Visual filters
+- Slicers
+- Relationships
+- Other DAX functions
+
+The same measure can return different results because the filter context changes—not because the formula changes.
+
+Understanding filter context is the foundation for mastering DAX.
+
+---
+
+## Next Steps
+
+Now that you understand filter context, you're ready to learn how to control it using `CALCULATE()`.
+
+Continue with:
+
+- [Row Context](/docs/dax/row-context)
+- [CALCULATE](/docs/dax/calculate)
+- [Variables (VAR)](/docs/dax/variables)
+- [Iterators](/docs/dax/iterators)
+- [Time Intelligence](/docs/dax/time-intelligence)

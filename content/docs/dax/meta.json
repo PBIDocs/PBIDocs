@@ -1,0 +1,15 @@
+{
+  "title": "DAX",
+  "pages": [
+    "introduction",
+    "basics",
+    "measures",
+    "calculated-columns",
+    "filter-context",
+    "row-context",
+    "calculate",
+    "variables",
+    "iterators",
+    "time-intelligence"
+  ]
+}

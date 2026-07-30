@@ -1,0 +1,16 @@
+---
+title: M Language
+description: Power BI documentation.
+---
+
+# M Language
+
+M is the formula language behind Power Query.
+
+Example:
+
+```powerquery
+Table.SelectRows(
+    Source,
+    each [Status] = "Active"
+)

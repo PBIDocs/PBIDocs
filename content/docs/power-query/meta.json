@@ -1,0 +1,10 @@
+{
+  "title": "Power Query",
+  "pages": [
+    "introduction",
+    "editor",
+    "transformations",
+    "merge-queries",
+    "query-folding"
+  ]
+}

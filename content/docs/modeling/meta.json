@@ -1,0 +1,15 @@
+{
+  "title": "Data Modeling",
+  "pages": [
+    "introduction",
+    "star-schema",
+    "fact-tables",
+    "dimension-tables",
+    "relationships",
+    "date-tables",
+    "measures",
+    "slowly-changing-dimensions",
+    "bridge-tables",
+    "many-to-many"
+  ]
+}

@@ -1,0 +1,370 @@
+---
+title: Row Context
+description: Learn how row context works in DAX and why it behaves differently from filter context.
+---
+
+# Row Context
+
+Row context is the environment in which DAX evaluates one row at a time.
+
+Unlike filter context, which determines **which rows are visible**, row context determines **which row is currently being evaluated**.
+
+Row context is automatically created in calculated columns and iterator functions such as `SUMX()` and `AVERAGEX()`.
+
+Understanding row context is essential before learning `CALCULATE()` and context transition.
+
+---
+
+## What Is Row Context?
+
+Row context means DAX has access to the values from the current row.
+
+Imagine the following table:
+
+| Product | Quantity | Unit Price |
+|---|---:|---:|
+| Tire A | 5 | 50 |
+| Tire B | 3 | 75 |
+| Tire C | 8 | 40 |
+
+If we create this calculated column:
+
+```dax
+Sales Amount =
+FactSales[Quantity] *
+FactSales[Unit Price]
+```
+
+Power BI evaluates every row individually.
+
+Result:
+
+| Product | Quantity | Unit Price | Sales Amount |
+|---|---:|---:|---:|
+| Tire A | 5 | 50 | 250 |
+| Tire B | 3 | 75 | 225 |
+| Tire C | 8 | 40 | 320 |
+
+Each calculation only uses values from the current row.
+
+---
+
+## Calculated Columns Automatically Have Row Context
+
+Every calculated column receives row context automatically.
+
+Example:
+
+```dax
+Full Name =
+Customer[First Name]
+    & " "
+    & Customer[Last Name]
+```
+
+For every customer, DAX reads the values from that specific row.
+
+No filtering is required.
+
+---
+
+## Measures Do NOT Have Row Context
+
+Measures are evaluated using **filter context**, not row context.
+
+Example:
+
+```dax
+Total Sales =
+SUM(FactSales[SalesAmount])
+```
+
+The measure never knows which individual row it is on.
+
+Instead, it evaluates all rows that remain after filtering.
+
+This is one of the biggest differences between calculated columns and measures.
+
+---
+
+## Row Context vs Filter Context
+
+Although they sound similar, they serve different purposes.
+
+| Row Context | Filter Context |
+|---|---|
+| Evaluates one row at a time | Filters visible rows |
+| Used by calculated columns | Used by measures |
+| Created automatically for each row | Created by visuals, slicers, relationships, and filters |
+| Reads values from the current row | Determines which rows are included in calculations |
+
+Understanding the difference between these two concepts is fundamental to writing effective DAX.
+
+---
+
+## Iterator Functions Create Row Context
+
+Some DAX functions create their own row context.
+
+These are known as **iterator functions** because they evaluate one row at a time.
+
+Common iterators include:
+
+- `SUMX()`
+- `AVERAGEX()`
+- `COUNTX()`
+- `MINX()`
+- `MAXX()`
+
+Example:
+
+```dax
+Total Sales =
+SUMX(
+    FactSales,
+    FactSales[Quantity] *
+    FactSales[Unit Price]
+)
+```
+
+`SUMX()` works as follows:
+
+```text
+Read Row 1
+
+↓
+
+Calculate
+Quantity × Unit Price
+
+↓
+
+Read Row 2
+
+↓
+
+Calculate
+
+↓
+
+Read Row 3
+
+↓
+
+...
+
+↓
+
+Add all results together
+```
+
+Unlike `SUM()`, `SUMX()` evaluates an expression for every row before returning the final result.
+
+---
+
+## Row Context and RELATED()
+
+Row context allows DAX to retrieve related values from another table.
+
+Example model:
+
+```text
+DimProduct
+     |
+     |
+FactSales
+```
+
+Calculated column:
+
+```dax
+Category =
+RELATED(DimProduct[Category])
+```
+
+Power BI reads the current **FactSales** row.
+
+It then follows the relationship to **DimProduct** and returns the matching category.
+
+Without row context, DAX would not know which product to retrieve.
+
+---
+
+## Multiple Row Contexts
+
+Iterator functions can create nested row contexts.
+
+Example:
+
+```dax
+SUMX(
+    FactSales,
+    FactSales[Quantity] *
+    FactSales[Unit Price]
+)
+```
+
+For every row in **FactSales**:
+
+- Read `Quantity`
+- Read `Unit Price`
+- Multiply them together
+
+After every row has been evaluated, the results are added together.
+
+This is why iterator functions are generally more flexible than simple aggregation functions.
+
+---
+
+## Business Example
+
+Suppose a company stores:
+
+| Product | Quantity | Unit Price |
+|---|---:|---:|
+| Tire A | 5 | 50 |
+| Tire B | 3 | 75 |
+| Tire C | 8 | 40 |
+
+Using:
+
+```dax
+SUM(FactSales[SalesAmount])
+```
+
+requires a stored **SalesAmount** column.
+
+Using:
+
+```dax
+SUMX(
+    FactSales,
+    FactSales[Quantity] *
+    FactSales[Unit Price]
+)
+```
+
+calculates the sales amount for every row dynamically.
+
+This avoids storing an additional column while producing the same result.
+
+---
+
+## When Row Context Exists
+
+Row context is automatically created in:
+
+- Calculated columns
+- Iterator functions (`SUMX`, `AVERAGEX`, etc.)
+- Some nested DAX expressions
+
+Measures **do not** automatically create row context.
+
+This distinction is one of the most important concepts in DAX.
+
+---
+
+## Context Transition
+
+One of the most powerful features of DAX is **context transition**.
+
+Context transition occurs when **`CALCULATE()` converts a row context into a filter context.**
+
+This allows DAX to evaluate measures using values from the current row.
+
+Without context transition, many advanced calculations would not be possible.
+
+---
+
+## Why Context Transition Matters
+
+Consider a calculated column:
+
+```dax
+Sales Percentage =
+DIVIDE(
+    FactSales[SalesAmount],
+    [Total Sales]
+)
+```
+
+The measure **[Total Sales]** is evaluated using filter context.
+
+However, a calculated column only has **row context**.
+
+By using `CALCULATE()`, DAX converts the current row into a filter, allowing measures to evaluate correctly.
+
+This behavior is known as **context transition**.
+
+---
+
+## Row Context vs Filter Context
+
+Understanding when each context exists makes DAX much easier to understand.
+
+| Feature | Row Context | Filter Context |
+|---|---|---|
+| Created by Calculated Columns | ✅ | ❌ |
+| Created by Measures | ❌ | ✅ |
+| Created by Iterator Functions | ✅ | ❌ |
+| Created by Report Filters | ❌ | ✅ |
+| Created by Slicers | ❌ | ✅ |
+| Modified by `CALCULATE()` | ➜ Converted | ✅ |
+
+Although both contexts affect calculations, they solve different problems.
+
+---
+
+## Common Beginner Mistakes
+
+Many new Power BI developers confuse row context and filter context.
+
+Common mistakes include:
+
+- Expecting measures to know the current row.
+- Using calculated columns for dynamic calculations.
+- Forgetting that iterator functions create row context.
+- Assuming `SUM()` behaves like `SUMX()`.
+- Using `RELATED()` without a valid relationship.
+
+Learning to recognize the active context makes debugging DAX much easier.
+
+---
+
+## Best Practices
+
+When working with row context:
+
+- Use calculated columns only for permanent attributes.
+- Use iterator functions when calculations require row-by-row evaluation.
+- Prefer measures for report calculations.
+- Understand whether your formula is executing in row context or filter context.
+- Keep calculations simple and reusable.
+
+As your models grow, understanding context becomes far more important than memorizing DAX functions.
+
+---
+
+## Summary
+
+Row context evaluates **one row at a time**.
+
+It is automatically created by:
+
+- Calculated columns
+- Iterator functions such as `SUMX()` and `AVERAGEX()`
+
+Unlike filter context, row context does **not** determine which rows are visible. Instead, it provides access to the values in the current row.
+
+Understanding both row context and filter context is the key to mastering DAX.
+
+---
+
+## Next Steps
+
+Now that you understand both contexts, you're ready to learn the most important DAX function:
+
+- [CALCULATE](/docs/dax/calculate)
+- [Variables (VAR)](/docs/dax/variables)
+- [Iterators](/docs/dax/iterators)
+- [Time Intelligence](/docs/dax/time-intelligence)

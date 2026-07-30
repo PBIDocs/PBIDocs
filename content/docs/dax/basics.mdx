@@ -1,0 +1,266 @@
+---
+title: DAX Basics
+description: Learn the syntax, structure, operators, and references used to write DAX formulas in Power BI.
+---
+
+# DAX Basics
+
+Before learning advanced DAX functions, it's important to understand how DAX formulas are written.
+
+DAX formulas consist of expressions that reference tables, columns, measures, operators, and functions.
+
+Understanding these building blocks makes writing calculations much easier.
+
+---
+
+## DAX Formula Structure
+
+Most DAX formulas follow this pattern:
+
+```text
+Measure Name =
+Expression
+```
+
+Example:
+
+```dax
+Total Sales =
+SUM(FactSales[SalesAmount])
+```
+
+Everything to the left of the equals sign is the measure name.
+
+Everything to the right is the expression that Power BI evaluates.
+
+---
+
+## Tables and Columns
+
+DAX references data using table and column names.
+
+The syntax is:
+
+```text
+TableName[ColumnName]
+```
+
+Example:
+
+```dax
+SUM(FactSales[SalesAmount])
+```
+
+Here:
+
+- `FactSales` is the table.
+- `SalesAmount` is the column.
+
+---
+
+## Measures
+
+Measures are referenced using square brackets only.
+
+Example:
+
+```dax
+Profit Margin =
+DIVIDE(
+    [Total Profit],
+    [Total Sales]
+)
+```
+
+Notice that measures do **not** include the table name.
+
+---
+
+## Constants
+
+DAX supports numeric, text, date, and Boolean constants.
+
+Examples:
+
+```text
+100
+3.14
+"North"
+TRUE()
+FALSE()
+DATE(2026,1,1)
+```
+
+Constants are often used inside calculations.
+
+---
+
+## Arithmetic Operators
+
+| Operator | Meaning |
+|---|---|
+| `+` | Addition |
+| `-` | Subtraction |
+| `*` | Multiplication |
+| `/` | Division |
+| `^` | Exponent |
+
+Example:
+
+```dax
+Total Cost =
+SUM(Sales[Quantity]) * 25
+```
+
+---
+
+## Comparison Operators
+
+Comparison operators return TRUE or FALSE.
+
+| Operator | Meaning |
+|---|---|
+| `=` | Equal |
+| `<>` | Not Equal |
+| `>` | Greater Than |
+| `<` | Less Than |
+| `>=` | Greater Than or Equal |
+| `<=` | Less Than or Equal |
+
+Example:
+
+```dax
+IF(
+    [Total Sales] > 100000,
+    "High",
+    "Low"
+)
+```
+
+---
+
+## Logical Operators
+
+DAX also supports logical operations.
+
+| Operator | Purpose |
+|---|---|
+| `&&` | AND |
+| `||` | OR |
+| `NOT()` | NOT |
+
+Example:
+
+```dax
+IF(
+    Sales[Quantity] > 10 &&
+    Sales[SalesAmount] > 500,
+    "Large Order",
+    "Standard Order"
+)
+```
+
+---
+
+## Comments
+
+Single-line comments begin with two forward slashes.
+
+```dax
+// Calculate total sales
+Total Sales =
+SUM(FactSales[SalesAmount])
+```
+
+Block comments can also be used.
+
+```dax
+/*
+Revenue calculations
+for monthly reporting
+*/
+```
+
+Comments improve readability and maintainability.
+
+---
+
+## Functions
+
+Functions perform calculations.
+
+General syntax:
+
+```text
+FUNCTION(argument1, argument2, ...)
+```
+
+Example:
+
+```dax
+SUM(FactSales[SalesAmount])
+```
+
+Here:
+
+- `SUM` is the function.
+- `FactSales[SalesAmount]` is the argument.
+
+---
+
+## Nesting Functions
+
+Functions can be combined together.
+
+Example:
+
+```dax
+Profit Margin =
+DIVIDE(
+    SUM(FactSales[Profit]),
+    SUM(FactSales[SalesAmount])
+)
+```
+
+The `SUM()` functions execute before `DIVIDE()` returns the final result.
+
+---
+
+## DAX Is Case Insensitive
+
+These formulas are equivalent:
+
+```dax
+SUM(FactSales[SalesAmount])
+```
+
+```dax
+sum(FactSales[SalesAmount])
+```
+
+However, using proper capitalization improves readability.
+
+---
+
+## Best Practices
+
+When writing DAX:
+
+- Use descriptive measure names.
+- Keep formulas readable.
+- Format complex calculations across multiple lines.
+- Reuse existing measures whenever possible.
+- Add comments for complex business logic.
+
+Readable DAX is easier to debug and maintain.
+
+---
+
+## Next Steps
+
+Continue learning:
+
+- [Measures](/docs/dax/measures)
+- [Calculated Columns](/docs/dax/calculated-columns)
+- [Filter Context](/docs/dax/filter-context)
+- [CALCULATE Function](/docs/dax/calculate)

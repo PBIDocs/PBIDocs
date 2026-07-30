@@ -1,0 +1,451 @@
+---
+title: Measures and DAX
+description: Learn how Power BI measures use DAX to create dynamic calculations and business logic.
+---
+
+# Measures and DAX
+
+Measures are calculations created using Data Analysis Expressions (DAX).
+
+In Power BI, measures are used to calculate business results dynamically based on the current filter context.
+
+Examples:
+
+- Total Sales
+- Profit
+- Average Price
+- Year-to-Date Revenue
+- Customer Counts
+
+A typical model follows this pattern:
+
+```text
+Dimension Tables
+       |
+       |
+       v
+   Fact Tables
+       |
+       |
+       v
+   DAX Measures
+       |
+       |
+       v
+ Reports & Dashboards
+```
+
+---
+
+## What Is a Measure?
+
+A measure is a calculation stored in the Power BI model.
+
+Example:
+
+```dax
+Total Sales =
+SUM(FactSales[SalesAmount])
+```
+
+The measure does not store a value.
+
+Instead, Power BI calculates the result when the measure is used in a visual.
+
+---
+
+## Measures vs Columns
+
+Power BI has two common ways to create calculations:
+
+- Calculated columns
+- Measures
+
+They serve different purposes.
+
+### Calculated Column
+
+Calculated columns are computed when data is loaded.
+
+Example:
+
+```dax
+Sales Amount =
+FactSales[Quantity] *
+FactSales[Unit Price]
+```
+
+The result is stored in the table.
+
+---
+
+### Measure
+
+Measures are calculated when a report is viewed.
+
+Example:
+
+```dax
+Total Sales =
+SUM(FactSales[SalesAmount])
+```
+
+The result changes based on filters.
+
+---
+
+## Why Use Measures?
+
+Measures provide:
+
+- Reusable calculations
+- Smaller models
+- Better performance
+- Dynamic results
+- Centralized business logic
+
+Instead of creating:
+
+```text
+Sales This Year
+Sales by Region
+Sales by Product
+Sales by Customer
+```
+
+Create one measure:
+
+```dax
+Total Sales
+```
+
+and allow report filters to control the result.
+
+---
+
+## Filter Context
+
+Filter context is one of the most important concepts in DAX.
+
+A measure responds to filters applied in a report.
+
+Example:
+
+Measure:
+
+```dax
+Total Sales =
+SUM(FactSales[SalesAmount])
+```
+
+Without filters:
+
+```text
+Total Sales = $500,000
+```
+
+Filter:
+
+```text
+Category = Off Road
+```
+
+Result:
+
+```text
+Total Sales = $150,000
+```
+
+The DAX formula did not change.
+
+The filter context changed.
+
+---
+
+## Basic Aggregation Measures
+
+Common aggregation functions:
+
+### SUM
+
+```dax
+Total Sales =
+SUM(FactSales[SalesAmount])
+```
+
+Adds all values.
+
+---
+
+### COUNT
+
+```dax
+Order Count =
+COUNT(FactSales[OrderNumber])
+```
+
+Counts rows containing values.
+
+---
+
+### DISTINCTCOUNT
+
+```dax
+Customer Count =
+DISTINCTCOUNT(
+    FactSales[CustomerKey]
+)
+```
+
+Counts unique customers.
+
+---
+
+### AVERAGE
+
+```dax
+Average Sales =
+AVERAGE(
+    FactSales[SalesAmount]
+)
+```
+
+Calculates the average value.
+
+---
+
+## CALCULATE Function
+
+CALCULATE is one of the most important DAX functions.
+
+It changes filter context.
+
+Example:
+
+```dax
+Sales 2026 =
+CALCULATE(
+    [Total Sales],
+    DimDate[Year] = 2026
+)
+```
+
+The measure calculates sales only for 2026.
+
+---
+
+## Measures Using Relationships
+
+Measures automatically use model relationships.
+
+Example:
+
+Model:
+
+```text
+DimProduct
+
+Category
+
+      |
+
+      |
+
+FactSales
+
+SalesAmount
+```
+
+Measure:
+
+```dax
+Total Sales =
+SUM(FactSales[SalesAmount])
+```
+
+Filter:
+
+```text
+Category = Tires
+```
+
+Power BI automatically filters FactSales.
+
+---
+
+## Time Intelligence Measures
+
+Date tables enable advanced calculations.
+
+Example:
+
+```dax
+Sales YTD =
+TOTALYTD(
+    [Total Sales],
+    DimDate[Date]
+)
+```
+
+Other common calculations:
+
+- Previous year sales
+- Month-over-month growth
+- Rolling averages
+- Year-to-date totals
+
+---
+
+## Variables in DAX
+
+Variables improve readability.
+
+Example:
+
+```dax
+Profit Margin =
+VAR Revenue =
+    [Total Sales]
+
+VAR Profit =
+    [Total Profit]
+
+RETURN
+    DIVIDE(
+        Profit,
+        Revenue
+    )
+```
+
+Benefits:
+
+- Easier debugging
+- Cleaner formulas
+- Better performance
+
+---
+
+## DIVIDE vs Division Operator
+
+Recommended:
+
+```dax
+Profit Margin =
+DIVIDE(
+    [Profit],
+    [Sales]
+)
+```
+
+Instead of:
+
+```dax
+[Profit] / [Sales]
+```
+
+DIVIDE safely handles zero values.
+
+---
+
+## Measure Naming Best Practices
+
+Good:
+
+```text
+Total Sales
+Gross Profit
+Customer Count
+Sales YTD
+```
+
+Avoid:
+
+```text
+Measure1
+Calc_New
+Sales_Final2
+```
+
+Clear names make models easier to maintain.
+
+---
+
+## Measure Tables
+
+Many professional models organize measures into dedicated tables.
+
+Example:
+
+```text
+Measures
+
+Total Sales
+Gross Profit
+Margin %
+Sales YTD
+```
+
+Benefits:
+
+- Cleaner models
+- Easier navigation
+- Better organization
+
+---
+
+## Common DAX Mistakes
+
+Avoid:
+
+### Creating Too Many Calculated Columns
+
+Problems:
+
+- Larger model size
+- Slower refresh
+- Duplicate calculations
+
+---
+
+### Repeating Logic
+
+Avoid:
+
+```dax
+Sales by Region Formula
+
+Sales by Product Formula
+
+Sales by Customer Formula
+```
+
+Instead:
+
+```dax
+Total Sales
+```
+
+and use dimensions for filtering.
+
+---
+
+## Measure Checklist
+
+Good Power BI models:
+
+- Use measures for calculations
+- Use dimensions for filtering
+- Keep business logic centralized
+- Use clear naming
+- Avoid unnecessary calculated columns
+
+---
+
+## Next Steps
+
+Continue learning DAX:
+
+- [DAX Fundamentals](/docs/dax/introduction)
+- [Filter Context](/docs/dax/filter-context)
+- [CALCULATE Function](/docs/dax/calculate)
+- [Time Intelligence](/docs/dax/time-intelligence)

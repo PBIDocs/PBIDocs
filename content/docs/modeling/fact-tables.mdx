@@ -1,0 +1,345 @@
+---
+title: Fact Tables
+description: Learn how Power BI fact tables store business events, measurements, and transactional data.
+---
+
+# Fact Tables
+
+Fact tables are the center of a Power BI star schema.
+
+They store measurable business events and connect to dimension tables through relationships.
+
+A fact table answers questions such as:
+
+- How many units were sold?
+- What was the total revenue?
+- How many products were produced?
+- How much inventory changed?
+
+Example:
+
+```text
+              DimDate
+                 |
+                 |
+DimCustomer --- FactSales --- DimProduct
+                 |
+                 |
+              DimStore
+```
+
+The fact table contains the business events.
+
+The dimension tables provide the context needed to analyze those events.
+
+---
+
+## What Is a Fact Table?
+
+A fact table contains:
+
+- Numeric measurements
+- Transaction records
+- Foreign keys connecting dimensions
+
+Example:
+
+```text
+FactSales
+
+SalesKey
+DateKey
+CustomerKey
+ProductKey
+StoreKey
+Quantity
+SalesAmount
+```
+
+Each row represents a business event.
+
+Example:
+
+| DateKey | ProductKey | Quantity | SalesAmount |
+|---|---|---:|---:|
+| 20260101 | 1001 | 5 | 250 |
+| 20260102 | 1002 | 3 | 180 |
+| 20260103 | 1001 | 8 | 400 |
+
+---
+
+## Fact Table Types
+
+Power BI models commonly use several types of fact tables.
+
+## Transaction Fact Tables
+
+Transaction facts record individual business events.
+
+Examples:
+
+- Sales transactions
+- Customer orders
+- Production records
+- Inventory movements
+
+Example:
+
+```text
+FactSales
+
+TransactionID
+DateKey
+ProductKey
+CustomerKey
+Quantity
+SalesAmount
+```
+
+Each row represents one transaction.
+
+---
+
+## Snapshot Fact Tables
+
+Snapshot facts capture a point-in-time measurement.
+
+Examples:
+
+- Daily inventory levels
+- Monthly account balances
+- Employee headcount
+
+Example:
+
+```text
+FactInventorySnapshot
+
+DateKey
+ProductKey
+LocationKey
+InventoryQuantity
+```
+
+A snapshot answers:
+
+"How much inventory existed on a specific date?"
+
+---
+
+## Accumulating Snapshot Fact Tables
+
+Accumulating snapshots track a process through multiple stages.
+
+Examples:
+
+- Order processing
+- Manufacturing workflow
+- Shipping process
+
+Example:
+
+```text
+FactOrderProcess
+
+OrderKey
+OrderDate
+ShipDate
+DeliveryDate
+CompleteDate
+```
+
+The row is updated as the process moves through stages.
+
+---
+
+## Fact Table Keys
+
+Fact tables usually contain foreign keys.
+
+Example:
+
+```text
+FactSales
+
+DateKey
+ProductKey
+CustomerKey
+StoreKey
+```
+
+These connect to dimension tables:
+
+```text
+DimDate
+    |
+    |
+FactSales
+    |
+    |
+DimProduct
+```
+
+Keys allow Power BI to filter and analyze facts by different perspectives.
+
+---
+
+## Measures Are Created From Facts
+
+Most DAX measures calculate values from fact table columns.
+
+Example:
+
+```dax
+Total Sales =
+SUM(FactSales[SalesAmount])
+```
+
+Example:
+
+```dax
+Total Quantity =
+SUM(FactSales[Quantity])
+```
+
+The measure changes based on report filters.
+
+Example:
+
+| Filter | Total Sales |
+|---|---:|
+| All Products | $500,000 |
+| Tires | $250,000 |
+| Off Road | $150,000 |
+
+---
+
+## Fact Table Design Principles
+
+Follow these guidelines:
+
+### Keep Facts Focused on One Business Process
+
+Good:
+
+```text
+FactSales
+```
+
+Contains sales events.
+
+Good:
+
+```text
+FactInventory
+```
+
+Contains inventory measurements.
+
+Avoid combining unrelated processes:
+
+```text
+Sales + Inventory + Production
+```
+
+---
+
+### Store Keys Instead of Descriptions
+
+Preferred:
+
+```text
+ProductKey = 1001
+```
+
+Avoid:
+
+```text
+ProductName = "All Terrain Tire"
+```
+
+Descriptions belong in dimension tables.
+
+---
+
+### Avoid Calculated Columns When Possible
+
+Instead of storing:
+
+```text
+TotalAmount
+```
+
+create a reusable measure:
+
+```dax
+Total Sales =
+SUM(FactSales[SalesAmount])
+```
+
+Measures provide more flexibility.
+
+---
+
+## Common Fact Table Mistakes
+
+Avoid:
+
+### Mixing Different Granularities
+
+Example:
+
+```text
+FactSales
+
+One row per transaction
+
++
+
+Monthly totals
+```
+
+These represent different levels of detail.
+
+Create separate fact tables instead.
+
+---
+
+### Too Many Columns
+
+Avoid adding:
+
+- Customer descriptions
+- Product descriptions
+- Category names
+- Region names
+
+These belong in dimensions.
+
+---
+
+## Fact Table Checklist
+
+A well-designed fact table should:
+
+- Represent one business process
+- Have a clear grain
+- Contain numeric measurements
+- Use dimension keys
+- Support reusable DAX measures
+
+---
+
+## Next Steps
+
+Continue learning Power BI data modeling:
+
+- [Dimension Tables](/docs/modeling/dimension-tables)
+- [Relationships](/docs/modeling/relationships)
+- [Date Tables](/docs/modeling/date-tables)
+
+Advanced Topics:
+
+- [Slowly Changing Dimensions](/docs/modeling/slowly-changing-dimensions)
+- [Bridge Tables](/docs/modeling/bridge-tables)
+- [Many-to-Many Relationships](/docs/modeling/many-to-many)

@@ -1,0 +1,367 @@
+---
+title: Date Tables
+description: Learn how Power BI date tables enable time intelligence, filtering, and accurate date-based analysis.
+---
+
+# Date Tables
+
+Date tables are one of the most important dimensions in a Power BI data model.
+
+They provide the calendar structure required for time-based analysis.
+
+A date table allows users to analyze data by:
+
+- Year
+- Quarter
+- Month
+- Week
+- Day
+- Fiscal periods
+
+Example:
+
+```text
+              DimDate
+                 |
+                 |
+DimCustomer --- FactSales --- DimProduct
+```
+
+The date table filters the fact table through a relationship.
+
+---
+
+## Why Use a Date Table?
+
+Power BI can automatically create hidden date tables when using date columns.
+
+However, professional Power BI models use dedicated date tables.
+
+Benefits include:
+
+- Consistent date filtering
+- Better DAX calculations
+- Time intelligence support
+- Fiscal calendar support
+- Reusable date logic
+
+---
+
+## Date Table Structure
+
+A typical date table contains:
+
+```text
+DimDate
+
+DateKey
+Date
+Year
+Quarter
+Month
+Month Number
+Week
+Day
+```
+
+Example:
+
+| Date | Year | Month | Quarter |
+|---|---:|---|---|
+| 2026-01-01 | 2026 | January | Q1 |
+| 2026-02-01 | 2026 | February | Q1 |
+| 2026-03-01 | 2026 | March | Q1 |
+
+---
+
+## Date Keys
+
+Many models use a numeric date key.
+
+Example:
+
+```text
+DateKey
+
+20260101
+20260102
+20260103
+```
+
+Fact tables store the key:
+
+```text
+FactSales
+
+DateKey
+ProductKey
+SalesAmount
+```
+
+The relationship:
+
+```text
+DimDate
+
+DateKey
+
+     |
+     |
+
+FactSales
+
+DateKey
+```
+
+connects dates to transactions.
+
+---
+
+## Creating a Date Table in DAX
+
+Example:
+
+```dax
+DimDate =
+CALENDAR(
+    DATE(2020,1,1),
+    DATE(2030,12,31)
+)
+```
+
+Additional columns can be added:
+
+```dax
+Year =
+YEAR(DimDate[Date])
+```
+
+```dax
+Month =
+FORMAT(
+    DimDate[Date],
+    "MMMM"
+)
+```
+
+```dax
+Month Number =
+MONTH(DimDate[Date])
+```
+
+---
+
+## Mark as Date Table
+
+After creating a date table:
+
+1. Select the table in Power BI.
+2. Choose **Table tools**.
+3. Select **Mark as date table**.
+4. Choose the Date column.
+
+This tells Power BI the table represents the official calendar.
+
+---
+
+## Date Hierarchies
+
+Date tables often contain natural hierarchies.
+
+Example:
+
+```text
+Year
+ |
+Quarter
+ |
+Month
+ |
+Day
+```
+
+Users can drill down:
+
+```text
+2026
+ |
+Q1
+ |
+January
+ |
+January 15
+```
+
+---
+
+## Time Intelligence
+
+Date tables enable common DAX calculations.
+
+Example:
+
+### Total Sales
+
+```dax
+Total Sales =
+SUM(FactSales[SalesAmount])
+```
+
+### Year-to-Date Sales
+
+```dax
+Sales YTD =
+TOTALYTD(
+    [Total Sales],
+    DimDate[Date]
+)
+```
+
+The calculation automatically responds to date filters.
+
+---
+
+## Fiscal Calendars
+
+Many businesses do not follow January to December calendars.
+
+Examples:
+
+- Manufacturing fiscal years
+- Retail calendars
+- 4-4-5 calendars
+
+A date table can include:
+
+```text
+Fiscal Year
+Fiscal Quarter
+Fiscal Period
+```
+
+Example:
+
+| Date | Fiscal Year | Period |
+|---|---|---|
+| 2026-07-01 | FY2027 | Period 1 |
+
+---
+
+## Multiple Date Relationships
+
+Fact tables may contain multiple dates.
+
+Example:
+
+```text
+FactSales
+
+OrderDateKey
+ShipDateKey
+DeliveryDateKey
+```
+
+A single date table can support all of them.
+
+Example:
+
+```text
+          DimDate
+
+             |
+             |
+
+       FactSales
+
+Order Date
+Ship Date
+Delivery Date
+```
+
+Only one relationship is active.
+
+Other relationships can be activated with DAX.
+
+---
+
+## Date Table Best Practices
+
+Follow these guidelines:
+
+- Create one official date table.
+- Use it across all fact tables.
+- Include future dates for planning.
+- Add fiscal calendar columns when needed.
+- Mark it as a date table.
+- Sort month names by month number.
+
+---
+
+## Common Date Table Mistakes
+
+Avoid:
+
+### Using Automatic Date Tables
+
+Problems:
+
+- Creates hidden tables
+- Duplicates logic
+- Makes models harder to maintain
+
+---
+
+### Sorting Months Alphabetically
+
+Incorrect:
+
+```text
+April
+August
+December
+February
+```
+
+Correct:
+
+```text
+January
+February
+March
+```
+
+Use:
+
+```text
+Month Name
+
+sorted by
+
+Month Number
+```
+
+---
+
+## Date Table Checklist
+
+A good date table should:
+
+- Contain continuous dates
+- Have a unique date column
+- Connect to fact tables
+- Support time intelligence
+- Include business calendar requirements
+
+---
+
+## Next Steps
+
+Continue learning Power BI modeling:
+
+- [Measures and DAX](/docs/modeling/measures-dax)
+
+Advanced Topics:
+
+- [Slowly Changing Dimensions](/docs/modeling/slowly-changing-dimensions)
+- [Bridge Tables](/docs/modeling/bridge-tables)
+- [Many-to-Many Relationships](/docs/modeling/many-to-many)

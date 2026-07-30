@@ -1,0 +1,159 @@
+---
+title: Introduction to Power BI
+description: Learn what Power BI is, how it works, and the core concepts behind Microsoft's business intelligence platform.
+---
+
+# Introduction to Power BI
+
+Power BI is Microsoft's business intelligence platform used to connect, transform, model, visualize, and analyze data.
+
+It allows organizations to turn raw data from multiple sources into interactive reports and dashboards that support better decision-making.
+
+## What is Power BI?
+
+Power BI combines several technologies:
+
+- **Data connectivity** — Connect to databases, Excel files, cloud services, APIs, and other sources.
+- **Data transformation** — Clean and reshape data using Power Query.
+- **Data modeling** — Build relationships between tables and create analytical models.
+- **Data analysis** — Create calculations using Data Analysis Expressions (DAX).
+- **Data visualization** — Present insights through interactive charts, tables, and dashboards.
+
+A typical Power BI workflow looks like:
+
+
+<div className="relative my-10 ml-4 border-l border-fd-border/60">
+
+  <div className="relative mb-10 pl-8">
+   <div className="absolute -left-[17px] top-0 flex h-8 w-8 items-center justify-center rounded-full border border-fd-primary/40 bg-fd-primary/10 text-sm font-semibold text-fd-primary">
+      1
+    </div>
+
+    <h3 className="text-base font-semibold">
+      Data Source
+    </h3>
+
+    <div className="mt-1 text-sm text-fd-muted-foreground/80">
+      Connect to databases, files, APIs, and other sources.
+    </div>
+  </div>
+
+
+  <div className="relative mb-10 pl-8">
+    <div className="absolute -left-[17px] top-0 flex h-8 w-8 items-center justify-center rounded-full border border-fd-primary/40 bg-fd-primary/10 text-sm font-semibold text-fd-primary">
+     2
+   </div>
+
+    <h3 className="text-base font-semibold">
+      Power Query
+    </h3>
+
+    <div className="mt-1 text-sm text-fd-muted-foreground/80">
+      Clean, transform, and prepare data using M queries.
+    </div>
+    </div>
+
+
+  <div className="relative mb-10 pl-8">
+    <div className="absolute -left-[17px] top-0 flex h-8 w-8 items-center justify-center rounded-full border border-fd-primary/40 bg-fd-primary/10 text-sm font-semibold text-fd-primary">
+     3
+    </div>
+
+    <h3 className="text-base font-semibold">
+      Data Model
+    </h3>
+
+    <div className="mt-1 text-sm text-fd-muted-foreground/80">
+      Create relationships, dimensions, and fact tables.
+    </div>
+  </div>
+
+
+  <div className="relative mb-10 pl-8">
+    <div className="absolute -left-[17px] top-0 flex h-8 w-8 items-center justify-center rounded-full border border-fd-primary/40 bg-fd-primary/10 text-sm font-semibold text-fd-primary">
+     4
+    </div>
+
+    <h3 className="text-base font-semibold">
+      DAX Calculations
+    </h3>
+
+    <div className="mt-1 text-sm text-fd-muted-foreground/80">
+      Create measures, calculated columns, and business logic.
+    </div>
+  </div>
+
+
+  <div className="relative pl-8">
+    <div className="absolute -left-[17px] top-0 flex h-8 w-8 items-center justify-center rounded-full border border-fd-primary/40 bg-fd-primary/10 text-sm font-semibold text-fd-primary">
+      5
+    </div>
+
+    <h3 className="text-base font-semibold">
+      Reports & Dashboards
+    </h3>
+
+    <div className="mt-1 text-sm text-fd-muted-foreground/80">
+      Build visualizations and share insights.
+    </div>
+  </div>
+
+</div>
+
+
+---
+
+## The Power BI Components
+
+Power BI is made up of several applications.
+
+## Power BI Desktop
+
+Power BI Desktop is the primary development tool.
+
+Used for:
+
+- Connecting to data
+- Cleaning data
+- Creating relationships
+- Writing DAX measures
+- Building reports
+
+Most developers build their reports here before publishing.
+
+---
+
+## Power BI Service
+
+The Power BI Service is the cloud platform where reports are shared and managed.
+
+Used for:
+
+- Publishing reports
+- Creating dashboards
+- Managing workspaces
+- Scheduling refreshes
+- Controlling security
+
+---
+
+## Power Query
+
+Power Query is the data preparation engine inside Power BI.
+
+It is used to:
+
+- Remove unnecessary columns
+- Change data types
+- Combine tables
+- Merge datasets
+- Create repeatable transformations
+
+Example:
+
+```powerquery
+let
+    Source = Excel.Workbook(File.Contents("Sales.xlsx")),
+    SalesTable = Source{[Name="Sales"]}[Data]
+in
+    SalesTable

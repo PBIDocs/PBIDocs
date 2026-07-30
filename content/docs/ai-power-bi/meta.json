@@ -1,0 +1,11 @@
+{
+  "title": "AI-Assisted Power BI",
+  "pages": [
+    "introduction",
+    "dax-with-ai",
+    "power-query-with-ai",
+    "model-advisor",
+    "report-design",
+    "prompt-library"
+  ]
+}

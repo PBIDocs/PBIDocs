@@ -1,0 +1,436 @@
+---
+title: Calculated Columns
+description: Learn when to use calculated columns, how they differ from measures, and when each is appropriate in Power BI.
+---
+
+# Calculated Columns
+
+Calculated columns create new columns in a table using DAX.
+
+Unlike measures, calculated columns are evaluated during data refresh and the results are stored in the Power BI model.
+
+Calculated columns are commonly used to:
+
+- Categorize data
+- Combine values
+- Create lookup values
+- Build sorting columns
+- Generate business attributes
+
+---
+
+## What Is a Calculated Column?
+
+A calculated column evaluates one row at a time.
+
+General syntax:
+
+```text
+Column Name =
+Expression
+```
+
+Example:
+
+```dax
+Sales Amount =
+FactSales[Quantity] * FactSales[Unit Price]
+```
+
+Power BI calculates the value for every row during model refresh.
+
+The result is stored in the table.
+
+---
+
+## Measures vs Calculated Columns
+
+Although both use DAX, they serve different purposes.
+
+| Measures | Calculated Columns |
+|---|---|
+| Calculated when viewed | Calculated during refresh |
+| Dynamic | Stored in the model |
+| Respond to filters | Same value until refresh |
+| Do not increase model size | Increase model size |
+| Used in visuals | Used for grouping and relationships |
+
+As a general rule:
+
+- Use **measures** for calculations.
+- Use **calculated columns** to create new data attributes.
+
+---
+
+## Row-by-Row Evaluation
+
+Calculated columns automatically evaluate each row independently.
+
+Example source data:
+
+| Quantity | Unit Price |
+|---:|---:|
+| 5 | 50 |
+| 3 | 75 |
+| 8 | 40 |
+
+Calculated column:
+
+```dax
+Sales Amount =
+FactSales[Quantity] * FactSales[Unit Price]
+```
+
+Result:
+
+| Quantity | Unit Price | Sales Amount |
+|---:|---:|---:|
+| 5 | 50 | 250 |
+| 3 | 75 | 225 |
+| 8 | 40 | 320 |
+
+Every row receives its own calculated value.
+
+---
+
+## Common Uses
+
+Calculated columns are useful when creating:
+
+- Product categories
+- Customer segments
+- Full names
+- Year-Month labels
+- Custom sort columns
+- Status indicators
+
+Example:
+
+```dax
+Full Name =
+Customer[First Name] &
+" " &
+Customer[Last Name]
+```
+
+The new column becomes part of the data model and can be used throughout reports.
+
+---
+
+## Creating Categories
+
+One of the most common uses of calculated columns is creating business categories.
+
+Example:
+
+```dax
+Sales Category =
+IF(
+    FactSales[SalesAmount] >= 1000,
+    "Large Sale",
+    "Standard Sale"
+)
+```
+
+Result:
+
+| Sales Amount | Sales Category |
+|---:|---|
+| $2,450 | Large Sale |
+| $320 | Standard Sale |
+| $1,180 | Large Sale |
+
+The category is stored with each row in the table.
+
+---
+
+## Using SWITCH()
+
+When multiple categories are required, `SWITCH()` is often easier to read than several nested `IF()` statements.
+
+Example:
+
+```dax
+Performance Rating =
+SWITCH(
+    TRUE(),
+    FactSales[SalesAmount] >= 5000, "Excellent",
+    FactSales[SalesAmount] >= 2500, "Good",
+    FactSales[SalesAmount] >= 1000, "Average",
+    "Needs Improvement"
+)
+```
+
+`SWITCH()` creates cleaner, more maintainable DAX for multiple conditions.
+
+---
+
+## Combining Columns
+
+Calculated columns can combine multiple fields into a single value.
+
+Example:
+
+```dax
+Customer Name =
+Customer[First Name]
+    & " "
+    & Customer[Last Name]
+```
+
+Result:
+
+| First Name | Last Name | Customer Name |
+|---|---|---|
+| John | Smith | John Smith |
+| Sarah | Jones | Sarah Jones |
+
+---
+
+## Using RELATED()
+
+`RELATED()` retrieves a value from a related table.
+
+Example model:
+
+```text
+DimProduct
+     |
+     |
+FactSales
+```
+
+Calculated column:
+
+```dax
+Category =
+RELATED(DimProduct[Category])
+```
+
+The new column copies the product category from the related dimension into each sales row.
+
+This function requires an existing relationship between the tables.
+
+---
+
+## Date Calculations
+
+Calculated columns are often used to simplify reporting dates.
+
+Example:
+
+```dax
+Year =
+YEAR(FactSales[OrderDate])
+```
+
+Example:
+
+```dax
+Month Name =
+FORMAT(
+    FactSales[OrderDate],
+    "MMMM"
+)
+```
+
+Example:
+
+```dax
+Year Month =
+FORMAT(
+    FactSales[OrderDate],
+    "YYYY-MM"
+)
+```
+
+These columns are useful for grouping and sorting reports.
+
+---
+
+## Sorting Text Values
+
+Power BI sorts text alphabetically by default.
+
+Calculated columns can create a numeric sort order.
+
+Example:
+
+```dax
+Month Number =
+MONTH(DimDate[Date])
+```
+
+Then:
+
+- Sort **Month Name**
+- By **Month Number**
+
+Instead of:
+
+```text
+April
+August
+December
+February
+```
+
+Power BI displays:
+
+```text
+January
+February
+March
+April
+...
+December
+```
+
+---
+
+## Practical Business Examples
+
+Calculated columns are commonly used for:
+
+| Business Need | Example |
+|---|---|
+| Customer Full Name | First + Last Name |
+| Product Category | RELATED() |
+| Sales Classification | IF() |
+| Order Year | YEAR() |
+| Month Name | FORMAT() |
+| Custom Sort Columns | Month Number |
+
+These columns become permanent parts of the semantic model and can be reused throughout reports.
+
+---
+
+## Performance Considerations
+
+Because calculated columns are stored in the data model, they increase the model's memory usage.
+
+Every value is calculated during refresh and saved for every row.
+
+Example:
+
+```text
+1 Million Rows
+
++ Existing Columns
++ Calculated Column
+
+↓
+
+1 Million Additional Stored Values
+```
+
+As models grow larger, unnecessary calculated columns can significantly increase refresh times and memory consumption.
+
+Whenever possible, use measures for report calculations.
+
+---
+
+## When Not to Use Calculated Columns
+
+A common mistake is creating calculated columns for values that should be measures.
+
+For example, avoid creating:
+
+```dax
+Total Sales =
+SUM(FactSales[SalesAmount])
+```
+
+as a calculated column.
+
+Why?
+
+- It produces the same value on every row.
+- It wastes storage space.
+- It does not respond to report filters.
+- A measure performs the calculation more efficiently.
+
+Instead, create it as a measure:
+
+```dax
+Total Sales =
+SUM(FactSales[SalesAmount])
+```
+
+Although the DAX looks identical, the behavior is completely different.
+
+---
+
+## Choosing Between Measures and Calculated Columns
+
+Use this guide when deciding which approach to use.
+
+| If you need to... | Use |
+|---|---|
+| Calculate totals | Measure |
+| Create KPIs | Measure |
+| Build percentages | Measure |
+| Respond to slicers | Measure |
+| Create categories | Calculated Column |
+| Combine text fields | Calculated Column |
+| Create sort columns | Calculated Column |
+| Generate lookup values | Calculated Column |
+
+A simple rule:
+
+> If the value should change when a user filters a report, create a **measure**.
+
+> If the value should remain fixed for every row until the data refreshes, create a **calculated column**.
+
+---
+
+## Best Practices
+
+When creating calculated columns:
+
+- Only create columns that are truly needed.
+- Keep formulas simple and readable.
+- Use descriptive column names.
+- Avoid storing values that can be calculated dynamically.
+- Use dimensions instead of duplicating descriptive data.
+- Prefer measures whenever possible.
+
+Keeping the model lean improves performance and simplifies maintenance.
+
+---
+
+## Common Beginner Mistakes
+
+Avoid these common issues:
+
+- Creating calculated columns for totals.
+- Using calculated columns instead of measures.
+- Duplicating existing dimension attributes.
+- Creating unnecessary text columns.
+- Forgetting that calculated columns increase model size.
+
+Many Power BI performance problems begin with overusing calculated columns.
+
+---
+
+## Summary
+
+Calculated columns are best used to create permanent attributes that become part of the data model.
+
+They are evaluated during data refresh and stored for every row.
+
+Measures, on the other hand, are evaluated dynamically and should be used for business calculations that respond to report filters.
+
+Understanding the difference between these two calculation types is one of the most important Power BI skills.
+
+---
+
+## Next Steps
+
+Continue learning DAX:
+
+- [Filter Context](/docs/dax/filter-context)
+- [Row Context](/docs/dax/row-context)
+- [CALCULATE](/docs/dax/calculate)
+- [Variables (VAR)](/docs/dax/variables)
+- [Time Intelligence](/docs/dax/time-intelligence)
