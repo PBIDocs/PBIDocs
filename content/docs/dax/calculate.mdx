@@ -1,18 +1,462 @@
 ---
-title: Calculate
-description: Power BI documentation.
+title: CALCULATE
+description: Learn how the CALCULATE function modifies filter context and why it is the most important function in DAX.
 ---
 
-# CALCULATE Function
+# CALCULATE
 
-`CALCULATE` is one of the most important functions in DAX.
+`CALCULATE()` is the most powerful and widely used function in DAX.
 
-It allows you to modify filter context when evaluating a calculation.
+It evaluates an expression while modifying the current filter context.
 
-## Example
+Most advanced DAX calculations—including percentages, running totals, Year-to-Date calculations, and business KPIs—depend on `CALCULATE()`.
 
-```sql
+If you understand `CALCULATE()`, you understand much of DAX.
+
+---
+
+## What Does CALCULATE Do?
+
+`CALCULATE()` evaluates an expression using one or more modified filters.
+
+General syntax:
+
+```dax
+CALCULATE(
+    <expression>,
+    <filter1>,
+    <filter2>,
+    ...
+)
+```
+
+The first argument is the calculation.
+
+The remaining arguments change the filter context before the calculation is evaluated.
+
+---
+
+## Simple Example
+
+Suppose we already have this measure:
+
+```dax
+Total Sales =
+SUM(FactSales[SalesAmount])
+```
+
+Now create a new measure:
+
+```dax
+Bike Sales =
+CALCULATE(
+    [Total Sales],
+    DimProduct[Category] = "Bikes"
+)
+```
+
+Regardless of the report filters, this measure evaluates sales only for products in the **Bikes** category.
+
+---
+
+## How CALCULATE Works
+
+Power BI follows this process:
+
+```text
+Current Filter Context
+        |
+        v
+CALCULATE modifies filters
+        |
+        v
+New Filter Context
+        |
+        v
+Expression is evaluated
+        |
+        v
+Result returned
+```
+
+Unlike most DAX functions, `CALCULATE()` changes the environment in which the calculation runs.
+
+---
+
+## Adding Filters
+
+`CALCULATE()` can add new filters.
+
+Example:
+
+```dax
+West Region Sales =
+CALCULATE(
+    [Total Sales],
+    DimCustomer[Region] = "West"
+)
+```
+
+Only customers in the **West** region are included.
+
+Additional filters can be added.
+
+```dax
+Bike Sales West =
+CALCULATE(
+    [Total Sales],
+    DimProduct[Category] = "Bikes",
+    DimCustomer[Region] = "West"
+)
+```
+
+Both filters are applied before the calculation is evaluated.
+
+---
+
+## Replacing Existing Filters
+
+If a filter already exists on the same column, `CALCULATE()` replaces it.
+
+Suppose a report is filtered to:
+
+```text
+Category = Accessories
+```
+
+This measure:
+
+```dax
+Bike Sales =
+CALCULATE(
+    [Total Sales],
+    DimProduct[Category] = "Bikes"
+)
+```
+
+ignores the report's category filter and evaluates only Bike sales.
+
+This behavior makes `CALCULATE()` incredibly powerful for creating custom business calculations.
+
+---
+
+## Removing Filters with ALL()
+
+Sometimes you want a calculation to ignore the current filters.
+
+The `ALL()` function removes filters from a table or column before the expression is evaluated.
+
+Example:
+
+```dax
+Total Sales (All Products) =
+CALCULATE(
+    [Total Sales],
+    ALL(DimProduct)
+)
+```
+
+Even if the report is filtered to:
+
+```text
+Category = Bikes
+```
+
+this measure returns sales for **all products**.
+
+`ALL()` is commonly used to calculate percentages of totals.
+
+---
+
+## Example: Percent of Total Sales
+
+Suppose you have these measures:
+
+```dax
+Total Sales =
+SUM(FactSales[SalesAmount])
+```
+
+```dax
+Percent of Total =
+DIVIDE(
+    [Total Sales],
+    CALCULATE(
+        [Total Sales],
+        ALL(DimProduct)
+    )
+)
+```
+
+Results:
+
+| Category | Sales | Percent of Total |
+|---|---:|---:|
+| Bikes | $150,000 | 30% |
+| Accessories | $80,000 | 16% |
+| Clothing | $270,000 | 54% |
+
+The numerator respects the current filter context.
+
+The denominator removes the product filter to calculate the overall total.
+
+---
+
+## REMOVEFILTERS()
+
+`REMOVEFILTERS()` is another way to clear filters.
+
+Example:
+
+```dax
 Total Sales =
 CALCULATE(
-    SUM(Sales[Amount])
+    [Total Sales],
+    REMOVEFILTERS(DimProduct)
 )
+```
+
+Like `ALL()`, it removes filters before evaluating the expression.
+
+Many developers prefer `REMOVEFILTERS()` because its purpose is more explicit and easier to understand.
+
+---
+
+## KEEPFILTERS()
+
+Normally, `CALCULATE()` replaces filters on the same column.
+
+`KEEPFILTERS()` changes this behavior by adding filters instead of replacing them.
+
+Example:
+
+```dax
+Bike Sales =
+CALCULATE(
+    [Total Sales],
+    KEEPFILTERS(
+        DimProduct[Category] = "Bikes"
+    )
+)
+```
+
+If another filter already limits the category, `KEEPFILTERS()` combines both filters instead of overwriting them.
+
+This is especially useful in more advanced business calculations.
+
+---
+
+## Multiple Filters
+
+`CALCULATE()` can apply several filters at the same time.
+
+Example:
+
+```dax
+West Bike Sales =
+CALCULATE(
+    [Total Sales],
+    DimCustomer[Region] = "West",
+    DimProduct[Category] = "Bikes",
+    DimDate[Year] = 2026
+)
+```
+
+Power BI evaluates only rows that satisfy **all** filter conditions.
+
+```text
+Region = West
+        +
+Category = Bikes
+        +
+Year = 2026
+
+↓
+
+Filtered FactSales Rows
+
+↓
+
+Total Sales
+```
+
+---
+
+## Filter Precedence
+
+When `CALCULATE()` applies a filter to a column that already has an existing filter, the new filter usually replaces the old one.
+
+Example:
+
+Current report filter:
+
+```text
+Category = Accessories
+```
+
+Measure:
+
+```dax
+Bike Sales =
+CALCULATE(
+    [Total Sales],
+    DimProduct[Category] = "Bikes"
+)
+```
+
+Result:
+
+```text
+Category = Bikes
+```
+
+The filter inside `CALCULATE()` takes precedence over the existing filter.
+
+Understanding this behavior is essential when building advanced DAX calculations.
+
+---
+
+## Context Transition
+
+One of the most important features of `CALCULATE()` is **context transition**.
+
+Context transition occurs when `CALCULATE()` converts an existing **row context** into a **filter context**.
+
+This most commonly happens inside calculated columns and iterator functions.
+
+Example:
+
+```dax
+Customer Sales =
+CALCULATE(
+    [Total Sales]
+)
+```
+
+If this expression is evaluated within a row context, `CALCULATE()` automatically converts the current row into filters before evaluating the measure.
+
+Without context transition, many advanced DAX calculations would not be possible.
+
+---
+
+## USERELATIONSHIP()
+
+Sometimes a data model contains multiple relationships between two tables.
+
+Only one relationship can be active at a time.
+
+`USERELATIONSHIP()` temporarily activates an inactive relationship during a calculation.
+
+Example:
+
+```dax
+Sales by Ship Date =
+CALCULATE(
+    [Total Sales],
+    USERELATIONSHIP(
+        FactSales[ShipDate],
+        DimDate[Date]
+    )
+)
+```
+
+Instead of using the active **Order Date** relationship, this measure evaluates sales using **Ship Date**.
+
+This is commonly used when a fact table contains multiple date columns.
+
+---
+
+## CROSSFILTER()
+
+`CROSSFILTER()` changes the direction of filtering between two related tables while the measure is evaluated.
+
+Example:
+
+```dax
+Sales Both Directions =
+CALCULATE(
+    [Total Sales],
+    CROSSFILTER(
+        FactSales[CustomerKey],
+        DimCustomer[CustomerKey],
+        BOTH
+    )
+)
+```
+
+This is useful in specialized scenarios but should be used carefully, as changing filter directions can affect performance and produce unexpected results.
+
+---
+
+## Real-World Business Examples
+
+`CALCULATE()` is used in many common business calculations.
+
+Examples include:
+
+| Business Requirement | Example |
+|---|---|
+| Sales for one category | Filter by Category |
+| Sales for one region | Filter by Region |
+| Year-to-date sales | Apply date filters |
+| Previous year's sales | Modify the date context |
+| Percent of total | Remove filters with `ALL()` |
+| Sales using Ship Date | `USERELATIONSHIP()` |
+
+Many of the KPIs found in executive dashboards rely on `CALCULATE()`.
+
+---
+
+## Performance Best Practices
+
+`CALCULATE()` is extremely efficient when used correctly.
+
+Follow these recommendations:
+
+- Build reusable base measures.
+- Keep filter expressions simple.
+- Use dimension tables for filtering.
+- Avoid unnecessary nested `CALCULATE()` calls.
+- Test calculations using different slicers and report filters.
+
+A clean star schema greatly improves the effectiveness of `CALCULATE()`.
+
+---
+
+## Common Beginner Mistakes
+
+Avoid these common issues:
+
+- Forgetting that `CALCULATE()` changes filter context.
+- Confusing row context with filter context.
+- Using `CALCULATE()` when a simple measure is sufficient.
+- Creating unnecessary nested calculations.
+- Ignoring inactive relationships when multiple date fields exist.
+
+Understanding how filter context changes is often the key to debugging DAX.
+
+---
+
+## Summary
+
+`CALCULATE()` is the most important function in DAX because it changes the filter context in which an expression is evaluated.
+
+With `CALCULATE()`, you can:
+
+- Add filters
+- Replace filters
+- Remove filters
+- Activate inactive relationships
+- Control how calculations respond to report interactions
+
+Mastering `CALCULATE()` is one of the biggest milestones in becoming a proficient Power BI developer.
+
+---
+
+## Next Steps
+
+Continue building your DAX skills:
+
+- [Variables (VAR)](/docs/dax/variables)
+- [Iterators](/docs/dax/iterators)
+- [Time Intelligence](/docs/dax/time-intelligence)
