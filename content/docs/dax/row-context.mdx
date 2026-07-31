@@ -1,6 +1,6 @@
----
-title: Row Context
-description: Learn how row context works in DAX and why it behaves differently from filter context.
+﻿---
+title: "Row Context"
+description: Power BI documentation.
 ---
 
 # Row Context
@@ -132,28 +132,28 @@ SUMX(
 ```text
 Read Row 1
 
-↓
+â†“
 
 Calculate
-Quantity × Unit Price
+Quantity Ã— Unit Price
 
-↓
+â†“
 
 Read Row 2
 
-↓
+â†“
 
 Calculate
 
-↓
+â†“
 
 Read Row 3
 
-↓
+â†“
 
 ...
 
-↓
+â†“
 
 Add all results together
 ```
@@ -304,12 +304,12 @@ Understanding when each context exists makes DAX much easier to understand.
 
 | Feature | Row Context | Filter Context |
 |---|---|---|
-| Created by Calculated Columns | ✅ | ❌ |
-| Created by Measures | ❌ | ✅ |
-| Created by Iterator Functions | ✅ | ❌ |
-| Created by Report Filters | ❌ | ✅ |
-| Created by Slicers | ❌ | ✅ |
-| Modified by `CALCULATE()` | ➜ Converted | ✅ |
+| Created by Calculated Columns | âœ… | âŒ |
+| Created by Measures | âŒ | âœ… |
+| Created by Iterator Functions | âœ… | âŒ |
+| Created by Report Filters | âŒ | âœ… |
+| Created by Slicers | âŒ | âœ… |
+| Modified by `CALCULATE()` | âžœ Converted | âœ… |
 
 Although both contexts affect calculations, they solve different problems.
 
@@ -368,3 +368,4 @@ Now that you understand both contexts, you're ready to learn the most important 
 - [Variables (VAR)](/docs/dax/variables)
 - [Iterators](/docs/dax/iterators)
 - [Time Intelligence](/docs/dax/time-intelligence)
+

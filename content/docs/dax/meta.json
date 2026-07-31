@@ -5,11 +5,12 @@
     "basics",
     "measures",
     "calculated-columns",
+    "calculated-tables",
     "filter-context",
     "row-context",
     "calculate",
     "variables",
-    "iterators",
+    "iterator",
     "time-intelligence"
   ]
 }
