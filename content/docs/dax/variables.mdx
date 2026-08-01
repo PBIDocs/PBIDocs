@@ -1,6 +1,427 @@
-﻿---
-title: "Variables"
-description: Power BI documentation.
+---
+title: "Variables (VAR)"
+description: Learn how to use DAX variables (VAR) to create cleaner, faster, and more maintainable calculations in Power BI.
 ---
 
+# Variables (VAR)
 
+Variables (`VAR`) allow you to store the result of a calculation and reuse it later in the same DAX expression.
+
+Using variables makes DAX formulas:
+
+- Easier to read
+- Easier to debug
+- Easier to maintain
+- More efficient
+
+Although variables are optional, they are considered a best practice for writing professional DAX.
+
+---
+
+## What Is a Variable?
+
+A variable stores a value that can be referenced later in a DAX expression.
+
+General syntax:
+
+```dax
+VAR VariableName = Expression
+
+RETURN
+    Expression
+```
+
+Variables are declared first.
+
+The `RETURN` statement specifies the final value returned by the measure.
+
+---
+
+## Simple Example
+
+Without variables:
+
+```dax
+Profit Margin =
+DIVIDE(
+    [Gross Profit],
+    [Total Sales]
+)
+```
+
+With variables:
+
+```dax
+Profit Margin =
+VAR Profit =
+    [Gross Profit]
+
+VAR Sales =
+    [Total Sales]
+
+RETURN
+    DIVIDE(
+        Profit,
+        Sales
+    )
+```
+
+Both measures return the same result.
+
+The second version is easier to read and extend.
+
+---
+
+## Why Use Variables?
+
+Variables provide several important benefits.
+
+They:
+
+- Reduce repeated calculations
+- Improve readability
+- Simplify debugging
+- Make formulas easier to modify
+- Improve performance in many scenarios
+
+As DAX formulas become more complex, variables become increasingly valuable.
+
+---
+
+## Variable Scope
+
+A variable only exists inside the expression where it is created.
+
+Example:
+
+```dax
+VAR Sales =
+    [Total Sales]
+
+RETURN
+    Sales
+```
+
+The variable **Sales** cannot be used by another measure.
+
+Each measure has its own variables.
+
+---
+
+## Using Multiple Variables
+
+A DAX expression can contain multiple variables.
+
+Each variable is evaluated before the `RETURN` statement.
+
+Example:
+
+```dax
+Profit Margin =
+VAR Sales =
+    [Total Sales]
+
+VAR Profit =
+    [Gross Profit]
+
+VAR Margin =
+    DIVIDE(
+        Profit,
+        Sales
+    )
+
+RETURN
+    Margin
+```
+
+Breaking calculations into small steps makes the formula easier to understand and maintain.
+
+---
+
+## Variables Are Evaluated Once
+
+One of the biggest advantages of variables is that they are evaluated only once.
+
+Without variables:
+
+```dax
+Profit Ratio =
+DIVIDE(
+    [Gross Profit],
+    [Total Sales]
+)
++
+DIVIDE(
+    [Gross Profit],
+    [Total Sales]
+)
+```
+
+Power BI must evaluate both measures multiple times.
+
+Using variables:
+
+```dax
+Profit Ratio =
+VAR Profit =
+    [Gross Profit]
+
+VAR Sales =
+    [Total Sales]
+
+VAR Margin =
+    DIVIDE(
+        Profit,
+        Sales
+    )
+
+RETURN
+    Margin + Margin
+```
+
+The variables are calculated once and reused throughout the expression.
+
+This often improves readability and can improve performance.
+
+---
+
+## Variables with CALCULATE()
+
+Variables work exceptionally well with `CALCULATE()`.
+
+Example:
+
+```dax
+West Sales =
+VAR WestSales =
+    CALCULATE(
+        [Total Sales],
+        DimCustomer[Region] = "West"
+    )
+
+RETURN
+    WestSales
+```
+
+Although this example is simple, variables become extremely valuable when several `CALCULATE()` statements are combined.
+
+---
+
+## Comparing Values
+
+Variables make comparisons much easier to read.
+
+Example:
+
+```dax
+Sales Growth =
+VAR CurrentYear =
+    [Sales]
+
+VAR PreviousYear =
+    [Sales LY]
+
+RETURN
+    CurrentYear - PreviousYear
+```
+
+Instead of repeatedly referencing measures, the calculation clearly describes the business logic.
+
+---
+
+## Business Example
+
+Suppose management wants to calculate profit after expenses.
+
+Example:
+
+```dax
+Net Profit =
+VAR Revenue =
+    [Total Sales]
+
+VAR Cost =
+    [Total Cost]
+
+VAR Expenses =
+    [Operating Expenses]
+
+RETURN
+    Revenue
+    - Cost
+    - Expenses
+```
+
+Each variable represents a business concept, making the formula easy to understand for both developers and analysts.
+
+---
+
+## Variables Can Store More Than Numbers
+
+Variables can store many types of values.
+
+Examples include:
+
+- Numbers
+- Text
+- Dates
+- Tables
+- Results from other DAX functions
+
+Example:
+
+```dax
+CurrentYear =
+VAR SelectedYear =
+    MAX(DimDate[Year])
+
+RETURN
+    SelectedYear
+```
+
+This flexibility makes variables useful in both simple and advanced DAX calculations.
+
+---
+
+## Debugging with Variables
+
+Variables make debugging DAX much easier.
+
+Instead of returning the final calculation, you can temporarily return an intermediate variable.
+
+Example:
+
+```dax
+Profit Margin =
+VAR Sales =
+    [Total Sales]
+
+VAR Profit =
+    [Gross Profit]
+
+VAR Margin =
+    DIVIDE(
+        Profit,
+        Sales
+    )
+
+RETURN
+    Margin
+```
+
+While troubleshooting, you might instead return:
+
+```dax
+RETURN
+    Profit
+```
+
+or
+
+```dax
+RETURN
+    Sales
+```
+
+This technique lets you verify each step of the calculation before returning the final result.
+
+---
+
+## Naming Variables
+
+Use descriptive variable names that explain what the value represents.
+
+Good examples:
+
+```dax
+VAR TotalSales =
+    [Total Sales]
+
+VAR PreviousYearSales =
+    [Sales LY]
+
+VAR SalesGrowth =
+    TotalSales - PreviousYearSales
+```
+
+Avoid generic names such as:
+
+```dax
+VAR X
+VAR Temp
+VAR Test
+```
+
+Clear names make formulas easier to understand months later.
+
+---
+
+## Performance Best Practices
+
+Variables can improve both readability and efficiency.
+
+Recommended practices include:
+
+- Store repeated calculations in variables.
+- Break complex formulas into logical steps.
+- Use meaningful variable names.
+- Keep each variable focused on a single task.
+- Return only the final result.
+
+Variables help Power BI avoid evaluating the same expression multiple times within a measure.
+
+---
+
+## Common Beginner Mistakes
+
+Avoid these common errors:
+
+- Creating variables that are never used.
+- Giving variables vague names.
+- Trying to reference a variable outside its measure.
+- Writing one long expression instead of breaking it into smaller variables.
+- Forgetting the `RETURN` statement.
+
+Remember that variables only exist within the measure in which they are declared.
+
+---
+
+## Variables vs Measures
+
+Variables and measures are often confused, but they serve different purposes.
+
+| Variables | Measures |
+|---|---|
+| Exist only within one expression | Can be reused throughout the model |
+| Evaluated once during the calculation | Evaluated whenever the measure is called |
+| Cannot be referenced by other measures | Can be referenced by any report or measure |
+| Improve readability | Represent reusable business logic |
+
+A common pattern is to build reusable **measures** and then use **variables** to organize complex calculations.
+
+---
+
+## Summary
+
+Variables (`VAR`) are one of the most valuable features of DAX.
+
+They help you:
+
+- Write cleaner code.
+- Reduce repeated calculations.
+- Simplify debugging.
+- Improve readability.
+- Organize complex business logic.
+
+Although variables are optional, they are considered a best practice for nearly every professional DAX measure.
+
+---
+
+## Next Steps
+
+Now that you understand variables, continue with more advanced DAX topics:
+
+- [Iterators](/docs/dax/iterators)
+- [Time Intelligence](/docs/dax/time-intelligence)
+
+You'll use variables extensively when building iterator expressions, running totals, and advanced business calculations.
