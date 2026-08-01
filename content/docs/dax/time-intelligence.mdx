@@ -1,9 +1,175 @@
 ﻿---
-title: "Time Intelligence"
-description: Power BI documentation.
+
+## Running Totals
+
+A running total accumulates values over time.
+
+Instead of displaying sales for each individual period, a running total continuously adds each period to the previous one.
+
+Example:
+
+```dax
+Running Sales =
+CALCULATE(
+    [Total Sales],
+    FILTER(
+        ALL(DimDate[Date]),
+        DimDate[Date] <= MAX(DimDate[Date])
+    )
+)
+```
+
+Example output:
+
+| Month | Monthly Sales | Running Total |
+|---|---:|---:|
+| January | $50,000 | $50,000 |
+| February | $60,000 | $110,000 |
+| March | $45,000 | $155,000 |
+| April | $70,000 | $225,000 |
+
+Running totals are commonly used for revenue, production, inventory, and cumulative KPI dashboards.
+
 ---
 
-# Time Intelligence
+## Rolling 12-Month Sales
 
-Content coming soon.
+Rolling calculations smooth short-term fluctuations by evaluating the previous 12 months instead of a single period.
 
+Example:
+
+```dax
+Rolling 12 Months =
+CALCULATE(
+    [Total Sales],
+    DATESINPERIOD(
+        DimDate[Date],
+        MAX(DimDate[Date]),
+        -12,
+        MONTH
+    )
+)
+```
+
+Rolling periods are frequently used for:
+
+- Sales trends
+- Forecasting
+- Financial reporting
+- Manufacturing performance
+
+---
+
+## Year-over-Year (YoY) Growth
+
+Year-over-Year compares the current period with the same period from the previous year.
+
+Example:
+
+```dax
+Sales YoY % =
+DIVIDE(
+    [Total Sales] - [Sales Last Year],
+    [Sales Last Year]
+)
+```
+
+Example results:
+
+| Year | Sales | YoY Growth |
+|---|---:|---:|
+| 2025 | $500,000 | — |
+| 2026 | $575,000 | 15% |
+
+YoY comparisons help identify long-term business growth.
+
+---
+
+## Month-over-Month (MoM) Growth
+
+Month-over-Month compares the current month to the previous month.
+
+Example:
+
+```dax
+Sales Previous Month =
+CALCULATE(
+    [Total Sales],
+    DATEADD(
+        DimDate[Date],
+        -1,
+        MONTH
+    )
+)
+
+Sales MoM % =
+DIVIDE(
+    [Total Sales] - [Sales Previous Month],
+    [Sales Previous Month]
+)
+```
+
+MoM analysis is commonly used to monitor short-term trends and seasonal changes.
+
+---
+
+## Common Time Intelligence Mistakes
+
+Many Time Intelligence issues are caused by problems with the Date table rather than the DAX itself.
+
+Common mistakes include:
+
+- Using transaction dates without a dedicated Date table.
+- Forgetting to **Mark as Date Table**.
+- Missing dates in the calendar.
+- Using multiple unrelated Date tables.
+- Applying Time Intelligence functions to non-date columns.
+
+A complete, continuous Date table is essential for reliable calculations.
+
+---
+
+## Best Practices
+
+When working with Time Intelligence:
+
+- Create a dedicated Date dimension.
+- Mark it as the official Date table.
+- Use one Date table across the entire model.
+- Build reusable base measures such as `[Total Sales]`.
+- Base Time Intelligence measures on existing measures rather than repeating calculations.
+- Test calculations using slicers for Year, Quarter, and Month.
+
+Following these practices makes Time Intelligence measures easier to maintain and reuse.
+
+---
+
+## Summary
+
+Time Intelligence allows Power BI to perform sophisticated date-based calculations with relatively simple DAX.
+
+Common functions include:
+
+- `TOTALYTD()`
+- `TOTALMTD()`
+- `TOTALQTD()`
+- `DATESYTD()`
+- `DATEADD()`
+- `SAMEPERIODLASTYEAR()`
+
+Combined with `CALCULATE()`, these functions make it possible to build running totals, period comparisons, growth metrics, and executive dashboards.
+
+Mastering Time Intelligence is one of the final milestones toward becoming proficient in DAX.
+
+---
+
+## Next Steps
+
+Continue exploring advanced DAX concepts:
+
+- [ALL, ALLEXCEPT & ALLSELECTED](/docs/dax/all-functions)
+- [FILTER](/docs/dax/filter)
+- [RELATED & RELATEDTABLE](/docs/dax/related)
+- [LOOKUPVALUE](/docs/dax/lookupvalue)
+- [USERELATIONSHIP](/docs/dax/userelationship)
+- [Performance Optimization](/docs/dax/performance)
