@@ -1,0 +1,463 @@
+---
+title: ALL(), ALLEXCEPT(), ALLSELECTED() & REMOVEFILTERS()
+description: Learn how DAX filter removal functions modify filter context for percentages, rankings, running totals, and advanced calculations.
+---
+
+# ALL(), ALLEXCEPT(), ALLSELECTED() & REMOVEFILTERS()
+
+One of the greatest strengths of DAX is its ability to control filter context.
+
+Functions such as `ALL()`, `ALLEXCEPT()`, `ALLSELECTED()`, and `REMOVEFILTERS()` allow you to ignore, preserve, or modify filters while evaluating a calculation.
+
+These functions are commonly used for:
+
+- Percent of Total calculations
+- Running Totals
+- Ranking
+- Year-over-Year comparisons
+- Dynamic KPIs
+- Dashboard summaries
+
+Although these functions appear similar, each serves a different purpose.
+
+Understanding the differences is essential for writing advanced DAX.
+
+---
+
+## Why Remove Filters?
+
+Suppose a report is filtered to:
+
+```text
+Category = Bikes
+```
+
+Your measure:
+
+```dax
+Total Sales =
+SUM(FactSales[SalesAmount])
+```
+
+returns only Bike sales.
+
+Sometimes, however, you need to compare Bike sales to **all products**.
+
+That's where filter removal functions become useful.
+
+---
+
+## The ALL() Function
+
+`ALL()` removes filters from a table or column before evaluating an expression.
+
+General syntax:
+
+```dax
+ALL(Table)
+
+ALL(Column)
+```
+
+When used inside `CALCULATE()`, the specified filters are removed.
+
+Example:
+
+```dax
+Total Sales All Products =
+CALCULATE(
+    [Total Sales],
+    ALL(DimProduct)
+)
+```
+
+Even if the report is filtered to:
+
+```text
+Category = Bikes
+```
+
+the measure returns sales for **every product**.
+
+---
+
+## Removing a Single Column Filter
+
+`ALL()` can also remove filters from a specific column.
+
+Example:
+
+```dax
+Sales All Categories =
+CALCULATE(
+    [Total Sales],
+    ALL(DimProduct[Category])
+)
+```
+
+Only the **Category** filter is removed.
+
+Other filters, such as:
+
+- Brand
+- Color
+- Size
+
+continue to affect the calculation.
+
+This makes column-level filter removal much more targeted than removing filters from an entire table.
+
+---
+
+## How ALL() Changes Filter Context
+
+Normal report:
+
+```text
+Report Filter
+
+↓
+
+Category = Bikes
+
+↓
+
+FactSales
+
+↓
+
+$150,000
+```
+
+Using `ALL()`:
+
+```text
+Report Filter
+
+↓
+
+ALL(DimProduct)
+
+↓
+
+All Products
+
+↓
+
+FactSales
+
+↓
+
+$500,000
+```
+
+The original report filter is ignored, allowing the measure to calculate against the complete dataset.
+
+---
+
+## A Common Use Case
+
+One of the most common applications of `ALL()` is calculating percentages of the grand total.
+
+Example:
+
+```dax
+Percent of Total =
+DIVIDE(
+    [Total Sales],
+    CALCULATE(
+        [Total Sales],
+        ALL(DimProduct)
+    )
+)
+```
+
+The numerator respects the current report filters.
+
+The denominator removes the product filter and calculates the overall total.
+
+This pattern appears in countless Power BI reports and dashboards.
+
+---
+
+## ALLEXCEPT()
+
+`ALLEXCEPT()` removes all filters from a table **except** the columns you specify.
+
+General syntax:
+
+```dax
+ALLEXCEPT(
+    Table,
+    Column1,
+    Column2
+)
+```
+
+Example:
+
+```dax
+Sales by Category =
+CALCULATE(
+    [Total Sales],
+    ALLEXCEPT(
+        DimProduct,
+        DimProduct[Category]
+    )
+)
+```
+
+In this example, every filter on **DimProduct** is removed except **Category**.
+
+If the report contains filters for:
+
+- Brand
+- Color
+- Size
+
+those filters are ignored, while the Category filter remains active.
+
+---
+
+## ALLSELECTED()
+
+`ALLSELECTED()` removes filters applied inside the visual while preserving filters selected by the user.
+
+This makes it especially useful for interactive reports.
+
+Example:
+
+```dax
+Visual Total Sales =
+CALCULATE(
+    [Total Sales],
+    ALLSELECTED(DimProduct)
+)
+```
+
+Suppose a report has a slicer selecting:
+
+```text
+Category = Bikes
+```
+
+Inside a table visual, each row displays an individual product.
+
+`ALLSELECTED()` removes the row-level product filter but keeps the slicer selection.
+
+The result is the total sales for **all Bikes**, not just the current product.
+
+---
+
+## REMOVEFILTERS()
+
+`REMOVEFILTERS()` explicitly removes filters from a table or column.
+
+General syntax:
+
+```dax
+REMOVEFILTERS(Table)
+
+REMOVEFILTERS(Column)
+```
+
+Example:
+
+```dax
+Overall Sales =
+CALCULATE(
+    [Total Sales],
+    REMOVEFILTERS(DimProduct)
+)
+```
+
+This produces the same result as:
+
+```dax
+CALCULATE(
+    [Total Sales],
+    ALL(DimProduct)
+)
+```
+
+Many developers prefer `REMOVEFILTERS()` because its intent is immediately clear.
+
+---
+
+## Comparing the Filter Functions
+
+Although these functions appear similar, they behave differently.
+
+| Function | Purpose |
+|---|---|
+| `ALL()` | Removes all filters from a table or column. |
+| `ALLEXCEPT()` | Removes all filters except selected columns. |
+| `ALLSELECTED()` | Removes visual filters but keeps user selections. |
+| `REMOVEFILTERS()` | Explicitly removes filters from a table or column. |
+
+Choosing the correct function depends on the type of report you are building and how you want filters to behave.
+
+---
+
+## Choosing the Right Function
+
+Use **ALL()** when you need to ignore all filters.
+
+Example:
+
+```dax
+Percent of Total =
+DIVIDE(
+    [Total Sales],
+    CALCULATE(
+        [Total Sales],
+        ALL(DimProduct)
+    )
+)
+```
+
+Use **ALLEXCEPT()** when one or more filters should remain active.
+
+Use **ALLSELECTED()** when calculations should respect slicers but ignore the current visual's row context.
+
+Use **REMOVEFILTERS()** when your goal is simply to remove filters and make the code easier to read.
+
+---
+
+## Real Business Examples
+
+These functions appear in many Power BI reports.
+
+| Business Requirement | Function |
+|---|---|
+| Percent of Grand Total | `ALL()` |
+| Sales Within Category | `ALLEXCEPT()` |
+| Visual Totals | `ALLSELECTED()` |
+| KPI Cards | `REMOVEFILTERS()` |
+
+Understanding the differences between these functions is essential for building accurate and interactive reports.
+
+---
+
+## Percent of Total
+
+One of the most common uses of filter functions is calculating a percentage of the overall total.
+
+Example:
+
+```dax
+Percent of Total =
+DIVIDE(
+    [Total Sales],
+    CALCULATE(
+        [Total Sales],
+        ALL(DimProduct)
+    )
+)
+```
+
+How it works:
+
+1. The numerator calculates sales for the current filter context.
+2. The denominator removes the Product filter.
+3. The result is the percentage of overall sales.
+
+Example:
+
+| Category | Sales | Percent of Total |
+|---|---:|---:|
+| Bikes | $150,000 | 30% |
+| Clothing | $100,000 | 20% |
+| Accessories | $250,000 | 50% |
+
+---
+
+## Ranking Products
+
+Filter functions are commonly used with `RANKX()`.
+
+Example:
+
+```dax
+Product Rank =
+RANKX(
+    ALL(DimProduct),
+    [Total Sales]
+)
+```
+
+Using `ALL()` removes the current product filter so every product is ranked against the complete list.
+
+Without `ALL()`, every product would rank as **1** because only the current row would be visible.
+
+---
+
+## Common Mistakes
+
+The most common mistakes include:
+
+- Using `ALL()` when `ALLSELECTED()` is required.
+- Removing more filters than intended.
+- Forgetting that `ALL(Table)` removes every filter on the table.
+- Applying `ALL()` outside of `CALCULATE()`.
+- Expecting `ALLSELECTED()` to ignore slicers.
+
+Understanding which filters remain active is the key to writing correct DAX.
+
+---
+
+## Best Practices
+
+When working with filter functions:
+
+- Use `REMOVEFILTERS()` when your intention is simply to remove filters.
+- Use `ALL()` for grand totals and rankings.
+- Use `ALLEXCEPT()` when one or more filters should remain.
+- Use `ALLSELECTED()` for interactive reports that use slicers.
+- Keep measures simple by combining filter functions with reusable base measures.
+
+Filter functions become much easier to understand when each measure has a single purpose.
+
+---
+
+## Performance Considerations
+
+Filter functions are generally efficient because they modify filter context rather than looping through rows.
+
+However, performance can decrease when they are combined with:
+
+- Large iterator functions (`SUMX()`, `FILTER()`)
+- Complex virtual tables
+- Multiple nested `CALCULATE()` statements
+
+When working with large models, test measures using **Performance Analyzer** to identify expensive calculations.
+
+---
+
+## Summary
+
+Filter functions control how DAX evaluates filter context.
+
+The four most common functions are:
+
+| Function | Purpose |
+|---|---|
+| `ALL()` | Removes all filters from a table or column. |
+| `ALLEXCEPT()` | Keeps specified filters while removing the rest. |
+| `ALLSELECTED()` | Keeps user selections but ignores visual-level filters. |
+| `REMOVEFILTERS()` | Explicitly removes filters for clearer code. |
+
+Mastering these functions is essential for building percentages, rankings, KPIs, and advanced analytical measures.
+
+---
+
+## Next Steps
+
+Continue learning advanced DAX functions:
+
+- [FILTER](/docs/dax/filter)
+- [RELATED & RELATEDTABLE](/docs/dax/related)
+- [LOOKUPVALUE](/docs/dax/lookupvalue)
+- [SELECTEDVALUE](/docs/dax/selectedvalue)
+
+These functions are frequently combined with filter functions to create powerful business calculations.
