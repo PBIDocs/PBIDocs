@@ -1,4 +1,288 @@
 ﻿---
+title: Time Intelligence
+description: Learn how DAX Time Intelligence functions perform year-to-date calculations, period comparisons, running totals, and trend analysis in Power BI.
+---
+
+# Time Intelligence
+
+Time Intelligence is a collection of DAX functions that simplify calculations involving dates.
+
+Instead of writing complex formulas to compare months, quarters, or years, DAX provides built-in functions that automatically understand time periods.
+
+Time Intelligence is commonly used to calculate:
+
+- Year-to-Date (YTD) Sales
+- Month-to-Date (MTD) Sales
+- Quarter-to-Date (QTD) Sales
+- Previous Year Sales
+- Year-over-Year Growth
+- Running Totals
+- Rolling 12-Month Averages
+
+These calculations are fundamental to business reporting and executive dashboards.
+
+---
+
+## Why Time Intelligence Matters
+
+Business users rarely want to see only today's numbers.
+
+Instead, they ask questions such as:
+
+- How much have we sold this year?
+- How does this month compare to last month?
+- Are sales increasing over time?
+- What was revenue last year?
+- What is our Year-over-Year growth?
+
+Time Intelligence functions answer these questions with relatively simple DAX.
+
+---
+
+## Date Table Requirements
+
+Time Intelligence requires a proper Date table.
+
+A typical model looks like:
+
+```text
+              DimDate
+                 |
+                 |
+FactSales -------+
+```
+
+The Date table should contain one row for every date.
+
+Typical columns include:
+
+| Column | Purpose |
+|---|---|
+| Date | Calendar date |
+| Year | Reporting year |
+| Quarter | Calendar quarter |
+| Month | Month name |
+| Month Number | Sort order |
+| Week | Week number |
+
+The Date table should span the entire reporting period—even if there are no sales on some dates.
+
+---
+
+## Mark as Date Table
+
+Power BI requires a dedicated Date table for many Time Intelligence functions.
+
+To mark a table as a Date table:
+
+1. Select the Date table.
+2. Open the **Table Tools** ribbon.
+3. Choose **Mark as Date Table**.
+4. Select the **Date** column.
+
+This allows DAX to correctly interpret calendar periods.
+
+---
+
+## Basic Date Model
+
+A common star schema looks like this:
+
+```text
+              DimDate
+                 |
+                 |
+DimCustomer --- FactSales --- DimProduct
+                 |
+                 |
+              DimStore
+```
+
+The **FactSales** table stores transactions.
+
+The **DimDate** table provides the calendar used for reporting.
+
+Almost every Time Intelligence calculation depends on this relationship.
+
+---
+
+## First Time Intelligence Measure
+
+Suppose you already have a basic measure:
+
+```dax
+Total Sales =
+SUM(FactSales[SalesAmount])
+```
+
+This returns sales for the current filter context.
+
+To calculate sales for the current year, DAX provides specialized Time Intelligence functions that build on this measure.
+
+You'll learn those functions next.
+
+---
+
+## Year-to-Date (YTD)
+
+Year-to-Date (YTD) calculates the cumulative value from the beginning of the year through the current date.
+
+The `TOTALYTD()` function makes this calculation simple.
+
+Example:
+
+```dax
+Sales YTD =
+TOTALYTD(
+    [Total Sales],
+    DimDate[Date]
+)
+```
+
+As new dates are selected, the measure automatically accumulates sales from January 1 through the current date.
+
+Example:
+
+| Month | Monthly Sales | Sales YTD |
+|---|---:|---:|
+| January | $50,000 | $50,000 |
+| February | $60,000 | $110,000 |
+| March | $45,000 | $155,000 |
+
+---
+
+## Month-to-Date (MTD)
+
+Month-to-Date (MTD) calculates the cumulative value from the beginning of the current month.
+
+Example:
+
+```dax
+Sales MTD =
+TOTALMTD(
+    [Total Sales],
+    DimDate[Date]
+)
+```
+
+This measure resets automatically at the beginning of each new month.
+
+---
+
+## Quarter-to-Date (QTD)
+
+Quarter-to-Date (QTD) accumulates values from the start of the current quarter.
+
+Example:
+
+```dax
+Sales QTD =
+TOTALQTD(
+    [Total Sales],
+    DimDate[Date]
+)
+```
+
+This is commonly used in financial reporting and quarterly performance dashboards.
+
+---
+
+## Previous Year Sales
+
+Comparing current performance to the previous year is one of the most common business requirements.
+
+The `SAMEPERIODLASTYEAR()` function returns the equivalent period from the previous year.
+
+Example:
+
+```dax
+Sales Last Year =
+CALCULATE(
+    [Total Sales],
+    SAMEPERIODLASTYEAR(DimDate[Date])
+)
+```
+
+If the current report shows:
+
+```text
+March 2026
+```
+
+the measure automatically evaluates:
+
+```text
+March 2025
+```
+
+---
+
+## Comparing Different Time Periods
+
+The `DATEADD()` function shifts the current filter by a specified interval.
+
+Example:
+
+```dax
+Sales Previous Month =
+CALCULATE(
+    [Total Sales],
+    DATEADD(
+        DimDate[Date],
+        -1,
+        MONTH
+    )
+)
+```
+
+Other examples include:
+
+```text
+-1 MONTH   Previous Month
+
+-1 QUARTER Previous Quarter
+
+-1 YEAR    Previous Year
+```
+
+This makes it easy to compare current performance with earlier periods.
+
+---
+
+## DATESYTD()
+
+Unlike `TOTALYTD()`, which returns a cumulative value, `DATESYTD()` returns a **table of dates** from the beginning of the year to the current date.
+
+It is often used inside `CALCULATE()`.
+
+Example:
+
+```dax
+Sales YTD =
+CALCULATE(
+    [Total Sales],
+    DATESYTD(DimDate[Date])
+)
+```
+
+Both approaches produce a Year-to-Date calculation, but `DATESYTD()` provides greater flexibility when building advanced measures.
+
+---
+
+## Choosing the Right Function
+
+| Requirement | Function |
+|---|---|
+| Year-to-Date | `TOTALYTD()` |
+| Month-to-Date | `TOTALMTD()` |
+| Quarter-to-Date | `TOTALQTD()` |
+| Previous Year | `SAMEPERIODLASTYEAR()` |
+| Shift Dates | `DATEADD()` |
+| Custom YTD Filters | `DATESYTD()` |
+
+These functions cover most of the Time Intelligence calculations used in business reporting.
+
+---
 
 ## Running Totals
 
