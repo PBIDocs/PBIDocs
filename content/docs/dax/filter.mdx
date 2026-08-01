@@ -1,0 +1,501 @@
+---
+title: FILTER()
+description: Learn how the FILTER function creates custom filter conditions for advanced DAX calculations.
+---
+
+# FILTER()
+
+The `FILTER()` function returns a table containing only rows that meet a specified condition.
+
+It is one of the most powerful functions in DAX because it allows you to create custom filter logic that goes beyond standard report filters.
+
+`FILTER()` is commonly used with:
+
+- `CALCULATE()`
+- Iterator functions (`SUMX()`, `AVERAGEX()`)
+- Virtual tables
+- Ranking calculations
+- Running totals
+- Advanced business rules
+
+Understanding `FILTER()` is a major step toward writing professional DAX.
+
+---
+
+## What Does FILTER() Do?
+
+The function evaluates each row in a table and keeps only the rows that satisfy a condition.
+
+General syntax:
+
+```dax
+FILTER(
+    Table,
+    Condition
+)
+```
+
+Example:
+
+```dax
+FILTER(
+    FactSales,
+    FactSales[SalesAmount] > 1000
+)
+```
+
+This returns only sales records where:
+
+```text
+SalesAmount > 1000
+```
+
+The result is a filtered table.
+
+---
+
+## How FILTER Works
+
+Imagine the following table:
+
+| Order | Sales Amount |
+|---|---:|
+| 1001 | 500 |
+| 1002 | 1500 |
+| 1003 | 2000 |
+| 1004 | 750 |
+
+Applying:
+
+```dax
+FILTER(
+    FactSales,
+    FactSales[SalesAmount] > 1000
+)
+```
+
+returns:
+
+| Order | Sales Amount |
+|---|---:|
+| 1002 | 1500 |
+| 1003 | 2000 |
+
+Rows that fail the condition are removed.
+
+---
+
+## FILTER Returns a Table
+
+One of the most important concepts in DAX is that:
+
+> FILTER does not return a number.
+
+It returns a table.
+
+Example:
+
+```dax
+FILTER(
+    FactSales,
+    FactSales[Quantity] > 10
+)
+```
+
+Result:
+
+```text
+Filtered FactSales Table
+```
+
+Because FILTER returns a table, it is commonly used inside functions that expect a table argument.
+
+---
+
+## FILTER with CALCULATE()
+
+The most common use of FILTER is inside `CALCULATE()`.
+
+Example:
+
+```dax
+Large Sales =
+CALCULATE(
+    [Total Sales],
+    FILTER(
+        FactSales,
+        FactSales[SalesAmount] > 1000
+    )
+)
+```
+
+How it works:
+
+1. FILTER creates a table containing sales greater than $1,000.
+2. CALCULATE applies that table as a filter.
+3. The measure returns sales for only those records.
+
+This pattern appears constantly in business reporting.
+
+---
+
+## Simple Business Example
+
+Suppose management wants to analyze high-value orders.
+
+Measure:
+
+```dax
+High Value Sales =
+CALCULATE(
+    [Total Sales],
+    FILTER(
+        FactSales,
+        FactSales[SalesAmount] >= 5000
+    )
+)
+```
+
+The measure ignores smaller orders and evaluates only transactions above $5,000.
+
+This type of calculation would be difficult to achieve using report filters alone.
+
+---
+
+## Why FILTER Is Important
+
+Many DAX functions apply simple filters automatically.
+
+For example:
+
+```dax
+CALCULATE(
+    [Total Sales],
+    DimProduct[Category] = "Bikes"
+)
+```
+
+However, more complex conditions require FILTER.
+
+Examples include:
+
+- Sales greater than a threshold
+- Multiple conditions
+- Dynamic comparisons
+- Date ranges
+- Ranking calculations
+
+FILTER provides the flexibility needed for these advanced scenarios.
+
+---
+
+## Multiple Conditions
+
+`FILTER()` can evaluate more than one condition at the same time.
+
+Example:
+
+```dax
+Large Bike Sales =
+CALCULATE(
+    [Total Sales],
+    FILTER(
+        FactSales,
+        FactSales[SalesAmount] > 1000 &&
+        FactSales[Category] = "Bikes"
+    )
+)
+```
+
+Both conditions must be true.
+
+The measure returns only Bike sales where the sales amount exceeds $1,000.
+
+---
+
+## Using AND and OR
+
+Multiple conditions can be combined using logical operators.
+
+### AND (`&&`)
+
+Every condition must be true.
+
+```dax
+FILTER(
+    FactSales,
+    FactSales[Quantity] > 10 &&
+    FactSales[SalesAmount] > 1000
+)
+```
+
+Result:
+
+```text
+Quantity > 10
+
+AND
+
+SalesAmount > 1000
+```
+
+---
+
+### OR (`||`)
+
+Only one condition needs to be true.
+
+```dax
+FILTER(
+    FactSales,
+    FactSales[Category] = "Bikes" ||
+    FactSales[Category] = "Accessories"
+)
+```
+
+Result:
+
+```text
+Bikes
+
+OR
+
+Accessories
+```
+
+---
+
+## Filtering Date Ranges
+
+`FILTER()` is frequently used with dates.
+
+Example:
+
+```dax
+Sales This Year =
+CALCULATE(
+    [Total Sales],
+    FILTER(
+        DimDate,
+        DimDate[Year] = 2026
+    )
+)
+```
+
+Only dates from 2026 are included in the calculation.
+
+Although Time Intelligence functions are usually preferred for standard calendar calculations, `FILTER()` is useful for custom date logic.
+
+---
+
+## FILTER with ALL()
+
+One of the most common patterns combines `FILTER()` with `ALL()`.
+
+Example:
+
+```dax
+Running Sales =
+CALCULATE(
+    [Total Sales],
+    FILTER(
+        ALL(DimDate),
+        DimDate[Date] <= MAX(DimDate[Date])
+    )
+)
+```
+
+How it works:
+
+1. `ALL()` removes the current date filter.
+2. `FILTER()` returns all dates up to the current date.
+3. `CALCULATE()` evaluates sales over that date range.
+
+This pattern creates a running total.
+
+---
+
+## Dynamic Business Rules
+
+Unlike simple filters, `FILTER()` can compare one value to another.
+
+Example:
+
+```dax
+Above Average Sales =
+CALCULATE(
+    [Total Sales],
+    FILTER(
+        FactSales,
+        FactSales[SalesAmount] >
+            AVERAGE(FactSales[SalesAmount])
+    )
+)
+```
+
+Instead of using a fixed value such as:
+
+```text
+SalesAmount > 1000
+```
+
+the threshold changes automatically based on the average sales amount.
+
+This allows business rules to adapt as data changes.
+
+---
+
+## Common FILTER Examples
+
+| Requirement | Example |
+|---|---|
+| Orders over $1,000 | `SalesAmount > 1000` |
+| Current Year Sales | `Year = 2026` |
+| Bike Sales | `Category = "Bikes"` |
+| Multiple Conditions | `&&` |
+| Either Condition | `||` |
+| Running Totals | `FILTER(ALL(...))` |
+
+These patterns appear frequently in real-world Power BI reports and dashboards.
+
+---
+
+## FILTER() vs Simple CALCULATE Filters
+
+Not every calculation requires `FILTER()`.
+
+For simple filter conditions, use `CALCULATE()` directly.
+
+Example:
+
+```dax
+Bike Sales =
+CALCULATE(
+    [Total Sales],
+    DimProduct[Category] = "Bikes"
+)
+```
+
+This is cleaner and typically performs better than:
+
+```dax
+Bike Sales =
+CALCULATE(
+    [Total Sales],
+    FILTER(
+        DimProduct,
+        DimProduct[Category] = "Bikes"
+    )
+)
+```
+
+Whenever a simple filter expression is sufficient, prefer the first approach.
+
+Reserve `FILTER()` for situations where more advanced logic is required.
+
+---
+
+## When Should You Use FILTER()?
+
+Use `FILTER()` when you need to:
+
+- Compare values between rows.
+- Apply multiple complex conditions.
+- Build dynamic filters.
+- Create running totals.
+- Filter using calculations or measures.
+- Build virtual tables.
+
+If a simple column filter works, `FILTER()` is usually unnecessary.
+
+---
+
+## Performance Considerations
+
+`FILTER()` evaluates every row in the specified table.
+
+Example:
+
+```text
+FactSales
+
+250,000 Rows
+
+↓
+
+Evaluate Condition
+
+↓
+
+Return Matching Rows
+```
+
+For large tables, this can increase query execution time.
+
+To improve performance:
+
+- Filter the smallest table possible.
+- Avoid unnecessary nested `FILTER()` functions.
+- Use simple `CALCULATE()` filters whenever possible.
+- Reuse existing measures instead of repeating calculations.
+
+Efficient filtering can significantly improve report responsiveness.
+
+---
+
+## Common Beginner Mistakes
+
+Avoid these common issues:
+
+- Using `FILTER()` when a simple `CALCULATE()` filter would work.
+- Filtering an entire fact table unnecessarily.
+- Forgetting that `FILTER()` returns a **table**, not a value.
+- Creating overly complex nested conditions.
+- Ignoring performance when filtering very large datasets.
+
+Choosing the simplest solution usually produces the best results.
+
+---
+
+## Best Practices
+
+When writing DAX with `FILTER()`:
+
+- Keep filter conditions easy to read.
+- Use variables (`VAR`) to simplify complex expressions.
+- Prefer dimension tables for filtering when possible.
+- Combine `FILTER()` with `CALCULATE()` for advanced business logic.
+- Test measures with slicers and different filter combinations.
+
+Readable DAX is easier to debug and maintain.
+
+---
+
+## Summary
+
+The `FILTER()` function creates a table containing only rows that satisfy a specified condition.
+
+It is commonly used with:
+
+- `CALCULATE()`
+- Iterator functions
+- Running totals
+- Ranking calculations
+- Dynamic business rules
+
+Although `FILTER()` is one of the most powerful DAX functions, it should be used only when simple filter expressions are not sufficient.
+
+Learning when **not** to use `FILTER()` is just as important as learning when to use it.
+
+---
+
+## Next Steps
+
+Continue learning additional DAX functions:
+
+- [RELATED & RELATEDTABLE](/docs/dax/related)
+- [LOOKUPVALUE](/docs/dax/lookupvalue)
+- [SELECTEDVALUE](/docs/dax/selectedvalue)
+- [SWITCH](/docs/dax/switch)
+
+These functions are frequently combined with `FILTER()` to build powerful business calculations.
