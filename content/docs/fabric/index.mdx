@@ -20,3 +20,20 @@ Microsoft Fabric combines:
 - Pipelines
 - Real-Time Intelligence
 
+import { Callout } from "@/components/docs/Callout"
+
+<Callout type="tip">
+Always build your Date table first.
+</Callout>
+
+<Callout type="warning">
+FILTER() returns a table, not a scalar value.
+</Callout>
+
+<Callout type="note">
+CALCULATE() changes filter context before evaluating an expression.
+</Callout>
+
+<Callout type="info">
+Iterator functions evaluate expressions row by row.
+</Callout>
