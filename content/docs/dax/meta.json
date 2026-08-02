@@ -2,15 +2,24 @@
   "title": "DAX",
   "pages": [
     "introduction",
-    "basics",
+    "syntax",
+    "variables",
     "measures",
     "calculated-columns",
-    "calculated-tables",
-    "filter-context",
     "row-context",
+    "filter-context",
     "calculate",
-    "variables",
-    "iterator",
-    "time-intelligence"
+    "iterators",
+    "time-intelligence",
+    "all-functions",
+    "filter",
+    "related",
+    "lookupvalue",
+    "selectedvalue",
+    "switch",
+    "rankx",
+    "topn",
+    "summarize",
+    "userelationship"
   ]
 }
