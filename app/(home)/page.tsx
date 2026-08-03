@@ -5,7 +5,7 @@ const topics = [
     title: 'DAX',
     description:
       'Learn measures, functions, filter context, and advanced calculations.',
-    href: '/docs/dax',
+    href: '/docs/dax/introduction',
   },
   {
     title: 'Power Query',
@@ -17,13 +17,31 @@ const topics = [
     title: 'Data Modeling',
     description:
       'Build efficient star schemas, relationships, and semantic models.',
-    href: '/docs/modeling',
+    href: '/docs/modeling/introduction',
   },
   {
     title: 'Microsoft Fabric',
     description:
       'Explore Lakehouse, Warehouse, pipelines, and modern analytics.',
     href: '/docs/fabric',
+  },
+  {
+    title: 'Visuals',
+    description:
+      'Design effective charts, tables, slicers, and custom formatting.',
+    href: '/docs/visuals/charts',
+  },
+  {
+    title: 'Power BI Service',
+    description:
+      'Manage workspaces, dashboards, scheduled refresh, and security.',
+    href: '/docs/power-bi-service/workspaces',
+  },
+  {
+    title: 'DAX Patterns',
+    description:
+      'Ready-made patterns for totals, ranking, and running calculations.',
+    href: '/docs/dax-patterns/totals',
   },
   {
     title: 'AI-Assisted Power BI',
@@ -60,14 +78,14 @@ export default function HomePage() {
 
         <div className="flex justify-center gap-4">
           <Link
-            href="/docs"
-            className="rounded-lg bg-blue-500 hover:bg-blue-400 text-white px-6 py-3 font-semibold text-black"
+            href="/docs/getting-started"
+            className="rounded-lg bg-blue-500 hover:bg-blue-400 text-white px-6 py-3 font-semibold"
           >
             Browse Documentation
           </Link>
 
           <Link
-            href="/docs/getting-started"
+            href="/docs/getting-started/introduction"
             className="rounded-lg border px-6 py-3 font-semibold hover:bg-muted"
           >
             Get Started
