@@ -5,17 +5,18 @@
 
 
 :root {
-  /* pbidocs brand */
-  --primary: oklch(62.3% 0.214 259.815); /* blue-500 */
-  --primary-hover: oklch(54.6% 0.245 262.881); /* blue-600 */
-  --primary-muted: oklch(70.7% 0.165 254.624); /* blue-400 */
+  /* pbidocs brand: indigo-violet, distinct from the fumadocs neutral default */
+  --color-fd-primary: oklch(56% 0.20 291);
+  --color-fd-primary-foreground: oklch(98.5% 0 0);
+  --color-fd-ring: oklch(56% 0.2 291);
+  --primary-muted: oklch(68% 0.16 291);
+}
 
-  /* dark documentation theme */
-  --background: oklch(14.5% 0 0);
-  --foreground: oklch(98.5% 0 0);
-  --border: oklch(27.4% 0.006 286.033);
-  --muted: oklch(70.5% 0.015 286.067);
-
+.dark {
+  --color-fd-primary: oklch(74% 0.17 291);
+  --color-fd-primary-foreground: oklch(14.5% 0 0);
+  --color-fd-ring: oklch(74% 0.17 291);
+  --primary-muted: oklch(80% 0.13 291);
 }
 
 
@@ -32,7 +33,7 @@ html > body[data-scroll-locked] {
 /* Documentation links only */
 .prose p a,
 .prose li a {
-  color: var(--primary);
+  color: var(--color-fd-primary);
   text-decoration: none;
   position: relative;
   font-weight: 500;
@@ -75,7 +76,7 @@ html > body[data-scroll-locked] {
   bottom: -4px;
   width: 0;
   height: 2px;
-  background: var(--primary);
+  background: var(--color-fd-primary);
   transition: width 250ms ease;
 }
 .prose h1 a:hover::after,
