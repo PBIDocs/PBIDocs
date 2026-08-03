@@ -13,35 +13,6 @@
   content: "–";
   position: absolute;
   left: 0;
-  color: var(--muted);
+  color: var(--color-fd-muted-foreground);
   font-size: 0.85em;
-}
-
-/* Documentation links */
-.docs-link {
-  position: relative;
-  color: oklch(62.3% 0.214 259.815);
-  text-decoration: none;
-  transition: color 200ms ease;
-}
-
-.docs-link::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  bottom: -3px;
-  width: 100%;
-  height: 1px;
-  background: currentColor;
-  transform: scaleX(0);
-  transform-origin: left;
-  transition: transform 250ms ease;
-}
-
-.docs-link:hover {
-  color: oklch(70% 0.18 259.815);
-}
-
-.docs-link:hover::after {
-  transform: scaleX(1);
 }

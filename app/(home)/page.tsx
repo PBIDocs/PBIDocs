@@ -55,13 +55,13 @@ export default function HomePage() {
   return (
     <main className="relative overflow-hidden flex flex-col items-center text-center px-6 py-24">
      <div className="absolute inset-0 -z-10">
-      <div className="absolute left-1/2 top-0 h-[400px] w-[100%] -translate-x-1/2 rounded-full bg-blue-500/10 blur-3xl" />
+      <div className="absolute left-1/2 top-0 h-[400px] w-[100%] -translate-x-1/2 rounded-full bg-fd-primary/10 blur-3xl" />
      </div>
 
 
       {/* Hero */}
       <section className="max-w-4xl animate-in fade-in slide-in-from-bottom-4 duration-700">
-        <div className="mb-6 inline-flex rounded-full border px-4 py-1 text-sm text-muted-foreground">
+        <div className="mb-6 inline-flex rounded-full border px-4 py-1 text-sm text-fd-muted-foreground">
          Power BI + AI Documentation Platform
         </div>
 
@@ -71,7 +71,7 @@ export default function HomePage() {
         Build smarter with AI.
         </h1>
 
-        <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-10">
+        <p className="text-lg text-fd-muted-foreground max-w-2xl mx-auto mb-10">
           Learn DAX, Power Query, Data Modeling, Microsoft Fabric, and AI-assisted
           Power BI development with clear documentation and practical examples.
         </p>
@@ -79,14 +79,14 @@ export default function HomePage() {
         <div className="flex justify-center gap-4">
           <Link
             href="/docs/getting-started"
-            className="rounded-lg bg-blue-500 hover:bg-blue-400 text-white px-6 py-3 font-semibold"
+            className="rounded-lg bg-fd-primary hover:bg-fd-primary/90 text-fd-primary-foreground px-6 py-3 font-semibold"
           >
             Browse Documentation
           </Link>
 
           <Link
             href="/docs/getting-started/introduction"
-            className="rounded-lg border px-6 py-3 font-semibold hover:bg-muted"
+            className="rounded-lg border px-6 py-3 font-semibold hover:bg-fd-muted"
           >
             Get Started
           </Link>
@@ -99,12 +99,12 @@ export default function HomePage() {
           <Link
             key={topic.title}
             href={topic.href}
-            className="group rounded-xl border border-border p-6 text-left transition-all duration-300 hover:-translate-y-1 hover:border-blue-500/50 hover:bg-accent/50 hover:shadow-md">
-            <h2 className="text-xl font-semibold mb-2 group-hover:text-blue-500 transition-colors">
+            className="group rounded-xl border border-fd-border p-6 text-left transition-all duration-300 hover:-translate-y-1 hover:border-fd-primary/50 hover:bg-fd-accent/50 hover:shadow-md">
+            <h2 className="text-xl font-semibold mb-2 group-hover:text-fd-primary transition-colors">
               {topic.title}
             </h2>
 
-            <p className="text-muted-foreground">
+            <p className="text-fd-muted-foreground">
               {topic.description}
             </p>
           </Link>
