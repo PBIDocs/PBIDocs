@@ -6,6 +6,7 @@ const withMDX = createMDX();
 const config = {
   reactStrictMode: true,
   output: 'export', // <--- ADD THIS LINE
+  agentRules: false,
 };
 
 export default withMDX(config);
