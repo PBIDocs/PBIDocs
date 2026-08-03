@@ -93,3 +93,22 @@ html > body[data-scroll-locked] {
   font-size: 0.875em;
   font-weight: 500;
 }
+
+/* Code blocks: brand-tinted surface, distinct from the page background
+   (fd-card and fd-background are only ~3% apart in lightness, which
+   reads as a faint band around the rounded edges otherwise) */
+figure.shiki {
+  background: color-mix(in srgb, var(--color-fd-card) 96%, var(--color-fd-primary) 4%);
+  border-color: color-mix(in srgb, var(--color-fd-primary) 18%, transparent);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--color-fd-primary) 6%, transparent),
+    0 8px 24px -12px color-mix(in srgb, var(--color-fd-primary) 20%, transparent);
+}
+
+.dark figure.shiki {
+  background: color-mix(in srgb, var(--color-fd-card) 92%, var(--color-fd-primary) 8%);
+  border-color: color-mix(in srgb, var(--color-fd-primary) 30%, transparent);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--color-fd-primary) 10%, transparent),
+    0 8px 24px -12px color-mix(in srgb, var(--color-fd-primary) 35%, transparent);
+}
