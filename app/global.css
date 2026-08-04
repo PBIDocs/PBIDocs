@@ -103,23 +103,15 @@ html > body[data-scroll-locked] {
   font-weight: 500;
 }
 
-/* Code blocks: brand-tinted surface, distinct from the page background
-   (fd-card and fd-background are only ~3% apart in lightness, which
-   reads as a faint band around the rounded edges otherwise) */
+/* Code blocks: a plain neutral surface (fd-secondary), distinct enough from
+   the page background to avoid a faint band at the rounded corners, same
+   idea as Cloudflare/Supabase's docs - the box itself stays neutral, and
+   color only shows up in the syntax-highlighted tokens inside it. A tinted
+   background + glow was tried here previously; the glow's downward offset
+   made the box look asymmetric (different color top vs. bottom) and the
+   tint made the whole box read as purple instead of just the code tokens. */
 figure.shiki {
-  background: color-mix(in srgb, var(--color-fd-card) 96%, var(--color-fd-primary) 4%);
-  border-color: color-mix(in srgb, var(--color-fd-primary) 18%, transparent);
-  box-shadow:
-    0 0 0 1px color-mix(in srgb, var(--color-fd-primary) 6%, transparent),
-    0 8px 24px -12px color-mix(in srgb, var(--color-fd-primary) 20%, transparent);
-}
-
-.dark figure.shiki {
-  background: color-mix(in srgb, var(--color-fd-card) 92%, var(--color-fd-primary) 8%);
-  border-color: color-mix(in srgb, var(--color-fd-primary) 30%, transparent);
-  box-shadow:
-    0 0 0 1px color-mix(in srgb, var(--color-fd-primary) 10%, transparent),
-    0 8px 24px -12px color-mix(in srgb, var(--color-fd-primary) 35%, transparent);
+  background: var(--color-fd-secondary);
 }
 
 /* Plain-text diagrams (```text fences) get no syntax highlighting at all,
