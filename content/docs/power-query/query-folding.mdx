@@ -1,9 +1,190 @@
-﻿---
+---
 title: "Query Folding"
-description: Power BI documentation.
+description: Learn how Power Query's query folding pushes transformations back to the source for much faster refreshes.
 ---
 
 # Query Folding
 
-Content coming soon.
+Query folding translates Power Query steps into a query the source system runs itself, instead of Power BI pulling raw data and transforming it locally.
 
+```text
+Power Query Steps
+        |
+        | folded into
+        |
+Native Source Query (e.g. SQL)
+        |
+        | source does the work
+        |
+Only the result is transferred
+```
+
+When folding works, the source database does the filtering, sorting, and grouping — and only the final, already-reduced result crosses the network.
+
+---
+
+## Without Query Folding
+
+```text
+Source Database
+     |
+     | sends entire table
+     |
+Power BI
+     |
+     | filters, groups locally
+     |
+Final Result
+```
+
+Every row in the source table gets transferred, even if the transformations only end up keeping a small fraction of them.
+
+---
+
+## With Query Folding
+
+```text
+Power Query Steps
+     |
+     | translated to SQL
+     |
+Source Database
+     |
+     | filters, groups there
+     |
+Only final rows sent
+     |
+Power BI
+```
+
+The source system does the heavy lifting, and the network transfer is limited to whatever the final, filtered result actually needs.
+
+---
+
+## Which Steps Fold
+
+Folding support depends on the data source and the specific transformation.
+
+| Step | Typically Folds |
+|---|---|
+| Filter rows | Yes |
+| Remove columns | Yes |
+| Group by | Yes |
+| Sort | Yes |
+| Change type | Usually |
+| Custom column with complex M | Often not |
+| Merge with a non-foldable query | No |
+
+Relational databases (SQL Server, PostgreSQL, Snowflake, and similar) generally support folding well. File sources like Excel or CSV don't fold at all, since there's no query engine on the other end to push work to.
+
+---
+
+## Checking Whether a Query Folds
+
+Right-click a step in **Applied Steps** and check whether **View Native Query** is available.
+
+```text
+Step
+  |
+  | right-click
+  |
+"View Native Query" available?
+      |
+      +-- Yes -> folding up to this point
+      |
+      +-- No  -> folding stopped earlier
+```
+
+If the option is greyed out, folding has already stopped by that step — everything from there onward runs locally in Power Query instead of at the source.
+
+---
+
+## What Breaks Folding
+
+Certain transformations force Power Query to stop folding and start processing locally.
+
+```text
+Folding
+   |
+   | breaks at
+   |
+Complex custom M expressions
+Merging with a non-foldable source
+Adding an index column
+Certain text/date functions with no SQL equivalent
+```
+
+Once folding breaks at a step, every step after it also runs locally, even if those later steps individually could have folded.
+
+---
+
+## Ordering Steps to Preserve Folding
+
+Because a broken step stops folding for everything after it, putting foldable steps (filters, column removal) before non-foldable ones (custom columns, complex logic) keeps as much work as possible pushed to the source.
+
+```text
+Good order:
+Filter -> Remove Columns -> Group By -> Custom Column
+
+Worse order:
+Custom Column -> Filter -> Remove Columns -> Group By
+```
+
+In the second example, folding stops at the custom column, so the filter and group-by that follow run locally even though they could have folded.
+
+---
+
+## Why It Matters for Refresh Performance
+
+```text
+No Folding: entire table transferred, then processed locally
+Folding:    source processes and filters, small result transferred
+```
+
+For large source tables, the difference between folding and not folding can turn a refresh from minutes into seconds — or the reverse, if folding is accidentally broken partway through a query.
+
+---
+
+## Best Practices
+
+- Put filtering and column removal steps early, before custom columns or complex transformations.
+- Check **View Native Query** periodically while building a query against a relational source.
+- Avoid unnecessary custom M columns when an equivalent built-in transformation would fold instead.
+- Expect no folding at all from flat file sources (Excel, CSV, JSON) — there's no source query engine to push work to.
+
+---
+
+## Common Mistakes
+
+### Adding Custom Columns Too Early
+
+A custom column added before filtering forces every later step, including the filter, to run locally instead of at the source.
+
+### Assuming All Sources Fold
+
+Folding is a feature of certain connectors, mainly relational databases. Expecting the same performance benefit from a CSV or Excel source will lead to confusion about why refresh is slow.
+
+### Not Checking Native Query
+
+Without checking **View Native Query**, it's easy to build a query that silently stopped folding several steps ago, with no obvious symptom other than a slower-than-expected refresh.
+
+---
+
+## Query Folding Checklist
+
+Before finalizing a query against a relational source:
+
+- Filtering and column removal happen before custom or complex steps.
+- **View Native Query** has been checked at key points in the step list.
+- Any step known to break folding is placed as late as possible.
+- Refresh performance has been tested against production-scale source data.
+
+---
+
+## Next Steps
+
+Continue learning Power Query:
+
+- [Introduction](/docs/power-query/introduction)
+- [Transformations](/docs/power-query/transformations)
+- [Merge Queries](/docs/power-query/merge-queries)

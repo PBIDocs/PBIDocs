@@ -1,9 +1,189 @@
-﻿---
+---
 title: "Calculated Tables"
-description: Power BI documentation.
+description: Learn how DAX calculated tables generate new tables inside a Power BI data model.
 ---
 
 # Calculated Tables
 
-Content coming soon.
+A calculated table is a table whose rows come from a DAX expression, instead of an imported data source.
 
+```text
+Data Source Tables
+        |
+        | loaded via Power Query
+        |
+   Regular Tables
+
+DAX Expression
+        |
+        | evaluated once, at refresh
+        |
+   Calculated Table
+```
+
+The result becomes a real table in the model — it can have relationships, be used in visuals, and be referenced by other DAX just like any other table.
+
+---
+
+## Creating a Calculated Table
+
+From the **Modeling** ribbon in Power BI Desktop, select **New Table**, then enter a DAX expression that returns a table.
+
+Example:
+
+```dax
+ActiveProducts =
+FILTER(
+    DimProduct,
+    DimProduct[Status] = "Active"
+)
+```
+
+This creates a new table containing only the rows from `DimProduct` where `Status` equals `"Active"`.
+
+---
+
+## When Calculated Tables Are Evaluated
+
+Calculated tables are recalculated on every refresh, not on every interaction.
+
+```text
+Refresh
+   |
+   | recalculates
+   |
+Calculated Table
+```
+
+Unlike a measure, which recalculates constantly as filters change, a calculated table's rows stay fixed between refreshes.
+
+---
+
+## Common Uses
+
+### Building a Date Table
+
+```dax
+DimDate =
+CALENDAR(
+    DATE(2020, 1, 1),
+    DATE(2026, 12, 31)
+)
+```
+
+This generates one row per day across the specified range, commonly extended with calculated columns for Year, Month, and Quarter.
+
+### Combining Tables
+
+```dax
+AllProducts =
+UNION(
+    OnlineProducts,
+    RetailProducts
+)
+```
+
+Useful when the same kind of data arrives from two different sources that need to be modeled as one table.
+
+### Creating a Distinct Values Table
+
+```dax
+UniqueRegions =
+DISTINCT(DimStore[Region])
+```
+
+Useful as a clean lookup or filter table when the source data doesn't already provide one.
+
+### Summarizing Data into a New Table
+
+```dax
+SalesByCategory =
+SUMMARIZE(
+    FactSales,
+    DimProduct[Category],
+    "Total Sales", SUM(FactSales[SalesAmount])
+)
+```
+
+Produces one row per category with an aggregated total, useful as a simplified table for specific visuals.
+
+---
+
+## Calculated Tables vs. Power Query Tables
+
+| | Power Query Table | Calculated Table |
+|---|---|---|
+| Built with | M language | DAX |
+| Runs | During refresh, before load | During refresh, after load |
+| Can reference | External data sources | Only tables already in the model |
+| Best for | Shaping and cleaning source data | Deriving new tables from existing model data |
+
+A calculated table cannot reach out to an external data source — it can only work with tables and columns already loaded into the model.
+
+---
+
+## Calculated Tables vs. Measures
+
+A calculated table produces rows. A measure produces a single aggregated value.
+
+```text
+Calculated Table
+   |
+   | returns
+   |
+A table of rows
+
+Measure
+   |
+   | returns
+   |
+A single value
+```
+
+If the goal is a number to display in a card or chart, use a measure. If the goal is a new table to relate, filter by, or use as a slicer source, use a calculated table.
+
+---
+
+## Best Practices
+
+- Prefer Power Query for shaping raw source data; reserve calculated tables for logic that depends on the model itself.
+- Keep calculated tables small — they add to model size and refresh time just like any other table.
+- Use calculated tables for date tables, distinct value lists, and combining same-shape tables.
+- Avoid using a calculated table where a measure would do the job with less model overhead.
+
+---
+
+## Common Mistakes
+
+### Using a Calculated Table Instead of a Measure
+
+Building a calculated table just to hold a single aggregated number adds unnecessary model complexity. A measure is lighter and recalculates dynamically with filters.
+
+### Expecting Real-Time Updates
+
+Calculated tables only update on refresh. Expecting them to reflect filter or slicer changes in real time — the way a measure does — leads to confusing, seemingly "stuck" results.
+
+### Referencing External Sources Directly
+
+DAX calculated tables cannot query an external database directly. Any external data needs to already be loaded into the model as a regular table first.
+
+---
+
+## Calculated Table Checklist
+
+Before adding a calculated table to a model:
+
+- The result genuinely needs to be a table, not a single value.
+- The logic only depends on data already loaded into the model.
+- The table size is reasonable and won't meaningfully slow refresh.
+- A Power Query solution wasn't a better fit for shaping the same data.
+
+---
+
+## Next Steps
+
+Continue exploring DAX:
+
+- [Calculated Columns](/docs/dax/calculated-columns)
+- [SUMMARIZE](/docs/dax/summarize)
+- [FILTER](/docs/dax/filter)

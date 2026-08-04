@@ -1,9 +1,220 @@
-﻿---
+---
 title: "Transformations"
-description: Power BI documentation.
+description: Common Power Query transformations for cleaning and reshaping data before it loads into Power BI.
 ---
 
 # Transformations
 
-Content coming soon.
+A transformation is one step that changes the shape or content of a table — removing a column, filtering rows, splitting text, and so on.
 
+```text
+Raw Table
+   |
+   | transformation
+   |
+Cleaner Table
+```
+
+Every transformation applied through the Power Query Editor's UI is recorded as a step in the **Applied Steps** pane.
+
+---
+
+## Removing and Reordering Columns
+
+```text
+Before: ID | Name | Notes | Status
+After:  ID | Name | Status
+```
+
+Right-click a column header and choose **Remove**, or select the columns to keep and choose **Remove Other Columns**. Column order can be changed by dragging headers.
+
+---
+
+## Filtering Rows
+
+Row filters work like a spreadsheet's column filter, keeping only rows that match a condition.
+
+```text
+Before:
+Status
+-------
+Active
+Inactive
+Active
+
+After filtering Status = "Active":
+Status
+-------
+Active
+Active
+```
+
+Applied from the dropdown arrow on a column header, the same way filtering works in Excel.
+
+---
+
+## Changing Data Types
+
+Power Query infers a type for each column, but it's often necessary to correct it — a date stored as text, or a number stored as text with formatting.
+
+```text
+"1,250" (text)
+     |
+     | Change Type -> Whole Number
+     |
+1250 (number)
+```
+
+Set from the column header's type icon, or the **Transform > Data Type** menu.
+
+---
+
+## Splitting Columns
+
+A single column can be split into multiple columns, by a delimiter or a fixed number of characters.
+
+```text
+Before:
+Full Name
+------------
+Alice Smith
+
+After splitting by space:
+First Name | Last Name
+-----------|------------
+Alice      | Smith
+```
+
+Available from **Transform > Split Column**.
+
+---
+
+## Merging Columns
+
+The reverse of splitting — combining two or more columns into one.
+
+```text
+First Name | Last Name        Full Name
+-----------|------------  ->  ------------
+Alice      | Smith            Alice Smith
+```
+
+Available from **Transform > Merge Columns**, with a chosen separator.
+
+---
+
+## Pivoting and Unpivoting
+
+**Unpivot** turns columns into rows, commonly needed when source data arrives in a wide, spreadsheet-style format.
+
+```text
+Before (wide):
+Product | Jan  | Feb  | Mar
+--------|------|------|------
+Tire A  | 100  | 120  | 90
+
+After unpivoting:
+Product | Month | Sales
+--------|-------|-------
+Tire A  | Jan   | 100
+Tire A  | Feb   | 120
+Tire A  | Mar   | 90
+```
+
+Unpivoted data fits Power BI's star schema model far better than a wide, one-column-per-period layout.
+
+**Pivot** does the reverse — turning row values into columns — though it's used less often, since most Power BI models prefer the long/unpivoted shape.
+
+---
+
+## Grouping
+
+**Group By** aggregates rows, similar to a `GROUP BY` in SQL.
+
+```text
+Before:
+Category | Sales
+---------|-------
+Bikes    | 100
+Bikes    | 150
+Gear     | 80
+
+After grouping by Category, summing Sales:
+Category | Total Sales
+---------|-------------
+Bikes    | 250
+Gear     | 80
+```
+
+Available from **Transform > Group By**, with a choice of aggregation (sum, count, average, and others).
+
+---
+
+## Replacing Values
+
+Replaces specific values throughout a column, useful for standardizing inconsistent source data.
+
+```text
+Before: "USA", "U.S.A", "United States"
+After:  "United States", "United States", "United States"
+```
+
+Applied from **Transform > Replace Values**.
+
+---
+
+## Adding Custom Columns
+
+A new column can be computed from an M expression referencing other columns.
+
+```text
+Custom Column: [Quantity] * [Unit Price]
+```
+
+Available from **Add Column > Custom Column**, useful for calculations that should happen at load time rather than as a DAX measure.
+
+---
+
+## Best Practices
+
+- Filter rows and remove unneeded columns as early as possible, so later steps process less data.
+- Prefer unpivoted (long) data over wide, one-column-per-period layouts for anything feeding a star schema.
+- Use **Group By** in Power Query for aggregations needed at load time, not as a workaround for DAX.
+- Name each step something meaningful instead of leaving the auto-generated "Changed Type1" style names.
+
+---
+
+## Common Mistakes
+
+### Transforming Wide Data Without Unpivoting
+
+Loading spreadsheet-style wide data (one column per month) directly into the model makes it awkward to filter, slice, and aggregate. Unpivoting first fixes this at the source.
+
+### Reordering Steps Without Checking Dependencies
+
+Moving a step earlier or later in the Applied Steps list can break later steps that assumed a certain column name or type was already in place.
+
+### Doing Heavy Transformation Work After Load
+
+Trying to fix a poorly-shaped table with DAX after it's already loaded is usually far more complex than fixing the shape in Power Query before load.
+
+---
+
+## Transformation Checklist
+
+Before loading a query into the model:
+
+- Unnecessary columns and rows are removed.
+- Data types are explicitly set, not left to automatic inference alone.
+- Wide, spreadsheet-style data has been unpivoted where appropriate.
+- Step names are descriptive enough for someone else to follow later.
+
+---
+
+## Next Steps
+
+Continue learning Power Query:
+
+- [Power Query Editor](/docs/power-query/editor)
+- [Merge Queries](/docs/power-query/merge-queries)
+- [Query Folding](/docs/power-query/query-folding)

@@ -1,9 +1,189 @@
-﻿---
-title: "Power Bi Overview"
-description: Power BI documentation.
+---
+title: "Power BI Overview"
+description: How Power BI licensing tiers work, and how it fits into the broader Microsoft Fabric ecosystem.
 ---
 
-# Power Bi Overview
+# Power BI Overview
 
-Content coming soon.
+[Introduction](/docs/getting-started/introduction) covers what Power BI does. This page covers how it's licensed, and where it fits alongside the rest of Microsoft's data platform.
 
+```text
+Power BI
+   |
+   +-- Licensing tiers
+   |
+   +-- Microsoft Fabric integration
+   |
+   +-- Typical roles
+```
+
+---
+
+## Licensing Tiers
+
+| Tier | Who It's For | Key Limitation |
+|---|---|---|
+| Free | Individual, local-only use | Can't share to a workspace |
+| Pro | Individual contributors sharing reports | Per-user license, shared capacity limits apply |
+| Premium Per User (PPU) | Power users needing Premium features individually | Everyone viewing PPU content also needs a PPU license |
+| Premium / Fabric Capacity | Organization-wide, capacity-based | Licensed by capacity (SKU), not per user |
+
+Most individuals start on Free or Pro. Larger organizations typically move important workspaces to Premium or Fabric capacity, which removes per-user licensing friction for report *viewers* (though report *creators* still generally need Pro or PPU).
+
+---
+
+## Free vs. Pro
+
+```text
+Free
+  |
+  | can build reports locally
+  |
+  | cannot share to a workspace
+  |
+Pro
+  |
+  | can publish to shared workspaces
+  |
+  | can consume Pro content shared by others
+```
+
+A Free license is enough to learn Power BI Desktop and build personal reports. Collaborating with a team requires Pro (or a workspace hosted on Premium/Fabric capacity, which can let Free users view content).
+
+---
+
+## Premium and Fabric Capacity
+
+Premium (and its successor, Microsoft Fabric capacity) is licensed by compute capacity rather than by individual user.
+
+```text
+Capacity (e.g. F64)
+     |
+     | shared across
+     |
+Multiple workspaces
+```
+
+This unlocks features unavailable on shared/Pro-only capacity: larger dataset sizes, more frequent refresh, paginated reports, and dataflows — while also letting users with only a Free license view content in a Premium-backed workspace.
+
+---
+
+## Power BI and Microsoft Fabric
+
+Microsoft Fabric is Microsoft's unified data platform, and Power BI is one of its workloads.
+
+```text
+Microsoft Fabric
+   |
+   +-- Power BI (reporting & visualization)
+   |
+   +-- Data Factory (data integration)
+   |
+   +-- Synapse Data Engineering (big data processing)
+   |
+   +-- Synapse Data Science (ML/AI)
+   |
+   +-- OneLake (unified data storage)
+```
+
+A Power BI dataset can now sit directly on top of Fabric's OneLake, sharing storage with pipelines and data engineering workloads instead of requiring a separate copy of the data.
+
+---
+
+## Power BI and Microsoft 365
+
+Power BI integrates with the broader Microsoft 365 suite.
+
+```text
+Power BI Report
+      |
+      +-- Embed in Teams
+      |
+      +-- Embed in SharePoint
+      |
+      +-- Export to Excel / PowerPoint
+```
+
+Reports can be pinned directly inside a Teams channel, embedded in a SharePoint page, or exported for use in other Office documents.
+
+---
+
+## Typical Roles
+
+Power BI is used differently depending on the role.
+
+```text
+Report Consumer
+     |
+     | views dashboards and reports (Viewer access)
+     |
+Report Author
+     |
+     | builds reports in Desktop, publishes to the Service
+     |
+Data Modeler
+     |
+     | designs the underlying data model and DAX measures
+     |
+Administrator
+     |
+     | manages tenant settings, capacity, and governance
+```
+
+Smaller teams often have one person filling several of these roles. Larger organizations typically separate them, with dedicated data modelers building the semantic model that many report authors build on top of.
+
+---
+
+## Choosing a Starting License
+
+| Situation | Recommended Starting Point |
+|---|---|
+| Learning Power BI individually | Free |
+| Sharing reports with a small team | Pro |
+| Building an org-wide reporting platform | Premium / Fabric capacity |
+| Working with Fabric data engineering pipelines | Fabric capacity |
+
+---
+
+## Best Practices
+
+- Start with Free or Pro for learning and small-scale sharing; move to capacity-based licensing once an organization needs it broadly.
+- Understand the difference between what a *license* enables (create vs. view) before assuming a feature is unavailable.
+- Consider Fabric capacity when Power BI needs to share data with other data engineering or data science workloads.
+- Assign report-authoring roles deliberately in larger teams, rather than letting model design happen ad hoc across many individual reports.
+
+---
+
+## Common Mistakes
+
+### Assuming Pro Licenses Scale Indefinitely
+
+Per-user Pro licensing works well for small teams, but becomes expensive and harder to manage at scale — Premium/Fabric capacity is usually more cost-effective for larger viewer populations.
+
+### Not Realizing Viewers Need Licensing Too
+
+Even to *view* certain content, users need at least a Free license and, depending on the workspace's capacity, sometimes Pro. Assuming reports are viewable by literally anyone in an organization without any license can lead to access surprises.
+
+### Treating Fabric as Unrelated to Power BI
+
+Since Fabric absorbed and extended much of what used to be Premium-only Power BI capacity, treating them as separate products can lead to missing capabilities — like sharing a dataset's storage directly with a data engineering pipeline.
+
+---
+
+## Overview Checklist
+
+Before planning a Power BI rollout:
+
+- The right licensing tier is chosen for the team's size and sharing needs.
+- Report author vs. report consumer licensing requirements are both accounted for.
+- Fabric capacity has been considered if data engineering or data science workloads are also in scope.
+- Roles (author, modeler, administrator) are clear enough to avoid duplicated or conflicting model ownership.
+
+---
+
+## Next Steps
+
+Continue getting started with Power BI:
+
+- [Introduction](/docs/getting-started/introduction)
+- [Installation](/docs/getting-started/installation)
