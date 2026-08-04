@@ -1,9 +1,167 @@
-﻿---
+---
 title: "Totals"
-description: Power BI documentation.
+description: Common DAX patterns for calculating totals, grand totals, and totals that ignore filters.
 ---
 
 # Totals
 
-Content coming soon.
+"Total" sounds simple, but DAX offers several different kinds depending on which filters should — and shouldn't — apply.
 
+```text
+Total
+  |
+  +-- Filtered total (respects slicers/filters)
+  |
+  +-- Grand total (ignores row-level filters)
+  |
+  +-- Total ignoring one specific filter
+```
+
+---
+
+## Basic Total
+
+A simple `SUM()` respects whatever filter context is currently active.
+
+```dax
+Total Sales =
+SUM(FactSales[SalesAmount])
+```
+
+In a table visual grouped by Category, this measure automatically returns the total for each category, because the visual applies a filter per row.
+
+---
+
+## Grand Total (Ignoring All Filters)
+
+`ALL()` removes filters from a table or column, producing a true grand total regardless of the current selection.
+
+```dax
+Grand Total Sales =
+CALCULATE(
+    [Total Sales],
+    ALL(FactSales)
+)
+```
+
+Every row in a table visual using this measure shows the same overall total, ignoring the row's own category.
+
+---
+
+## Percent of Grand Total
+
+Combining a filtered total with a grand total produces a percentage of the whole.
+
+```dax
+Sales % of Total =
+DIVIDE(
+    [Total Sales],
+    [Grand Total Sales]
+)
+```
+
+Each row shows its own share of the overall total — see [Percent of Total](/docs/dax-patterns/percent-of-total) for a closer look at this pattern.
+
+---
+
+## Total Ignoring One Specific Filter
+
+`ALL()` can target a single column instead of an entire table, removing just that filter while keeping others active.
+
+```dax
+Sales Ignoring Region =
+CALCULATE(
+    [Total Sales],
+    ALL(DimStore[Region])
+)
+```
+
+This keeps filters like Category or Date active, while ignoring whatever Region is currently selected.
+
+---
+
+## Total Within a Group, Ignoring Sub-Filters
+
+`ALLEXCEPT()` removes all filters except the ones explicitly listed, useful for a subtotal that should stay fixed within a larger group.
+
+```dax
+Sales Within Category =
+CALCULATE(
+    [Total Sales],
+    ALLEXCEPT(DimProduct, DimProduct[Category])
+)
+```
+
+This ignores filters on every `DimProduct` column except `Category`, producing a total for the whole category regardless of which specific product row is being evaluated.
+
+---
+
+## Comparing the Patterns
+
+| Pattern | Function | Result |
+|---|---|---|
+| Basic total | `SUM()` | Respects all active filters |
+| Grand total | `ALL(table)` | Ignores every filter |
+| Total ignoring one column | `ALL(column)` | Ignores just that filter |
+| Total within a group | `ALLEXCEPT()` | Ignores all filters except the ones listed |
+
+---
+
+## Example Output
+
+```text
+Category  | Sales   | % of Total
+----------|---------|------------
+Bikes     | 45,000  | 60%
+Gear      | 20,000  | 27%
+Apparel   | 10,000  | 13%
+Total     | 75,000  | 100%
+```
+
+The `% of Total` column comes from dividing each row's filtered total by the unfiltered grand total.
+
+---
+
+## Best Practices
+
+- Reuse a base measure (like `[Total Sales]`) inside `CALCULATE()` rather than repeating the same `SUM()` expression everywhere.
+- Prefer `ALLEXCEPT()` over listing multiple `ALL()` calls when a subtotal needs to ignore several columns except one or two.
+- Be explicit about which filters a "total" should ignore — an unlabeled measure named `Total` can mean different things to different people.
+- Test totals measures inside a table visual with grouping, not just as a single card, to confirm the filter behavior is correct.
+
+---
+
+## Common Mistakes
+
+### Confusing SUM() with a Grand Total
+
+A plain `SUM()` still respects the current filter context. Without `ALL()`, it is not a grand total — it's just the total for whatever is currently selected.
+
+### Removing Too Many Filters
+
+Using `ALL(FactSales)` when only one column's filter needed to be ignored removes every filter on that table, which can silently produce a much bigger number than intended.
+
+### Dividing by Zero
+
+`Sales % of Total` using plain division can error when the grand total is zero. Use `DIVIDE()`, which returns blank instead of an error by default.
+
+---
+
+## Totals Checklist
+
+Before publishing totals-related measures:
+
+- Grand total measures explicitly use `ALL()` or `ALLEXCEPT()`, not just `SUM()`.
+- Percentage measures use `DIVIDE()`, not the `/` operator.
+- Measure names make clear what kind of total they represent.
+- Totals have been tested inside a grouped table, not just a single card visual.
+
+---
+
+## Next Steps
+
+Continue exploring DAX patterns:
+
+- [Ranking](/docs/dax-patterns/ranking)
+- [Percent of Total](/docs/dax-patterns/percent-of-total)
+- [Running Total](/docs/dax-patterns/running-total)

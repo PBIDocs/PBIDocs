@@ -1,9 +1,174 @@
-﻿---
+---
 title: "Installation"
-description: Power BI documentation.
+description: How to install Power BI Desktop and understand the other ways to access Power BI.
 ---
 
 # Installation
 
-Content coming soon.
+Power BI isn't one single install — it's a family of tools, and which one you need depends on what you're doing.
 
+```text
+Power BI
+   |
+   +-- Desktop (build reports, Windows only)
+   |
+   +-- Service (view/share reports, browser-based)
+   |
+   +-- Mobile (view reports, iOS/Android)
+   |
+   +-- Report Server (on-premises alternative to the cloud Service)
+```
+
+Report *building* happens in Desktop. Report *consumption* happens through the Service, Mobile, or Report Server.
+
+---
+
+## Installing Power BI Desktop
+
+Power BI Desktop is free and available two ways.
+
+```text
+Option 1: Microsoft Store
+Option 2: Standalone installer (.exe) from microsoft.com
+```
+
+The Microsoft Store version updates automatically. The standalone installer is preferred in locked-down corporate environments where Store access is restricted, or where IT needs to control update timing.
+
+---
+
+## System Requirements
+
+Power BI Desktop is Windows-only.
+
+| | Minimum |
+|---|---|
+| OS | Windows 10 or later (64-bit) |
+| RAM | 4 GB (8 GB+ recommended for larger models) |
+| .NET | .NET Framework requirements are handled automatically by the installer |
+
+Mac users run Power BI Desktop through a Windows virtual machine, or build reports entirely through the browser-based Power BI Service instead.
+
+---
+
+## Signing In
+
+Power BI Desktop and the Service both require a Microsoft account tied to a Power BI license (often included with a Microsoft 365 subscription, or purchased separately).
+
+```text
+Microsoft Account
+       |
+       | sign in
+       |
+Power BI Desktop / Service
+```
+
+A free account can build and use Power BI Desktop locally, but publishing to a shared workspace in the Service requires at least a Power BI Pro license (or a workspace on Premium/Fabric capacity).
+
+---
+
+## The Power BI Service (No Install Needed)
+
+The Power BI Service runs entirely in a browser at `app.powerbi.com` — there's nothing to install.
+
+```text
+Browser
+   |
+   | app.powerbi.com
+   |
+Power BI Service
+```
+
+This is where published reports live, where dashboards and workspaces are managed, and where refresh schedules are configured.
+
+---
+
+## Power BI Mobile
+
+The Power BI Mobile app (iOS and Android) provides a touch-friendly way to view reports and dashboards, and can send push notifications for data alerts.
+
+```text
+Power BI Service
+      |
+      | sync
+      |
+Mobile App
+```
+
+Mobile is for consuming reports, not building them — report authoring still happens in Desktop or the browser-based Service editor.
+
+---
+
+## Power BI Report Server
+
+Organizations that can't use the cloud Service (due to data residency or compliance requirements) can host reports on-premises instead, using Power BI Report Server.
+
+```text
+Power BI Desktop
+       |
+       | Publish
+       |
+Report Server (on-premises)
+```
+
+Report Server requires a separate license from standard Power BI Pro, and supports a more limited feature set than the cloud Service — some newer visuals and AI features are cloud-only.
+
+---
+
+## Keeping Power BI Desktop Updated
+
+Power BI Desktop releases a new version almost every month, often including new visual features and DAX functions.
+
+```text
+Monthly Release
+     |
+     | includes
+     |
+New visuals, DAX functions, connectors
+```
+
+The Store version updates automatically. The standalone installer requires manually downloading and running the latest version, or using an organization's software deployment tooling.
+
+---
+
+## Best Practices
+
+- Use the Microsoft Store version for automatic updates, unless organizational policy requires manual control.
+- Confirm the Power BI license type (Free, Pro, Premium Per User) before assuming a workspace or feature will be available.
+- Mac users should plan for a Windows VM or rely on the browser-based Service, since Desktop doesn't run natively on macOS.
+- Keep Desktop reasonably up to date — reports built with newer features may not open correctly in a much older Desktop version.
+
+---
+
+## Common Mistakes
+
+### Assuming a Free License Covers Everything
+
+A free Power BI account can build reports locally, but publishing to a shared workspace and collaborating with others typically requires a Pro license or Premium/Fabric capacity.
+
+### Installing Desktop on macOS Directly
+
+Power BI Desktop has no native macOS build. Attempting to run the Windows installer directly on a Mac won't work without a Windows virtual machine.
+
+### Falling Too Far Behind on Updates
+
+An outdated Desktop version can fail to open reports that use newer visuals or DAX functions, especially in organizations where updates are tightly controlled.
+
+---
+
+## Installation Checklist
+
+Before starting to build reports:
+
+- Power BI Desktop is installed via Store or standalone installer, matching organizational policy.
+- The Microsoft account being used has an appropriate Power BI license.
+- Mac users have a Windows VM plan, or are using the browser-based Service instead.
+- Desktop is reasonably current, especially before opening reports built by others.
+
+---
+
+## Next Steps
+
+Continue getting started with Power BI:
+
+- [Introduction](/docs/getting-started/introduction)
+- [Power BI Overview](/docs/getting-started/power-bi-overview)

@@ -1,9 +1,172 @@
-﻿---
+---
 title: "Ranking"
-description: Power BI documentation.
+description: Common DAX patterns for ranking rows using RANKX, including ties, filtered ranks, and ranking within groups.
 ---
 
 # Ranking
 
-Content coming soon.
+Ranking answers "where does this row stand compared to the others?" — 1st, 2nd, 3rd, and so on.
 
+```text
+Product   | Sales   | Rank
+----------|---------|------
+Tire A    | 50,000  | 1
+Tire B    | 42,000  | 2
+Helmet A  | 18,000  | 3
+```
+
+DAX handles ranking with `RANKX()`.
+
+---
+
+## Basic Ranking
+
+```dax
+Product Rank =
+RANKX(
+    ALL(DimProduct),
+    [Total Sales]
+)
+```
+
+`RANKX()` needs a table to rank across (`ALL(DimProduct)`, so every product is compared, not just the ones visible after filtering) and an expression to rank by (`[Total Sales]`).
+
+---
+
+## Why ALL() Matters Here
+
+Without `ALL()`, the ranking table would only include whatever rows survive the current filter context — which, inside a table visual grouped by product, is usually just one row per calculation.
+
+```text
+Without ALL(): each row only sees itself -> every rank is 1
+With ALL():    every row is compared against every product -> real ranks
+```
+
+`ALL(DimProduct)` re-expands the comparison set back to every product, regardless of what the visual is currently filtering.
+
+---
+
+## Descending vs. Ascending Rank
+
+By default, `RANKX()` ranks highest value as 1st (descending).
+
+```dax
+Product Rank (Highest First) =
+RANKX(
+    ALL(DimProduct),
+    [Total Sales],
+    ,
+    DESC
+)
+
+Product Rank (Lowest First) =
+RANKX(
+    ALL(DimProduct),
+    [Total Sales],
+    ,
+    ASC
+)
+```
+
+Use ascending order for rankings like "lowest performing products" or "smallest to largest."
+
+---
+
+## Ranking Within a Group
+
+Ranking within each category — instead of across the whole table — uses `ALLEXCEPT()` to keep the category filter active.
+
+```dax
+Rank Within Category =
+RANKX(
+    ALLEXCEPT(DimProduct, DimProduct[Category]),
+    [Total Sales]
+)
+```
+
+Example output:
+
+```text
+Category | Product   | Sales   | Rank
+---------|-----------|---------|------
+Bikes    | Tire A    | 50,000  | 1
+Bikes    | Tire B    | 42,000  | 2
+Gear     | Helmet A  | 18,000  | 1
+Gear     | Helmet B  | 9,000   | 2
+```
+
+Each category restarts its own ranking from 1.
+
+---
+
+## Handling Ties
+
+By default, tied values receive the same rank, and the next rank skips accordingly.
+
+```text
+Product   | Sales   | Rank
+----------|---------|------
+Tire A    | 50,000  | 1
+Tire B    | 50,000  | 1
+Helmet A  | 18,000  | 3
+```
+
+This matches how rankings are usually expected to behave — two products tied for 1st mean there is no 2nd place.
+
+---
+
+## Top N Filtering with Rank
+
+A rank measure can be used to filter a visual down to a Top N, using the **Filters** pane with "is less than or equal to."
+
+```text
+Filter: [Product Rank] <= 5
+```
+
+This is a common alternative to the built-in Top N filter, useful when the ranking logic needs to be reused elsewhere too (like a "Rank" column shown directly in a table).
+
+---
+
+## Best Practices
+
+- Always specify the full table for `RANKX()`'s first argument (usually with `ALL()`) to avoid every row ranking as 1.
+- Use `ALLEXCEPT()` when ranking needs to reset within a group, like category or region.
+- Reuse an existing base measure inside `RANKX()` rather than repeating the aggregation expression.
+- Be explicit about ascending vs. descending order in the measure name if a report has both.
+
+---
+
+## Common Mistakes
+
+### Forgetting ALL()
+
+Omitting `ALL()` from the ranking table is the most common `RANKX()` mistake, and it silently produces a rank of 1 for every row, since each row is only ever compared to itself.
+
+### Ranking the Wrong Table
+
+Ranking `DimProduct` when the real business question is about `DimCustomer` will produce a rank that looks plausible but answers the wrong question. Double-check which table actually represents what's being ranked.
+
+### Ignoring Ties
+
+Assuming every rank is unique can break Top N filters when several rows are tied — a `<= 5` filter might return more than 5 rows if multiple items share 5th place.
+
+---
+
+## Ranking Checklist
+
+Before publishing a ranking measure:
+
+- The table argument uses `ALL()` or `ALLEXCEPT()` as appropriate.
+- Ascending or descending order matches the business question being asked.
+- Ranking within groups uses `ALLEXCEPT()`, not a plain `ALL()`.
+- Tie behavior has been checked against real data.
+
+---
+
+## Next Steps
+
+Continue exploring DAX patterns:
+
+- [Totals](/docs/dax-patterns/totals)
+- [Percent of Total](/docs/dax-patterns/percent-of-total)
+- [Running Total](/docs/dax-patterns/running-total)

@@ -1,9 +1,205 @@
-﻿---
+---
 title: "Introduction"
-description: Power BI documentation.
+description: An introduction to Power Query, the data connection and transformation engine behind Power BI.
 ---
 
 # Introduction
 
-Content coming soon.
+Power Query is how data gets into Power BI, and how it gets cleaned up before anyone builds a report on top of it.
 
+```text
+Source Data
+     |
+     | Power Query
+     |
+Clean, Modeled Tables
+     |
+     | loaded into
+     |
+Power BI Data Model
+```
+
+Every Import or Dual-mode table in a Power BI model passes through Power Query first.
+
+---
+
+## What Power Query Does
+
+Power Query handles three jobs:
+
+```text
+Power Query
+   |
+   +-- Connect to data sources
+   |
+   +-- Transform and clean data
+   |
+   +-- Load the result into the model
+```
+
+It connects to databases, files, APIs, and dozens of other source types, then reshapes that raw data into the tables a Power BI model actually needs.
+
+---
+
+## The Power Query Editor
+
+Transformations are built visually in the **Power Query Editor**, opened from **Home > Transform Data** in Power BI Desktop.
+
+```text
+Source Data (preview)
+       |
+       | apply a step
+       |
+Transformed Preview
+       |
+       | apply another step
+       |
+Final Table
+```
+
+Every transformation is recorded as a step, shown in the **Applied Steps** pane, and can be reordered, edited, or removed.
+
+See [Power Query Editor](/docs/power-query/editor) for a closer look at the interface itself.
+
+---
+
+## Under the Hood: M Language
+
+Every action in the Editor generates code in **M**, Power Query's underlying formula language.
+
+```text
+Click "Remove Columns" in the UI
+        |
+        | generates
+        |
+Table.RemoveColumns(Source, {"Column1"})
+```
+
+Most work happens through the visual editor, but M can also be written or edited directly in the **Advanced Editor** for transformations the UI doesn't expose. See [M Language](/docs/power-query/m-language) for more detail.
+
+---
+
+## Queries
+
+Each data source loaded into a model becomes a **query** — a named sequence of steps that produces one table.
+
+```text
+Query: "Sales"
+   |
+   +-- Source
+   +-- Filtered Rows
+   +-- Renamed Columns
+   +-- Changed Type
+   |
+   Result: FactSales table
+```
+
+A single Power BI model typically has one query per table, visible in the **Queries** pane on the left side of the Editor.
+
+---
+
+## Applied Steps Are Sequential
+
+Steps run in order, each one operating on the result of the step before it.
+
+```text
+Source
+   |
+   v
+Step 1: Filter Rows
+   |
+   v
+Step 2: Rename Columns
+   |
+   v
+Step 3: Change Types
+   |
+   v
+Final Table
+```
+
+Reordering steps can change the result, or break later steps that depended on the earlier order — a common source of Power Query errors.
+
+---
+
+## Query Dependencies
+
+Queries can reference other queries, letting transformation logic be reused instead of duplicated.
+
+```text
+Query: RawSales
+   |
+   | referenced by
+   |
+Query: CleanedSales
+   |
+   | referenced by
+   |
+Query: FinalSales
+```
+
+This is useful for staging raw, unfiltered data in one query, then building cleaned or filtered versions from it without re-fetching the source each time.
+
+---
+
+## Where Power Query Fits
+
+```text
+Data Source
+     |
+     | Power Query (extract, transform)
+     |
+Power BI Model
+     |
+     | DAX (calculate, aggregate)
+     |
+Report Visuals
+```
+
+Power Query shapes the data. DAX calculates on top of the shape Power Query produced. Getting the Power Query layer right makes the DAX layer significantly simpler.
+
+---
+
+## Best Practices
+
+- Do as much cleaning and shaping as possible in Power Query, rather than compensating for messy data with complex DAX.
+- Name queries and steps clearly — "Changed Type1" tells the next person nothing.
+- Reference queries to reuse logic instead of copy-pasting the same steps across multiple queries.
+- Remove unnecessary columns early, since later steps process less data as a result.
+
+---
+
+## Common Mistakes
+
+### Doing Too Much in DAX Instead of Power Query
+
+Reshaping or cleaning data with DAX measures, when Power Query could have produced the correct shape at load time, adds unnecessary complexity to the model.
+
+### Ignoring Step Order
+
+Reordering steps without understanding their dependencies can silently break a query — a later step referencing a column name that an earlier step renamed, for example.
+
+### Not Using Query References
+
+Duplicating the same set of cleaning steps across multiple queries, instead of building one shared query and referencing it, means every future fix has to be repeated in every copy.
+
+---
+
+## Introduction Checklist
+
+Before considering a Power Query setup finished:
+
+- Queries and steps have clear, descriptive names.
+- Shared logic is built once and referenced, not duplicated.
+- Unnecessary columns and rows are removed as early as possible.
+- The result loads into the model as clean, well-typed tables — not raw, unprocessed data.
+
+---
+
+## Next Steps
+
+Continue learning Power Query:
+
+- [Power Query Editor](/docs/power-query/editor)
+- [Transformations](/docs/power-query/transformations)
+- [M Language](/docs/power-query/m-language)

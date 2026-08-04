@@ -1,9 +1,184 @@
-﻿---
+---
 title: "Percent Of Total"
-description: Power BI documentation.
+description: Common DAX patterns for calculating percent of total, percent of parent, and percent of a specific category.
 ---
 
 # Percent Of Total
 
-Content coming soon.
+Percent of total shows how much a single row contributes to a larger whole.
 
+```text
+Category  | Sales   | % of Total
+----------|---------|------------
+Bikes     | 45,000  | 60%
+Gear      | 20,000  | 27%
+Apparel   | 10,000  | 13%
+```
+
+The pattern always has the same shape: a filtered value, divided by an unfiltered (or less-filtered) value.
+
+---
+
+## The Basic Pattern
+
+```dax
+Sales % of Total =
+DIVIDE(
+    [Total Sales],
+    CALCULATE(
+        [Total Sales],
+        ALL(DimProduct)
+    )
+)
+```
+
+```text
+Sales % of Total
+      |
+      | =
+      |
+[Total Sales] (filtered)  /  [Total Sales] (ALL — unfiltered)
+```
+
+The numerator respects whatever filters are active. The denominator deliberately removes them, producing the grand total to divide by.
+
+---
+
+## Percent of Grand Total
+
+Using `ALL()` on the entire table produces a percentage against the true grand total, regardless of any other filters active in the report.
+
+```dax
+Sales % of Grand Total =
+DIVIDE(
+    [Total Sales],
+    CALCULATE(
+        [Total Sales],
+        ALL(FactSales)
+    )
+)
+```
+
+---
+
+## Percent of Parent Category
+
+Instead of comparing against the grand total, a row can be compared against just its own parent group.
+
+```dax
+Sales % of Category =
+DIVIDE(
+    [Total Sales],
+    CALCULATE(
+        [Total Sales],
+        ALLEXCEPT(DimProduct, DimProduct[Category])
+    )
+)
+```
+
+Example output:
+
+```text
+Category | Product   | Sales   | % of Category
+---------|-----------|---------|----------------
+Bikes    | Tire A    | 30,000  | 67%
+Bikes    | Tire B    | 15,000  | 33%
+Gear     | Helmet A  | 12,000  | 60%
+Gear     | Helmet B  | 8,000   | 40%
+```
+
+Each product's percentage is relative to its own category total, not the overall grand total.
+
+---
+
+## Percent of a Fixed Selection
+
+Sometimes the denominator should stay fixed to a specific value, regardless of what the user filters elsewhere in the report.
+
+```dax
+Sales % of West Region =
+DIVIDE(
+    [Total Sales],
+    CALCULATE(
+        [Total Sales],
+        DimStore[Region] = "West"
+    )
+)
+```
+
+This always divides by West region sales specifically, even if the report is currently filtered to a different region.
+
+---
+
+## Why DIVIDE() Instead of /
+
+`DIVIDE()` handles division by zero gracefully, returning blank instead of an error.
+
+```dax
+Safe:   DIVIDE([Total Sales], [Grand Total])
+Risky:  [Total Sales] / [Grand Total]
+```
+
+If the denominator is ever zero — an empty category, a filter with no matching rows — the plain `/` operator returns an error that can break visuals. `DIVIDE()` avoids that entirely.
+
+---
+
+## Formatting as a Percentage
+
+The measure itself returns a decimal (0.60, not "60%"). Formatting is applied separately.
+
+```text
+Raw value: 0.60
+     |
+     | percentage formatting
+     |
+Displayed: 60%
+```
+
+Set from the measure's **Format** property in the Modeling ribbon, choosing **Percentage**.
+
+---
+
+## Best Practices
+
+- Always use `DIVIDE()`, never the raw `/` operator, for percentage measures.
+- Be explicit in the measure name about what the percentage is relative to (total, category, region, and so on).
+- Reuse the base measure (`[Total Sales]`) instead of repeating the aggregation logic in both numerator and denominator.
+- Set number formatting to Percentage so the measure doesn't display as a raw decimal.
+
+---
+
+## Common Mistakes
+
+### Dividing by a Filtered Denominator
+
+Forgetting to remove filters from the denominator (with `ALL()` or `ALLEXCEPT()`) makes the denominator match the numerator, and every row shows 100%.
+
+### Using / Instead of DIVIDE()
+
+The raw division operator errors on divide-by-zero, which can silently break an otherwise-working visual whenever a filter combination produces an empty group.
+
+### Forgetting Percentage Formatting
+
+A correct measure that returns `0.6` but isn't formatted as a percentage displays as a confusing raw decimal instead of "60%".
+
+---
+
+## Percent of Total Checklist
+
+Before publishing a percent-of-total measure:
+
+- `DIVIDE()` is used, not the `/` operator.
+- The denominator's filter removal matches what "total" should mean for this measure (grand total, category, or a fixed selection).
+- The measure name makes clear what the percentage is relative to.
+- The measure is formatted as a percentage, not a raw decimal.
+
+---
+
+## Next Steps
+
+Continue exploring DAX patterns:
+
+- [Totals](/docs/dax-patterns/totals)
+- [Ranking](/docs/dax-patterns/ranking)
+- [Running Total](/docs/dax-patterns/running-total)

@@ -1,9 +1,165 @@
-﻿---
+---
 title: "Running Total"
-description: Power BI documentation.
+description: A general DAX pattern for calculating running (cumulative) totals over any sorted column, not just dates.
 ---
 
 # Running Total
 
-Content coming soon.
+A running total adds each row to the sum of everything before it.
 
+```text
+Month     | Sales   | Running Total
+----------|---------|---------------
+January   | 50,000  | 50,000
+February  | 60,000  | 110,000
+March     | 45,000  | 155,000
+```
+
+Time-based running totals (like Year-to-Date) have dedicated DAX functions — see [Time Intelligence](/docs/dax/time-intelligence). This page covers the general pattern, which works over any sortable column, not just dates.
+
+---
+
+## The General Pattern
+
+```dax
+Running Total =
+CALCULATE(
+    [Total Sales],
+    FILTER(
+        ALL(DimDate[Date]),
+        DimDate[Date] <= MAX(DimDate[Date])
+    )
+)
+```
+
+```text
+FILTER(
+   ALL(DimDate[Date]),              all dates, filters removed
+   DimDate[Date] <= MAX(DimDate[Date])   keep only dates up to the current row
+)
+```
+
+`MAX(DimDate[Date])` picks up the current row's date from context. `FILTER()` keeps every date less than or equal to it. `ALL()` makes sure the comparison set isn't limited to whatever's already been filtered.
+
+---
+
+## Running Total Over Any Sorted Value
+
+The same pattern works over a rank or sequence number, not just a date.
+
+```dax
+Running Total by Rank =
+CALCULATE(
+    [Total Sales],
+    FILTER(
+        ALL(DimProduct[SalesRank]),
+        DimProduct[SalesRank] <= MAX(DimProduct[SalesRank])
+    )
+)
+```
+
+Useful for cumulative charts like "what percentage of total sales come from the top N products" (a Pareto / 80-20 analysis).
+
+---
+
+## Running Total Within a Group
+
+Restarting the running total for each group (like each year) combines the pattern with a group-preserving filter.
+
+```dax
+Running Total Within Year =
+CALCULATE(
+    [Total Sales],
+    FILTER(
+        ALL(DimDate[Date]),
+        DimDate[Date] <= MAX(DimDate[Date]) &&
+        DimDate[Year] = MAX(DimDate[Year])
+    )
+)
+```
+
+```text
+Year | Month     | Sales   | Running Total
+-----|-----------|---------|---------------
+2025 | November  | 40,000  | 40,000
+2025 | December  | 35,000  | 75,000
+2026 | January   | 50,000  | 50,000
+2026 | February  | 60,000  | 110,000
+```
+
+The running total resets at the start of each year, instead of accumulating across the entire date range.
+
+---
+
+## Running Total Using Time Intelligence Functions
+
+For calendar-based running totals specifically, `TOTALYTD()`, `TOTALQTD()`, and `TOTALMTD()` are simpler and more efficient than the generic `FILTER()` pattern.
+
+```dax
+Sales YTD =
+TOTALYTD(
+    [Total Sales],
+    DimDate[Date]
+)
+```
+
+Use the generic `FILTER()`-based pattern when the running total isn't calendar-based — ranks, sequence numbers, or any other sortable column where the built-in time intelligence functions don't apply.
+
+---
+
+## Performance Considerations
+
+The `FILTER(ALL(...), ...)` pattern re-evaluates across the full unfiltered column for every row, which can be slow on very large date or rank columns.
+
+```text
+Rows evaluated per cell = size of the unfiltered column
+```
+
+For calendar dates specifically, `TOTALYTD()` and related functions are generally faster, since they're optimized internally rather than relying on a generic row-by-row filter scan.
+
+---
+
+## Best Practices
+
+- Use dedicated time intelligence functions (`TOTALYTD()`, etc.) for calendar-based running totals.
+- Reserve the `FILTER(ALL(...), ...)` pattern for running totals over non-date columns.
+- Test running total measures against a large, realistic dataset — this pattern's performance degrades with column size.
+- Add a group condition (like Year) when the running total should reset periodically instead of accumulating indefinitely.
+
+---
+
+## Common Mistakes
+
+### Using FILTER(ALL()) for Simple Date Running Totals
+
+When the running total is just Year-to-Date or similar, `TOTALYTD()` does the same job more efficiently and more clearly than the generic pattern.
+
+### Forgetting to Reset Within Groups
+
+A running total that should restart each year, but doesn't include the year condition in the `FILTER()`, will keep accumulating across year boundaries instead of resetting.
+
+### Sorting Assumptions
+
+The pattern depends on comparing values with `<=`. If the column being compared isn't naturally ordered the way the business expects (like a text field instead of a number or date), the "running total" won't make sense.
+
+---
+
+## Running Total Checklist
+
+Before publishing a running total measure:
+
+- Calendar-based running totals use `TOTALYTD()`/`TOTALQTD()`/`TOTALMTD()` where possible.
+- Non-date running totals correctly use `FILTER(ALL(...), ...)` over a genuinely sortable column.
+- Group resets (like per-year) are included if the business logic requires them.
+- Performance has been tested against production-scale data.
+
+---
+
+## Next Steps
+
+Continue exploring DAX patterns:
+
+- [Totals](/docs/dax-patterns/totals)
+- [Ranking](/docs/dax-patterns/ranking)
+- [Percent of Total](/docs/dax-patterns/percent-of-total)
+- [Time Intelligence](/docs/dax/time-intelligence)
