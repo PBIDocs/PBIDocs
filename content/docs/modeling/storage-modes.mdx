@@ -1,0 +1,232 @@
+---
+title: "DirectQuery vs. Import"
+description: Learn the difference between Import, DirectQuery, and Composite storage modes in Power BI, and when to use each.
+---
+
+# DirectQuery vs. Import
+
+Every table in a Power BI model has a storage mode.
+
+The storage mode decides where the data actually lives, and how fast the model can query it.
+
+```text
+Storage Mode
+     |
+     +-- Import
+     |
+     +-- DirectQuery
+     |
+     +-- Dual
+```
+
+---
+
+## Import Mode
+
+Import mode copies data into Power BI's in-memory engine (VertiPaq) when the model refreshes.
+
+```text
+Source Database
+     |
+     | copied on refresh
+     |
+Power BI (in-memory)
+     |
+     |
+     Report
+```
+
+Once loaded, queries run entirely against the in-memory copy.
+
+Characteristics:
+
+- Very fast query performance
+- Full DAX and modeling feature support
+- Data is only as current as the last refresh
+- Model size is limited by available memory
+
+Import is the default and recommended mode for most reports.
+
+---
+
+## DirectQuery Mode
+
+DirectQuery sends queries straight to the source system every time a visual needs data. No data is copied into Power BI.
+
+```text
+Report
+   |
+   | query sent live
+   |
+Source Database
+```
+
+Characteristics:
+
+- Data is always current, with no refresh needed
+- No practical limit on data volume, since nothing is imported
+- Query performance depends entirely on the source system
+- Some DAX functions and modeling features are restricted
+
+DirectQuery is commonly used for very large datasets or when near-real-time data is required.
+
+---
+
+## Comparing Import and DirectQuery
+
+| | Import | DirectQuery |
+|---|---|---|
+| Data location | Copied into Power BI | Stays in the source |
+| Query speed | Very fast | Depends on the source |
+| Data freshness | As of last refresh | Live |
+| Data volume | Limited by memory | Limited by the source |
+| DAX support | Full | Some restrictions |
+
+---
+
+## Dual Storage Mode
+
+A table set to Dual can behave as either Import or DirectQuery, depending on which is more efficient for a given query.
+
+```text
+Table (Dual)
+     |
+     +-- acts as Import
+     |
+     +-- acts as DirectQuery
+```
+
+Dual mode is most useful for shared dimension tables, such as `DimDate` or `DimProduct`, in a composite model.
+
+---
+
+## Composite Models
+
+A composite model mixes storage modes across different tables in the same Power BI model.
+
+```text
+FactSales (DirectQuery)
+     |
+     |
+DimDate (Dual)
+     |
+     |
+DimProduct (Dual)
+```
+
+This lets a very large fact table stay in DirectQuery, while smaller dimension tables use Dual mode for fast filtering and slicers.
+
+---
+
+## Why Composite Models Are Useful
+
+A single large fact table often does not need to be imported to get good performance, as long as the dimension tables it relates to are fast.
+
+Composite models let you:
+
+- Keep a huge fact table live in DirectQuery
+- Keep dimension tables fast using Dual mode
+- Combine data from multiple sources in one model
+- Avoid importing data that changes too often to cache usefully
+
+---
+
+## Relationships Across Storage Modes
+
+Relationships between an Import table and a DirectQuery table are allowed, but Power BI evaluates them differently depending on direction and mode.
+
+```text
+DimProduct (Dual)
+     |
+     | filters
+     |
+FactSales (DirectQuery)
+```
+
+Filtering from a Dual or Import dimension into a DirectQuery fact table is the most common and best-supported pattern.
+
+---
+
+## Performance Considerations
+
+DirectQuery performance depends on:
+
+- Indexing and query performance of the source database
+- Network latency between Power BI and the source
+- The complexity of the DAX being translated into source queries
+- Aggregation tables, which can pre-summarize DirectQuery data for common queries
+
+Import performance depends on:
+
+- Model size and available memory
+- How well the model follows a star schema
+- Refresh frequency and duration
+
+---
+
+## Choosing a Storage Mode
+
+Use Import when:
+
+- The dataset fits comfortably in memory
+- Data does not need to be real-time
+- Maximum query performance and full DAX support are priorities
+
+Use DirectQuery when:
+
+- The dataset is too large to import
+- Data must reflect the source in near real-time
+- The source system can handle the query load
+
+Use a Composite model when:
+
+- One large fact table needs to stay live
+- Supporting dimension tables benefit from Import-level speed
+
+---
+
+## Best Practices
+
+- Default to Import unless there's a specific reason not to.
+- Use Dual mode for shared dimension tables in composite models.
+- Add aggregation tables to speed up common DirectQuery queries.
+- Test report performance against realistic data volumes, not just a small sample.
+- Confirm the source database can handle concurrent DirectQuery load before rolling out broadly.
+
+---
+
+## Common Storage Mode Mistakes
+
+### Defaulting to DirectQuery for Everything
+
+DirectQuery removes the refresh step, but it also removes most of the performance benefit of Power BI's in-memory engine. Import first; move to DirectQuery only when there's a real reason.
+
+### Leaving Dimension Tables in DirectQuery
+
+Dimension tables used for slicers and filters are usually small. Leaving them in DirectQuery inside a composite model adds unnecessary latency for little benefit — Dual mode is almost always a better fit.
+
+### Ignoring Source Performance
+
+A DirectQuery model is only as fast as the queries the source database can answer. Missing indexes or an under-provisioned source will make every report feel slow, regardless of how well the Power BI model is designed.
+
+---
+
+## Storage Mode Checklist
+
+Before publishing a DirectQuery or composite model:
+
+- Fact tables that need to stay live are set to DirectQuery.
+- Shared dimension tables are set to Dual, not DirectQuery.
+- Aggregation tables are in place for common queries, if needed.
+- The source database has been tested under realistic concurrent load.
+- Report performance has been validated with production-scale data.
+
+---
+
+## Next Steps
+
+Continue learning Power BI data modeling:
+
+- [Star Schema](/docs/modeling/star-schema)
+- [Relationships](/docs/modeling/relationships)
+- [Fact Tables](/docs/modeling/fact-tables)
