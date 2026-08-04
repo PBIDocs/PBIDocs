@@ -39,16 +39,18 @@ html > body[data-scroll-locked] {
 }
 
 
-/* Documentation links only */
+/* Documentation links, plus the standalone changelog page's entry links */
 .prose p a,
-.prose li a {
+.prose li a,
+.changelog-entries a {
   color: var(--color-fd-primary);
   text-decoration: none;
   position: relative;
   font-weight: 500;
 }
 .prose p a::after,
-.prose li a::after {
+.prose li a::after,
+.changelog-entries a::after {
   content: "";
   position: absolute;
   left: 0;
@@ -59,11 +61,13 @@ html > body[data-scroll-locked] {
   transition: width 200ms ease;
 }
 .prose p a:hover::after,
-.prose li a:hover::after {
+.prose li a:hover::after,
+.changelog-entries a:hover::after {
   width: 100%;
 }
 .prose p a:hover,
-.prose li a:hover {
+.prose li a:hover,
+.changelog-entries a:hover {
   color: var(--primary-muted);
 }
 
@@ -100,7 +104,8 @@ html > body[data-scroll-locked] {
    own styles, not plain descendant selectors), adding an 8%-opacity light
    wash and padding inset from the block's true edges - a visible two-tone
    box, lighter in the middle than the padding/border around it. */
-.prose code:not(pre code) {
+.prose code:not(pre code),
+.changelog-entries code {
   background: color-mix(in srgb, currentColor 8%, transparent);
   border-radius: 0.35rem;
   padding: 0.15rem 0.35rem;

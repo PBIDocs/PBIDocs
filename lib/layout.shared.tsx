@@ -12,6 +12,7 @@ export function baseOptions(): BaseLayoutProps {
         </>
       ),
     },
+    links: [{ text: 'Changelog', url: '/changelog' }],
     githubUrl: `https://github.com/${gitConfig.user}/${gitConfig.repo}`,
   };
 }

@@ -7,7 +7,6 @@
     "power-query",
     "visuals",
     "power-bi-service",
-    "dax-patterns",
-    "changelog"
+    "dax-patterns"
   ]
 }
