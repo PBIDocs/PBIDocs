@@ -5,11 +5,13 @@
 
 
 :root {
-  /* pbidocs brand: indigo-violet, distinct from the fumadocs neutral default */
-  --color-fd-primary: oklch(56% 0.20 291);
+  /* pbidocs brand: indigo-violet, distinct from the fumadocs neutral default.
+     Lightness tuned to clear WCAG AA (4.5:1) as text against the light
+     background/card (the original 56%/68% values only hit ~2.7-4.5:1). */
+  --color-fd-primary: oklch(54% 0.20 291);
   --color-fd-primary-foreground: oklch(98.5% 0 0);
-  --color-fd-ring: oklch(56% 0.2 291);
-  --primary-muted: oklch(68% 0.16 291);
+  --color-fd-ring: oklch(54% 0.2 291);
+  --primary-muted: oklch(50% 0.14 291);
 }
 
 .dark {

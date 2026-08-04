@@ -6,7 +6,7 @@ export function Logo({ className }: { className?: string }) {
       aria-hidden="true"
       xmlns="http://www.w3.org/2000/svg"
     >
-      <rect width="32" height="32" rx="8" fill="#7954DE" />
+      <rect width="32" height="32" rx="8" fill="#744ED7" />
       <rect x="8" y="18" width="4" height="8" rx="1.5" fill="white" />
       <rect x="14" y="13" width="4" height="13" rx="1.5" fill="white" />
       <rect x="20" y="7" width="4" height="19" rx="1.5" fill="white" />
