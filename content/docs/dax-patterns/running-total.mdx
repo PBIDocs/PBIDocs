@@ -111,9 +111,7 @@ Use the generic `FILTER()`-based pattern when the running total isn't calendar-b
 
 The `FILTER(ALL(...), ...)` pattern re-evaluates across the full unfiltered column for every row, which can be slow on very large date or rank columns.
 
-```text
-Rows evaluated per cell = size of the unfiltered column
-```
+`Rows evaluated per cell = size of the unfiltered column`
 
 For calendar dates specifically, `TOTALYTD()` and related functions are generally faster, since they're optimized internally rather than relying on a generic row-by-row filter scan.
 

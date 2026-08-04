@@ -41,15 +41,11 @@ DAX references data using table and column names.
 
 The syntax is:
 
-```text
-TableName[ColumnName]
-```
+`TableName[ColumnName]`
 
 Example:
 
-```dax
-SUM(FactSales[SalesAmount])
-```
+`SUM(FactSales[SalesAmount])`
 
 Here:
 
@@ -191,15 +187,11 @@ Functions perform calculations.
 
 General syntax:
 
-```text
-FUNCTION(argument1, argument2, ...)
-```
+`FUNCTION(argument1, argument2, ...)`
 
 Example:
 
-```dax
-SUM(FactSales[SalesAmount])
-```
+`SUM(FactSales[SalesAmount])`
 
 Here:
 
@@ -230,13 +222,9 @@ The `SUM()` functions execute before `DIVIDE()` returns the final result.
 
 These formulas are equivalent:
 
-```dax
-SUM(FactSales[SalesAmount])
-```
+`SUM(FactSales[SalesAmount])`
 
-```dax
-sum(FactSales[SalesAmount])
-```
+`sum(FactSales[SalesAmount])`
 
 However, using proper capitalization improves readability.
 

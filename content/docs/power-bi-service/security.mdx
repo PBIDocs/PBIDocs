@@ -54,9 +54,7 @@ A role has:
 
 Example role named `Region - West`, filtering `DimStore`:
 
-```dax
-[Region] = "West"
-```
+`[Region] = "West"`
 
 Every visual in the report is now filtered to rows where `Region` equals `"West"` for any user assigned to this role.
 
@@ -68,15 +66,11 @@ Static RLS hardcodes the filter value directly in the role.
 
 Example:
 
-```dax
-[Region] = "West"
-```
+`[Region] = "West"`
 
 A second role for the East team:
 
-```dax
-[Region] = "East"
-```
+`[Region] = "East"`
 
 This works well for a small, fixed number of regions or departments, but does not scale to hundreds of individual users.
 
@@ -88,9 +82,7 @@ Dynamic RLS filters data based on the signed-in user, rather than a hardcoded va
 
 It uses `USERPRINCIPALNAME()` to identify who is viewing the report:
 
-```dax
-[Email] = USERPRINCIPALNAME()
-```
+`[Email] = USERPRINCIPALNAME()`
 
 This assumes a table (commonly `DimUser` or `DimSalesRep`) that maps each user's email to the rows they should see.
 
@@ -122,9 +114,7 @@ bob@company.com        | East
 
 The role filter expression on `DimUser`:
 
-```dax
-[Email] = USERPRINCIPALNAME()
-```
+`[Email] = USERPRINCIPALNAME()`
 
 Because `DimUser` filters `DimStore`, which filters `FactSales`, the security rule propagates through the whole model automatically.
 

@@ -115,9 +115,7 @@ Sales by Customer
 
 Create one measure:
 
-```dax
-Total Sales
-```
+`Total Sales`
 
 and allow report filters to control the result.
 
@@ -140,21 +138,15 @@ SUM(FactSales[SalesAmount])
 
 Without filters:
 
-```text
-Total Sales = $500,000
-```
+`Total Sales = $500,000`
 
 Filter:
 
-```text
-Category = Off Road
-```
+`Category = Off Road`
 
 Result:
 
-```text
-Total Sales = $150,000
-```
+`Total Sales = $150,000`
 
 The DAX formula did not change.
 
@@ -265,9 +257,7 @@ SUM(FactSales[SalesAmount])
 
 Filter:
 
-```text
-Category = Tires
-```
+`Category = Tires`
 
 Power BI automatically filters FactSales.
 
@@ -339,9 +329,7 @@ DIVIDE(
 
 Instead of:
 
-```dax
-[Profit] / [Sales]
-```
+`[Profit] / [Sales]`
 
 DIVIDE safely handles zero values.
 
@@ -421,9 +409,7 @@ Sales by Customer Formula
 
 Instead:
 
-```dax
-Total Sales
-```
+`Total Sales`
 
 and use dimensions for filtering.
 
