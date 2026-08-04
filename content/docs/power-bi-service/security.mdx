@@ -1,9 +1,261 @@
-﻿---
-title: "Security"
-description: Power BI documentation.
+---
+title: "Row-Level Security"
+description: Learn how Row-Level Security (RLS) restricts data access in Power BI using roles and DAX filter expressions.
 ---
 
-# Security
+# Row-Level Security
 
-Content coming soon.
+Row-Level Security (RLS) restricts what data a user can see, based on who they are.
 
+The report stays the same for everyone. The rows returned underneath it do not.
+
+RLS is commonly used to enforce:
+
+- Regional sales access
+- Department-level visibility
+- Customer or account ownership
+- Manager vs. individual contributor views
+
+---
+
+## How RLS Works
+
+RLS is built from two pieces:
+
+```text
+Role
+  |
+  | defines a filter expression
+  |
+Table
+```
+
+```text
+User
+  |
+  | is assigned to a role
+  |
+Role
+```
+
+When a user opens a report, Power BI applies the role's filter expression before any visual renders.
+
+---
+
+## Creating a Role
+
+Roles are created in Power BI Desktop, under **Modeling > Manage Roles**.
+
+A role has:
+
+- A name
+- A table
+- A DAX filter expression
+
+Example role named `Region - West`, filtering `DimStore`:
+
+```dax
+[Region] = "West"
+```
+
+Every visual in the report is now filtered to rows where `Region` equals `"West"` for any user assigned to this role.
+
+---
+
+## Static Row-Level Security
+
+Static RLS hardcodes the filter value directly in the role.
+
+Example:
+
+```dax
+[Region] = "West"
+```
+
+A second role for the East team:
+
+```dax
+[Region] = "East"
+```
+
+This works well for a small, fixed number of regions or departments, but does not scale to hundreds of individual users.
+
+---
+
+## Dynamic Row-Level Security
+
+Dynamic RLS filters data based on the signed-in user, rather than a hardcoded value.
+
+It uses `USERPRINCIPALNAME()` to identify who is viewing the report:
+
+```dax
+[Email] = USERPRINCIPALNAME()
+```
+
+This assumes a table (commonly `DimUser` or `DimSalesRep`) that maps each user's email to the rows they should see.
+
+---
+
+## Dynamic RLS with a Mapping Table
+
+A typical dynamic RLS model looks like:
+
+```text
+DimUser
+   |
+   | Email, Region
+   |
+DimStore
+   |
+   |
+FactSales
+```
+
+`DimUser` example:
+
+```text
+Email                  | Region
+-----------------------|-------
+alice@company.com      | West
+bob@company.com        | East
+```
+
+The role filter expression on `DimUser`:
+
+```dax
+[Email] = USERPRINCIPALNAME()
+```
+
+Because `DimUser` filters `DimStore`, which filters `FactSales`, the security rule propagates through the whole model automatically.
+
+---
+
+## Filtering Through Relationships
+
+RLS relies on the same filter propagation as any other DAX filter.
+
+```text
+DimUser
+   |
+   | Region
+   |
+DimStore
+   |
+   | filters
+   |
+FactSales
+```
+
+If a relationship is one-directional and pointed the wrong way, the RLS filter will not reach the fact table, and the role will silently show more data than intended.
+
+Always verify the filter direction between the security table and the tables it needs to restrict.
+
+---
+
+## Testing Roles
+
+Power BI Desktop lets you preview a role before publishing.
+
+Use **Modeling > View As** and select a role to see the report exactly as a user assigned to that role would.
+
+For dynamic RLS, `USERPRINCIPALNAME()` returns an empty value in Desktop preview unless a specific user is entered, so test with:
+
+```dax
+"alice@company.com" = LOOKUPVALUE(
+    DimUser[Email],
+    DimUser[Email],
+    "alice@company.com"
+)
+```
+
+or use the **Other user** option in the View As dialog to simulate a specific email.
+
+---
+
+## Assigning Users to Roles
+
+Roles are defined in Desktop, but users are assigned to them after publishing, in the Power BI Service.
+
+Steps:
+
+1. Publish the report to a workspace.
+2. Open the dataset settings.
+3. Select **Security**.
+4. Add users or security groups to each role.
+
+Static roles require manually adding every user. Dynamic roles typically need only one broad group added, since the filter expression itself determines what each person sees.
+
+---
+
+## RLS and Admins
+
+Workspace admins, members, and contributors bypass RLS by default.
+
+This is intentional; RLS is meant to restrict report *consumers*, not the people building and maintaining the model.
+
+To test RLS as it will actually be experienced, use a Viewer-level account or the **View As** role preview.
+
+---
+
+## Static vs. Dynamic RLS
+
+| | Static | Dynamic |
+|---|---|---|
+| Filter value | Hardcoded in the role | Based on signed-in user |
+| Scales to many users | Poorly | Well |
+| Setup complexity | Low | Higher (needs a mapping table) |
+| Maintenance | Manual role edits | Data-driven, self-maintaining |
+
+Most enterprise models use dynamic RLS once the user base grows beyond a handful of roles.
+
+---
+
+## RLS Best Practices
+
+- Prefer dynamic RLS over maintaining many static roles.
+- Filter from a dedicated security/dimension table, not the fact table directly.
+- Always verify filter direction reaches every table that needs restricting.
+- Test every role with **View As** before publishing.
+- Keep the user-to-region (or user-to-department) mapping table up to date.
+
+---
+
+## Common RLS Mistakes
+
+### Filtering the Wrong Table
+
+Applying the role filter directly to a fact table instead of a dimension table makes the rule harder to maintain and easy to miss when new fact tables are added.
+
+### Bidirectional Filtering Confusion
+
+Unexpected bidirectional relationships can cause RLS to restrict more (or less) than intended, since filters may propagate through paths that were not accounted for.
+
+### Forgetting to Assign Users
+
+A role with a correct DAX filter still allows unrestricted access to anyone not assigned to it. Roles only apply to the users explicitly added to them.
+
+### Testing as an Admin
+
+Workspace admins bypass RLS, so testing while logged in as an admin can hide security problems that a real Viewer would encounter.
+
+---
+
+## RLS Checklist
+
+Before publishing a model with sensitive data:
+
+- Every role has a correct DAX filter expression.
+- Filter direction reaches every table that needs restricting.
+- Each role has been tested with **View As**.
+- Users or security groups are assigned to every role.
+- No sensitive table is left unfiltered.
+
+---
+
+## Next Steps
+
+Continue learning Power BI security and modeling:
+
+- [Relationships](/docs/modeling/relationships)
+- [CALCULATE()](/docs/dax/calculate)
+- [Workspaces](/docs/power-bi-service/workspaces)
