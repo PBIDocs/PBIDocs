@@ -132,28 +132,28 @@ SUMX(
 ```text
 Read Row 1
 
-â†“
+↓
 
 Calculate
-Quantity Ã— Unit Price
+Quantity × Unit Price
 
-â†“
+↓
 
 Read Row 2
 
-â†“
+↓
 
 Calculate
 
-â†“
+↓
 
 Read Row 3
 
-â†“
+↓
 
 ...
 
-â†“
+↓
 
 Add all results together
 ```
@@ -304,12 +304,12 @@ Understanding when each context exists makes DAX much easier to understand.
 
 | Feature | Row Context | Filter Context |
 |---|---|---|
-| Created by Calculated Columns | âœ… | âŒ |
-| Created by Measures | âŒ | âœ… |
-| Created by Iterator Functions | âœ… | âŒ |
-| Created by Report Filters | âŒ | âœ… |
-| Created by Slicers | âŒ | âœ… |
-| Modified by `CALCULATE()` | âžœ Converted | âœ… |
+| Created by Calculated Columns | ✅ | ❌ |
+| Created by Measures | ❌ | ✅ |
+| Created by Iterator Functions | ✅ | ❌ |
+| Created by Report Filters | ❌ | ✅ |
+| Created by Slicers | ❌ | ✅ |
+| Modified by `CALCULATE()` | ➜ Converted | ✅ |
 
 Although both contexts affect calculations, they solve different problems.
 

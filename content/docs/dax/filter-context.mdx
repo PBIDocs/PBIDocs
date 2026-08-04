@@ -9,7 +9,7 @@ Filter context is one of the most important concepts in DAX.
 
 Every measure in Power BI is evaluated within a filter context. Understanding how filters affect calculations is essential for writing accurate and efficient DAX.
 
-Many DAX functionsâ€”including `CALCULATE()`, `ALL()`, and Time Intelligence functionsâ€”depend on filter context.
+Many DAX functions—including `CALCULATE()`, `ALL()`, and Time Intelligence functions—depend on filter context.
 
 ---
 
@@ -118,7 +118,7 @@ Slicer
       +
 Relationships
 
-â†“
+↓
 
 Filter Context
 ```
@@ -212,11 +212,11 @@ Year
      +
 Region
 
-â†“
+↓
 
 Visible FactSales Rows
 
-â†“
+↓
 
 Measure Evaluation
 ```
@@ -234,9 +234,9 @@ Example:
 ```
 Year
 
-â˜ 2024
-â˜ 2025
-â˜‘ 2026
+☐ 2024
+☐ 2025
+☑ 2026
 ```
 
 When the user selects **2026**, every connected visual is filtered automatically.
@@ -306,19 +306,19 @@ When the user clicks **Bikes** in the bar chart:
 ```text
 Bar Chart
 
-â†“
+↓
 
 Category = Bikes
 
-â†“
+↓
 
 Table updates
 
-â†“
+↓
 
 KPI updates
 
-â†“
+↓
 
 Measures recalculate
 ```
@@ -468,7 +468,7 @@ It can be created by:
 - Relationships
 - Other DAX functions
 
-The same measure can return different results because the filter context changesâ€”not because the formula changes.
+The same measure can return different results because the filter context changes—not because the formula changes.
 
 Understanding filter context is the foundation for mastering DAX.
 

@@ -18,10 +18,10 @@ Power BI models are built using tables, relationships, columns, and measures.
 
 Common model objects include:
 
-- `<code>Fact Tables</code>` â€” Store measurable business events.
-- `<code>Dimension Tables</code>` â€” Provide descriptive information for filtering.
-- `<code>Relationships</code>` â€” Connect tables together.
-- `<code>Measures</code>` â€” Calculate business logic using DAX.
+- `<code>Fact Tables</code>` — Store measurable business events.
+- `<code>Dimension Tables</code>` — Provide descriptive information for filtering.
+- `<code>Relationships</code>` — Connect tables together.
+- `<code>Measures</code>` — Calculate business logic using DAX.
 
 ---
 
@@ -396,12 +396,12 @@ Example:
 
 ```text
 Sales
- â”œâ”€â”€ Sales Amount
- â”œâ”€â”€ Customer Name
- â”œâ”€â”€ Product Name
- â”œâ”€â”€ Product Category
- â”œâ”€â”€ Store
- â””â”€â”€ Date
+ ├── Sales Amount
+ ├── Customer Name
+ ├── Product Name
+ ├── Product Category
+ ├── Store
+ └── Date
 ```
 
 This may work for small datasets, but creates problems as models grow.
