@@ -24,7 +24,7 @@ Expression
 
 Example:
 
-```dax
+```dax lineNumbers
 Total Sales =
 SUM(FactSales[SalesAmount])
 ```
@@ -60,7 +60,7 @@ Measures are referenced using square brackets only.
 
 Example:
 
-```dax
+```dax lineNumbers
 Profit Margin =
 DIVIDE(
     [Total Profit],
@@ -103,7 +103,7 @@ Constants are often used inside calculations.
 
 Example:
 
-```dax
+```dax lineNumbers
 Total Cost =
 SUM(Sales[Quantity]) * 25
 ```
@@ -125,7 +125,7 @@ Comparison operators return TRUE or FALSE.
 
 Example:
 
-```dax
+```dax lineNumbers
 IF(
     [Total Sales] > 100000,
     "High",
@@ -147,7 +147,7 @@ DAX also supports logical operations.
 
 Example:
 
-```dax
+```dax lineNumbers
 IF(
     Sales[Quantity] > 10 &&
     Sales[SalesAmount] > 500,
@@ -162,7 +162,7 @@ IF(
 
 Single-line comments begin with two forward slashes.
 
-```dax
+```dax lineNumbers
 // Calculate total sales
 Total Sales =
 SUM(FactSales[SalesAmount])
@@ -170,7 +170,7 @@ SUM(FactSales[SalesAmount])
 
 Block comments can also be used.
 
-```dax
+```dax lineNumbers
 /*
 Revenue calculations
 for monthly reporting
@@ -206,7 +206,7 @@ Functions can be combined together.
 
 Example:
 
-```dax
+```dax lineNumbers
 Profit Margin =
 DIVIDE(
     SUM(FactSales[Profit]),

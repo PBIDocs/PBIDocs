@@ -21,7 +21,7 @@ The pattern always has the same shape: a filtered value, divided by an unfiltere
 
 ## The Basic Pattern
 
-```dax
+```dax lineNumbers
 Sales % of Total =
 DIVIDE(
     [Total Sales],
@@ -48,7 +48,7 @@ The numerator respects whatever filters are active. The denominator deliberately
 
 Using `ALL()` on the entire table produces a percentage against the true grand total, regardless of any other filters active in the report.
 
-```dax
+```dax lineNumbers
 Sales % of Grand Total =
 DIVIDE(
     [Total Sales],
@@ -65,7 +65,7 @@ DIVIDE(
 
 Instead of comparing against the grand total, a row can be compared against just its own parent group.
 
-```dax
+```dax lineNumbers
 Sales % of Category =
 DIVIDE(
     [Total Sales],
@@ -95,7 +95,7 @@ Each product's percentage is relative to its own category total, not the overall
 
 Sometimes the denominator should stay fixed to a specific value, regardless of what the user filters elsewhere in the report.
 
-```dax
+```dax lineNumbers
 Sales % of West Region =
 DIVIDE(
     [Total Sales],
@@ -114,7 +114,7 @@ This always divides by West region sales specifically, even if the report is cur
 
 `DIVIDE()` handles division by zero gracefully, returning blank instead of an error.
 
-```dax
+```dax lineNumbers
 Safe:   DIVIDE([Total Sales], [Grand Total])
 Risky:  [Total Sales] / [Grand Total]
 ```

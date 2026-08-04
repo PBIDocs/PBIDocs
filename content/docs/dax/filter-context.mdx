@@ -62,7 +62,7 @@ Only the rows being evaluated change.
 
 Suppose we have this measure:
 
-```dax
+```dax lineNumbers
 Total Sales =
 SUM(FactSales[SalesAmount])
 ```
@@ -137,7 +137,7 @@ Clothing               $40,000
 
 Although only one measure is used:
 
-```dax
+```dax lineNumbers
 Total Sales =
 SUM(FactSales[SalesAmount])
 ```
@@ -166,7 +166,7 @@ DimCustomer -- FactSales -- DimProduct
 
 Suppose a report contains this measure:
 
-```dax
+```dax lineNumbers
 Total Sales =
 SUM(FactSales[SalesAmount])
 ```
@@ -323,7 +323,7 @@ Power BI automatically creates a new filter context for every affected visual.
 
 Consider this measure:
 
-```dax
+```dax lineNumbers
 Total Sales =
 SUM(FactSales[SalesAmount])
 ```
@@ -351,7 +351,7 @@ The `ALL()` function removes filters from a table or column.
 
 Example:
 
-```dax
+```dax lineNumbers
 Total Sales (All Products) =
 CALCULATE(
     [Total Sales],
@@ -373,7 +373,7 @@ The `CALCULATE()` function evaluates an expression using a modified set of filte
 
 Example:
 
-```dax
+```dax lineNumbers
 Bike Sales =
 CALCULATE(
     [Total Sales],
@@ -393,7 +393,7 @@ Filter context is often modified to compare a filtered value against the overall
 
 Example:
 
-```dax
+```dax lineNumbers
 Percent of Total =
 DIVIDE(
     [Total Sales],

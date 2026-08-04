@@ -28,7 +28,7 @@ The function evaluates each row in a table and keeps only the rows that satisfy 
 
 General syntax:
 
-```dax
+```dax lineNumbers
 FILTER(
     Table,
     Condition
@@ -37,7 +37,7 @@ FILTER(
 
 Example:
 
-```dax
+```dax lineNumbers
 FILTER(
     FactSales,
     FactSales[SalesAmount] > 1000
@@ -65,7 +65,7 @@ Imagine the following table:
 
 Applying:
 
-```dax
+```dax lineNumbers
 FILTER(
     FactSales,
     FactSales[SalesAmount] > 1000
@@ -93,7 +93,7 @@ It returns a table.
 
 Example:
 
-```dax
+```dax lineNumbers
 FILTER(
     FactSales,
     FactSales[Quantity] > 10
@@ -114,7 +114,7 @@ The most common use of FILTER is inside `CALCULATE()`.
 
 Example:
 
-```dax
+```dax lineNumbers
 Large Sales =
 CALCULATE(
     [Total Sales],
@@ -141,7 +141,7 @@ Suppose management wants to analyze high-value orders.
 
 Measure:
 
-```dax
+```dax lineNumbers
 High Value Sales =
 CALCULATE(
     [Total Sales],
@@ -164,7 +164,7 @@ Many DAX functions apply simple filters automatically.
 
 For example:
 
-```dax
+```dax lineNumbers
 CALCULATE(
     [Total Sales],
     DimProduct[Category] = "Bikes"
@@ -191,7 +191,7 @@ FILTER provides the flexibility needed for these advanced scenarios.
 
 Example:
 
-```dax
+```dax lineNumbers
 Large Bike Sales =
 CALCULATE(
     [Total Sales],
@@ -217,7 +217,7 @@ Multiple conditions can be combined using logical operators.
 
 Every condition must be true.
 
-```dax
+```dax lineNumbers
 FILTER(
     FactSales,
     FactSales[Quantity] > 10 &&
@@ -241,7 +241,7 @@ SalesAmount > 1000
 
 Only one condition needs to be true.
 
-```dax
+```dax lineNumbers
 FILTER(
     FactSales,
     FactSales[Category] = "Bikes" ||
@@ -267,7 +267,7 @@ Accessories
 
 Example:
 
-```dax
+```dax lineNumbers
 Sales This Year =
 CALCULATE(
     [Total Sales],
@@ -290,7 +290,7 @@ One of the most common patterns combines `FILTER()` with `ALL()`.
 
 Example:
 
-```dax
+```dax lineNumbers
 Running Sales =
 CALCULATE(
     [Total Sales],
@@ -317,7 +317,7 @@ Unlike simple filters, `FILTER()` can compare one value to another.
 
 Example:
 
-```dax
+```dax lineNumbers
 Above Average Sales =
 CALCULATE(
     [Total Sales],
@@ -362,7 +362,7 @@ For simple filter conditions, use `CALCULATE()` directly.
 
 Example:
 
-```dax
+```dax lineNumbers
 Bike Sales =
 CALCULATE(
     [Total Sales],
@@ -372,7 +372,7 @@ CALCULATE(
 
 This is cleaner and typically performs better than:
 
-```dax
+```dax lineNumbers
 Bike Sales =
 CALCULATE(
     [Total Sales],

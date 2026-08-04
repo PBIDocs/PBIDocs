@@ -133,3 +133,11 @@ figure.shiki {
 .dark .shiki code.language-text span {
   color: var(--primary-muted);
 }
+
+/* Line-wrap toggle: fumadocs' Pre defaults to w-max (intrinsic width),
+   which is what makes long lines scroll horizontally instead of wrapping. */
+figure.shiki[data-wrap] pre {
+  width: 100%;
+  white-space: pre-wrap;
+  word-break: break-word;
+}

@@ -1,5 +1,6 @@
 import { defineConfig, defineDocs } from 'fumadocs-mdx/config';
 import { metaSchema, pageSchema } from 'fumadocs-core/source/schema';
+import { pbidocsLightTheme, pbidocsDarkTheme } from './lib/shiki-theme';
 
 // You can customize Zod schemas for frontmatter and `meta.json` here
 // see https://fumadocs.dev/docs/mdx/collections
@@ -20,8 +21,8 @@ export default defineConfig({
   mdxOptions: {
     rehypeCodeOptions: {
       themes: {
-        light: 'github-light',
-        dark: 'github-dark',
+        light: pbidocsLightTheme,
+        dark: pbidocsDarkTheme,
       },
       addLanguageClass: true,
     },

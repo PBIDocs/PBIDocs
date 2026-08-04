@@ -110,7 +110,7 @@ Almost every Time Intelligence calculation depends on this relationship.
 
 Suppose you already have a basic measure:
 
-```dax
+```dax lineNumbers
 Total Sales =
 SUM(FactSales[SalesAmount])
 ```
@@ -131,7 +131,7 @@ The `TOTALYTD()` function makes this calculation simple.
 
 Example:
 
-```dax
+```dax lineNumbers
 Sales YTD =
 TOTALYTD(
     [Total Sales],
@@ -157,7 +157,7 @@ Month-to-Date (MTD) calculates the cumulative value from the beginning of the cu
 
 Example:
 
-```dax
+```dax lineNumbers
 Sales MTD =
 TOTALMTD(
     [Total Sales],
@@ -175,7 +175,7 @@ Quarter-to-Date (QTD) accumulates values from the start of the current quarter.
 
 Example:
 
-```dax
+```dax lineNumbers
 Sales QTD =
 TOTALQTD(
     [Total Sales],
@@ -195,7 +195,7 @@ The `SAMEPERIODLASTYEAR()` function returns the equivalent period from the previ
 
 Example:
 
-```dax
+```dax lineNumbers
 Sales Last Year =
 CALCULATE(
     [Total Sales],
@@ -219,7 +219,7 @@ The `DATEADD()` function shifts the current filter by a specified interval.
 
 Example:
 
-```dax
+```dax lineNumbers
 Sales Previous Month =
 CALCULATE(
     [Total Sales],
@@ -253,7 +253,7 @@ It is often used inside `CALCULATE()`.
 
 Example:
 
-```dax
+```dax lineNumbers
 Sales YTD =
 CALCULATE(
     [Total Sales],
@@ -288,7 +288,7 @@ Instead of displaying sales for each individual period, a running total continuo
 
 Example:
 
-```dax
+```dax lineNumbers
 Running Sales =
 CALCULATE(
     [Total Sales],
@@ -318,7 +318,7 @@ Rolling calculations smooth short-term fluctuations by evaluating the previous 1
 
 Example:
 
-```dax
+```dax lineNumbers
 Rolling 12 Months =
 CALCULATE(
     [Total Sales],
@@ -346,7 +346,7 @@ Year-over-Year compares the current period with the same period from the previou
 
 Example:
 
-```dax
+```dax lineNumbers
 Sales YoY % =
 DIVIDE(
     [Total Sales] - [Sales Last Year],
@@ -371,7 +371,7 @@ Month-over-Month compares the current month to the previous month.
 
 Example:
 
-```dax
+```dax lineNumbers
 Sales Previous Month =
 CALCULATE(
     [Total Sales],

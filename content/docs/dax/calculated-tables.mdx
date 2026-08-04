@@ -31,7 +31,7 @@ From the **Modeling** ribbon in Power BI Desktop, select **New Table**, then ent
 
 Example:
 
-```dax
+```dax lineNumbers
 ActiveProducts =
 FILTER(
     DimProduct,
@@ -63,7 +63,7 @@ Unlike a measure, which recalculates constantly as filters change, a calculated 
 
 ### Building a Date Table
 
-```dax
+```dax lineNumbers
 DimDate =
 CALENDAR(
     DATE(2020, 1, 1),
@@ -75,7 +75,7 @@ This generates one row per day across the specified range, commonly extended wit
 
 ### Combining Tables
 
-```dax
+```dax lineNumbers
 AllProducts =
 UNION(
     OnlineProducts,
@@ -87,7 +87,7 @@ Useful when the same kind of data arrives from two different sources that need t
 
 ### Creating a Distinct Values Table
 
-```dax
+```dax lineNumbers
 UniqueRegions =
 DISTINCT(DimStore[Region])
 ```
@@ -96,7 +96,7 @@ Useful as a clean lookup or filter table when the source data doesn't already pr
 
 ### Summarizing Data into a New Table
 
-```dax
+```dax lineNumbers
 SalesByCategory =
 SUMMARIZE(
     FactSales,

@@ -30,7 +30,7 @@ While Excel formulas typically work with individual cells, DAX works with:
 
 Example:
 
-```dax
+```dax lineNumbers
 Total Sales =
 SUM(Sales[SalesAmount])
 ```
@@ -81,7 +81,7 @@ Measures are dynamic calculations evaluated when a report is viewed.
 
 Example:
 
-```dax
+```dax lineNumbers
 Total Quantity =
 SUM(Sales[Quantity])
 ```
@@ -113,7 +113,7 @@ Calculated columns create values stored inside a table.
 
 Example:
 
-```dax
+```dax lineNumbers
 Sales Amount =
 Sales[Quantity] * Sales[Unit Price]
 ```
@@ -173,7 +173,7 @@ Instead, it evaluates only the rows currently visible after filters have been ap
 
 Example:
 
-```dax
+```dax lineNumbers
 Total Sales =
 SUM(FactSales[SalesAmount])
 ```

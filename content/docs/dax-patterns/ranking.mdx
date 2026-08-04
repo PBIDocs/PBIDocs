@@ -21,7 +21,7 @@ DAX handles ranking with `RANKX()`.
 
 ## Basic Ranking
 
-```dax
+```dax lineNumbers
 Product Rank =
 RANKX(
     ALL(DimProduct),
@@ -50,7 +50,7 @@ With ALL():    every row is compared against every product -> real ranks
 
 By default, `RANKX()` ranks highest value as 1st (descending).
 
-```dax
+```dax lineNumbers
 Product Rank (Highest First) =
 RANKX(
     ALL(DimProduct),
@@ -76,7 +76,7 @@ Use ascending order for rankings like "lowest performing products" or "smallest 
 
 Ranking within each category — instead of across the whole table — uses `ALLEXCEPT()` to keep the category filter active.
 
-```dax
+```dax lineNumbers
 Rank Within Category =
 RANKX(
     ALLEXCEPT(DimProduct, DimProduct[Category]),

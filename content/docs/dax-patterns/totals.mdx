@@ -23,7 +23,7 @@ Total
 
 A simple `SUM()` respects whatever filter context is currently active.
 
-```dax
+```dax lineNumbers
 Total Sales =
 SUM(FactSales[SalesAmount])
 ```
@@ -36,7 +36,7 @@ In a table visual grouped by Category, this measure automatically returns the to
 
 `ALL()` removes filters from a table or column, producing a true grand total regardless of the current selection.
 
-```dax
+```dax lineNumbers
 Grand Total Sales =
 CALCULATE(
     [Total Sales],
@@ -52,7 +52,7 @@ Every row in a table visual using this measure shows the same overall total, ign
 
 Combining a filtered total with a grand total produces a percentage of the whole.
 
-```dax
+```dax lineNumbers
 Sales % of Total =
 DIVIDE(
     [Total Sales],
@@ -68,7 +68,7 @@ Each row shows its own share of the overall total — see [Percent of Total](/do
 
 `ALL()` can target a single column instead of an entire table, removing just that filter while keeping others active.
 
-```dax
+```dax lineNumbers
 Sales Ignoring Region =
 CALCULATE(
     [Total Sales],
@@ -84,7 +84,7 @@ This keeps filters like Category or Date active, while ignoring whatever Region 
 
 `ALLEXCEPT()` removes all filters except the ones explicitly listed, useful for a subtotal that should stay fixed within a larger group.
 
-```dax
+```dax lineNumbers
 Sales Within Category =
 CALCULATE(
     [Total Sales],

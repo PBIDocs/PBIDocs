@@ -150,7 +150,7 @@ Use **Modeling > View As** and select a role to see the report exactly as a user
 
 For dynamic RLS, `USERPRINCIPALNAME()` returns an empty value in Desktop preview unless a specific user is entered, so test with:
 
-```dax
+```dax lineNumbers
 "alice@company.com" = LOOKUPVALUE(
     DimUser[Email],
     DimUser[Email],
