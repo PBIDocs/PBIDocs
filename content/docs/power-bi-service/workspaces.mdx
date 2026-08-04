@@ -1,9 +1,194 @@
-﻿---
+---
 title: "Workspaces"
-description: Power BI documentation.
+description: Learn how Power BI workspaces organize reports, datasets, and permissions in the Power BI Service.
 ---
 
 # Workspaces
 
-Content coming soon.
+A workspace is where Power BI content lives once it leaves Desktop and is published to the Service.
 
+```text
+Power BI Desktop
+       |
+       | Publish
+       |
+   Workspace
+```
+
+Reports, dashboards, datasets, and dataflows are all organized inside workspaces.
+
+---
+
+## What a Workspace Contains
+
+```text
+Workspace
+   |
+   +-- Datasets
+   |
+   +-- Reports
+   |
+   +-- Dashboards
+   |
+   +-- Dataflows
+```
+
+A single dataset published to a workspace can be reused by multiple reports, avoiding duplicate copies of the same data.
+
+---
+
+## Workspace Roles
+
+Access to a workspace is controlled by roles, assigned per user or security group.
+
+| Role | Can View | Can Edit | Can Publish | Can Manage Access |
+|---|---|---|---|---|
+| Viewer | Yes | No | No | No |
+| Contributor | Yes | Yes | Yes | No |
+| Member | Yes | Yes | Yes | Yes |
+| Admin | Yes | Yes | Yes | Yes |
+
+Admins can also delete the workspace and change its settings, including who else is an Admin.
+
+---
+
+## Viewer
+
+Viewers can open reports and dashboards, interact with slicers and filters, and use bookmarks — but cannot change the underlying content.
+
+```text
+Viewer
+  |
+  | can
+  |
+Interact with reports (read-only)
+```
+
+Viewer is the appropriate role for most report consumers.
+
+---
+
+## Contributor
+
+Contributors can create and edit content inside the workspace, including publishing updated reports from Desktop.
+
+```text
+Contributor
+  |
+  | can
+  |
+Edit and publish content
+```
+
+Contributors cannot manage who else has access to the workspace.
+
+---
+
+## Member and Admin
+
+Members and Admins can additionally manage workspace access, adding or removing other users and changing their roles.
+
+```text
+Admin
+  |
+  | can
+  |
+Manage workspace settings and access
+```
+
+Admin is typically reserved for whoever owns the workspace or leads the team responsible for it.
+
+---
+
+## Workspaces vs. My Workspace
+
+Every user also has a personal **My Workspace**, separate from shared team workspaces.
+
+```text
+My Workspace
+   |
+   | personal, not shared
+   |
+   Only visible to you
+```
+
+My Workspace is useful for individual exploration, but content there cannot be shared with a team the way content in a proper workspace can.
+
+---
+
+## Apps
+
+A workspace can be published as an **App**, giving consumers a clean, read-only view of selected content without exposing the workspace's editing environment.
+
+```text
+Workspace (editing)
+       |
+       | Publish app
+       |
+   App (consumption)
+```
+
+Apps are the recommended way to distribute finished reports to a broad audience, since they hide in-progress work and workspace management controls.
+
+---
+
+## Premium and Shared Capacity
+
+Workspaces run on either shared capacity or a Premium/Fabric capacity.
+
+| | Shared Capacity | Premium / Fabric Capacity |
+|---|---|---|
+| Refresh frequency | Limited (typically 8/day) | Higher, configurable |
+| Dataset size limit | Smaller | Larger |
+| Paginated reports | Not supported | Supported |
+| Dataflows | Limited | Full support |
+
+Larger organizations typically assign important workspaces to a dedicated capacity for predictable performance.
+
+---
+
+## Best Practices
+
+- Use one workspace per team or project, not one giant shared workspace for everything.
+- Assign the least-privileged role that still lets someone do their job (most people should be Viewers).
+- Publish an App for broad distribution instead of giving report consumers direct workspace access.
+- Use security groups instead of adding individual users one at a time.
+- Reserve Admin for a small number of trusted owners.
+
+---
+
+## Common Mistakes
+
+### Everyone Is a Contributor
+
+Giving every consumer Contributor access means anyone can accidentally modify a shared report. Most users only need Viewer access.
+
+### One Workspace for the Entire Organization
+
+A single workspace holding every team's reports makes permissions difficult to manage and increases the risk of someone seeing data they shouldn't.
+
+### Sharing the Workspace Instead of an App
+
+Giving report consumers direct workspace access exposes in-progress content and management settings. Publishing an App keeps the editing environment separate from what consumers see.
+
+---
+
+## Workspace Checklist
+
+Before rolling out a workspace to a team:
+
+- Roles are assigned based on least privilege.
+- Broad distribution goes through a published App, not direct workspace access.
+- The workspace is assigned to appropriate capacity for its refresh and size needs.
+- Security groups are used instead of individually added users where possible.
+- Only trusted owners have the Admin role.
+
+---
+
+## Next Steps
+
+Continue exploring the Power BI Service:
+
+- [Dashboards](/docs/power-bi-service/dashboards)
+- [Refresh](/docs/power-bi-service/refresh)
+- [Row-Level Security](/docs/power-bi-service/security)

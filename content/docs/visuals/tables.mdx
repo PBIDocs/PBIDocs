@@ -1,9 +1,172 @@
-﻿---
+---
 title: "Tables"
-description: Power BI documentation.
+description: Learn when to use Table and Matrix visuals in Power BI, and how to configure them well.
 ---
 
 # Tables
 
-Content coming soon.
+Charts show patterns. Tables show exact numbers.
 
+```text
+Chart
+  |
+  | "sales are trending up"
+  |
+Table
+  |
+  | "March was exactly $84,213.50"
+```
+
+Power BI offers two grid-style visuals: **Table** and **Matrix**.
+
+---
+
+## Table Visual
+
+A Table lists rows and columns, similar to a spreadsheet.
+
+```text
+Product   | Category | Sales
+----------|----------|-------
+Tire A    | Bikes    | 250
+Tire B    | Bikes    | 400
+Helmet A  | Gear     | 180
+```
+
+Best for a flat list of detailed records — no grouping, no hierarchy.
+
+---
+
+## Matrix Visual
+
+A Matrix adds row and column grouping, similar to a pivot table.
+
+```text
+              | 2025    | 2026
+--------------|---------|--------
+Bikes         | 45,000  | 52,000
+  Tire A      | 20,000  | 24,000
+  Tire B      | 25,000  | 28,000
+Gear          | 12,000  | 15,000
+```
+
+Best when data needs to be summarized and drilled into by category, region, or time period.
+
+---
+
+## Table vs. Matrix
+
+| | Table | Matrix |
+|---|---|---|
+| Structure | Flat rows | Grouped rows and columns |
+| Drill-down | No | Yes |
+| Subtotals | No | Yes |
+| Best for | Detailed record lists | Summarized, hierarchical data |
+
+---
+
+## Adding a Table or Matrix
+
+Steps:
+
+1. Select **Table** or **Matrix** from the **Visualizations** pane.
+2. Drag fields into **Rows** (and **Columns**, for a Matrix).
+3. Drag numeric fields into **Values**.
+
+For a Matrix, dragging multiple fields into **Rows** creates a drill-down hierarchy (for example, Category, then Product).
+
+---
+
+## Drilling in a Matrix
+
+Matrix rows built from a hierarchy can be expanded or collapsed.
+
+```text
+Category (collapsed)
+  |
+  | expand
+  |
+Category
+  +-- Product
+```
+
+Users can drill down one level at a time, or expand everything at once using the drill controls above the visual.
+
+---
+
+## Conditional Formatting
+
+Both Table and Matrix support conditional formatting, applying color scales, data bars, or icons based on cell values.
+
+```text
+Sales
+  1,200   ██████████ (green)
+    450   ████ (yellow)
+    -80   █ (red)
+```
+
+Configured from the field's context menu under **Conditional formatting**, directly on the Values field.
+
+---
+
+## Totals and Subtotals
+
+A Matrix can show subtotals for each group, and a grand total for the whole visual.
+
+```text
+Bikes    | 45,000
+  ...
+Gear     | 12,000
+  ...
+Total    | 57,000
+```
+
+Totals and subtotals can be toggled independently in the **Format** pane, under **Subtotals**.
+
+---
+
+## Best Practices
+
+- Use Table for detailed, non-hierarchical lists; use Matrix when grouping and drilling matter.
+- Turn off unnecessary subtotal levels to reduce visual clutter.
+- Use conditional formatting sparingly, on the one or two columns where it actually helps the reader.
+- Sort columns in the order that best supports the reader's task, not just alphabetically.
+- Avoid cramming so many columns into a table that it requires horizontal scrolling on a typical screen.
+
+---
+
+## Common Mistakes
+
+### Using a Table When a Matrix Fits Better
+
+A flat Table with repeated category values in every row is often better expressed as a grouped Matrix, which avoids the repetition and adds useful subtotals.
+
+### Too Many Columns
+
+A wide table that requires horizontal scrolling is hard to scan. Consider whether every column is necessary, or whether some belong in a drill-through detail page instead.
+
+### Overusing Conditional Formatting
+
+Applying color scales to every numeric column turns the table into visual noise instead of highlighting what actually matters.
+
+---
+
+## Table Checklist
+
+Before publishing a report page with tables:
+
+- Table vs. Matrix was chosen based on whether grouping is needed.
+- Subtotals are shown only where they add value.
+- Conditional formatting highlights the columns that matter most.
+- Column count and width fit without requiring horizontal scrolling.
+- Sort order supports how the reader will actually use the table.
+
+---
+
+## Next Steps
+
+Continue exploring Power BI visuals:
+
+- [Charts](/docs/visuals/charts)
+- [Slicers](/docs/visuals/slicers)
+- [Formatting](/docs/visuals/formatting)

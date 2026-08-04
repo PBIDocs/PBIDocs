@@ -1,9 +1,181 @@
-﻿---
+---
 title: "Dashboards"
-description: Power BI documentation.
+description: Learn how Power BI dashboards differ from reports, and how to build one from pinned tiles.
 ---
 
 # Dashboards
 
-Content coming soon.
+A dashboard is a single canvas of tiles, pinned from one or more reports.
 
+```text
+Report A ---+
+            |
+Report B ---+--- Tiles ---> Dashboard
+            |
+Report C ---+
+```
+
+Unlike a report, a dashboard is not interactive in the same way — it's a curated, at-a-glance summary.
+
+---
+
+## Dashboards vs. Reports
+
+| | Report | Dashboard |
+|---|---|---|
+| Pages | Multiple | Single |
+| Filtering | Full slicers and interactions | Limited (click-through only) |
+| Source | One dataset | Can combine tiles from many reports |
+| Best for | Exploration | At-a-glance monitoring |
+
+A dashboard is built *from* reports. It doesn't replace them.
+
+---
+
+## Pinning a Tile
+
+Tiles are added to a dashboard by pinning a visual from a report.
+
+```text
+Report visual
+     |
+     | Pin to dashboard
+     |
+Dashboard tile
+```
+
+Steps:
+
+1. Open a report and hover over the visual to pin.
+2. Select the pin icon.
+3. Choose an existing dashboard, or create a new one.
+
+The visual becomes a static tile that links back to the underlying report and visual state at the time it was pinned.
+
+---
+
+## Live Tiles vs. Pinned Images
+
+Most tiles stay live, refreshing whenever the underlying dataset refreshes.
+
+```text
+Dataset refresh
+     |
+     | updates
+     |
+Dashboard tile
+```
+
+Clicking a live tile takes the user back into the source report, filtered to match the state that was pinned.
+
+---
+
+## Pinning a Live Report Page
+
+An entire report page can also be pinned as a single tile, preserving its own interactivity when clicked into.
+
+```text
+Report Page
+     |
+     | Pin live page
+     |
+Dashboard tile (opens full page)
+```
+
+This is useful when a whole page — not just one visual — represents a meaningful summary.
+
+---
+
+## Combining Multiple Sources
+
+Because a dashboard is just a collection of tiles, it can combine visuals pinned from different reports and even different datasets.
+
+```text
+Sales Report -----+
+                   |
+Inventory Report --+--- Dashboard
+                   |
+Finance Report ----+
+```
+
+This makes dashboards useful as an executive summary that spans multiple underlying models.
+
+---
+
+## Q&A Tiles
+
+Dashboards support natural-language Q&A tiles, letting users type a question and get a matching visual back automatically.
+
+```text
+"total sales by region"
+        |
+        | Q&A
+        |
+   Auto-generated chart
+```
+
+Q&A quality depends heavily on clear field and table naming in the underlying dataset.
+
+---
+
+## Setting Alerts
+
+Numeric tiles (cards, KPIs) can trigger data alerts when a value crosses a threshold.
+
+```text
+Tile value > threshold
+        |
+        | triggers
+        |
+   Email / notification
+```
+
+Alerts are useful for monitoring metrics like inventory levels or daily sales without needing to check the dashboard manually.
+
+---
+
+## Best Practices
+
+- Keep a dashboard focused on one audience or one decision, not everything at once.
+- Pin only the tiles that matter for an at-a-glance view; leave exploration to the underlying reports.
+- Use live report page tiles when a whole page tells the story better than one visual.
+- Set alerts on the handful of metrics that actually need proactive monitoring.
+- Revisit dashboards periodically — pinned tiles can become stale if the source report changes significantly.
+
+---
+
+## Common Mistakes
+
+### Treating a Dashboard Like a Report
+
+Dashboards intentionally have less interactivity than reports. Trying to replicate full slicer-driven exploration on a dashboard usually means the content should be a report page instead.
+
+### Pinning Too Many Tiles
+
+A dashboard crowded with dozens of tiles stops being an at-a-glance summary. If it takes scrolling and searching to find the number that matters, it has grown too large.
+
+### Forgetting Tiles Are Snapshots of a Visual State
+
+A pinned tile reflects the filters applied at the moment it was pinned. Changing the source report's default filters later does not automatically update tiles pinned earlier.
+
+---
+
+## Dashboard Checklist
+
+Before sharing a dashboard broadly:
+
+- Every tile serves the dashboard's specific audience or purpose.
+- Live tiles link back to the correct report and filtered state.
+- Alerts are configured for metrics that need proactive monitoring.
+- The dashboard isn't trying to replace full report exploration.
+- Tile count stays small enough to scan at a glance.
+
+---
+
+## Next Steps
+
+Continue exploring the Power BI Service:
+
+- [Workspaces](/docs/power-bi-service/workspaces)
+- [Refresh](/docs/power-bi-service/refresh)
+- [Row-Level Security](/docs/power-bi-service/security)

@@ -1,9 +1,200 @@
-﻿---
+---
 title: "Refresh"
-description: Power BI documentation.
+description: Learn how dataset refresh keeps Import-mode Power BI reports up to date, including scheduled and incremental refresh.
 ---
 
 # Refresh
 
-Content coming soon.
+Import-mode datasets are a snapshot. Refresh is what brings that snapshot up to date.
 
+```text
+Source Data
+     |
+     | Refresh
+     |
+Power BI Dataset (in-memory copy)
+```
+
+DirectQuery tables don't need refresh, since they query the source live. Refresh applies to Import and Dual-mode tables.
+
+---
+
+## What Happens During Refresh
+
+A refresh re-runs the full query pipeline for every Import table in the dataset.
+
+```text
+Refresh
+   |
+   +-- Reconnect to each data source
+   |
+   +-- Re-run Power Query transformations
+   |
+   +-- Reload data into the model
+   |
+   +-- Recalculate calculated columns and tables
+```
+
+The larger the model and the more complex the transformations, the longer a full refresh takes.
+
+---
+
+## Scheduled Refresh
+
+Scheduled refresh runs automatically at set times, without anyone manually clicking refresh.
+
+```text
+Schedule (e.g. 6:00 AM, 12:00 PM)
+        |
+        | triggers
+        |
+   Dataset Refresh
+```
+
+Configured from the dataset's settings in the Power BI Service, under **Scheduled refresh**.
+
+On shared capacity, datasets are limited to a small number of scheduled refreshes per day (typically 8). Premium and Fabric capacities allow more frequent refresh.
+
+---
+
+## Refresh Requires a Data Gateway (Sometimes)
+
+Cloud data sources (like most SaaS databases) refresh directly. On-premises sources need a gateway to bridge the connection.
+
+```text
+On-Premises Database
+        |
+        | Gateway
+        |
+   Power BI Service
+```
+
+Without a gateway installed and configured, scheduled refresh against an on-premises source will fail.
+
+---
+
+## Incremental Refresh
+
+Incremental refresh only reloads recent data, instead of reprocessing the entire table every time.
+
+```text
+Full Table
+   |
+   +-- Historical data (unchanged) -- skipped
+   |
+   +-- Recent data (changed) -- refreshed
+```
+
+It's configured with a date range policy, for example: keep 5 years of history, but only refresh the last 10 days.
+
+---
+
+## Setting Up Incremental Refresh
+
+Incremental refresh is configured in Power BI Desktop, using **RangeStart** and **RangeEnd** parameters that Power Query uses to filter each partition.
+
+```text
+RangeStart / RangeEnd
+        |
+        | filters
+        |
+   Table partitions by date
+```
+
+Once published, the Service manages the partitions automatically based on the policy defined in Desktop.
+
+---
+
+## Why Incremental Refresh Matters
+
+Without it, refreshing a large fact table means reprocessing years of unchanged historical data every single time.
+
+| | Full Refresh | Incremental Refresh |
+|---|---|---|
+| Data reprocessed | Entire table | Only the recent window |
+| Refresh time | Grows with table size | Stays roughly constant |
+| Source load | High every refresh | Lower, ongoing |
+
+Incremental refresh is most valuable on large fact tables where historical rows rarely change.
+
+---
+
+## Refresh Failures
+
+A failed refresh leaves the dataset showing whatever data was loaded during the last *successful* refresh.
+
+```text
+Refresh fails
+     |
+     | dataset unchanged
+     |
+Last successful data still shown
+```
+
+Common causes include expired credentials, schema changes at the source, or a gateway that's offline.
+
+Refresh history, available from the dataset settings, shows the error details for any failed attempt.
+
+---
+
+## Refresh Notifications
+
+Power BI can send an email when a scheduled refresh fails, so problems don't go unnoticed until someone spots stale data.
+
+```text
+Refresh fails
+     |
+     | notify
+     |
+Dataset owner
+```
+
+Configured alongside the scheduled refresh settings.
+
+---
+
+## Best Practices
+
+- Schedule refresh to run before people start their day, not during it.
+- Use incremental refresh for any large, mostly-historical fact table.
+- Install and monitor gateways for any on-premises source; a single offline gateway can silently break every dependent dataset.
+- Turn on refresh failure notifications so problems surface immediately.
+- Keep Power Query transformations efficient — slow transformations directly extend refresh time.
+
+---
+
+## Common Mistakes
+
+### No Incremental Refresh on Large Tables
+
+Reprocessing millions of historical rows on every refresh wastes time and source load for data that never changes.
+
+### Ignoring Refresh Failures
+
+A refresh that silently fails leaves users looking at stale data without knowing it, unless notifications are configured.
+
+### Missing or Outdated Gateway
+
+An offline or outdated on-premises gateway breaks scheduled refresh for every dataset that depends on it, often without an obvious error message pointing at the real cause.
+
+---
+
+## Refresh Checklist
+
+Before relying on scheduled refresh in production:
+
+- A gateway is installed and online for any on-premises source.
+- Incremental refresh is configured for large historical fact tables.
+- Refresh failure notifications are enabled.
+- The refresh schedule fits within the workspace's capacity limits.
+- Someone owns monitoring refresh history, not just setting it up once.
+
+---
+
+## Next Steps
+
+Continue exploring the Power BI Service:
+
+- [Workspaces](/docs/power-bi-service/workspaces)
+- [Dashboards](/docs/power-bi-service/dashboards)
+- [DirectQuery vs. Import](/docs/modeling/storage-modes)

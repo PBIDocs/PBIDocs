@@ -1,9 +1,171 @@
-﻿---
+---
 title: "Slicers"
-description: Power BI documentation.
+description: Learn how Power BI slicers let report users filter visuals interactively.
 ---
 
 # Slicers
 
-Content coming soon.
+A slicer is a visible, clickable filter placed directly on a report page.
 
+```text
+Slicer: Region
+  [ West ]  [ East ]  [ Central ]
+        |
+        | selection filters
+        |
+  Every visual on the page
+```
+
+Unlike filters hidden in the Filters pane, slicers put filtering directly in front of the report's audience.
+
+---
+
+## Adding a Slicer
+
+Steps:
+
+1. Select the **Slicer** visual from the **Visualizations** pane.
+2. Drag a field into the **Field** well.
+3. Resize and position it on the page.
+
+Any field can back a slicer — categories, dates, or numeric ranges.
+
+---
+
+## Slicer Types
+
+Power BI supports several slicer layouts, chosen from the **Format** pane.
+
+```text
+Slicer
+  |
+  +-- List (checkboxes)
+  |
+  +-- Dropdown
+  |
+  +-- Between (numeric range)
+  |
+  +-- Relative date
+```
+
+List slicers work well for a small number of options; dropdown slicers save space when there are many.
+
+---
+
+## Date Slicers
+
+A date field backing a slicer can use a range slider or relative date options.
+
+```text
+[====●========●====]
+   Jan 1          Dec 31
+```
+
+Relative date slicers ("Last 30 days," "This year") are especially useful for reports that should always show recent data without manual adjustment.
+
+---
+
+## Single vs. Multi-Select
+
+Slicers can allow either one selection at a time or multiple selections.
+
+```text
+Single-select: only "West" active
+Multi-select:  "West" and "East" both active
+```
+
+Multi-select is the default; single-select is useful when a report is designed around viewing exactly one category at a time.
+
+---
+
+## Syncing Slicers Across Pages
+
+A slicer normally only filters the page it's on. **Sync slicers** extends its filter to other pages too.
+
+```text
+Slicer (Page 1)
+     |
+     | Sync Slicers
+     |
+Page 2, Page 3 also filtered
+```
+
+Configured from **View > Sync slicers**, useful for a consistent filter (like a date range) that should apply everywhere in the report.
+
+---
+
+## Slicer Panels
+
+A dedicated slicer panel — a strip of slicers along one edge of the page, synced across every page — gives a report a consistent global filtering experience.
+
+```text
++------------------------------------------+
+| [Region] [Year] [Category]                |
++------------------------------------------+
+|                                            |
+|              Report content                |
+|                                            |
++------------------------------------------+
+```
+
+This is a common pattern for enterprise reports where users expect the same filters available on every page.
+
+---
+
+## Clearing Slicer Selections
+
+Slicers include a small eraser icon (when enabled) that resets the selection.
+
+```text
+Slicer [selected: West]  [⟲ clear]
+```
+
+Enabled from the Format pane under **Slicer header**, this saves users from manually deselecting every option.
+
+---
+
+## Best Practices
+
+- Use a small, consistent set of slicers rather than one for every possible field.
+- Sync commonly-needed slicers (like date range) across all report pages.
+- Prefer relative date slicers for reports meant to always show current data.
+- Enable the clear/reset button so users can easily return to an unfiltered view.
+- Keep slicer panels visually distinct from the report content, so users can immediately tell what's a filter versus what's data.
+
+---
+
+## Common Mistakes
+
+### Too Many Slicers
+
+A page covered in a dozen slicers overwhelms users and takes up space better used for visuals. Keep it to the handful of filters people actually need.
+
+### Forgetting to Sync
+
+A date slicer that only filters one page, when the report has five pages, creates a confusing experience where "today's date range" silently stops applying after the first page.
+
+### Hardcoded Date Ranges
+
+A slicer set to a specific date range (like "2025") requires manual updates every year. A relative date slicer avoids that maintenance entirely.
+
+---
+
+## Slicer Checklist
+
+Before publishing a report with slicers:
+
+- Slicer count is kept small and purposeful.
+- Commonly-needed slicers are synced across all relevant pages.
+- Date slicers use relative ranges where the report should stay current.
+- A clear/reset option is available.
+- Slicer panels are visually distinct from report content.
+
+---
+
+## Next Steps
+
+Continue exploring Power BI visuals:
+
+- [Charts](/docs/visuals/charts)
+- [Tables](/docs/visuals/tables)
+- [Bookmarks & Interactivity](/docs/visuals/bookmarks)
