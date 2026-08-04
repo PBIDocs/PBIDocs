@@ -21,7 +21,7 @@ Time-based running totals (like Year-to-Date) have dedicated DAX functions — s
 
 ## The General Pattern
 
-```dax
+```dax lineNumbers
 Running Total =
 CALCULATE(
     [Total Sales],
@@ -47,7 +47,7 @@ FILTER(
 
 The same pattern works over a rank or sequence number, not just a date.
 
-```dax
+```dax lineNumbers
 Running Total by Rank =
 CALCULATE(
     [Total Sales],
@@ -66,7 +66,7 @@ Useful for cumulative charts like "what percentage of total sales come from the 
 
 Restarting the running total for each group (like each year) combines the pattern with a group-preserving filter.
 
-```dax
+```dax lineNumbers
 Running Total Within Year =
 CALCULATE(
     [Total Sales],
@@ -95,7 +95,7 @@ The running total resets at the start of each year, instead of accumulating acro
 
 For calendar-based running totals specifically, `TOTALYTD()`, `TOTALQTD()`, and `TOTALMTD()` are simpler and more efficient than the generic `FILTER()` pattern.
 
-```dax
+```dax lineNumbers
 Sales YTD =
 TOTALYTD(
     [Total Sales],

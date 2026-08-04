@@ -32,7 +32,7 @@ Expression
 
 Example:
 
-```dax
+```dax lineNumbers
 Sales Amount =
 FactSales[Quantity] * FactSales[Unit Price]
 ```
@@ -76,7 +76,7 @@ Example source data:
 
 Calculated column:
 
-```dax
+```dax lineNumbers
 Sales Amount =
 FactSales[Quantity] * FactSales[Unit Price]
 ```
@@ -106,7 +106,7 @@ Calculated columns are useful when creating:
 
 Example:
 
-```dax
+```dax lineNumbers
 Full Name =
 Customer[First Name] &
 " " &
@@ -123,7 +123,7 @@ One of the most common uses of calculated columns is creating business categorie
 
 Example:
 
-```dax
+```dax lineNumbers
 Sales Category =
 IF(
     FactSales[SalesAmount] >= 1000,
@@ -150,7 +150,7 @@ When multiple categories are required, `SWITCH()` is often easier to read than s
 
 Example:
 
-```dax
+```dax lineNumbers
 Performance Rating =
 SWITCH(
     TRUE(),
@@ -171,7 +171,7 @@ Calculated columns can combine multiple fields into a single value.
 
 Example:
 
-```dax
+```dax lineNumbers
 Customer Name =
 Customer[First Name]
     & " "
@@ -202,7 +202,7 @@ FactSales
 
 Calculated column:
 
-```dax
+```dax lineNumbers
 Category =
 RELATED(DimProduct[Category])
 ```
@@ -219,14 +219,14 @@ Calculated columns are often used to simplify reporting dates.
 
 Example:
 
-```dax
+```dax lineNumbers
 Year =
 YEAR(FactSales[OrderDate])
 ```
 
 Example:
 
-```dax
+```dax lineNumbers
 Month Name =
 FORMAT(
     FactSales[OrderDate],
@@ -236,7 +236,7 @@ FORMAT(
 
 Example:
 
-```dax
+```dax lineNumbers
 Year Month =
 FORMAT(
     FactSales[OrderDate],
@@ -256,7 +256,7 @@ Calculated columns can create a numeric sort order.
 
 Example:
 
-```dax
+```dax lineNumbers
 Month Number =
 MONTH(DimDate[Date])
 ```
@@ -336,7 +336,7 @@ A common mistake is creating calculated columns for values that should be measur
 
 For example, avoid creating:
 
-```dax
+```dax lineNumbers
 Total Sales =
 SUM(FactSales[SalesAmount])
 ```
@@ -352,7 +352,7 @@ Why?
 
 Instead, create it as a measure:
 
-```dax
+```dax lineNumbers
 Total Sales =
 SUM(FactSales[SalesAmount])
 ```

@@ -21,7 +21,7 @@ If you understand `CALCULATE()`, you understand much of DAX.
 
 General syntax:
 
-```dax
+```dax lineNumbers
 CALCULATE(
     <expression>,
     <filter1>,
@@ -40,14 +40,14 @@ The remaining arguments change the filter context before the calculation is eval
 
 Suppose we already have this measure:
 
-```dax
+```dax lineNumbers
 Total Sales =
 SUM(FactSales[SalesAmount])
 ```
 
 Now create a new measure:
 
-```dax
+```dax lineNumbers
 Bike Sales =
 CALCULATE(
     [Total Sales],
@@ -89,7 +89,7 @@ Unlike most DAX functions, `CALCULATE()` changes the environment in which the ca
 
 Example:
 
-```dax
+```dax lineNumbers
 West Region Sales =
 CALCULATE(
     [Total Sales],
@@ -101,7 +101,7 @@ Only customers in the **West** region are included.
 
 Additional filters can be added.
 
-```dax
+```dax lineNumbers
 Bike Sales West =
 CALCULATE(
     [Total Sales],
@@ -124,7 +124,7 @@ Suppose a report is filtered to:
 
 This measure:
 
-```dax
+```dax lineNumbers
 Bike Sales =
 CALCULATE(
     [Total Sales],
@@ -146,7 +146,7 @@ The `ALL()` function removes filters from a table or column before the expressio
 
 Example:
 
-```dax
+```dax lineNumbers
 Total Sales (All Products) =
 CALCULATE(
     [Total Sales],
@@ -168,12 +168,12 @@ this measure returns sales for **all products**.
 
 Suppose you have these measures:
 
-```dax
+```dax lineNumbers
 Total Sales =
 SUM(FactSales[SalesAmount])
 ```
 
-```dax
+```dax lineNumbers
 Percent of Total =
 DIVIDE(
     [Total Sales],
@@ -204,7 +204,7 @@ The denominator removes the product filter to calculate the overall total.
 
 Example:
 
-```dax
+```dax lineNumbers
 Total Sales =
 CALCULATE(
     [Total Sales],
@@ -226,7 +226,7 @@ Normally, `CALCULATE()` replaces filters on the same column.
 
 Example:
 
-```dax
+```dax lineNumbers
 Bike Sales =
 CALCULATE(
     [Total Sales],
@@ -248,7 +248,7 @@ This is especially useful in more advanced business calculations.
 
 Example:
 
-```dax
+```dax lineNumbers
 West Bike Sales =
 CALCULATE(
     [Total Sales],
@@ -290,7 +290,7 @@ Current report filter:
 
 Measure:
 
-```dax
+```dax lineNumbers
 Bike Sales =
 CALCULATE(
     [Total Sales],
@@ -318,7 +318,7 @@ This most commonly happens inside calculated columns and iterator functions.
 
 Example:
 
-```dax
+```dax lineNumbers
 Customer Sales =
 CALCULATE(
     [Total Sales]
@@ -341,7 +341,7 @@ Only one relationship can be active at a time.
 
 Example:
 
-```dax
+```dax lineNumbers
 Sales by Ship Date =
 CALCULATE(
     [Total Sales],
@@ -364,7 +364,7 @@ This is commonly used when a fact table contains multiple date columns.
 
 Example:
 
-```dax
+```dax lineNumbers
 Sales Both Directions =
 CALCULATE(
     [Total Sales],

@@ -121,7 +121,7 @@ connects dates to transactions.
 
 Example:
 
-```dax
+```dax lineNumbers
 DimDate =
 CALENDAR(
     DATE(2020,1,1),
@@ -131,12 +131,12 @@ CALENDAR(
 
 Additional columns can be added:
 
-```dax
+```dax lineNumbers
 Year =
 YEAR(DimDate[Date])
 ```
 
-```dax
+```dax lineNumbers
 Month =
 FORMAT(
     DimDate[Date],
@@ -144,7 +144,7 @@ FORMAT(
 )
 ```
 
-```dax
+```dax lineNumbers
 Month Number =
 MONTH(DimDate[Date])
 ```
@@ -202,14 +202,14 @@ Example:
 
 ### Total Sales
 
-```dax
+```dax lineNumbers
 Total Sales =
 SUM(FactSales[SalesAmount])
 ```
 
 ### Year-to-Date Sales
 
-```dax
+```dax lineNumbers
 Sales YTD =
 TOTALYTD(
     [Total Sales],

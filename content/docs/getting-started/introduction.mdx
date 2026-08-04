@@ -151,7 +151,7 @@ It is used to:
 
 Example:
 
-```powerquery
+```powerquery lineNumbers
 let
     Source = Excel.Workbook(File.Contents("Sales.xlsx")),
     SalesTable = Source{[Name="Sales"]}[Data]

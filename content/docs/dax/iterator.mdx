@@ -30,7 +30,7 @@ An iterator processes one row at a time.
 
 General syntax:
 
-```dax
+```dax lineNumbers
 SUMX(
     Table,
     Expression
@@ -47,7 +47,7 @@ After every row has been calculated, the results are added together.
 
 Consider this measure:
 
-```dax
+```dax lineNumbers
 Total Sales =
 SUM(FactSales[SalesAmount])
 ```
@@ -56,7 +56,7 @@ This adds the values already stored in the **SalesAmount** column.
 
 Now compare it to:
 
-```dax
+```dax lineNumbers
 Total Sales =
 SUMX(
     FactSales,
@@ -123,7 +123,7 @@ Suppose **FactSales** contains:
 
 Using:
 
-```dax
+```dax lineNumbers
 SUMX(
     FactSales,
     FactSales[Quantity] *
@@ -172,7 +172,7 @@ Whenever every row requires its own calculation, an iterator is usually the corr
 
 General syntax:
 
-```dax
+```dax lineNumbers
 AVERAGEX(
     Table,
     Expression
@@ -181,7 +181,7 @@ AVERAGEX(
 
 Example:
 
-```dax
+```dax lineNumbers
 Average Revenue Per Sale =
 AVERAGEX(
     FactSales,
@@ -200,7 +200,7 @@ Instead of averaging an existing column, `AVERAGEX()` first calculates revenue f
 
 Example:
 
-```dax
+```dax lineNumbers
 Orders With Sales =
 COUNTX(
     FactSales,
@@ -218,7 +218,7 @@ This returns the number of rows that contain a sales value.
 
 Example:
 
-```dax
+```dax lineNumbers
 Highest Order Value =
 MAXX(
     FactSales,
@@ -229,7 +229,7 @@ MAXX(
 
 Example:
 
-```dax
+```dax lineNumbers
 Lowest Order Value =
 MINX(
     FactSales,
@@ -248,7 +248,7 @@ These functions are useful when the value being compared is calculated rather th
 
 Example:
 
-```dax
+```dax lineNumbers
 Product Rank =
 RANKX(
     ALL(DimProduct),
@@ -276,7 +276,7 @@ Iterator functions are often paired with `FILTER()` to evaluate only selected ro
 
 Example:
 
-```dax
+```dax lineNumbers
 Large Order Sales =
 SUMX(
     FILTER(
@@ -338,7 +338,7 @@ Iterator functions evaluate expressions.
 
 Compare these examples:
 
-```dax
+```dax lineNumbers
 SUM(
     FactSales[SalesAmount]
 )
@@ -346,7 +346,7 @@ SUM(
 
 versus
 
-```dax
+```dax lineNumbers
 SUMX(
     FactSales,
     FactSales[Quantity] *
@@ -400,7 +400,7 @@ Use `SUM()` when the values already exist in a column.
 
 Example:
 
-```dax
+```dax lineNumbers
 Total Sales =
 SUM(FactSales[SalesAmount])
 ```
@@ -409,7 +409,7 @@ Use `SUMX()` when each row requires a calculation.
 
 Example:
 
-```dax
+```dax lineNumbers
 Total Sales =
 SUMX(
     FactSales,

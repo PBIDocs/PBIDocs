@@ -29,7 +29,7 @@ Imagine the following table:
 
 If we create this calculated column:
 
-```dax
+```dax lineNumbers
 Sales Amount =
 FactSales[Quantity] *
 FactSales[Unit Price]
@@ -55,7 +55,7 @@ Every calculated column receives row context automatically.
 
 Example:
 
-```dax
+```dax lineNumbers
 Full Name =
 Customer[First Name]
     & " "
@@ -74,7 +74,7 @@ Measures are evaluated using **filter context**, not row context.
 
 Example:
 
-```dax
+```dax lineNumbers
 Total Sales =
 SUM(FactSales[SalesAmount])
 ```
@@ -118,7 +118,7 @@ Common iterators include:
 
 Example:
 
-```dax
+```dax lineNumbers
 Total Sales =
 SUMX(
     FactSales,
@@ -177,7 +177,7 @@ FactSales
 
 Calculated column:
 
-```dax
+```dax lineNumbers
 Category =
 RELATED(DimProduct[Category])
 ```
@@ -196,7 +196,7 @@ Iterator functions can create nested row contexts.
 
 Example:
 
-```dax
+```dax lineNumbers
 SUMX(
     FactSales,
     FactSales[Quantity] *
@@ -234,7 +234,7 @@ requires a stored **SalesAmount** column.
 
 Using:
 
-```dax
+```dax lineNumbers
 SUMX(
     FactSales,
     FactSales[Quantity] *
@@ -278,7 +278,7 @@ Without context transition, many advanced calculations would not be possible.
 
 Consider a calculated column:
 
-```dax
+```dax lineNumbers
 Sales Percentage =
 DIVIDE(
     FactSales[SalesAmount],

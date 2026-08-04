@@ -43,7 +43,7 @@ A measure is a calculation stored in the Power BI model.
 
 Example:
 
-```dax
+```dax lineNumbers
 Total Sales =
 SUM(FactSales[SalesAmount])
 ```
@@ -69,7 +69,7 @@ Calculated columns are computed when data is loaded.
 
 Example:
 
-```dax
+```dax lineNumbers
 Sales Amount =
 FactSales[Quantity] *
 FactSales[Unit Price]
@@ -85,7 +85,7 @@ Measures are calculated when a report is viewed.
 
 Example:
 
-```dax
+```dax lineNumbers
 Total Sales =
 SUM(FactSales[SalesAmount])
 ```
@@ -131,7 +131,7 @@ Example:
 
 Measure:
 
-```dax
+```dax lineNumbers
 Total Sales =
 SUM(FactSales[SalesAmount])
 ```
@@ -160,7 +160,7 @@ Common aggregation functions:
 
 ### SUM
 
-```dax
+```dax lineNumbers
 Total Sales =
 SUM(FactSales[SalesAmount])
 ```
@@ -171,7 +171,7 @@ Adds all values.
 
 ### COUNT
 
-```dax
+```dax lineNumbers
 Order Count =
 COUNT(FactSales[OrderNumber])
 ```
@@ -182,7 +182,7 @@ Counts rows containing values.
 
 ### DISTINCTCOUNT
 
-```dax
+```dax lineNumbers
 Customer Count =
 DISTINCTCOUNT(
     FactSales[CustomerKey]
@@ -195,7 +195,7 @@ Counts unique customers.
 
 ### AVERAGE
 
-```dax
+```dax lineNumbers
 Average Sales =
 AVERAGE(
     FactSales[SalesAmount]
@@ -214,7 +214,7 @@ It changes filter context.
 
 Example:
 
-```dax
+```dax lineNumbers
 Sales 2026 =
 CALCULATE(
     [Total Sales],
@@ -250,7 +250,7 @@ SalesAmount
 
 Measure:
 
-```dax
+```dax lineNumbers
 Total Sales =
 SUM(FactSales[SalesAmount])
 ```
@@ -269,7 +269,7 @@ Date tables enable advanced calculations.
 
 Example:
 
-```dax
+```dax lineNumbers
 Sales YTD =
 TOTALYTD(
     [Total Sales],
@@ -292,7 +292,7 @@ Variables improve readability.
 
 Example:
 
-```dax
+```dax lineNumbers
 Profit Margin =
 VAR Revenue =
     [Total Sales]
@@ -319,7 +319,7 @@ Benefits:
 
 Recommended:
 
-```dax
+```dax lineNumbers
 Profit Margin =
 DIVIDE(
     [Profit],
@@ -399,7 +399,7 @@ Problems:
 
 Avoid:
 
-```dax
+```dax lineNumbers
 Sales by Region Formula
 
 Sales by Product Formula

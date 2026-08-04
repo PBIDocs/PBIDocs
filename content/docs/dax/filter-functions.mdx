@@ -32,7 +32,7 @@ Suppose a report is filtered to:
 
 Your measure:
 
-```dax
+```dax lineNumbers
 Total Sales =
 SUM(FactSales[SalesAmount])
 ```
@@ -51,7 +51,7 @@ That's where filter removal functions become useful.
 
 General syntax:
 
-```dax
+```dax lineNumbers
 ALL(Table)
 
 ALL(Column)
@@ -61,7 +61,7 @@ When used inside `CALCULATE()`, the specified filters are removed.
 
 Example:
 
-```dax
+```dax lineNumbers
 Total Sales All Products =
 CALCULATE(
     [Total Sales],
@@ -83,7 +83,7 @@ the measure returns sales for **every product**.
 
 Example:
 
-```dax
+```dax lineNumbers
 Sales All Categories =
 CALCULATE(
     [Total Sales],
@@ -157,7 +157,7 @@ One of the most common applications of `ALL()` is calculating percentages of the
 
 Example:
 
-```dax
+```dax lineNumbers
 Percent of Total =
 DIVIDE(
     [Total Sales],
@@ -182,7 +182,7 @@ This pattern appears in countless Power BI reports and dashboards.
 
 General syntax:
 
-```dax
+```dax lineNumbers
 ALLEXCEPT(
     Table,
     Column1,
@@ -192,7 +192,7 @@ ALLEXCEPT(
 
 Example:
 
-```dax
+```dax lineNumbers
 Sales by Category =
 CALCULATE(
     [Total Sales],
@@ -223,7 +223,7 @@ This makes it especially useful for interactive reports.
 
 Example:
 
-```dax
+```dax lineNumbers
 Visual Total Sales =
 CALCULATE(
     [Total Sales],
@@ -249,7 +249,7 @@ The result is the total sales for **all Bikes**, not just the current product.
 
 General syntax:
 
-```dax
+```dax lineNumbers
 REMOVEFILTERS(Table)
 
 REMOVEFILTERS(Column)
@@ -257,7 +257,7 @@ REMOVEFILTERS(Column)
 
 Example:
 
-```dax
+```dax lineNumbers
 Overall Sales =
 CALCULATE(
     [Total Sales],
@@ -267,7 +267,7 @@ CALCULATE(
 
 This produces the same result as:
 
-```dax
+```dax lineNumbers
 CALCULATE(
     [Total Sales],
     ALL(DimProduct)
@@ -299,7 +299,7 @@ Use **ALL()** when you need to ignore all filters.
 
 Example:
 
-```dax
+```dax lineNumbers
 Percent of Total =
 DIVIDE(
     [Total Sales],
@@ -339,7 +339,7 @@ One of the most common uses of filter functions is calculating a percentage of t
 
 Example:
 
-```dax
+```dax lineNumbers
 Percent of Total =
 DIVIDE(
     [Total Sales],
@@ -372,7 +372,7 @@ Filter functions are commonly used with `RANKX()`.
 
 Example:
 
-```dax
+```dax lineNumbers
 Product Rank =
 RANKX(
     ALL(DimProduct),

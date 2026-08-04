@@ -24,7 +24,7 @@ A variable stores a value that can be referenced later in a DAX expression.
 
 General syntax:
 
-```dax
+```dax lineNumbers
 VAR VariableName = Expression
 
 RETURN
@@ -41,7 +41,7 @@ The `RETURN` statement specifies the final value returned by the measure.
 
 Without variables:
 
-```dax
+```dax lineNumbers
 Profit Margin =
 DIVIDE(
     [Gross Profit],
@@ -51,7 +51,7 @@ DIVIDE(
 
 With variables:
 
-```dax
+```dax lineNumbers
 Profit Margin =
 VAR Profit =
     [Gross Profit]
@@ -94,7 +94,7 @@ A variable only exists inside the expression where it is created.
 
 Example:
 
-```dax
+```dax lineNumbers
 VAR Sales =
     [Total Sales]
 
@@ -116,7 +116,7 @@ Each variable is evaluated before the `RETURN` statement.
 
 Example:
 
-```dax
+```dax lineNumbers
 Profit Margin =
 VAR Sales =
     [Total Sales]
@@ -144,7 +144,7 @@ One of the biggest advantages of variables is that they are evaluated only once.
 
 Without variables:
 
-```dax
+```dax lineNumbers
 Profit Ratio =
 DIVIDE(
     [Gross Profit],
@@ -161,7 +161,7 @@ Power BI must evaluate both measures multiple times.
 
 Using variables:
 
-```dax
+```dax lineNumbers
 Profit Ratio =
 VAR Profit =
     [Gross Profit]
@@ -191,7 +191,7 @@ Variables work exceptionally well with `CALCULATE()`.
 
 Example:
 
-```dax
+```dax lineNumbers
 West Sales =
 VAR WestSales =
     CALCULATE(
@@ -213,7 +213,7 @@ Variables make comparisons much easier to read.
 
 Example:
 
-```dax
+```dax lineNumbers
 Sales Growth =
 VAR CurrentYear =
     [Sales]
@@ -235,7 +235,7 @@ Suppose management wants to calculate profit after expenses.
 
 Example:
 
-```dax
+```dax lineNumbers
 Net Profit =
 VAR Revenue =
     [Total Sales]
@@ -270,7 +270,7 @@ Examples include:
 
 Example:
 
-```dax
+```dax lineNumbers
 CurrentYear =
 VAR SelectedYear =
     MAX(DimDate[Year])
@@ -291,7 +291,7 @@ Instead of returning the final calculation, you can temporarily return an interm
 
 Example:
 
-```dax
+```dax lineNumbers
 Profit Margin =
 VAR Sales =
     [Total Sales]
@@ -311,14 +311,14 @@ RETURN
 
 While troubleshooting, you might instead return:
 
-```dax
+```dax lineNumbers
 RETURN
     Profit
 ```
 
 or
 
-```dax
+```dax lineNumbers
 RETURN
     Sales
 ```
@@ -333,7 +333,7 @@ Use descriptive variable names that explain what the value represents.
 
 Good examples:
 
-```dax
+```dax lineNumbers
 VAR TotalSales =
     [Total Sales]
 
@@ -346,7 +346,7 @@ VAR SalesGrowth =
 
 Avoid generic names such as:
 
-```dax
+```dax lineNumbers
 VAR X
 VAR Temp
 VAR Test

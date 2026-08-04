@@ -34,7 +34,7 @@ Expression
 
 Example:
 
-```dax
+```dax lineNumbers
 Total Sales =
 SUM(FactSales[SalesAmount])
 ```
@@ -96,7 +96,7 @@ Only the rows being evaluated change.
 
 ## Simple Measure Example
 
-```dax
+```dax lineNumbers
 Total Quantity =
 SUM(FactSales[Quantity])
 ```
@@ -113,17 +113,17 @@ One of the biggest advantages of DAX is reusability.
 
 Example:
 
-```dax
+```dax lineNumbers
 Total Sales =
 SUM(FactSales[SalesAmount])
 ```
 
-```dax
+```dax lineNumbers
 Total Cost =
 SUM(FactSales[Cost])
 ```
 
-```dax
+```dax lineNumbers
 Profit =
 [Total Sales] - [Total Cost]
 ```
@@ -150,14 +150,14 @@ Most Power BI reports use a relatively small group of DAX aggregation functions.
 
 Example:
 
-```dax
+```dax lineNumbers
 Average Sales =
 AVERAGE(FactSales[SalesAmount])
 ```
 
 Example:
 
-```dax
+```dax lineNumbers
 Customer Count =
 DISTINCTCOUNT(FactSales[CustomerKey])
 ```
@@ -172,7 +172,7 @@ Measures automatically respond to report filters, slicers, and relationships.
 
 Suppose the report contains this measure:
 
-```dax
+```dax lineNumbers
 Total Sales =
 SUM(FactSales[SalesAmount])
 ```
@@ -198,17 +198,17 @@ One measure can be used inside another measure.
 
 Example:
 
-```dax
+```dax lineNumbers
 Total Sales =
 SUM(FactSales[SalesAmount])
 ```
 
-```dax
+```dax lineNumbers
 Total Cost =
 SUM(FactSales[Cost])
 ```
 
-```dax
+```dax lineNumbers
 Gross Profit =
 [Total Sales] - [Total Cost]
 ```
@@ -329,7 +329,7 @@ Instead of repeating calculations, store intermediate results in variables.
 
 Example:
 
-```dax
+```dax lineNumbers
 Profit Margin =
 VAR Revenue =
     [Total Sales]
