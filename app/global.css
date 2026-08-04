@@ -119,3 +119,15 @@ figure.shiki {
     0 0 0 1px color-mix(in srgb, var(--color-fd-primary) 10%, transparent),
     0 8px 24px -12px color-mix(in srgb, var(--color-fd-primary) 35%, transparent);
 }
+
+/* Plain-text diagrams (```text fences) get no syntax highlighting at all,
+   which looks flat and monochrome next to fully-colored ```dax blocks on
+   the same page. Tint them toward the brand color for consistency.
+   Matches fumadocs' own ".shiki code span" specificity to win the cascade. */
+.shiki code.language-text span {
+  color: var(--primary-muted);
+}
+
+.dark .shiki code.language-text span {
+  color: var(--primary-muted);
+}
