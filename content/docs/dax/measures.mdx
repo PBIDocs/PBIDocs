@@ -271,19 +271,19 @@ Example:
 ```text
 Measures
 
-â”œâ”€â”€ Sales
-â”‚   â”œâ”€â”€ Total Sales
-â”‚   â”œâ”€â”€ Average Sales
-â”‚   â””â”€â”€ Sales YTD
-â”‚
-â”œâ”€â”€ Profit
-â”‚   â”œâ”€â”€ Gross Profit
-â”‚   â”œâ”€â”€ Profit Margin
-â”‚   â””â”€â”€ Gross Margin %
-â”‚
-â””â”€â”€ Customers
-    â”œâ”€â”€ Customer Count
-    â””â”€â”€ Average Customer Spend
+├── Sales
+│   ├── Total Sales
+│   ├── Average Sales
+│   └── Sales YTD
+│
+├── Profit
+│   ├── Gross Profit
+│   ├── Profit Margin
+│   └── Gross Margin %
+│
+└── Customers
+    ├── Customer Count
+    └── Average Customer Spend
 ```
 
 A well-organized model is easier for report developers to navigate.
@@ -368,7 +368,7 @@ Examples include:
 | What was the average order value? | Average Order Value |
 | How much have sales grown? | Sales Growth % |
 
-Most Power BI dashboards are built using dozensâ€”or even hundredsâ€”of reusable measures.
+Most Power BI dashboards are built using dozens—or even hundreds—of reusable measures.
 
 ---
 
@@ -380,14 +380,14 @@ Example:
 
 ```text
 Total Sales
-      â”‚
-      â–¼
+      │
+      ▼
 Gross Profit
-      â”‚
-      â–¼
+      │
+      ▼
 Profit Margin
-      â”‚
-      â–¼
+      │
+      ▼
 Gross Margin %
 ```
 
