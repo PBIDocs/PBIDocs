@@ -6,6 +6,7 @@
     "fact-tables",
     "dimension-tables",
     "relationships",
+    "storage-modes",
     "date-tables",
     "measures",
     "slowly-changing-dimensions",

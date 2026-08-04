@@ -1,0 +1,207 @@
+---
+title: "Bookmarks & Interactivity"
+description: Learn how Bookmarks, drill-through, and tooltips make Power BI reports interactive.
+---
+
+# Bookmarks & Interactivity
+
+Power BI reports are not static images. Bookmarks, drill-through, and tooltips let users navigate and explore data without leaving the page.
+
+```text
+Interactivity
+     |
+     +-- Bookmarks
+     |
+     +-- Drill-through
+     |
+     +-- Tooltips
+```
+
+---
+
+## What a Bookmark Captures
+
+A bookmark saves the current state of a report page.
+
+```text
+Bookmark
+   |
+   +-- Filter and slicer selections
+   |
+   +-- Visibility of visuals
+   |
+   +-- Sort order
+   |
+   +-- Focus mode / spotlight state
+```
+
+Clicking a bookmark restores that exact state, even if the user has since changed filters or navigated around the page.
+
+---
+
+## Creating a Bookmark
+
+Bookmarks are managed from the **View > Bookmarks** pane.
+
+Steps:
+
+1. Set the report page to the state you want to capture (filters, visible visuals, slicers).
+2. Open the **Bookmarks** pane.
+3. Select **Add**.
+4. Rename the bookmark to something descriptive, such as `Regional View` or `Q4 Only`.
+
+Each bookmark is a snapshot. Updating the report later does not update existing bookmarks automatically.
+
+---
+
+## Bookmark Options
+
+Each bookmark can optionally capture:
+
+| Option | Captures |
+|---|---|
+| Data | Filters, slicers, and selections |
+| Display | Which visuals are shown or hidden |
+| Current page | Which report page is active |
+
+Turning off **Data** creates a bookmark that only changes visual layout, without altering filters — useful for building simple show/hide toggles.
+
+---
+
+## Using Bookmarks for Navigation
+
+A common pattern uses bookmarks to build in-report navigation buttons.
+
+```text
+Button: "Sales"
+   |
+   | linked to
+   |
+Bookmark: Sales View
+```
+
+Each button on a navigation bar is linked to a different bookmark, letting users switch between curated views without separate report pages.
+
+---
+
+## Bookmark Groups
+
+Related bookmarks can be organized into a group.
+
+```text
+Bookmark Group: Regions
+     |
+     +-- West
+     |
+     +-- East
+     |
+     +-- Central
+```
+
+Grouping keeps a set of mutually exclusive bookmarks (like regional views) organized and easy to wire up to buttons.
+
+---
+
+## Drill-through
+
+Drill-through sends a user from a summary page to a detail page, automatically filtered to what they clicked.
+
+```text
+Summary Page
+     |
+     | right-click a data point
+     |
+Detail Page (filtered)
+```
+
+Setting it up:
+
+1. Create a detail page.
+2. Add the field to filter by (such as `Product`) to the **Drill through** field well.
+3. Right-click a value on the summary page and select **Drill through**.
+
+The detail page opens already filtered to the value that was clicked.
+
+---
+
+## Tooltips
+
+Tooltips show extra information when hovering over a data point.
+
+```text
+Hover over a bar
+     |
+     |
+Tooltip appears
+```
+
+Power BI supports two kinds:
+
+- **Default tooltips** — automatically show the field values behind a data point.
+- **Report page tooltips** — a small custom report page, shown as a tooltip, that can include its own visuals and formatting.
+
+Report page tooltips are commonly used to show a mini trend chart or breakdown without adding clutter to the main visual.
+
+---
+
+## Combining Bookmarks and Buttons
+
+Buttons and bookmarks are often paired to build interactive elements like toggles and navigation menus.
+
+```text
+Button: "Show Details"
+   |
+   | Action: Bookmark
+   |
+Bookmark: Details Visible
+```
+
+A second button, paired with a second bookmark, can toggle back to the summary state — creating a simple show/hide interaction with no DAX required.
+
+---
+
+## Best Practices
+
+- Name bookmarks descriptively; "Bookmark 1" becomes unmanageable quickly.
+- Use bookmark groups to keep mutually exclusive views organized.
+- Turn off **Data** capture for bookmarks that should only affect layout.
+- Keep drill-through detail pages focused on one entity (a single product, customer, or order).
+- Use report page tooltips sparingly, since each one adds a small amount of report complexity.
+
+---
+
+## Common Mistakes
+
+### Forgetting to Update Bookmarks
+
+Bookmarks capture a snapshot. Adding a new visual or filter to a page later does not automatically appear in bookmarks created before the change — they need to be updated manually.
+
+### Overusing Report Page Tooltips
+
+A custom tooltip page still needs to render every time it's shown. Overusing them across many visuals can noticeably slow down report interactions.
+
+### Missing Drill-through Filters
+
+If the field used for drill-through isn't present on the summary visual, right-click drill-through won't be available for that data point.
+
+---
+
+## Interactivity Checklist
+
+Before publishing an interactive report:
+
+- Bookmarks are named clearly and grouped logically.
+- Navigation buttons are linked to the correct bookmarks.
+- Drill-through pages are filtered correctly and focused on one entity.
+- Report page tooltips are used only where they add real value.
+- Bookmarks have been re-tested after any layout or filter changes.
+
+---
+
+## Next Steps
+
+Continue exploring Power BI visuals and reports:
+
+- [Slicers](/docs/visuals/slicers)
+- [Formatting](/docs/visuals/formatting)
+- [Charts](/docs/visuals/charts)
