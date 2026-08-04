@@ -94,8 +94,13 @@ html > body[data-scroll-locked] {
 .prose h4 a:hover::after {
   width: 100%;
 }
-/* code highlighting */
-.prose code {
+/* Inline code only (e.g. `FactSales` mentioned in a sentence). Excludes
+   pre code: without that, this rule also matched the <code> inside every
+   fenced code block (not-prose only opts out of the typography plugin's
+   own styles, not plain descendant selectors), adding an 8%-opacity light
+   wash and padding inset from the block's true edges - a visible two-tone
+   box, lighter in the middle than the padding/border around it. */
+.prose code:not(pre code) {
   background: color-mix(in srgb, currentColor 8%, transparent);
   border-radius: 0.35rem;
   padding: 0.15rem 0.35rem;
