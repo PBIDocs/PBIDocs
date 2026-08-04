@@ -1,9 +1,191 @@
-﻿---
+---
 title: "Formatting"
-description: Power BI documentation.
+description: Learn how to format Power BI visuals and reports for clarity and consistency.
 ---
 
 # Formatting
 
-Content coming soon.
+Good formatting makes a report easier to read. It doesn't make it prettier for its own sake.
 
+```text
+Raw Visual
+    |
+    | formatting
+    |
+Clear, scannable Visual
+```
+
+Power BI's Format pane controls everything from colors and fonts to axis labels and data labels.
+
+---
+
+## The Format Pane
+
+Every visual has its own Format pane, opened from the paint-roller icon next to the Visualizations pane.
+
+```text
+Visual
+  |
+  | paint-roller icon
+  |
+Format pane
+  |
+  +-- General
+  |
+  +-- Visual-specific options
+```
+
+Options vary by visual type — a chart has axis and legend settings that a table doesn't, and vice versa.
+
+---
+
+## Data Labels
+
+Data labels display the underlying value directly on a chart, instead of requiring the reader to compare against an axis.
+
+```text
+██ 1,200
+████ 2,400
+███ 1,800
+```
+
+Useful when exact values matter more than the general shape of the trend. Overusing them on a dense chart can clutter it — sometimes the axis alone communicates the pattern better.
+
+---
+
+## Color
+
+Consistent color use across a report helps readers recognize the same category everywhere it appears.
+
+```text
+"West" region
+  |
+  | same color
+  |
+Every chart in the report
+```
+
+Power BI supports theme-based coloring, so a single color palette can apply automatically across all visuals.
+
+---
+
+## Report Themes
+
+A theme is a saved set of colors, fonts, and default visual styles, applied report-wide.
+
+```text
+Theme
+  |
+  +-- Color palette
+  |
+  +-- Font family
+  |
+  +-- Default visual styles
+```
+
+Applied from **View > Themes**, either using a built-in theme or a custom JSON theme file for brand-matched colors.
+
+---
+
+## Conditional Formatting
+
+Conditional formatting changes a visual element's appearance based on its value — a data bar, a color scale, or an icon.
+
+```text
+Value > target   -> green
+Value near target -> yellow
+Value < target    -> red
+```
+
+Available on table/matrix cells, and on some chart elements, from the field's context menu.
+
+---
+
+## Axis Formatting
+
+Axis settings control scale, gridlines, and label formatting.
+
+```text
+Y-axis: 0 -- 500K -- 1M
+X-axis: Jan  Feb  Mar  Apr
+```
+
+Common adjustments include starting the Y-axis at zero (to avoid exaggerating differences), and formatting large numbers with K/M abbreviations for readability.
+
+---
+
+## Titles and Subtitles
+
+A clear title states what the visual shows — ideally the takeaway, not just the field names.
+
+```text
+Weak title:   "Sales by Region"
+Better title: "West Region Leads in Q4 Sales"
+```
+
+Subtitles can add supporting context, like the date range being shown.
+
+---
+
+## Alignment and Spacing
+
+Consistent alignment and spacing between visuals makes a page feel intentional rather than assembled ad hoc.
+
+```text
++--------+  +--------+
+| Chart  |  | Chart  |
++--------+  +--------+
++--------+  +--------+
+| Chart  |  | Chart  |
++--------+  +--------+
+```
+
+Power BI's **Format > Align** and **Distribute** tools (with multiple visuals selected) snap objects into consistent rows and columns.
+
+---
+
+## Best Practices
+
+- Apply a single report theme instead of manually coloring every visual individually.
+- Keep color meaning consistent — the same category should always be the same color.
+- Start numeric axes at zero unless there's a specific, clearly labeled reason not to.
+- Write titles that state the takeaway, not just the fields being plotted.
+- Use alignment and distribution tools instead of manually eyeballing visual placement.
+
+---
+
+## Common Mistakes
+
+### Inconsistent Colors Across Visuals
+
+If "West" is blue on one chart and green on another, readers have to relearn the color mapping on every visual. A shared theme prevents this.
+
+### Truncated Axes That Mislead
+
+A Y-axis that doesn't start at zero can make a small difference look dramatic. This is one of the most common ways a chart accidentally misleads its audience.
+
+### Over-Formatting
+
+Excessive borders, shadows, background colors, and decorative elements compete with the data for attention. Formatting should support the data, not distract from it.
+
+---
+
+## Formatting Checklist
+
+Before publishing a report:
+
+- A consistent theme is applied across the whole report.
+- The same category uses the same color everywhere it appears.
+- Numeric axes start at zero unless there's a clear, labeled reason not to.
+- Titles communicate the takeaway, not just the field names.
+- Visuals are aligned and evenly spaced using Power BI's alignment tools.
+
+---
+
+## Next Steps
+
+Continue exploring Power BI visuals:
+
+- [Charts](/docs/visuals/charts)
+- [Tables](/docs/visuals/tables)
+- [Slicers](/docs/visuals/slicers)

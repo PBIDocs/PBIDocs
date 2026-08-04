@@ -1,9 +1,189 @@
-﻿---
+---
 title: "Charts"
-description: Power BI documentation.
+description: Learn how to choose and configure the right Power BI chart type for your data.
 ---
 
 # Charts
 
-Content coming soon.
+The right chart makes a pattern obvious. The wrong one hides it behind decoration.
 
+```text
+Data
+  |
+  | shaped by
+  |
+Chart Type
+  |
+  | determines
+  |
+What the audience notices first
+```
+
+Power BI includes dozens of visual types, but most reports only need a handful of them used well.
+
+---
+
+## Bar and Column Charts
+
+Bar and column charts compare values across categories.
+
+```text
+Category A |████████
+Category B |████████████
+Category C |█████
+```
+
+Use column charts (vertical bars) for a small number of categories, and bar charts (horizontal bars) when category names are long or there are many categories to list.
+
+---
+
+## Line Charts
+
+Line charts show a value changing over a continuous axis, almost always time.
+
+```text
+Sales
+  |        *
+  |     *     *
+  |  *           *
+  +------------------- Time
+```
+
+Line charts are the default choice for trends: monthly revenue, daily active users, year-over-year growth.
+
+---
+
+## Combo Charts
+
+A combo chart overlays a line and columns on the same axis, useful for comparing two related measures with different scales.
+
+```text
+Columns: Sales
+Line:    Target
+  |   ██        ██
+  |   ██  ─●─   ██  ─●─
+  +----------------------
+```
+
+Common pairing: actual values as columns, target or budget as a line.
+
+---
+
+## Pie and Donut Charts
+
+Pie and donut charts show parts of a whole.
+
+```text
+   ___
+  /   \
+ | 60% |  Category A
+ | 25% |  Category B
+  \15%/   Category C
+```
+
+They work well with 2-4 categories. Beyond that, the slices become too thin to compare accurately — a bar chart communicates the same data more clearly.
+
+---
+
+## Scatter Charts
+
+Scatter charts plot two numeric measures against each other, revealing correlation or clusters.
+
+```text
+Profit
+  |     *   *
+  |   *   *     *
+  |      *   *
+  +------------------- Revenue
+```
+
+Adding a third measure as bubble size turns a scatter chart into a bubble chart.
+
+---
+
+## KPI and Card Visuals
+
+Cards and KPI visuals show a single number, optionally with a trend or target comparison.
+
+```text
+┌─────────────┐
+│  $1.2M      │
+│  Total Sales│
+│  ▲ 12% vs LY│
+└─────────────┘
+```
+
+Best for the one or two numbers that matter most on a page — an executive summary metric, not a detailed breakdown.
+
+---
+
+## Choosing a Chart Type
+
+| Question | Recommended Chart |
+|---|---|
+| Comparing categories? | Bar or column |
+| Showing a trend over time? | Line |
+| Comparing two related measures? | Combo |
+| Showing parts of a whole (few categories)? | Pie or donut |
+| Showing correlation between two numbers? | Scatter |
+| Highlighting one key number? | Card / KPI |
+
+---
+
+## Adding a Chart
+
+Steps:
+
+1. Select a chart type from the **Visualizations** pane.
+2. Drag fields into the appropriate wells (**Axis**, **Legend**, **Values**).
+3. Adjust formatting under the paint-roller icon in the Visualizations pane.
+
+Power BI also supports **Q&A**-driven chart creation — typing a question generates a matching chart automatically, which can be swapped to a different visual type afterward.
+
+---
+
+## Best Practices
+
+- Match the chart type to the question being answered, not to what looks most interesting.
+- Limit the number of categories or series a single chart tries to show at once.
+- Use consistent colors for the same category across every chart on a page.
+- Avoid 3D and heavily decorated chart styles; they make values harder to compare accurately.
+- Add clear titles that state the takeaway, not just the field names being plotted.
+
+---
+
+## Common Mistakes
+
+### Using Pie Charts for Too Many Categories
+
+Beyond four or five slices, a pie chart becomes difficult to read accurately. A bar chart handles more categories clearly.
+
+### Dual Axes That Mislead
+
+Combo charts with two differently-scaled axes can visually suggest a relationship between two measures that doesn't actually exist. Label both axes clearly, or reconsider the pairing.
+
+### Too Many Chart Types on One Page
+
+Mixing many different visual types on a single page increases the cognitive effort needed to read it. A consistent, limited set of chart types is easier to scan.
+
+---
+
+## Chart Checklist
+
+Before publishing a report page:
+
+- Each chart type matches the question it's answering.
+- Colors are consistent for the same category across all charts.
+- Axes and legends are clearly labeled.
+- No chart is trying to show more categories than it can display clearly.
+- Titles communicate the takeaway, not just the underlying fields.
+
+---
+
+## Next Steps
+
+Continue exploring Power BI visuals:
+
+- [Tables](/docs/visuals/tables)
+- [Formatting](/docs/visuals/formatting)
+- [Bookmarks & Interactivity](/docs/visuals/bookmarks)
