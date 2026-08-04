@@ -120,9 +120,7 @@ If a filter already exists on the same column, `CALCULATE()` replaces it.
 
 Suppose a report is filtered to:
 
-```text
-Category = Accessories
-```
+`Category = Accessories`
 
 This measure:
 
@@ -158,9 +156,7 @@ CALCULATE(
 
 Even if the report is filtered to:
 
-```text
-Category = Bikes
-```
+`Category = Bikes`
 
 this measure returns sales for **all products**.
 
@@ -290,9 +286,7 @@ Example:
 
 Current report filter:
 
-```text
-Category = Accessories
-```
+`Category = Accessories`
 
 Measure:
 
@@ -306,9 +300,7 @@ CALCULATE(
 
 Result:
 
-```text
-Category = Bikes
-```
+`Category = Bikes`
 
 The filter inside `CALCULATE()` takes precedence over the existing filter.
 

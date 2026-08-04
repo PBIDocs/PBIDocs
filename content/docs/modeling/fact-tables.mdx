@@ -222,25 +222,19 @@ Follow these guidelines:
 
 Good:
 
-```text
-FactSales
-```
+`FactSales`
 
 Contains sales events.
 
 Good:
 
-```text
-FactInventory
-```
+`FactInventory`
 
 Contains inventory measurements.
 
 Avoid combining unrelated processes:
 
-```text
-Sales + Inventory + Production
-```
+`Sales + Inventory + Production`
 
 ---
 
@@ -248,15 +242,11 @@ Sales + Inventory + Production
 
 Preferred:
 
-```text
-ProductKey = 1001
-```
+`ProductKey = 1001`
 
 Avoid:
 
-```text
-ProductName = "All Terrain Tire"
-```
+`ProductName = "All Terrain Tire"`
 
 Descriptions belong in dimension tables.
 
@@ -266,9 +256,7 @@ Descriptions belong in dimension tables.
 
 Instead of storing:
 
-```text
-TotalAmount
-```
+`TotalAmount`
 
 create a reusable measure:
 
