@@ -14,7 +14,11 @@ const ACCENT_SCOPES = [
   'entity.name.label',
   'support.function',
   'support.class',
-  'variable.other.constant',
+  // Deliberately NOT variable.other.constant: DAX's grammar uses that scope
+  // as a catch-all for every bare identifier (including plain VAR names
+  // like Profit/Sales/Margin, not just function/table/column names), which
+  // accented almost every word in a block and made it read as "all purple"
+  // instead of a restrained accent on the actually-important tokens.
   'variable.language',
   'constant.language',
 ];
