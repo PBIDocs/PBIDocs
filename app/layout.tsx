@@ -7,13 +7,21 @@ const inter = Inter({
   subsets: ['latin'],
 });
 
-export const metadata = {
+export const metadata: Metadata = {
   metadataBase: new URL('https://pbidocs.com'),
   title: {
-    default: 'PBI Docs',
-    template: '%s | PBI Docs',
+    default: 'PBIDocs',
+    template: '%s | PBIDocs',
   },
-  description: 'Power BI documentation.',
+  description:
+    'Learn DAX, Power Query, Data Modeling, Microsoft Fabric, and AI-assisted Power BI development with clear documentation and practical examples.',
+  openGraph: {
+    type: 'website',
+    siteName: 'PBIDocs',
+  },
+  twitter: {
+    card: 'summary_large_image',
+  },
 };
 
 export default function Layout({ children }: { children: React.ReactNode }) {

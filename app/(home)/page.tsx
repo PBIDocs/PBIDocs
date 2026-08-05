@@ -1,4 +1,13 @@
 import Link from 'next/link';
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: {
+    absolute: 'PBIDocs — Master Power BI. Build smarter with AI.',
+  },
+  description:
+    'Learn DAX, Power Query, Data Modeling, Microsoft Fabric, and AI-assisted Power BI development with clear documentation and practical examples.',
+};
 
 const topics = [
   {
