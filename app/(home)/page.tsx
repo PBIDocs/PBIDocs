@@ -62,7 +62,7 @@ const topics = [
 
 export default function HomePage() {
   return (
-    <main className="relative overflow-hidden flex flex-col items-center text-center px-6 py-24">
+    <div className="relative overflow-hidden flex flex-col items-center text-center px-6 py-24">
      <div className="absolute inset-0 -z-10">
       <div className="absolute left-1/2 top-0 h-[400px] w-[100%] -translate-x-1/2 rounded-full bg-fd-primary/10 blur-3xl" />
      </div>
@@ -119,6 +119,6 @@ export default function HomePage() {
           </Link>
         ))}
       </section>
-    </main>
+    </div>
   );
 }

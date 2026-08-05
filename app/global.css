@@ -12,6 +12,11 @@
   --color-fd-primary-foreground: oklch(98.5% 0 0);
   --color-fd-ring: oklch(54% 0.2 291);
   --primary-muted: oklch(50% 0.14 291);
+
+  /* fumadocs' default light-mode muted-foreground (hsl(0,0%,45.1%), #737373)
+     measures only 4.12-4.34:1 against the light card/sidebar backgrounds it's
+     actually used on, just under WCAG AA. Darkened with margin. */
+  --color-fd-muted-foreground: hsl(0, 0%, 38%);
 }
 
 .dark {
@@ -19,6 +24,12 @@
   --color-fd-primary-foreground: oklch(14.5% 0 0);
   --color-fd-ring: oklch(74% 0.17 291);
   --primary-muted: oklch(80% 0.13 291);
+
+  /* fumadocs' default dark-mode muted-foreground is a semi-transparent
+     hsla() that only measures ~3:1 against the actual dark background
+     (#121212), same AA failure as light mode. A solid, lighter gray
+     with margin, matching the light-mode fix above. */
+  --color-fd-muted-foreground: hsl(0, 0%, 55%);
 }
 
 
