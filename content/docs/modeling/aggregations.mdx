@@ -1,0 +1,179 @@
+---
+title: "Aggregations"
+description: Learn how Power BI aggregation tables speed up DirectQuery models by pre-summarizing common queries.
+---
+
+# Aggregations
+
+An aggregation table stores pre-summarized data at a coarser grain than the detailed fact table, so common queries can be answered from a small Import table instead of hitting a large DirectQuery source every time.
+
+```text
+Detail (DirectQuery)
+   FactSales: 500 million rows, one per transaction
+
+Aggregation (Import)
+   AggSalesByMonth: 5,000 rows, one per month/product/store
+```
+
+A query that only needs monthly totals can be answered from the small aggregation table almost instantly, instead of scanning half a billion detail rows.
+
+---
+
+## Where Aggregations Fit
+
+Aggregations are most valuable in composite models where the fact table is too large to import in full.
+
+```text
+FactSales (DirectQuery, 500M rows)
+        |
+        | too large to import
+        |
+AggSalesByMonth (Import, 5K rows)
+        |
+        | answers common summary queries instantly
+```
+
+See [DirectQuery vs. Import](/docs/modeling/storage-modes) for the broader storage mode picture aggregations build on.
+
+---
+
+## How Query Matching Works
+
+When a visual's query can be fully answered by the aggregation table, Power BI uses it automatically. When it needs more detail than the aggregation provides, Power BI falls back to the DirectQuery fact table.
+
+```text
+Visual needs: Sales by Month
+        |
+        | matches aggregation grain
+        |
+Answered by AggSalesByMonth (fast)
+
+Visual needs: Sales by individual Transaction ID
+        |
+        | too detailed for the aggregation
+        |
+Falls back to FactSales (DirectQuery)
+```
+
+This fallback happens transparently — report authors don't need to manually pick which table a visual should query.
+
+---
+
+## Setting Up an Aggregation Table
+
+An aggregation table is built like any other table (often via Power Query, grouping the detail source), then configured through **Manage Aggregations** on the table itself.
+
+```text
+Manage Aggregations
+        |
+        +-- Summarization: Sum, Count, Min, Max, GroupBy
+        |
+        +-- Detail Table: FactSales
+        |
+        +-- Detail Column: which column each agg column summarizes
+```
+
+Each column in the aggregation table is mapped to a summarization type and the detail-table column it summarizes.
+
+---
+
+## Example Mapping
+
+```text
+Aggregation Column      | Summarization | Detail Table Column
+-------------------------|----------------|----------------------
+Month                    | GroupBy        | FactSales[DateKey]
+ProductKey                | GroupBy        | FactSales[ProductKey]
+Total Sales               | Sum            | FactSales[SalesAmount]
+Transaction Count          | Count          | FactSales[TransactionID]
+```
+
+`GroupBy` columns define the aggregation's grain; `Sum`/`Count`/etc. columns define what gets pre-calculated.
+
+---
+
+## Aggregation Table Storage Mode
+
+The aggregation table itself is typically set to Import (or Dual), while the detail table stays DirectQuery.
+
+```text
+AggSalesByMonth: Import
+FactSales:       DirectQuery
+```
+
+This is the same Import/DirectQuery split used in composite models generally — the aggregation just adds a specific, pre-summarized shortcut on top.
+
+---
+
+## Hiding the Aggregation Table
+
+End users shouldn't need to know an aggregation table exists — it's an internal performance optimization, not something to browse directly.
+
+```text
+AggSalesByMonth
+        |
+        | hidden from report view
+        |
+Still used automatically behind the scenes
+```
+
+Hidden from the Fields list via the table's **Is Hidden** property, while still participating in query matching.
+
+---
+
+## Aggregations vs. Plain Import
+
+| | Full Import | Aggregation Table |
+|---|---|---|
+| Data volume | Entire fact table | Pre-summarized subset |
+| Detail available | Full detail | Only down to the aggregation's grain |
+| Refresh cost | High, for large tables | Low, since it's much smaller |
+| Fallback needed | No | Yes, for queries needing more detail |
+
+Aggregations trade some detail-level flexibility for dramatically faster common queries, while DirectQuery still covers the cases that need full detail.
+
+---
+
+## Best Practices
+
+- Build aggregations at the grain that matches the most common report queries (often by month, region, or category).
+- Keep the aggregation table hidden from report authors and consumers.
+- Validate that fallback to DirectQuery actually works correctly for queries needing more detail than the aggregation provides.
+- Monitor which queries hit the aggregation vs. fall back, to confirm the aggregation grain matches real usage.
+
+---
+
+## Common Mistakes
+
+### Aggregating at the Wrong Grain
+
+An aggregation table that doesn't match how reports actually query the data (too fine or too coarse) provides little benefit — most queries still fall back to the slow DirectQuery path.
+
+### Leaving the Aggregation Table Visible
+
+Exposing the aggregation table directly to report authors invites confusion about which table to use, and risks building visuals against the wrong grain.
+
+### Assuming Aggregations Replace DirectQuery Entirely
+
+Aggregations only accelerate queries that match their grain. Detail-level analysis still depends on the underlying DirectQuery source performing reasonably well.
+
+---
+
+## Aggregations Checklist
+
+Before relying on an aggregation table in production:
+
+- The aggregation's grain matches the most common report query patterns.
+- Detail table fallback has been tested and returns correct results.
+- The aggregation table is hidden from the Fields list.
+- Refresh performance for the (much smaller) aggregation table has been validated.
+
+---
+
+## Next Steps
+
+Continue exploring Power BI data modeling:
+
+- [DirectQuery vs. Import](/docs/modeling/storage-modes)
+- [Star Schema](/docs/modeling/star-schema)
+- [Fact Tables](/docs/modeling/fact-tables)

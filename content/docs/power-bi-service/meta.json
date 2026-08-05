@@ -4,6 +4,8 @@
     "workspaces",
     "dashboards",
     "refresh",
+    "dataflows",
+    "deployment-pipelines",
     "security"
   ]
 }

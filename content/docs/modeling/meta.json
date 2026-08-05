@@ -7,6 +7,7 @@
     "dimension-tables",
     "relationships",
     "storage-modes",
+    "aggregations",
     "date-tables",
     "measures",
     "slowly-changing-dimensions",
