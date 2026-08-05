@@ -1,0 +1,179 @@
+---
+title: "Composite Models"
+description: A deeper look at building Power BI composite models that combine multiple data sources and storage modes.
+---
+
+# Composite Models
+
+[DirectQuery vs. Import](/docs/modeling/storage-modes) introduced composite models as mixing storage modes within a single source. Composite models go further than that — they can also combine **multiple, independent data sources** in one model, each queried on its own terms.
+
+```text
+Power BI Model
+     |
+     +-- Sales (DirectQuery -> SQL Server)
+     |
+     +-- Budget (Import -> Excel)
+     |
+     +-- DimDate (Dual)
+```
+
+This page covers the multi-source case, and the specific limitations and performance considerations that come with it.
+
+---
+
+## Single-Source vs. Multi-Source Composite Models
+
+A single-source composite model mixes storage modes on tables that all come from the same underlying database — the common Dual-dimension-plus-DirectQuery-fact pattern from [Storage Modes](/docs/modeling/storage-modes).
+
+```text
+Single-Source Composite
+     |
+     SQL Server
+        |
+        +-- FactSales (DirectQuery)
+        +-- DimDate (Dual)
+
+Multi-Source Composite
+     |
+     +-- SQL Server: FactSales (DirectQuery)
+     +-- Excel File: Budget (Import)
+     +-- SQL Server: DimDate (Dual)
+```
+
+A multi-source composite model pulls tables from genuinely different systems into one model, which is where composite modeling's real power — and its extra constraints — show up.
+
+---
+
+## Why Combine Multiple Sources
+
+Multi-source composite models solve a problem neither Import nor DirectQuery alone can: reporting across systems that were never designed to share a database.
+
+```text
+Question: "Sales vs. Budget by Region"
+
+FactSales lives in the transactional SQL Server
+Budget lives in a Finance-owned Excel file
+        |
+        | composite model joins them on DimDate / DimRegion
+        |
+One report, two sources
+```
+
+Common cases:
+
+- A large transactional fact table stays in DirectQuery, joined against a small Import table (budget, targets, manual adjustments) that a business team maintains outside the source system.
+- Two DirectQuery sources (e.g., two regional SQL Server instances) are combined through shared Dual dimension tables.
+- A Fabric semantic model is extended locally with an Import table, without needing write access to the upstream model.
+
+---
+
+## Relationships Across Sources
+
+A relationship between tables from different sources is evaluated differently than a same-source relationship — Power BI can't push the join down to a single database, so it handles the join itself.
+
+```text
+DimDate (Dual)
+     |
+     | relationship crosses sources
+     |
+FactSales (DirectQuery, SQL Server)
+```
+
+Power BI issues separate queries to each source and combines the results locally. This works well when the "many" side of the relationship is filtered down first — badly when it isn't.
+
+---
+
+## Limiting Relationship Direction
+
+Cross-source relationships default to single-direction filtering. Bidirectional filtering across sources is possible but should be used deliberately, since it multiplies the number of cross-source queries a single visual can trigger.
+
+```text
+DimProduct --filters--> FactSales     (single direction: safe default)
+
+DimProduct <--filters--> FactSales    (bidirectional: use only when needed)
+```
+
+Start single-direction. Only enable bidirectional filtering across a source boundary once a specific report requirement calls for it, and after checking query performance.
+
+---
+
+## Performance in Multi-Source Models
+
+Every visual that touches tables from more than one source triggers multiple backend queries, evaluated separately and merged by Power BI.
+
+```text
+Visual: Sales by Region, filtered by Budget Category
+        |
+        +-- Query 1 -> SQL Server (Sales)
+        +-- Query 2 -> Excel-backed Import table (Budget)
+        |
+        Power BI merges both results
+```
+
+This merge step has a cost. The more cross-source joins a single visual requires, and the larger the intermediate result sets, the slower that visual gets — independent of how fast either source is individually.
+
+---
+
+## Reducing Cross-Source Query Cost
+
+- Filter DirectQuery tables down early (report-level filters, RLS) so less data crosses the source boundary.
+- Keep shared dimension tables (the ones relationships cross through) in Dual or Import mode, not DirectQuery.
+- Add [aggregation tables](/docs/modeling/aggregations) on the DirectQuery side for the queries that matter most.
+- Avoid bidirectional cross-source relationships unless a report genuinely requires them.
+
+---
+
+## Composite Models vs. a Single Source
+
+| | Single-Source Model | Multi-Source Composite |
+|---|---|---|
+| Data location | One database | Multiple independent systems |
+| Relationship evaluation | Pushed to the source | Merged locally by Power BI |
+| Setup complexity | Lower | Higher |
+| Typical use | One system, mixed storage modes | Reporting across systems that don't share a database |
+
+---
+
+## Best Practices
+
+- Reserve multi-source composite models for cases a single source genuinely can't solve — they add real query complexity.
+- Keep shared dimension tables in Dual mode so cross-source joins stay cheap.
+- Filter aggressively before crossing a source boundary, not after.
+- Validate performance with production-scale data on every source involved, not just the smallest one.
+
+---
+
+## Common Mistakes
+
+### Treating Every Cross-Source Join Like a Local One
+
+A relationship between two sources is not free the way a same-database relationship is. Each cross-source query adds real latency that compounds across visuals on a page.
+
+### Leaving Shared Dimensions in DirectQuery
+
+If a dimension table used to relate two different sources is itself in DirectQuery, every cross-source query pays for three round trips instead of two. Dual or Import mode on the shared dimension avoids this.
+
+### Enabling Bidirectional Filtering by Default
+
+Bidirectional filtering across a source boundary multiplies the number of queries a visual can trigger. Turn it on only where a specific report need justifies the cost.
+
+---
+
+## Composite Models Checklist
+
+Before publishing a multi-source composite model:
+
+- Shared dimension tables are Dual or Import, not DirectQuery.
+- Cross-source relationships are single-direction unless bidirectional is specifically required.
+- Filters are applied as early as possible, before data crosses source boundaries.
+- Report performance has been tested with realistic data volumes on every source.
+
+---
+
+## Next Steps
+
+Continue exploring Power BI data modeling:
+
+- [DirectQuery vs. Import](/docs/modeling/storage-modes)
+- [Aggregations](/docs/modeling/aggregations)
+- [Relationships](/docs/modeling/relationships)
