@@ -8,6 +8,7 @@
     "relationships",
     "storage-modes",
     "aggregations",
+    "composite-models",
     "date-tables",
     "measures",
     "slowly-changing-dimensions",
