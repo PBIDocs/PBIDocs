@@ -5,7 +5,7 @@ import { baseOptions } from '@/lib/layout.shared';
 export default function NotFound() {
   return (
     <HomeLayout {...baseOptions()}>
-      <main className="flex flex-1 flex-col items-center justify-center px-6 py-24 text-center">
+      <div className="flex flex-1 flex-col items-center justify-center px-6 py-24 text-center">
         <p className="mb-4 text-sm font-semibold tracking-wide text-fd-primary">404</p>
         <h1 className="mb-4 text-4xl font-bold tracking-tight">Page not found</h1>
         <p className="mb-10 max-w-md text-fd-muted-foreground">
@@ -26,7 +26,7 @@ export default function NotFound() {
             Go Home
           </Link>
         </div>
-      </main>
+      </div>
     </HomeLayout>
   );
 }

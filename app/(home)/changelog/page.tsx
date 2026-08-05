@@ -88,7 +88,7 @@ const changelog: { date: string; entries: ReactNode[] }[] = [
 
 export default function ChangelogPage() {
   return (
-    <main className="mx-auto max-w-3xl px-6 py-16 sm:py-24">
+    <div className="mx-auto max-w-3xl px-6 py-16 sm:py-24">
       <h1 className="text-4xl font-bold tracking-tight mb-3">Changelog</h1>
       <p className="text-lg text-fd-muted-foreground mb-16">
         A running record of meaningful additions and fixes to the Power BI content on this site.
@@ -117,6 +117,6 @@ export default function ChangelogPage() {
           </section>
         ))}
       </div>
-    </main>
+    </div>
   );
 }
