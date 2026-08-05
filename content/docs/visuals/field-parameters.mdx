@@ -1,0 +1,176 @@
+---
+title: "Field Parameters"
+description: Learn how Power BI field parameters let report users swap which fields or measures a visual displays.
+---
+
+# Field Parameters
+
+A field parameter lets a report viewer switch what a visual is showing — which measure, which column, which dimension — using a slicer, instead of needing a separate visual for every combination.
+
+```text
+Slicer: "Sales" / "Profit" / "Quantity"
+        |
+        | selection swaps
+        |
+Chart's Y-axis
+```
+
+One chart, driven by a field parameter, can replace what would otherwise be several nearly-identical visuals.
+
+---
+
+## What a Field Parameter Contains
+
+A field parameter is a small table where each row represents one field the user can choose.
+
+```text
+Field Parameter: "Metric"
+
+Field          | Order
+---------------|-------
+[Total Sales]  | 0
+[Total Profit] | 1
+[Total Units]  | 2
+```
+
+Despite looking like a table, it isn't real data — it's a list of references to existing measures or columns already in the model.
+
+---
+
+## Creating a Field Parameter
+
+Field parameters are created from **Modeling > New Parameter > Fields** in Power BI Desktop.
+
+```text
+New Parameter (Fields)
+        |
+        +-- Add measures/columns to include
+        |
+        +-- Creates a table + a slicer visual automatically
+```
+
+Power BI automatically adds a slicer to the current page, bound to the new parameter.
+
+---
+
+## Using a Field Parameter in a Visual
+
+Instead of dragging a specific measure into a chart's Values well, drag the field parameter itself.
+
+```text
+Chart Values: [Metric parameter]
+        |
+        | resolves to whichever field is selected
+        |
+[Total Sales] or [Total Profit] or [Total Units]
+```
+
+Whichever row the user selects in the paired slicer determines what the chart actually plots.
+
+---
+
+## Swapping Dimensions, Not Just Measures
+
+Field parameters aren't limited to measures — they can also list columns, letting a report swap the axis or grouping field itself.
+
+```text
+Field Parameter: "Breakdown By"
+
+Field              | Order
+-------------------|-------
+DimProduct[Category] | 0
+DimStore[Region]      | 1
+DimDate[Year]         | 2
+```
+
+A single chart can then be grouped by Category, Region, or Year, depending on which one the viewer picks.
+
+---
+
+## Combining Multiple Field Parameters
+
+A report page can use more than one field parameter at once — for example, one controlling the measure and another controlling the breakdown dimension.
+
+```text
+Metric parameter:     [Total Sales] / [Total Profit]
+Breakdown parameter:  Category / Region / Year
+        |
+        | both feed the same chart
+        |
+2D matrix of chart configurations from one visual
+```
+
+This turns a handful of report pages into a single flexible page, at the cost of some added setup complexity.
+
+---
+
+## Renaming Parameter Labels
+
+The labels shown in the slicer don't have to match the underlying field names — a calculated column on the parameter table can rename them for a friendlier display.
+
+```text
+Field          | Order | Display Name
+---------------|-------|---------------
+[Total Sales]  | 0     | "Revenue"
+[Total Profit] | 1     | "Profit"
+```
+
+Edited directly in the field parameter table, similar to any other Power Query or DAX table edit.
+
+---
+
+## Field Parameters vs. Bookmarks
+
+| | Field Parameters | Bookmarks |
+|---|---|---|
+| Swaps | Which field a visual uses | Filter state, visibility, layout |
+| Best for | "Show me this metric instead of that one" | "Show me this view of the report" |
+| Setup | One parameter table + slicer | One bookmark per state |
+
+The two are often combined: bookmarks for overall report views, field parameters for flexibility within a single visual.
+
+---
+
+## Best Practices
+
+- Use descriptive display names in the parameter table instead of raw measure names.
+- Keep the number of fields in a single parameter manageable — a slicer with 20 options isn't very usable.
+- Pair field parameters with a clear slicer label so users understand what they're switching.
+- Test that every field included in the parameter actually makes sense in the visual it's driving (a text column plotted as a numeric axis won't work).
+
+---
+
+## Common Mistakes
+
+### Mixing Incompatible Field Types
+
+Including both measures and text columns in the same field parameter, when a visual expects consistent field types, produces confusing or broken results when certain options are selected.
+
+### Too Many Options in One Slicer
+
+A field parameter with a long list of fields turns a helpful slicer into a hard-to-scan dropdown. Group related fields into separate parameters instead.
+
+### Forgetting to Rename Display Labels
+
+Leaving raw measure names like "Sum of SalesAmount2" in the slicer, instead of a clean display name, makes the switcher harder to use than it needs to be.
+
+---
+
+## Field Parameters Checklist
+
+Before publishing a report using field parameters:
+
+- Display names are clean and understandable, not raw measure/column names.
+- All included fields are compatible with how the visual will use them.
+- The number of options per parameter stays manageable for a slicer.
+- The paired slicer has a clear label explaining what it controls.
+
+---
+
+## Next Steps
+
+Continue exploring Power BI visuals:
+
+- [Slicers](/docs/visuals/slicers)
+- [Bookmarks & Interactivity](/docs/visuals/bookmarks)
+- [Charts](/docs/visuals/charts)

@@ -1,0 +1,175 @@
+---
+title: "Deployment Pipelines"
+description: Learn how Power BI deployment pipelines move content through Development, Test, and Production stages safely.
+---
+
+# Deployment Pipelines
+
+A deployment pipeline moves content through a sequence of stages, so changes get tested before reaching the people who depend on the report.
+
+```text
+Development
+     |
+     | Deploy
+     |
+Test
+     |
+     | Deploy
+     |
+Production
+```
+
+Each stage is backed by its own workspace, so Development changes don't affect what Production users see until they're explicitly promoted.
+
+---
+
+## The Three Stages
+
+```text
+Development
+   |
+   +-- Where active changes happen
+   |
+Test
+   |
+   +-- Where changes are validated before release
+   |
+Production
+   |
+   +-- What end users actually see
+```
+
+Each stage is a separate workspace, with its own workspace roles and, optionally, its own data source connections.
+
+---
+
+## Creating a Pipeline
+
+Deployment pipelines are created from the Power BI Service's pipeline area, then assigned an existing workspace for each stage (or new workspaces are created automatically).
+
+```text
+New Pipeline
+     |
+     +-- Assign Development workspace
+     +-- Assign Test workspace
+     +-- Assign Production workspace
+```
+
+Requires Premium or Fabric capacity — deployment pipelines aren't available on shared capacity workspaces.
+
+---
+
+## Deploying Between Stages
+
+Deploying copies content from one stage to the next, comparing what's changed before confirming.
+
+```text
+Development (source)
+        |
+        | Deploy
+        |
+Test (target)
+        |
+        | content compared, then overwritten
+```
+
+The pipeline shows a diff-style comparison — which reports, dashboards, and datasets differ between stages — before the deployment actually happens.
+
+---
+
+## Stage-Specific Data Sources
+
+A report often needs to point at a different database per stage — a Test database for the Test stage, Production data for the Production stage.
+
+```text
+Development -> Dev Database
+Test        -> Test Database
+Production  -> Production Database
+```
+
+Configured through **deployment rules**, which override specific settings (like a data source connection string or a parameter value) per stage, so the same dataset definition can point at different data depending on which stage it's deployed to.
+
+---
+
+## Deployment Rules
+
+A deployment rule says "when this dataset lands in this stage, apply this override."
+
+```text
+Rule: Dataset "Sales" in "Production"
+        |
+        | override
+        |
+Data source = prod-server.database.windows.net
+```
+
+Without deployment rules, deploying to Production would carry over the Development connection string, pointing Production reports at development data.
+
+---
+
+## Comparing Pipeline Stages
+
+Each stage shows its last-deployed timestamp and whether it differs from the stage before it.
+
+| Stage | Status |
+|---|---|
+| Development | Actively being edited |
+| Test | Matches Development, or shows pending changes |
+| Production | Matches Test, or shows pending changes |
+
+This makes it easy to see whether Production is running the latest tested version, or has drifted behind Test.
+
+---
+
+## Why Use Deployment Pipelines
+
+- Changes are validated in Test before reaching the people relying on Production.
+- Each stage can safely use different data sources without manual reconfiguration on every deploy.
+- The diff view prevents accidentally deploying unintended changes.
+- Report authors get a clear, auditable path from "in progress" to "live."
+
+---
+
+## Best Practices
+
+- Never edit Production content directly; all changes should flow through Development and Test first.
+- Set up deployment rules for every stage-specific connection before the first deployment, not after a broken Production report is discovered.
+- Review the diff comparison carefully before deploying to Production — it's the last checkpoint before end users see the change.
+- Keep Test data representative of Production data volume, so performance issues surface before release.
+
+---
+
+## Common Mistakes
+
+### Editing Production Directly
+
+Bypassing the pipeline to fix something "just this once" in Production defeats the purpose of having a tested release path, and the fix will be overwritten by the next deployment from Test.
+
+### Forgetting Deployment Rules
+
+Deploying a dataset to Production without a rule overriding its data source can silently point live reports at development or test data.
+
+### Treating Test as Optional
+
+Skipping straight from Development to Production removes the one checkpoint designed to catch problems before real users see them.
+
+---
+
+## Deployment Pipeline Checklist
+
+Before deploying to Production:
+
+- Changes have been validated in the Test stage first.
+- Deployment rules are configured for every stage-specific data source.
+- The diff comparison has been reviewed and matches what's expected.
+- Report consumers have been notified of significant changes, if relevant.
+
+---
+
+## Next Steps
+
+Continue exploring the Power BI Service:
+
+- [Workspaces](/docs/power-bi-service/workspaces)
+- [Dataflows](/docs/power-bi-service/dataflows)
+- [Refresh](/docs/power-bi-service/refresh)

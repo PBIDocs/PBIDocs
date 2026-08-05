@@ -1,0 +1,178 @@
+---
+title: "Dataflows"
+description: Learn how Power BI dataflows centralize data preparation so multiple datasets can share the same cleaned tables.
+---
+
+# Dataflows
+
+A dataflow moves Power Query transformation logic out of individual Desktop files and into the Power BI Service, where multiple datasets can share it.
+
+```text
+Without a Dataflow
+     |
+     +-- Report A's Power Query: clean Sales data
+     +-- Report B's Power Query: clean Sales data (duplicated)
+     +-- Report C's Power Query: clean Sales data (duplicated)
+
+With a Dataflow
+     |
+     +-- Dataflow: clean Sales data (once)
+              |
+              +-- Report A references it
+              +-- Report B references it
+              +-- Report C references it
+```
+
+Each report author avoids re-solving the same cleanup problem, and a fix to the shared logic benefits every report at once.
+
+---
+
+## Where Dataflows Live
+
+Dataflows are created and stored inside a workspace, not inside a Desktop file.
+
+```text
+Workspace
+   |
+   +-- Datasets
+   |
+   +-- Reports
+   |
+   +-- Dataflows
+   |
+   +-- Dashboards
+```
+
+Created from the workspace's **New > Dataflow** option, using the same Power Query Editor interface as Desktop.
+
+---
+
+## Referencing a Dataflow from Desktop
+
+Once published, a dataflow's tables appear as a data source in Power BI Desktop, under **Power Platform Dataflows**.
+
+```text
+Power BI Desktop
+       |
+       | Get Data > Power Platform Dataflows
+       |
+Dataflow Table
+       |
+       | loaded like any other source
+       |
+Report's Data Model
+```
+
+The report's Power Query just references the dataflow's output — the transformation logic itself doesn't need to be rebuilt.
+
+---
+
+## Dataflows Have Their Own Refresh Schedule
+
+A dataflow refreshes independently of the datasets that consume it.
+
+```text
+Dataflow Refresh (e.g. 6:00 AM)
+        |
+        | produces fresh tables
+        |
+Dataset Refresh (e.g. 6:30 AM)
+        |
+        | picks up the dataflow's latest output
+```
+
+Scheduling the dataflow refresh to complete before dependent dataset refreshes avoids datasets picking up stale dataflow data.
+
+---
+
+## Linked vs. Computed Entities
+
+A **linked entity** references another dataflow's table without copying or transforming it further.
+
+```text
+Dataflow A: CleanedSales
+     |
+     | linked
+     |
+Dataflow B: uses CleanedSales as-is
+```
+
+A **computed entity** takes a linked entity and applies additional transformations, without re-touching the original source.
+
+```text
+Dataflow A: CleanedSales
+     |
+     | linked, then transformed
+     |
+Dataflow B: CleanedSalesByRegion (computed)
+```
+
+Computed entities require Premium or Fabric capacity, since the transformation runs inside the Power BI Service rather than against the original source.
+
+---
+
+## Dataflows vs. Datasets
+
+| | Dataflow | Dataset |
+|---|---|---|
+| Contains | Cleaned tables (Power Query only) | Tables, relationships, DAX measures |
+| Consumed by | Datasets, other dataflows | Reports |
+| Runs in | Power BI Service | Power BI Service (after publish from Desktop) |
+| Best for | Shared, reusable data prep | The full semantic model for reporting |
+
+A dataflow is only the data-cleaning layer. Relationships, DAX measures, and the reporting model still live in a dataset built from the dataflow's tables.
+
+---
+
+## Why Use Dataflows
+
+- Avoid duplicating the same Power Query logic across many Desktop files.
+- Give data source credentials and connection details a single, centrally-managed location.
+- Let less technical report builders consume already-cleaned tables without needing to write M themselves.
+- Separate data engineering work (dataflows) from report authoring work (datasets and reports).
+
+---
+
+## Best Practices
+
+- Build one dataflow per logical entity (Sales, Customers, Products), not one giant dataflow for everything.
+- Schedule dataflow refresh early enough that dependent dataset refreshes always pick up current data.
+- Use computed entities to avoid re-fetching from the original source when further transforming already-cleaned data.
+- Document which workspace owns each dataflow, since dataflows are easy to lose track of once several teams depend on them.
+
+---
+
+## Common Mistakes
+
+### Duplicating Logic Instead of Sharing a Dataflow
+
+Building the same Power Query cleanup independently in every report defeats the purpose of dataflows — a single shared dataflow means one place to fix bugs and extend logic.
+
+### Refresh Order Race Conditions
+
+If a dataset refreshes before its source dataflow finishes, it picks up yesterday's data. Refresh schedules need enough buffer between dataflow and dependent dataset refresh times.
+
+### Treating a Dataflow Like a Full Semantic Model
+
+A dataflow has no relationships or DAX measures. Trying to build a report directly against dataflow output, without an intermediate dataset, means every calculation has to happen in Power Query instead of DAX.
+
+---
+
+## Dataflows Checklist
+
+Before relying on a dataflow in production:
+
+- The dataflow is scoped to one logical entity, not a catch-all for unrelated data.
+- Refresh timing leaves enough buffer for dependent datasets to pick up fresh data.
+- Computed entities are used instead of re-fetching from source when chaining transformations.
+- Ownership and location of the dataflow are documented for the team.
+
+---
+
+## Next Steps
+
+Continue exploring the Power BI Service:
+
+- [Refresh](/docs/power-bi-service/refresh)
+- [Workspaces](/docs/power-bi-service/workspaces)
+- [DirectQuery vs. Import](/docs/modeling/storage-modes)
