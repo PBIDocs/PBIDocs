@@ -21,6 +21,7 @@ export function baseOptions(): BaseLayoutProps {
       ),
     },
     links: [
+      { text: 'Docs', url: '/docs' },
       { text: 'Changelog', url: '/changelog' },
       {
         type: 'icon',

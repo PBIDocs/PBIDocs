@@ -87,7 +87,7 @@ export default function HomePage() {
 
         <div className="flex justify-center gap-4">
           <Link
-            href="/docs/getting-started"
+            href="/docs"
             className="rounded-lg bg-fd-primary hover:bg-fd-primary/90 text-fd-primary-foreground px-6 py-3 font-semibold"
           >
             Browse Documentation
