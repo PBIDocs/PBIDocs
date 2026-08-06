@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
+import { appName, gitConfig } from '@/lib/shared';
 
 export const metadata: Metadata = {
   title: {
@@ -119,6 +120,20 @@ export default function HomePage() {
           </Link>
         ))}
       </section>
+
+      <footer className="mt-24 flex w-full max-w-5xl flex-col items-center justify-between gap-4 border-t border-fd-border py-8 text-sm text-fd-muted-foreground sm:flex-row">
+        <p>
+          &copy; {new Date().getFullYear()} {appName}
+        </p>
+        <a
+          href={`https://github.com/${gitConfig.user}/${gitConfig.repo}`}
+          target="_blank"
+          rel="noreferrer noopener"
+          className="transition-colors hover:text-fd-foreground"
+        >
+          View on GitHub
+        </a>
+      </footer>
     </div>
   );
 }
