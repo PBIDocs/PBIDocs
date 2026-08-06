@@ -1,0 +1,155 @@
+---
+title: "Report Theme JSON Files"
+description: How Power BI JSON theme files are structured, what to check for accessibility, and how to distribute one standard theme across a team.
+---
+
+# Report Theme JSON Files
+
+[Formatting](/docs/visuals/formatting) covers why a shared theme matters for consistency. This page is about the theme file itself — its structure, and how to treat it as a governed asset a team distributes and version-controls, rather than something each report author recreates by hand.
+
+```text
+theme.json
+     |
+     applied via Format pane > Themes > Browse for themes
+     |
+     every visual in the report picks up its colors from one file
+```
+
+---
+
+## Minimal Structure
+
+A theme file is JSON with, at minimum, a name and a data color palette. Power BI applies these to every visual that doesn't have an explicit color override.
+
+```json
+{
+  "name": "Contoso Standard",
+  "dataColors": [
+    "#2E5EAA", "#5B8DEF", "#8FB8FF",
+    "#F2A007", "#F26B3A", "#E0474C"
+  ],
+  "background": "#FFFFFF",
+  "foreground": "#1A1A1A",
+  "tableAccent": "#2E5EAA"
+}
+```
+
+`dataColors` is the palette charts cycle through for categories/series; `background`, `foreground`, and `tableAccent` cover the report canvas and table styling.
+
+---
+
+## Extending to Per-Visual Styles
+
+Beyond the base palette, a theme can set defaults for specific visual types via `visualStyles` — useful for enforcing things like consistent card borders or table header styling without every author configuring them manually.
+
+```json
+{
+  "name": "Contoso Standard",
+  "dataColors": ["#2E5EAA", "#5B8DEF", "#8FB8FF"],
+  "visualStyles": {
+    "card": {
+      "*": {
+        "background": [{ "color": { "solid": { "color": "#FFFFFF" } } }]
+      }
+    }
+  }
+}
+```
+
+`visualStyles` is where a theme goes from "consistent colors" to "consistent formatting" — border widths, font sizing, and header styles can all be set once instead of per report.
+
+---
+
+## Accessible Color Palettes
+
+`dataColors` is worth checking for contrast and colorblind-safety before it becomes the standard for every report in the organization, the same way [text contrast](/docs/power-bi-service/security) matters for readability elsewhere.
+
+```text
+Palette check
+     |
+     +-- Adjacent colors distinguishable for common color blindness types
+     +-- Text/background pairs meet WCAG AA contrast (4.5:1)
+     +-- Not relying on red/green alone to distinguish categories
+```
+
+A palette that looks fine to the person who picked it can still fail for a meaningful share of report viewers — checking it once at the theme level is far cheaper than fixing it report by report later.
+
+---
+
+## Distributing One Standard Theme
+
+The goal is one file, one source of truth, applied consistently — not each author's local copy slowly drifting from everyone else's.
+
+```text
+theme.json (checked into the same repo as .pbip files)
+     |
+     +-- Report A: Browse for themes -> theme.json
+     +-- Report B: Browse for themes -> theme.json
+     +-- Report C: Browse for themes -> theme.json
+     |
+     one file, applied the same way everywhere
+```
+
+Keeping the theme file in source control alongside report files means a color or font change is a single commit, not a manual update repeated across every report.
+
+---
+
+## Versioning the Theme File
+
+Treat changes to the standard theme like any other shared asset — a small changelog note (even just a comment convention in the commit message) saves guessing later about why a color changed.
+
+```text
+theme.json
+     |
+     +-- v1: initial palette
+     +-- v2: darkened primary blue for AA contrast
+     +-- v3: added visualStyles for card borders
+```
+
+Report authors pulling an outdated copy of the theme is a common, avoidable source of "why does this report look different" questions.
+
+---
+
+## Best Practices
+
+- Maintain exactly one theme file per brand/team, in source control, not per-author local copies.
+- Check `dataColors` for WCAG contrast and colorblind-safe adjacency before adopting it as the standard.
+- Use `visualStyles` to standardize recurring formatting choices, not just colors.
+- Note what changed and why whenever the theme file is updated.
+
+---
+
+## Common Mistakes
+
+### Divergent Local Copies
+
+Once a theme file gets emailed around or copied between machines instead of pulled from one source, different reports quietly end up on different versions with no way to tell which is current.
+
+### Hardcoding Colors Instead of Using the Theme
+
+Manually setting a visual's color instead of letting it inherit from the theme defeats the purpose — that visual won't update when the theme does, and becomes an exception someone has to remember.
+
+### Skipping the Accessibility Check
+
+A palette that hasn't been checked for contrast or colorblind-safety becomes the default for every report built against it — one check at the theme level is far cheaper than catching it later across dozens of reports.
+
+---
+
+## Report Theme Checklist
+
+Before adopting a theme file as the team standard:
+
+- `dataColors` has been checked for WCAG AA contrast and colorblind-safe adjacency.
+- The file lives in source control as the single source of truth.
+- Report authors apply it via Browse for themes rather than manually matching colors.
+- Changes to the theme are noted somewhere reviewers can see them.
+
+---
+
+## Next Steps
+
+Continue exploring Power BI formatting and governance:
+
+- [Formatting](/docs/visuals/formatting)
+- [Charts](/docs/visuals/charts)
+- [RLS Role Matrix](/docs/governance/rls-matrix)

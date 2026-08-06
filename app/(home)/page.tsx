@@ -59,6 +59,12 @@ const topics = [
       'Use AI to accelerate DAX, Power Query, modeling, and report development.',
     href: '/docs/ai-power-bi/introduction',
   },
+  {
+    title: 'Governance',
+    description:
+      'Reference sheets for RLS matrices, gateway architecture, and report themes.',
+    href: '/docs/governance/rls-matrix',
+  },
 ];
 
 export default function HomePage() {
