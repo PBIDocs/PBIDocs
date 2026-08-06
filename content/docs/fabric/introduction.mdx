@@ -1,0 +1,141 @@
+---
+title: "Introduction"
+description: Learn what Microsoft Fabric is, how its workloads fit together on OneLake, and how Power BI connects to it via Direct Lake.
+---
+
+# Microsoft Fabric
+
+Microsoft Fabric is a unified, SaaS analytics platform that brings data engineering, data warehousing, data science, real-time analytics, and Power BI together on one shared storage layer, instead of stitching together separate products with separate copies of data.
+
+```text
+Microsoft Fabric
+     |
+     +-- Data Engineering (Lakehouse, Spark notebooks)
+     +-- Data Warehouse (SQL-based warehousing)
+     +-- Data Factory (pipelines, Dataflows Gen2)
+     +-- Real-Time Intelligence (streaming, KQL)
+     +-- Power BI (semantic models, reports)
+     |
+     all reading and writing the same OneLake storage
+```
+
+---
+
+## OneLake: One Copy of Data
+
+OneLake is Fabric's built-in data lake — every workspace gets a OneLake location automatically, and every Fabric workload reads and writes to it using the open Delta Lake format.
+
+```text
+OneLake
+     |
+     +-- Lakehouse writes Delta tables
+     +-- Warehouse reads/writes the same Delta tables
+     +-- Power BI reads the same Delta tables directly
+     |
+     no separate export/import step between workloads
+```
+
+The practical effect: a table produced by a data engineering pipeline doesn't need to be re-exported or re-imported for Power BI to use it — it's already sitting in a format Power BI can read straight from storage.
+
+---
+
+## Core Workloads
+
+### Lakehouse
+
+A Lakehouse combines file storage with a SQL query layer over Delta tables, aimed at data engineering work — ingesting raw files, transforming them with Spark notebooks, and landing clean Delta tables for downstream use.
+
+### Data Warehouse
+
+Fabric's Warehouse is a SQL-first alternative to the Lakehouse, better suited to teams who want a traditional warehousing experience (T-SQL, stored procedures, standard schema design) rather than a Spark-based one.
+
+### Data Factory
+
+Data Factory in Fabric covers orchestration and transformation: pipelines for scheduling and moving data, and Dataflows Gen2 for Power Query-based transformation logic that lands directly in OneLake.
+
+### Real-Time Intelligence
+
+Real-Time Intelligence handles streaming and event-based data — eventstreams for ingesting continuously arriving data, and KQL databases for querying it, aimed at scenarios where waiting for a scheduled refresh isn't acceptable.
+
+### Power BI
+
+Power BI in Fabric works the same way it does standalone, with one addition: semantic models can read Delta tables in OneLake directly, without importing a copy first.
+
+---
+
+## Lakehouse vs. Warehouse
+
+| Aspect | Lakehouse | Warehouse |
+|---|---|---|
+| Primary interface | Spark notebooks, SQL endpoint | T-SQL |
+| Best for | Data engineering, unstructured/semi-structured data | Traditional warehousing, structured schemas |
+| Transformation approach | Notebooks (PySpark, Spark SQL) | Stored procedures, T-SQL |
+| Underlying format | Delta tables in OneLake | Delta tables in OneLake |
+
+Both ultimately produce the same Delta table format in OneLake — the choice is about which authoring experience fits the team, not a difference in what Power BI can consume afterward.
+
+---
+
+## Direct Lake: How Power BI Connects to Fabric
+
+Direct Lake is a storage mode, alongside [Import and DirectQuery](/docs/modeling/storage-modes), built specifically for OneLake. It reads Delta tables directly from OneLake into Power BI's query engine, without a traditional import step and without querying a live source on every request.
+
+```text
+Import:       Source -> copied into Power BI on refresh -> fast, but stale until refresh
+DirectQuery:  Source -> queried live every time -> fresh, but slower
+Direct Lake:  OneLake Delta tables -> read directly, no copy step -> fast and current
+```
+
+Direct Lake gets Import-like query speed without a separate refresh cycle, because there's no copy being made — Power BI reads the same Delta files the Lakehouse or Warehouse already produced.
+
+---
+
+## Fabric Capacity
+
+Fabric workloads run on Fabric capacity (SKUs F2 through F2048), which extends and eventually replaces Power BI Premium capacity. Workspaces are assigned to a capacity the same way they are under Premium, and capacity sizing follows the same logic — bigger, more demanding workloads need a larger SKU.
+
+---
+
+## Best Practices
+
+- Land data in OneLake once, and let every downstream workload (Warehouse, Power BI, notebooks) read that same copy instead of duplicating it.
+- Choose Lakehouse or Warehouse based on the team's skill set (Spark vs. T-SQL), not a technical limitation — both produce the same underlying format.
+- Use Direct Lake for semantic models built directly on Fabric data, and reserve traditional Import for sources outside Fabric.
+- Size Fabric capacity based on actual workload demand, and monitor capacity utilization before adding more workspaces to it.
+
+---
+
+## Common Mistakes
+
+### Treating Fabric as Just "Power BI With Extra Steps"
+
+Fabric's value is the shared OneLake layer across workloads. Using only the Power BI piece and ignoring Lakehouse/Warehouse/Data Factory misses the point of consolidating on one platform.
+
+### Duplicating Data Across Workloads
+
+Copying the same data into a Lakehouse and a separate Warehouse, when one would do, recreates the exact duplication problem OneLake is meant to eliminate.
+
+### Assuming Direct Lake Behaves Exactly Like Import
+
+Direct Lake is fast because it skips the copy step, but it depends on OneLake data being well-organized (properly structured Delta tables). Messy or excessively fragmented tables can hurt Direct Lake performance in ways a normal Import model wouldn't hit.
+
+---
+
+## Fabric Checklist
+
+Before building on Fabric in production:
+
+- The right workload (Lakehouse vs. Warehouse) has been chosen based on team skills, not guesswork.
+- Data lands in OneLake once and is reused across workloads, not duplicated.
+- Power BI semantic models use Direct Lake where the data already lives in OneLake.
+- Fabric capacity is sized for the actual workload, with utilization monitored.
+
+---
+
+## Next Steps
+
+Continue exploring Power BI and Microsoft Fabric:
+
+- [DirectQuery vs. Import](/docs/modeling/storage-modes)
+- [Dataflows](/docs/power-bi-service/dataflows)
+- [Workspaces](/docs/power-bi-service/workspaces)

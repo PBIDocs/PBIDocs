@@ -9,6 +9,35 @@ export const metadata: Metadata = {
 
 const changelog: { date: string; entries: ReactNode[] }[] = [
   {
+    date: '2026-08-06',
+    entries: [
+      <>
+        Added <Link href="/docs/fabric/introduction">Microsoft Fabric</Link> — OneLake, core
+        workloads (Lakehouse, Warehouse, Data Factory, Real-Time Intelligence), and how Direct
+        Lake connects Power BI to Fabric data.
+      </>,
+      <>
+        Added a <Link href="/docs">documentation landing page</Link> at <code>/docs</code>, which
+        previously had no page of its own.
+      </>,
+    ],
+  },
+  {
+    date: '2026-08-05',
+    entries: [
+      <>
+        Added <Link href="/docs/power-bi-service/dataflows">Dataflows</Link>,{' '}
+        <Link href="/docs/power-bi-service/deployment-pipelines">Deployment Pipelines</Link>,{' '}
+        <Link href="/docs/visuals/field-parameters">Field Parameters</Link>, and{' '}
+        <Link href="/docs/modeling/aggregations">Aggregations</Link>.
+      </>,
+      <>
+        Added <Link href="/docs/modeling/composite-models">Composite Models</Link> — combining
+        multiple data sources in one model, cross-source relationships, and query performance.
+      </>,
+    ],
+  },
+  {
     date: '2026-08-04',
     entries: [
       <>
