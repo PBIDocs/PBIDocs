@@ -8,6 +8,7 @@
     "visuals",
     "power-bi-service",
     "fabric",
+    "governance",
     "dax-patterns"
   ]
 }

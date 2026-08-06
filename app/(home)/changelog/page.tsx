@@ -20,6 +20,12 @@ const changelog: { date: string; entries: ReactNode[] }[] = [
         Added a <Link href="/docs">documentation landing page</Link> at <code>/docs</code>, which
         previously had no page of its own.
       </>,
+      <>
+        Added a <Link href="/docs/governance/rls-matrix">Governance</Link> section —{' '}
+        <Link href="/docs/governance/rls-matrix">RLS Role Matrix</Link>,{' '}
+        <Link href="/docs/governance/gateway-refresh">Gateway &amp; Refresh Architecture</Link>,
+        and <Link href="/docs/governance/report-themes">Report Theme JSON Files</Link>.
+      </>,
     ],
   },
   {

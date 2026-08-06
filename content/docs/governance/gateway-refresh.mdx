@@ -1,0 +1,146 @@
+---
+title: "Gateway & Refresh Architecture"
+description: A reference architecture for mapping on-premises data gateways to the datasets and refresh schedules that depend on them, to avoid contention and bottlenecks.
+---
+
+# Gateway & Refresh Architecture
+
+[Refresh](/docs/power-bi-service/refresh) covers full and incremental refresh at the dataset level. This page is about the layer above a single dataset: which gateway each dataset actually goes through, and what happens when several of them compete for the same gateway at once.
+
+```text
+Multiple datasets
+     |
+     all scheduled to refresh at 6:00 AM
+     |
+     all routed through the same gateway machine
+     |
+     gateway CPU/memory maxes out, refreshes queue or time out
+```
+
+None of this shows up by looking at one dataset's refresh settings in isolation — it only becomes visible when the datasets are mapped against the gateway they share.
+
+---
+
+## Personal vs. Standard Gateway Mode
+
+| Aspect | Personal Mode | Standard Mode |
+|---|---|---|
+| Who can use it | The installing user only | Any authorized user in the org |
+| High availability | No | Yes, via clustering |
+| Supported sources | Import only, subset of connectors | Import, DirectQuery, all supported connectors |
+| Typical use | Individual, one-off refresh | Team or organization-wide |
+
+Standard mode is the right choice for anything more than a single person's individual reports — Personal mode has no failover and a narrower set of supported connectors.
+
+---
+
+## Gateway Clusters
+
+A Standard mode gateway can be installed on multiple machines as a cluster: one primary and one or more secondary members, sharing the same configuration and data source registrations.
+
+```text
+Gateway Cluster "Finance-Prod"
+     |
+     +-- Primary member (Server A)
+     +-- Secondary member (Server B)
+     |
+     if Server A goes offline, Server B keeps refreshes running
+```
+
+Clustering exists specifically to avoid one gateway machine being a single point of failure for every dataset routed through it.
+
+---
+
+## Mapping the Architecture
+
+The useful artifact here isn't a diagram of one gateway — it's a map of every gateway, which sources go through each one, and which datasets depend on those sources.
+
+```text
+Gateway Cluster "Finance-Prod"
+     |
+     +-- Source: SQL Server (Finance DB)
+     |      +-- Dataset: Monthly Financials    (refresh: 6:00 AM)
+     |      +-- Dataset: Budget vs. Actuals    (refresh: 6:00 AM)
+     |
+     +-- Source: SQL Server (Sales DB)
+            +-- Dataset: Sales Pipeline        (refresh: 6:15 AM)
+```
+
+Written out this way, the 6:00 AM collision between two datasets on the same gateway is obvious. Inside each dataset's individual refresh settings, it isn't visible at all.
+
+---
+
+## Staggering Refresh Schedules
+
+Once the mapping above exists, the fix is usually simple: spread refresh times across datasets that share a gateway, instead of defaulting every dataset to the same time of day.
+
+```text
+Before:  6:00 AM — Monthly Financials, Budget vs. Actuals   (collide)
+After:   6:00 AM — Monthly Financials
+         6:20 AM — Budget vs. Actuals
+```
+
+The right stagger interval depends on how long each refresh actually takes — which is only knowable once refreshes aren't already contending with each other.
+
+---
+
+## Monitoring Gateway Performance
+
+The on-premises gateway app exposes performance counters (CPU, memory, network) and logs on the machine it runs on. These are worth checking before refresh failures start, not just after.
+
+```text
+Gateway machine
+     |
+     +-- Performance counters (CPU, memory)
+     +-- Gateway logs (connection errors, timeouts)
+     |
+     reviewed periodically, not only when something breaks
+```
+
+A gateway that's consistently near its resource limits during refresh windows will eventually start failing refreshes intermittently, in ways that look like source or dataset problems at first.
+
+---
+
+## Best Practices
+
+- Use Standard mode with clustering for anything beyond one person's individual use.
+- Maintain a written map of gateway → sources → datasets → refresh times, and keep it current as datasets are added.
+- Stagger refresh schedules for datasets sharing a gateway, based on actual refresh duration.
+- Check gateway performance counters periodically, not only in response to failures.
+
+---
+
+## Common Mistakes
+
+### One Gateway Machine for Everything
+
+Routing every source in the organization through a single, unclustered gateway machine turns it into both a performance bottleneck and a single point of failure.
+
+### Defaulting Every Refresh to the Same Time
+
+Leaving every dataset on its default schedule (often early morning) creates exactly the contention this page is about — the fix costs nothing but requires knowing which datasets share a gateway.
+
+### No Monitoring Until Refreshes Start Failing
+
+Gateway performance problems are usually gradual — refreshes get slower and start timing out intermittently before they fail outright. Without monitoring, the first real signal is often a support ticket.
+
+---
+
+## Gateway & Refresh Checklist
+
+Before scaling up scheduled refresh across a team:
+
+- Gateways run in Standard mode with clustering for any shared or business-critical source.
+- A current map exists of which datasets share which gateway.
+- Refresh schedules are staggered based on actual refresh duration, not left on defaults.
+- Gateway performance is checked periodically, not only after a failure.
+
+---
+
+## Next Steps
+
+Continue exploring Power BI governance and operations:
+
+- [Refresh](/docs/power-bi-service/refresh)
+- [Dataflows](/docs/power-bi-service/dataflows)
+- [Workspaces](/docs/power-bi-service/workspaces)

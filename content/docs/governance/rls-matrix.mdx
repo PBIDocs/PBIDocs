@@ -1,0 +1,128 @@
+---
+title: "RLS Role Matrix"
+description: A reference format for mapping Power BI roles to their DAX filter logic and table scope, so row-level security stays auditable as it grows.
+---
+
+# RLS Role Matrix
+
+[Row-Level Security](/docs/power-bi-service/security) covers how static and dynamic RLS work. Once a model has more than two or three roles, keeping track of which role filters which table with which DAX expression stops fitting in anyone's head — an RLS matrix makes that mapping explicit and reviewable.
+
+```text
+Manage Roles dialog
+     |
+     shows one role at a time
+     |
+     no single view of every role's rules at once
+```
+
+The matrix exists to fill that gap: one document, checked in alongside the model, that shows every role side by side.
+
+---
+
+## Anatomy of a Matrix
+
+A matrix is a table with one row per role and columns covering exactly what a reviewer needs to audit that role without opening Power BI Desktop.
+
+| Column | Purpose |
+|---|---|
+| Role | The role name as defined in Manage Roles |
+| Table | The table the DAX filter is applied to |
+| DAX Filter | The exact filter expression |
+| Propagates To | Related tables filtered indirectly via relationships |
+| Notes | Anything a reviewer needs — e.g. "matches AD security group X" |
+
+---
+
+## Example Matrix
+
+```text
+Role              | Table      | DAX Filter                                    | Propagates To
+------------------|------------|------------------------------------------------|------------------
+RegionalManager   | DimRegion  | [RegionManagerEmail] = USERPRINCIPALNAME()      | FactSales, DimStore
+SalesRep          | DimStore   | [SalesRepEmail] = USERPRINCIPALNAME()          | FactSales
+Executive          | (none)     | no filter — full access                        | —
+```
+
+`Executive` having no filter is worth documenting explicitly, not leaving implicit — a blank row is ambiguous about whether it was forgotten or intentional.
+
+---
+
+## Documenting Propagation
+
+RLS applied to a dimension table filters every fact table connected to it through a single-direction relationship, but not tables it isn't related to. The matrix should record that propagation, not just the table the filter is written against.
+
+```text
+DimRegion (filtered by role)
+     |
+     | single-direction relationship
+     |
+FactSales (filtered indirectly)
+
+DimProduct (unrelated to DimRegion)
+     |
+     not filtered — no relationship path
+```
+
+Without writing this down, it's easy to assume a role restricts more (or less) than it actually does.
+
+---
+
+## Validating Against the Matrix
+
+**View as Roles** in Power BI Desktop lets you preview the report exactly as a given role would see it — the matrix is what you check the result against, row by row.
+
+```text
+Matrix says: SalesRep sees only their own store's rows
+        |
+        | View as Roles > SalesRep
+        |
+Confirm: report shows only that store's data
+```
+
+Every role in the matrix should have a corresponding "View as Roles" check before publishing, not just a written filter expression that's never been executed.
+
+---
+
+## Best Practices
+
+- Keep the matrix in the same repository as the `.pbix`/`.pbip` file, so it changes alongside the model instead of drifting out of date.
+- Include roles with no filter (full access) explicitly, rather than leaving them undocumented.
+- Record propagation to related tables, not just the table the DAX filter is written against.
+- Re-validate every role with View as Roles whenever the model's relationships change.
+
+---
+
+## Common Mistakes
+
+### Undocumented Ad-Hoc Roles
+
+A role added quickly to unblock one user, then never added to the matrix, becomes an untracked gap the next security review will miss entirely.
+
+### Assuming Propagation Without Checking It
+
+RLS only propagates in the direction relationships filter. A role written against the wrong table, or across a bidirectional relationship the author didn't expect, can expose more data than intended.
+
+### Treating "No Filter" as the Same as "Not Reviewed"
+
+A role with no filter should be a deliberate, documented decision (e.g. an executive role), not the default state of a role nobody got around to configuring.
+
+---
+
+## RLS Matrix Checklist
+
+Before publishing a model with more than one role:
+
+- Every role, including any with full access, is listed in the matrix.
+- Propagation to related tables is documented per role.
+- Every role has been checked with View as Roles against its documented filter.
+- The matrix lives in source control next to the model file.
+
+---
+
+## Next Steps
+
+Continue exploring Power BI governance and security:
+
+- [Row-Level Security](/docs/power-bi-service/security)
+- [Workspaces](/docs/power-bi-service/workspaces)
+- [Relationships](/docs/modeling/relationships)
