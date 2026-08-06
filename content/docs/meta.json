@@ -7,6 +7,7 @@
     "power-query",
     "visuals",
     "power-bi-service",
+    "fabric",
     "dax-patterns"
   ]
 }

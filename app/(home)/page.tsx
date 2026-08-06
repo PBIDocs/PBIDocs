@@ -32,7 +32,7 @@ const topics = [
     title: 'Microsoft Fabric',
     description:
       'Explore Lakehouse, Warehouse, pipelines, and modern analytics.',
-    href: '/docs/fabric',
+    href: '/docs/fabric/introduction',
   },
   {
     title: 'Visuals',
