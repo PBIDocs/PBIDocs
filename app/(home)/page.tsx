@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
 import { appName, gitConfig } from '@/lib/shared';
+import { NewsletterForm } from '@/components/newsletter-form';
 
 export const metadata: Metadata = {
   title: {
@@ -125,6 +126,17 @@ export default function HomePage() {
             </p>
           </Link>
         ))}
+      </section>
+
+      {/* Newsletter */}
+      <section className="mt-24 flex w-full max-w-5xl flex-col items-center gap-4 rounded-xl border border-fd-border p-8 text-center">
+        <div>
+          <h2 className="text-xl font-semibold">Stay in the loop</h2>
+          <p className="mt-1 text-fd-muted-foreground">
+            New Power BI content, sent occasionally. No spam.
+          </p>
+        </div>
+        <NewsletterForm />
       </section>
 
       <footer className="mt-24 flex w-full max-w-5xl flex-col items-center justify-between gap-4 border-t border-fd-border py-8 text-sm text-fd-muted-foreground sm:flex-row">

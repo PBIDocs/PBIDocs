@@ -24,3 +24,7 @@ yarn-error.log*
 .env*.local
 .vercel
 next-env.d.ts
+
+# cloudflare (local-only D1 testing config; binding is set via the Pages dashboard in production)
+.wrangler/
+wrangler.toml
