@@ -12,6 +12,7 @@ import { getMDXComponents } from '@/components/mdx';
 import type { Metadata } from 'next';
 import { createRelativeLink } from 'fumadocs-ui/mdx';
 import { gitConfig } from '@/lib/shared';
+import { PageFeedback } from '@/components/page-feedback';
 
 export default async function Page(props: PageProps<'/docs/[[...slug]]'>) {
   const params = await props.params;
@@ -20,13 +21,24 @@ export default async function Page(props: PageProps<'/docs/[[...slug]]'>) {
 
   const MDX = page.data.body;
   const markdownUrl = getPageMarkdownUrl(page).url;
+  const issueTitle = encodeURIComponent(`Docs issue: ${page.data.title}`);
+  const issueBody = encodeURIComponent(`Page: https://pbidocs.com${page.url}\n\nDescribe the issue:\n`);
 
   return (
     <DocsPage
       toc={page.data.toc}
       full={page.data.full}
       role="main"
-      tableOfContent={{ container: { role: 'complementary', 'aria-labelledby': 'toc-title' } }}
+      tableOfContent={{
+        container: { role: 'complementary', 'aria-labelledby': 'toc-title' },
+        footer: (
+          <PageFeedback
+            page={page.url}
+            editUrl={`https://github.com/${gitConfig.user}/${gitConfig.repo}/edit/${gitConfig.branch}/content/docs/${page.path}`}
+            issueUrl={`https://github.com/${gitConfig.user}/${gitConfig.repo}/issues/new?title=${issueTitle}&body=${issueBody}`}
+          />
+        ),
+      }}
     >
       <DocsTitle>{page.data.title}</DocsTitle>
       <DocsDescription className="mb-0">{page.data.description}</DocsDescription>
