@@ -1,5 +1,6 @@
-import { defineConfig, defineDocs } from 'fumadocs-mdx/config';
+import { defineCollections, defineConfig, defineDocs } from 'fumadocs-mdx/config';
 import { metaSchema, pageSchema } from 'fumadocs-core/source/schema';
+import { z } from 'zod';
 import { pbidocsLightTheme, pbidocsDarkTheme } from './lib/shiki-theme';
 
 // You can customize Zod schemas for frontmatter and `meta.json` here
@@ -15,6 +16,17 @@ export const docs = defineDocs({
   meta: {
     schema: metaSchema,
   },
+});
+
+export const blog = defineCollections({
+  type: 'doc',
+  dir: 'content/blog',
+  schema: z.object({
+    title: z.string(),
+    description: z.string(),
+    date: z.string(),
+    tags: z.array(z.string()).optional(),
+  }),
 });
 
 export default defineConfig({

@@ -1,0 +1,122 @@
+---
+title: "Power Query Error: Expression.Error - The Field Wasn't Found"
+description: "This error means a step is referencing a column name that doesn't exist by the time it runs. Here's how to find which step, and the four usual causes."
+date: "2026-08-10"
+tags: ["Power Query", "Troubleshooting"]
+---
+
+The full error usually reads something like:
+
+```text
+Expression.Error: The field 'CustomerID' of the record wasn't found.
+Details:
+    Field=CustomerID
+```
+
+It means one specific thing: a step in the query is trying to reference a column that doesn't exist in the table at that point — either it was never there, it got renamed earlier, or it hasn't been created yet by the time this step runs.
+
+## Step One: Find Which Step Is Actually Failing
+
+Power BI highlights the failing step in the **Applied Steps** pane, but if it's not obvious, click through steps one at a time from the top — the preview grid will show the error appear at the exact step it happens on, and the columns available in the step just before it.
+
+```text
+Source          -> preview OK, has [CustomerID]
+Changed Type    -> preview OK, has [CustomerID]
+Renamed Columns -> preview OK, [CustomerID] renamed to [CustID]
+Filtered Rows   -> ERROR: [CustomerID] wasn't found   <- here
+```
+
+In this example the answer is already visible: `Renamed Columns` renamed `CustomerID` to `CustID` one step earlier, and `Filtered Rows` is still referencing the old name.
+
+## Cause 1: A Column Was Renamed Earlier in the Query
+
+This is the most common cause by far. A rename step changes the column's name going forward, but any *later* step still referencing the old name breaks.
+
+```powerquery lineNumbers
+let
+    Source = ...,
+    #"Renamed Columns" = Table.RenameColumns(Source, {{"CustomerID", "CustID"}}),
+    #"Filtered Rows" = Table.SelectRows(#"Renamed Columns", each [CustomerID] = 100)
+    // ^ still says CustomerID, but the column is now called CustID
+in
+    #"Filtered Rows"
+```
+
+**Fix:** update the later reference to match the new name.
+
+```powerquery lineNumbers
+#"Filtered Rows" = Table.SelectRows(#"Renamed Columns", each [CustID] = 100)
+```
+
+## Cause 2: Step Order Was Changed
+
+Dragging a step to a new position in **Applied Steps** re-runs every step after it against a different starting point. A step that used to come after a rename might now come before it.
+
+```text
+Original order:               Reordered (broken):
+Source                        Source
+Renamed Columns               Filtered Rows   <- now runs before the rename
+Filtered Rows                 Renamed Columns
+```
+
+**Fix:** move the step back, or update its column references to match whatever the table actually looks like at its new position.
+
+## Cause 3: The Source Data's Columns Changed
+
+If the query connects to a live source (a database, an API, a file that gets replaced), and that source's schema changed — a column got renamed or removed upstream — every step downstream that expected the old column name breaks on the next refresh, even though nothing in the query itself changed.
+
+```text
+Last week: source had [CustomerID]
+This week: source was rebuilt, column is now [CustID]
+        |
+Query still expects [CustomerID] -> error
+```
+
+**Fix:** update the query to match the new source schema. If this is likely to keep happening, consider making the query more defensive (see below) rather than chasing it every time.
+
+## Cause 4: A Merge or Expand Step Referenced the Wrong Column
+
+After a **Merge Queries** step, the merged table's columns only become available once an **Expand** step names them explicitly. Referencing a column that wasn't included in the expand list — or was misspelled there — produces the same error.
+
+```powerquery lineNumbers
+#"Expanded Customers" = Table.ExpandTableColumn(
+    #"Merged Queries", "Customers", {"Name"}, {"Customers.Name"}
+),
+#"Filtered Rows" = Table.SelectRows(#"Expanded Customers", each [Customers.Region] = "West")
+// ^ Region was never included in the expand list above
+```
+
+**Fix:** add the missing column to the expand step's list, or correct the name if it was typed wrong. See [Merge Queries](/docs/power-query/merge-queries) for the full merge/expand pattern.
+
+## Making a Query More Defensive Against This
+
+For queries against a source that occasionally drifts, wrapping a column reference in `try...otherwise` turns a hard failure into a handled fallback, rather than breaking the whole refresh over one missing field:
+
+```powerquery lineNumbers
+#"Safe Column" = Table.AddColumn(
+    Source, "CustomerIDSafe",
+    each try [CustomerID] otherwise null
+)
+```
+
+This doesn't fix the underlying schema drift, but it stops one missing column from taking down an otherwise-working refresh. See [M Language](/docs/power-query/m-language) for more on `try...otherwise` and how M expressions are structured.
+
+## Common Mistakes
+
+### Fixing the Symptom Instead of the Cause
+
+Renaming the column back to what a later step expects "fixes" the error, but if the earlier rename was intentional, this just moves the mismatch somewhere else in the query.
+
+### Not Checking Step Order After Dragging a Step
+
+A step moved earlier or later in Applied Steps can silently change what columns are available to it — always re-check the preview immediately after reordering.
+
+### Assuming the Query Is Broken When the Source Changed
+
+If a query worked yesterday and fails today with no edits, check the source's actual current schema before assuming the query itself has a bug.
+
+## Next Steps
+
+- [Power Query Editor](/docs/power-query/editor)
+- [Merge Queries](/docs/power-query/merge-queries)
+- [M Language](/docs/power-query/m-language)
