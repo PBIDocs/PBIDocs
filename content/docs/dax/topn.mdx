@@ -1,0 +1,158 @@
+---
+title: TOPN()
+description: Learn how TOPN returns the top (or bottom) N rows of a table by a given expression.
+---
+
+# TOPN()
+
+`TOPN()` returns a table containing the top (or bottom) N rows, ranked by a given expression — the DAX equivalent of "show me the top 10."
+
+```dax lineNumbers
+TOPN(
+    N Value,
+    Table,
+    OrderBy Expression,
+    [Order]
+)
+```
+
+---
+
+## Basic Example
+
+```dax lineNumbers
+Top 5 Products =
+TOPN(
+    5,
+    ALL(DimProduct),
+    [Total Sales]
+)
+```
+
+```text
+All Products (ranked by Total Sales, descending)
+   |
+   +-- Tire A     50,000
+   +-- Tire B     42,000
+   +-- Helmet A   18,000
+   +-- Lock A     12,000
+   +-- Pump A      9,500
+   |
+Top 5 Products = these 5 rows
+```
+
+Because `TOPN()` returns a table, it's typically wrapped in `CALCULATE()` to restrict a measure to just those top rows, or used inside another table function.
+
+---
+
+## TOPN Inside CALCULATE
+
+```dax lineNumbers
+Top 5 Sales =
+CALCULATE(
+    [Total Sales],
+    TOPN(
+        5,
+        ALL(DimProduct),
+        [Total Sales]
+    )
+)
+```
+
+This restricts `[Total Sales]` to only the 5 highest-selling products, regardless of how many products actually exist in the model.
+
+---
+
+## Order: Descending vs. Ascending
+
+```dax lineNumbers
+Bottom 5 Products =
+TOPN(
+    5,
+    ALL(DimProduct),
+    [Total Sales],
+    ASC
+)
+```
+
+```text
+DESC (default): highest values first -> "top" N
+ASC:            lowest values first  -> "bottom" N
+```
+
+---
+
+## TOPN vs. RANKX + FILTER
+
+The same "top N" result can be built by ranking every row and filtering down to the top ranks — `TOPN()` is the more direct route to the same answer.
+
+```dax lineNumbers
+Top 5 (via RANKX + FILTER) =
+CALCULATE(
+    [Total Sales],
+    FILTER(
+        ALL(DimProduct),
+        RANKX(ALL(DimProduct), [Total Sales]) <= 5
+    )
+)
+```
+
+```dax lineNumbers
+Top 5 (via TOPN) =
+CALCULATE(
+    [Total Sales],
+    TOPN(5, ALL(DimProduct), [Total Sales])
+)
+```
+
+Both return the same result for a clean top-N cutoff. `RANKX()` combined with `FILTER()` is worth reaching for instead when the actual rank number needs to be displayed, or when ties need explicit `Skip`/`Dense` handling — see [RANKX](/docs/dax/rankx).
+
+---
+
+## Handling Ties at the Cutoff
+
+`TOPN()` can return more than N rows when there's a tie at the boundary — by default, all tied rows at the cutoff point are included rather than arbitrarily cutting one out.
+
+```text
+Requesting Top 3, with a tie at 3rd place:
+Tire A   50,000
+Tire B   42,000
+Helmet A 18,000
+Lock A   18,000   <- tied with Helmet A, both included
+```
+
+This is usually the desired behavior for a "top N" report, but it means the result set isn't guaranteed to be exactly N rows.
+
+---
+
+## Common Mistakes
+
+### Expecting Exactly N Rows
+
+A tie at the cutoff can return more than N rows — code and visuals consuming the result shouldn't assume an exact row count.
+
+### Using TOPN Without CALCULATE for a Scalar Result
+
+`TOPN()` returns a table. Wrap it in `CALCULATE()` (or another table-consuming function) rather than expecting it to produce a single value directly.
+
+### Choosing TOPN When the Rank Value Itself Is Needed
+
+If a visual needs to display "Rank 1, 2, 3..." next to each row, `RANKX()` is the right tool — `TOPN()` only filters to the top rows, it doesn't expose a rank number.
+
+---
+
+## Best Practices
+
+- Wrap `TOPN()` in `CALCULATE()` when the goal is a single aggregated result over the top rows.
+- Use `RANKX()` instead when the rank number itself needs to be shown, or when specific tie-handling is required.
+- Confirm the table argument (typically wrapped in `ALL()`) matches the intended comparison scope, the same consideration that applies to `RANKX()`.
+
+---
+
+## Next Steps
+
+Continue learning DAX functions and patterns:
+
+- [RANKX](/docs/dax/rankx)
+- [Ranking Patterns](/docs/dax-patterns/ranking)
+- [FILTER](/docs/dax/filter)

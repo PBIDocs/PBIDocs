@@ -1,0 +1,150 @@
+---
+title: LOOKUPVALUE()
+description: Learn how LOOKUPVALUE retrieves a value from another table without requiring an existing relationship.
+---
+
+# LOOKUPVALUE()
+
+`LOOKUPVALUE()` retrieves a value from another table by matching one or more columns — similar to `RELATED()`, but it works even when no relationship connects the two tables.
+
+```dax lineNumbers
+LOOKUPVALUE(
+    Result Column,
+    Search Column, Search Value,
+    [Search Column 2, Search Value 2], ...
+)
+```
+
+---
+
+## Basic Example
+
+```dax lineNumbers
+Product Category =
+LOOKUPVALUE(
+    DimProduct[Category],
+    DimProduct[ProductKey], FactSales[ProductKey]
+)
+```
+
+```text
+DimProduct                          FactSales
+ProductKey | Category               ProductKey
+1001       | Bikes          <--     1001   -> looks up Category = "Bikes"
+```
+
+This returns the same result as `RELATED(DimProduct[Category])` would, if a relationship existed — the difference is `LOOKUPVALUE()` doesn't need one.
+
+---
+
+## When a Relationship Doesn't Exist
+
+`LOOKUPVALUE()`'s main use case is exactly this: pulling a value from a table that isn't (and sometimes shouldn't be) related in the model.
+
+```text
+DimExchangeRates                    FactSales
+Currency | Rate                     Currency | Amount
+USD      | 1.00           <--       EUR      -> looks up Rate for "EUR"
+EUR      | 1.08
+```
+
+Building an actual relationship for a small reference table like exchange rates is often unnecessary — `LOOKUPVALUE()` reads it directly instead.
+
+---
+
+## Matching on Multiple Columns
+
+More than one search column/value pair can be supplied, all of which must match for a row to qualify.
+
+```dax lineNumbers
+Price =
+LOOKUPVALUE(
+    PriceList[Price],
+    PriceList[ProductKey], FactSales[ProductKey],
+    PriceList[Region], FactSales[Region]
+)
+```
+
+Only a row where both `ProductKey` and `Region` match returns a result — this is how `LOOKUPVALUE()` handles a composite key without a corresponding composite relationship in the model.
+
+---
+
+## What Happens With No Match, or Multiple Matches
+
+```text
+No matching row       -> returns BLANK (or a specified default, see below)
+Exactly one match      -> returns that value
+More than one match    -> returns an error, unless every matching row has the same value
+```
+
+An optional final argument sets what to return instead of blank when no match is found:
+
+```dax lineNumbers
+Price =
+LOOKUPVALUE(
+    PriceList[Price],
+    PriceList[ProductKey], FactSales[ProductKey],
+    0
+)
+```
+
+This returns `0` instead of blank for any product missing from `PriceList`.
+
+---
+
+## LOOKUPVALUE vs. RELATED
+
+| | Requires a Relationship | Typical Use |
+|---|---|---|
+| `RELATED()` | Yes | Pulling a value across an existing, modeled relationship |
+| `LOOKUPVALUE()` | No | Pulling a value from a table intentionally left unrelated, or matched on columns a relationship can't represent |
+
+If a relationship already exists and could be used, `RELATED()` is simpler and typically performs better — reach for `LOOKUPVALUE()` specifically when there's no relationship to rely on.
+
+---
+
+## Performance Considerations
+
+`LOOKUPVALUE()` scans the target table looking for a matching row, rather than following a pre-built relationship index.
+
+```text
+Small reference table (rates, price lists) -> fine
+Large fact table as the lookup target       -> can be slow, scanned per row
+```
+
+It's well suited to small reference or lookup tables, but using it against a large fact table as the search target is a common source of slow calculated columns.
+
+---
+
+## Common Mistakes
+
+### Using LOOKUPVALUE Where a Relationship Would Be Simpler
+
+If the two tables genuinely have a one-to-many relationship that could just be modeled directly, using `LOOKUPVALUE()` instead adds unnecessary complexity — model the relationship and use `RELATED()`.
+
+### Not Handling Multiple Matches
+
+If the search columns don't uniquely identify a row, `LOOKUPVALUE()` errors instead of picking one arbitrarily — the search columns need to be a real, unique key in the target table.
+
+### Using It Against Large Fact Tables
+
+`LOOKUPVALUE()` against a multi-million-row fact table, especially inside a calculated column evaluated per row, can be significantly slower than an equivalent relationship-based approach.
+
+---
+
+## Best Practices
+
+- Reserve `LOOKUPVALUE()` for genuinely unrelated tables, or matches a standard relationship can't express (composite keys, non-key matching).
+- Confirm the search columns uniquely identify a row in the target table before relying on it in production.
+- Prefer `RELATED()` whenever an actual relationship exists or reasonably could.
+- Keep the lookup target small — reference tables and lookup lists, not large fact tables.
+
+---
+
+## Next Steps
+
+Continue learning DAX functions:
+
+- [RELATED & RELATEDTABLE](/docs/dax/related)
+- [SELECTEDVALUE](/docs/dax/selectedvalue)
+- [Relationships](/docs/modeling/relationships)

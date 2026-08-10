@@ -1,0 +1,128 @@
+---
+title: RANKX()
+description: Learn how RANKX ranks values within a table, and why ALL() is almost always required to get a meaningful result.
+---
+
+# RANKX()
+
+`RANKX()` ranks a value against every other value produced by evaluating an expression across a table.
+
+```dax lineNumbers
+RANKX(
+    Table,
+    Expression,
+    [Value],
+    [Order],
+    [Ties]
+)
+```
+
+For a deeper look at ranking patterns — handling ties, ranking within a group, filtered ranks — see [Ranking](/docs/dax-patterns/ranking).
+
+---
+
+## Basic Example
+
+```dax lineNumbers
+Product Rank =
+RANKX(
+    ALL(DimProduct),
+    [Total Sales]
+)
+```
+
+```text
+Product   | Sales   | Rank
+----------|---------|------
+Tire A    | 50,000  | 1
+Tire B    | 42,000  | 2
+Helmet A  | 18,000  | 3
+```
+
+`RANKX()` needs a table to rank across (`ALL(DimProduct)`) and an expression to rank by (`[Total Sales]`), evaluated once per row of that table.
+
+---
+
+## Why ALL() Is Almost Always Required
+
+Without `ALL()`, the table `RANKX()` ranks across is limited to whatever the current filter context already allows — which, inside a table visual grouped by product, is usually just the current row.
+
+```text
+Without ALL(): each product only sees itself in the comparison set -> every rank is 1
+With ALL():    every product is compared against every other product -> real ranks
+```
+
+`ALL(DimProduct)` removes the existing filter on `DimProduct`, giving `RANKX()` the full set of products to compare against, regardless of what the visual itself is filtering down to.
+
+---
+
+## Order: Descending vs. Ascending
+
+The fourth argument controls rank direction.
+
+```dax lineNumbers
+Product Rank (Lowest First) =
+RANKX(
+    ALL(DimProduct),
+    [Total Sales],
+    ,
+    ASC
+)
+```
+
+```text
+DESC (default): highest value = Rank 1
+ASC:            lowest value = Rank 1
+```
+
+Leaving the third argument blank (as in the example above, with two commas in a row) tells `RANKX()` to use the same expression for both ranking and comparison, which is the typical case.
+
+---
+
+## Ties
+
+By default, tied values receive the same rank, and the next rank skips accordingly.
+
+```text
+Product   | Sales   | Rank
+----------|---------|------
+Tire A    | 50,000  | 1
+Tire B    | 50,000  | 1    <- tied with Tire A
+Helmet A  | 18,000  | 3    <- skips rank 2
+```
+
+The optional fifth argument (`Skip` or `Dense`) controls this — `Dense` ranking keeps consecutive ranks without skipping after a tie. See [Ranking](/docs/dax-patterns/ranking) for worked examples of both.
+
+---
+
+## Common Mistakes
+
+### Forgetting ALL()
+
+The single most common `RANKX()` mistake — without `ALL()`, every row ends up ranked 1st, because the comparison table has been filtered down to just that row already.
+
+### Ranking Within the Wrong Table
+
+Passing a table that's too broad or too narrow for the intended comparison — ranking products globally when the intent was to rank within each category — needs `ALL()` combined with the right grouping columns kept in context, not stripped entirely.
+
+### Ignoring Ties
+
+Not considering how ties should behave (skip vs. dense) can produce a ranking that looks wrong to report viewers when several rows share the same value.
+
+---
+
+## Best Practices
+
+- Default to `ALL()` (or a scoped version of it) as the table argument, unless there's a specific reason not to re-expand the comparison set.
+- Be explicit about tie behavior (`Skip` vs. `Dense`) rather than relying on the default without checking it matches the intended result.
+- Use variables to store the ranking expression's inputs when the expression itself is complex, for readability.
+
+---
+
+## Next Steps
+
+Continue learning DAX functions and patterns:
+
+- [Ranking Patterns](/docs/dax-patterns/ranking)
+- [TOPN](/docs/dax/topn)
+- [FILTER](/docs/dax/filter)

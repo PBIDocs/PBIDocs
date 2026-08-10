@@ -1,0 +1,191 @@
+---
+title: "Performance Optimization"
+description: Practical techniques for diagnosing and fixing slow DAX measures, from filter context to iterator overhead to storage engine vs. formula engine time.
+---
+
+# DAX Performance Optimization
+
+A slow report is almost always a slow measure, and a slow measure almost always comes down to one of a handful of recurring causes — how much data gets scanned, how many times an expression gets re-evaluated, and how well the model itself is shaped.
+
+```text
+Slow Visual
+     |
+     +-- Slow measure (DAX)
+     +-- Poor model design (relationships, storage mode)
+     +-- Too much data being scanned unnecessarily
+```
+
+---
+
+## Storage Engine vs. Formula Engine
+
+Every DAX query splits its work between two engines, and understanding which one is spending the time changes what "optimize this" actually means.
+
+```text
+Storage Engine (SE)         Formula Engine (FE)
+  |                           |
+Scans and aggregates          Handles anything the storage
+data - fast, parallel,        engine can't do natively -
+set-based                     row-by-row logic, complex
+                               expressions, iterators
+```
+
+Most performance problems come from pushing work into the Formula Engine that the Storage Engine could have handled — a well-written measure lets the Storage Engine do as much of the heavy lifting as possible.
+
+---
+
+## Use Performance Analyzer First
+
+Before optimizing anything, **Performance Analyzer** (Power BI Desktop's **View > Performance Analyzer**) shows exactly which visuals are slow and how their time splits between DAX query time and visual rendering time.
+
+```text
+Performance Analyzer
+  |
+  +-- Visual A: 1,200ms DAX query, 50ms rendering  <- DAX is the problem
+  +-- Visual B: 80ms DAX query, 900ms rendering    <- rendering is the problem
+```
+
+Optimizing DAX on a visual whose slowness is actually rendering-related (too many data points, an unoptimized custom visual) wastes effort on the wrong layer.
+
+---
+
+## Common Cause: Iterators Over Large Tables
+
+Iterator functions (`SUMX()`, `AVERAGEX()`, `FILTER()`) evaluate an expression once per row, which scales with table size in a way simple aggregations don't.
+
+```dax lineNumbers
+Slow:
+Total Margin =
+SUMX(
+    FactSales,
+    FactSales[Quantity] * (FactSales[UnitPrice] - FactSales[UnitCost])
+)
+```
+
+```dax lineNumbers
+Faster, if pre-computed at load time:
+Total Margin =
+SUM(FactSales[MarginAmount])
+```
+
+Where possible, compute a value once in Power Query or as a column at load time, rather than recomputing it per row on every query. See [Iterators](/docs/dax/iterator) for more on how these functions work.
+
+---
+
+## Common Cause: Filtering More Than Necessary
+
+Filtering the largest table in the model, when a smaller related table could be filtered instead, forces the engine to scan more rows than the calculation actually needs.
+
+```text
+Filter the fact table directly (250,000 rows scanned)
+        vs.
+Filter the dimension table, let the relationship propagate (500 rows scanned)
+```
+
+Whenever a filter condition is really about a dimension attribute (category, region, year), filtering the dimension table and letting the relationship propagate to the fact table is almost always faster than filtering the fact table directly.
+
+---
+
+## Common Cause: Overusing FILTER Inside CALCULATE
+
+```dax lineNumbers
+Slower:
+CALCULATE(
+    [Total Sales],
+    FILTER(DimProduct, DimProduct[Category] = "Bikes")
+)
+```
+
+```dax lineNumbers
+Faster:
+CALCULATE(
+    [Total Sales],
+    DimProduct[Category] = "Bikes"
+)
+```
+
+For simple equality or comparison conditions, `CALCULATE()`'s native filter argument is translated more efficiently than the equivalent wrapped in `FILTER()`. See [FILTER](/docs/dax/filter) for when `FILTER()` is genuinely needed versus when it isn't.
+
+---
+
+## Use Variables to Avoid Recomputation
+
+Referencing the same measure or expression multiple times inside one calculation causes it to be evaluated multiple times, unless it's captured in a variable first.
+
+```dax lineNumbers
+Slower:
+Profit Margin % =
+DIVIDE(
+    [Total Sales] - [Total Cost],
+    [Total Sales]
+)
+```
+
+```dax lineNumbers
+Faster:
+Profit Margin % =
+VAR TotalSales = [Total Sales]
+VAR TotalCost = [Total Cost]
+RETURN
+    DIVIDE(TotalSales - TotalCost, TotalSales)
+```
+
+`[Total Sales]` is only evaluated once in the variable-based version, instead of potentially twice. See [Variables](/docs/dax/variables) for more on this pattern.
+
+---
+
+## Model Design Affects DAX Performance Too
+
+DAX can only be as fast as the model underneath it allows.
+
+```text
+Star schema, proper relationships    -> DAX engine optimizes well
+Wide flat table, no relationships    -> DAX engine has far less to work with
+```
+
+A poorly-shaped model — a wide flat table instead of a star schema, unnecessary bidirectional relationships, high-cardinality columns that don't need to be — limits how much even well-written DAX can improve things. See [Star Schema](/docs/modeling/star-schema) for the modeling side of this.
+
+---
+
+## Common Mistakes
+
+### Optimizing DAX Before Confirming DAX Is the Problem
+
+Rewriting a measure without first checking Performance Analyzer risks optimizing something that wasn't actually slow, while the real bottleneck (rendering, a poor relationship) goes unaddressed.
+
+### Repeating the Same Expression Instead of Using Variables
+
+Referencing `[Total Sales]` three times in one measure re-evaluates it three times — a variable computes it once and reuses the result.
+
+### Filtering the Largest Table When a Smaller One Would Do
+
+Filtering directly on a multi-million-row fact table, when the same filter could be expressed on a small related dimension table instead, does far more work than necessary.
+
+---
+
+## Best Practices
+
+- Start every performance investigation with Performance Analyzer, not a guess about which measure "feels" slow.
+- Push filtering onto dimension tables rather than fact tables wherever the filter condition is really about a dimension attribute.
+- Use variables to avoid re-evaluating the same expression multiple times within one measure.
+- Prefer `CALCULATE()`'s native filter arguments over `FILTER()` for simple conditions.
+- Fix model-level issues (star schema, relationship cardinality) before assuming a measure rewrite alone will solve a performance problem.
+
+---
+
+## Performance Checklist
+
+- Performance Analyzer has confirmed the DAX query, not rendering, is the actual bottleneck.
+- Iterators and `FILTER()` are used only where a simpler `CALCULATE()` filter or a pre-computed column wouldn't do.
+- Repeated subexpressions are captured in variables.
+- The model follows a star schema, with filters flowing from small dimension tables to the fact table.
+
+---
+
+## Next Steps
+
+Continue learning DAX:
+
+- [Iterators](/docs/dax/iterator)
+- [Variables](/docs/dax/variables)
+- [Star Schema](/docs/modeling/star-schema)

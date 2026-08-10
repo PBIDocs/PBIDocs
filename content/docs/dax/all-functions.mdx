@@ -1,0 +1,153 @@
+---
+title: "ALL, ALLEXCEPT & ALLSELECTED"
+description: Learn how ALL, ALLEXCEPT, and ALLSELECTED remove or partially restore filters, and how they differ from each other.
+---
+
+# ALL, ALLEXCEPT & ALLSELECTED
+
+`ALL()`, `ALLEXCEPT()`, and `ALLSELECTED()` all remove filters from a calculation — the difference between them is exactly how much filtering gets removed, and what it gets removed relative to.
+
+```text
+ALL()          — removes every filter on the specified table or columns
+ALLEXCEPT()    — removes every filter except the ones listed
+ALLSELECTED()  — removes filters added by the visual, keeps filters from outside it (slicers, page filters)
+```
+
+---
+
+## ALL(): Remove Every Filter
+
+`ALL()` removes all filters on a table, or specific columns, regardless of what's currently selected.
+
+```dax lineNumbers
+% of Total Sales =
+DIVIDE(
+    [Total Sales],
+    CALCULATE([Total Sales], ALL(FactSales))
+)
+```
+
+```text
+Filtered to "Bikes":     [Total Sales] = 120,000 (Bikes only)
+ALL(FactSales) removes    the filter entirely, so the denominator
+that filter for the        is Total Sales across every category
+denominator:                = 400,000
+
+% of Total Sales = 120,000 / 400,000 = 30%
+```
+
+This is the standard "percent of total" pattern — the numerator respects the current filter, the denominator uses `ALL()` to compute against everything.
+
+---
+
+## ALL() on Specific Columns
+
+`ALL()` can target specific columns instead of an entire table, removing filters only on those columns while leaving others untouched.
+
+```dax lineNumbers
+Sales All Regions =
+CALCULATE(
+    [Total Sales],
+    ALL(DimCustomer[Region])
+)
+```
+
+```text
+Filtered to Category = "Bikes" AND Region = "West":
+ALL(DimCustomer[Region]) removes only the Region filter
+Category = "Bikes" filter remains in effect
+
+Result: Bikes sales, across all regions
+```
+
+---
+
+## ALLEXCEPT(): Remove Every Filter Except...
+
+`ALLEXCEPT()` is the inverse framing of `ALL()` on columns — instead of listing what to remove, it lists what to keep, removing every other filter on the table.
+
+```dax lineNumbers
+Sales by Category Only =
+CALCULATE(
+    [Total Sales],
+    ALLEXCEPT(DimProduct, DimProduct[Category])
+)
+```
+
+```text
+Filtered to Category = "Bikes" AND Brand = "Brand A":
+ALLEXCEPT(DimProduct, DimProduct[Category]) keeps the Category filter,
+removes every other filter on DimProduct (including Brand)
+
+Result: all Bikes sales, regardless of brand
+```
+
+`ALLEXCEPT(Table, Column)` is functionally similar to combining `ALL(Table)` with the specific columns re-added, but it's usually easier to read when there's a long list of columns that should stay filtered and only one or two that shouldn't.
+
+---
+
+## ALLSELECTED(): Respect Filters Outside the Visual
+
+`ALLSELECTED()` removes filters coming from inside the current visual (like the row/column grouping), but keeps filters applied from outside it — slicers, page-level filters, report-level filters.
+
+```text
+Page has a Year slicer set to 2026.
+Table visual is grouped by Category, showing a "% of Total" column.
+
+ALL():          ignores the Year slicer too -> % of total across ALL years
+ALLSELECTED():  respects the Year slicer   -> % of total within 2026 only
+```
+
+This is the key difference from `ALL()` — `ALLSELECTED()` is aware of what the report viewer has actively selected outside the visual, and preserves it, while still removing the visual's own internal filtering (like the category breakdown).
+
+---
+
+## Comparing the Three
+
+| Function | Removes | Keeps |
+|---|---|---|
+| `ALL()` | Every filter on the table/columns specified | Nothing related to what was specified |
+| `ALLEXCEPT()` | Every filter on the table, except columns listed | Only the listed columns' filters |
+| `ALLSELECTED()` | Filters from inside the current visual | Filters from outside the visual (slicers, page filters) |
+
+```text
+Report has: Year slicer = 2026, table grouped by Category
+
+ALL(FactSales)            -> ignores 2026 filter and category grouping entirely
+ALLEXCEPT(DimProduct, ...) -> keeps only the columns explicitly listed
+ALLSELECTED(DimProduct)   -> keeps the 2026 slicer, ignores the category grouping
+```
+
+---
+
+## Common Mistakes
+
+### Using ALL When ALLSELECTED Was Intended
+
+A "% of total" column that should respect a report's slicers, but is built with `ALL()`, ends up computing against the entire dataset instead of the slicer-filtered subset — often not what a report viewer expects to see.
+
+### Listing the Wrong Columns in ALLEXCEPT
+
+`ALLEXCEPT()` keeps only the columns explicitly listed — forgetting one that should stay filtered removes its filter along with everything else.
+
+### Assuming ALLSELECTED Behaves Identically Everywhere
+
+`ALLSELECTED()`'s exact behavior depends on the visual and context it's evaluated in, which makes it more subtle to reason about than `ALL()` — test it directly in the actual visual it's meant for, rather than assuming behavior from a different context.
+
+---
+
+## Best Practices
+
+- Use `ALL()` for calculations that genuinely need to ignore every filter, like a true grand-total denominator.
+- Use `ALLSELECTED()` for "percent of total" calculations that should respect slicers and page filters, but not the visual's own grouping.
+- Use `ALLEXCEPT()` when a long list of columns should stay filtered and only a short list shouldn't — otherwise `ALL()` with specific columns is usually clearer.
+
+---
+
+## Next Steps
+
+Continue learning DAX functions:
+
+- [CALCULATE](/docs/dax/calculate)
+- [Filter Context](/docs/dax/filter-context)
+- [Percent of Total Pattern](/docs/dax-patterns/percent-of-total)
