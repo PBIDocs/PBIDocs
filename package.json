@@ -8,7 +8,11 @@
     "start": "next start",
     "types:check": "fumadocs-mdx && next typegen && tsc --noEmit",
     "postinstall": "fumadocs-mdx",
-    "lint": "eslint"
+    "lint": "eslint",
+    "d1:subscribers": "wrangler d1 execute pbidocs-subscribers --remote --command \"SELECT COUNT(*) AS total_subscribers FROM subscribers;\"",
+    "d1:subscribers:recent": "wrangler d1 execute pbidocs-subscribers --remote --command \"SELECT email, created_at FROM subscribers ORDER BY created_at DESC LIMIT 20;\"",
+    "d1:feedback": "wrangler d1 execute pbidocs-subscribers --remote --command \"SELECT page, SUM(CASE WHEN helpful = 1 THEN 1 ELSE 0 END) AS helpful_votes, SUM(CASE WHEN helpful = 0 THEN 1 ELSE 0 END) AS not_helpful_votes, COUNT(*) AS total_votes FROM page_feedback GROUP BY page ORDER BY total_votes DESC;\"",
+    "d1:feedback:negative": "wrangler d1 execute pbidocs-subscribers --remote --command \"SELECT page, SUM(CASE WHEN helpful = 0 THEN 1 ELSE 0 END) AS not_helpful_votes, COUNT(*) AS total_votes FROM page_feedback GROUP BY page HAVING not_helpful_votes > 0 ORDER BY not_helpful_votes DESC LIMIT 20;\""
   },
   "dependencies": {
     "cnfast": "^0.1.0",
@@ -30,6 +34,7 @@
     "tailwindcss": "^4.3.3",
     "typescript": "^6.0.3",
     "eslint": "^9.39.5",
-    "eslint-config-next": "^16.3.0"
+    "eslint-config-next": "^16.3.0",
+    "wrangler": "^4.120.1"
   }
 }
