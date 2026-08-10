@@ -223,6 +223,12 @@ Before publishing a DirectQuery or composite model:
 
 ---
 
+## A Third Option for OneLake Data: Direct Lake
+
+If the source data lives in Microsoft Fabric's OneLake, a fourth storage mode is available: Direct Lake, which reads Delta tables directly from OneLake without a copy step and without querying a live source on every request. See [Direct Lake Mode](/docs/fabric/direct-lake) for how it works and when it falls back to DirectQuery-like behavior.
+
+---
+
 ## Next Steps
 
 Continue learning Power BI data modeling:
@@ -230,3 +236,4 @@ Continue learning Power BI data modeling:
 - [Star Schema](/docs/modeling/star-schema)
 - [Relationships](/docs/modeling/relationships)
 - [Fact Tables](/docs/modeling/fact-tables)
+- [Direct Lake Mode](/docs/fabric/direct-lake)
