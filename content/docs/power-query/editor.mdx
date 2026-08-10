@@ -152,6 +152,56 @@ Selecting any step in the Applied Steps pane is equivalent to placing the cursor
 
 Editing this script directly — renaming a step, inserting a line, changing a function's arguments — has the same effect as doing it through the UI, but all at once instead of one click at a time. This is where a query is restructured wholesale, rather than nudged step by step.
 
+### Adding Error Handling the UI Doesn't Expose
+
+Some things are only practical to add directly in Advanced Editor, because there's no ribbon button for them. Wrapping a step in `try...otherwise` is a common example — it lets a query keep running even if one value fails to convert, instead of the whole refresh erroring out.
+
+Starting from a UI-built query:
+
+```powerquery lineNumbers
+let
+    Source = Csv.Document(File.Contents("orders.csv")),
+    #"Changed Type" = Table.TransformColumnTypes(Source, {{"OrderDate", type date}})
+in
+    #"Changed Type"
+```
+
+If a handful of rows have a malformed date, `#"Changed Type"` errors on those rows, and the query fails entirely. Editing that line directly in Advanced Editor to add `try...otherwise` changes the outcome from a hard failure to a handled one:
+
+```powerquery lineNumbers
+let
+    Source = Csv.Document(File.Contents("orders.csv")),
+    #"Changed Type" = Table.TransformColumns(
+        Source,
+        {{"OrderDate", each try Date.From(_) otherwise null, type date}}
+    )
+in
+    #"Changed Type"
+```
+
+Now a bad date becomes `null` instead of an error, and the refresh completes with the rest of the data intact. There's no equivalent checkbox for this in the ribbon — it only exists as a direct edit to the M.
+
+### What a UI-Built Merge Actually Generates
+
+[Merge Queries](/docs/power-query/merge-queries) walks through doing this from the ribbon. Opening Advanced Editor afterward shows what that UI step actually produced:
+
+```powerquery lineNumbers
+let
+    Source = Sales,
+    #"Merged Queries" = Table.NestedJoin(
+        Source, {"CustomerID"},
+        Customers, {"CustomerID"},
+        "Customers", JoinKind.LeftOuter
+    ),
+    #"Expanded Customers" = Table.ExpandTableColumn(
+        #"Merged Queries", "Customers", {"Name"}, {"Customers.Name"}
+    )
+in
+    #"Expanded Customers"
+```
+
+`Table.NestedJoin` is the merge itself — matching `Sales` and `Customers` on `CustomerID`, using a left outer join — and it produces a column of nested tables. `Table.ExpandTableColumn` is the separate "expand" step, pulling `Name` out of each nested table into a real column. Two ribbon actions (Merge, then Expand) become these two M steps, one to one.
+
 ---
 
 ## Best Practices
