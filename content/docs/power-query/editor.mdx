@@ -114,6 +114,44 @@ This is the fastest way to tweak a single step without reopening the full Advanc
 
 Opened from **Home > Advanced Editor**, this shows the entire query as one M script — every step, in order, in a single `let...in` expression. See [M Language](/docs/power-query/m-language) for how to read and write it directly.
 
+### What the Applied Steps Pane Produces
+
+Every step built through the UI becomes one line of the Advanced Editor's script. Given this Applied Steps list:
+
+```text
+Applied Steps
+  Source
+  Changed Type
+  Filtered Rows
+  Renamed Columns
+  Removed Columns
+```
+
+Opening Advanced Editor for that same query shows:
+
+```powerquery lineNumbers
+let
+    Source = Sql.Database("server", "SalesDB"),
+    #"Changed Type" = Table.TransformColumnTypes(Source, {{"OrderDate", type date}}),
+    #"Filtered Rows" = Table.SelectRows(#"Changed Type", each [Status] = "Active"),
+    #"Renamed Columns" = Table.RenameColumns(#"Filtered Rows", {{"Amt", "Amount"}}),
+    #"Removed Columns" = Table.RemoveColumns(#"Renamed Columns", {"Notes"})
+in
+    #"Removed Columns"
+```
+
+Reading it line by line:
+
+- `Source` connects to the database — this is whatever step created the query, here a `Sql.Database` call.
+- `#"Changed Type"` corresponds to clicking a column's type icon; it became this name because "Changed Type" contains a space, so M wraps it in `#"..."`.
+- `#"Filtered Rows"` is the row filter applied from a column header's dropdown, referencing the previous step by name.
+- `#"Renamed Columns"` and `#"Removed Columns"` follow the same pattern: each one wraps the step before it.
+- The final `in` clause names `#"Removed Columns"` as the query's result — the same step highlighted last in the Applied Steps pane.
+
+Selecting any step in the Applied Steps pane is equivalent to placing the cursor on that same line here; the preview grid always reflects up through whichever step is currently selected, in either view.
+
+Editing this script directly — renaming a step, inserting a line, changing a function's arguments — has the same effect as doing it through the UI, but all at once instead of one click at a time. This is where a query is restructured wholesale, rather than nudged step by step.
+
 ---
 
 ## Best Practices
