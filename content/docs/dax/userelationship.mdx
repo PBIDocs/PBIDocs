@@ -1,0 +1,120 @@
+---
+title: USERELATIONSHIP()
+description: Learn how USERELATIONSHIP activates an inactive relationship for a single calculation, without changing the model's default relationships.
+---
+
+# USERELATIONSHIP()
+
+`USERELATIONSHIP()` activates a specific inactive relationship for the duration of a single calculation, without changing which relationship is active by default in the rest of the model.
+
+```dax lineNumbers
+CALCULATE(
+    Expression,
+    USERELATIONSHIP(Column1, Column2)
+)
+```
+
+---
+
+## Why Inactive Relationships Exist
+
+A table can have more than one relationship to another table, but only one can be active at a time — every other relationship between the same two tables is created inactive.
+
+```text
+FactSales
+   |
+   +-- OrderDateKey  -> DimDate[DateKey]   (active)
+   +-- ShipDateKey   -> DimDate[DateKey]   (inactive)
+   +-- DueDateKey    -> DimDate[DateKey]   (inactive)
+```
+
+This commonly happens with multiple date roles against one date table — order date, ship date, due date — where only one relationship can drive automatic filter propagation.
+
+---
+
+## Basic Example
+
+```dax lineNumbers
+Sales by Ship Date =
+CALCULATE(
+    [Total Sales],
+    USERELATIONSHIP(FactSales[ShipDateKey], DimDate[DateKey])
+)
+```
+
+```text
+Default behavior:      Total Sales filters by OrderDateKey (the active relationship)
+With USERELATIONSHIP:  This specific measure instead filters by ShipDateKey
+```
+
+The rest of the model, and every other measure, is unaffected — `USERELATIONSHIP()` only changes which relationship is active inside the `CALCULATE()` it's used in.
+
+---
+
+## Multiple Date Roles Example
+
+```text
+DimDate
+   |
+   +-- OrderDateKey (active)   -> "Total Sales"        uses this by default
+   +-- ShipDateKey (inactive)  -> "Sales by Ship Date"  activates this explicitly
+   +-- DueDateKey (inactive)   -> "Sales by Due Date"   activates this explicitly
+```
+
+```dax lineNumbers
+Sales by Due Date =
+CALCULATE(
+    [Total Sales],
+    USERELATIONSHIP(FactSales[DueDateKey], DimDate[DateKey])
+)
+```
+
+Each measure that needs a different date role gets its own `USERELATIONSHIP()` call, rather than the model needing three separate date tables.
+
+---
+
+## USERELATIONSHIP vs. Multiple Date Tables
+
+An alternative to inactive relationships is creating a separate date table per role — `DimOrderDate`, `DimShipDate`, `DimDueDate` — each with its own active relationship.
+
+| | Inactive Relationship + USERELATIONSHIP | Separate Date Table per Role |
+|---|---|---|
+| Model complexity | One date table, several inactive relationships | Multiple date tables |
+| DAX complexity | Explicit `USERELATIONSHIP()` per measure | Simpler measures, no `USERELATIONSHIP()` needed |
+| Slicer behavior | One shared date slicer, roles selected via measure | Separate slicer needed per date role |
+
+Neither is universally correct — `USERELATIONSHIP()` keeps the model smaller with one shared date table, while separate date tables make each measure simpler at the cost of more tables and slicers.
+
+---
+
+## Common Mistakes
+
+### Forgetting USERELATIONSHIP Only Affects Its Own CALCULATE
+
+Each measure that needs the inactive relationship needs its own `USERELATIONSHIP()` call — it doesn't change the relationship's active/inactive status in the model globally.
+
+### Combining Conflicting Relationships in One CALCULATE
+
+Trying to activate two relationships between the same two tables inside one `CALCULATE()` produces an error — only one can be active for a given pair of tables at a time, even temporarily.
+
+### Building a Whole Model Around Inactive Relationships
+
+If nearly every measure needs a different date role, separate date tables per role are often simpler to maintain than a web of `USERELATIONSHIP()` calls scattered across the model's measures.
+
+---
+
+## Best Practices
+
+- Use `USERELATIONSHIP()` for occasional alternate-date (or alternate-key) calculations, not as the default way every measure resolves its relationships.
+- Name relationship-specific measures clearly ("Sales by Ship Date", not just "Sales 2") so it's obvious which relationship each one activates.
+- Consider separate date tables per role instead, once enough measures need `USERELATIONSHIP()` that the model becomes hard to follow.
+
+---
+
+## Next Steps
+
+Continue learning DAX functions:
+
+- [RELATED & RELATEDTABLE](/docs/dax/related)
+- [CALCULATE](/docs/dax/calculate)
+- [Date Tables](/docs/modeling/date-tables)

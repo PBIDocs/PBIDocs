@@ -2,7 +2,7 @@
   "title": "DAX",
   "pages": [
     "introduction",
-    "syntax",
+    "basics",
     "variables",
     "measures",
     "calculated-columns",
@@ -10,7 +10,7 @@
     "row-context",
     "filter-context",
     "calculate",
-    "iterators",
+    "iterator",
     "time-intelligence",
     "all-functions",
     "filter",
@@ -21,6 +21,7 @@
     "rankx",
     "topn",
     "summarize",
-    "userelationship"
+    "userelationship",
+    "performance"
   ]
 }

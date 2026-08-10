@@ -1,0 +1,153 @@
+---
+title: RELATED() & RELATEDTABLE()
+description: Learn how RELATED and RELATEDTABLE pull values across relationships in a Power BI data model.
+---
+
+# RELATED() & RELATEDTABLE()
+
+`RELATED()` and `RELATEDTABLE()` pull data across an existing relationship, without needing a manual lookup or merge.
+
+They only work where a relationship already connects the two tables — neither function creates a relationship, they just read across one that's already there.
+
+---
+
+## RELATED(): Pulling a Single Value
+
+`RELATED()` returns a single related value from the "one" side of a relationship, evaluated from the "many" side.
+
+```dax lineNumbers
+RELATED(Column)
+```
+
+Example — pulling a product's category onto each sales row:
+
+```dax lineNumbers
+Category =
+RELATED(DimProduct[Category])
+```
+
+```text
+DimProduct (one)          FactSales (many)
+ProductKey | Category      ProductKey | ...
+1001       | Bikes         1001       | ...
+                            1001       | ...   <- Category = "Bikes" via RELATED()
+```
+
+`RELATED()` only works in the direction from many to one — it can't be used on a fact table's column to pull a value across to a dimension table, since a single dimension row can relate to many fact rows, not one.
+
+---
+
+## RELATEDTABLE(): Pulling Multiple Rows
+
+`RELATEDTABLE()` is the reverse: from the "one" side, it returns every related row from the "many" side, as a table.
+
+```dax lineNumbers
+RELATEDTABLE(Table)
+```
+
+Example — counting how many orders a customer has placed:
+
+```dax lineNumbers
+Order Count =
+COUNTROWS(RELATEDTABLE(FactSales))
+```
+
+```text
+DimCustomer (one)                FactSales (many)
+CustomerKey | ...                 CustomerKey | OrderID
+1                                  1           | 5001
+                                   1           | 5002
+                                   1           | 5003
+        RELATEDTABLE returns all 3 rows for CustomerKey 1
+```
+
+Because it returns a table, `RELATEDTABLE()` is almost always wrapped in an aggregation function — `COUNTROWS()`, `SUMX()`, `AVERAGEX()` — rather than used on its own.
+
+---
+
+## RELATED vs. RELATEDTABLE
+
+| | Direction | Returns | Typical Use |
+|---|---|---|---|
+| `RELATED()` | Many-to-one | A single value | Pulling a dimension attribute onto a fact row |
+| `RELATEDTABLE()` | One-to-many | A table | Counting or aggregating related fact rows from a dimension row |
+
+---
+
+## RELATED Inside a Calculated Column
+
+`RELATED()` is most commonly used in a calculated column, to flatten a dimension attribute directly onto the fact table.
+
+```dax lineNumbers
+Product Category =
+RELATED(DimProduct[Category])
+```
+
+This is useful when a visual or another calculation needs the category available directly on `FactSales`, rather than requiring a relationship lookup at query time.
+
+---
+
+## RELATEDTABLE Inside a Measure
+
+`RELATEDTABLE()` is more commonly used inside a measure, from the "one" side of a relationship, to aggregate the related "many" rows.
+
+```dax lineNumbers
+Products in Category =
+CALCULATE(
+    DISTINCTCOUNT(FactSales[ProductKey]),
+    RELATEDTABLE(FactSales)
+)
+```
+
+Evaluated per category row, this counts the distinct products sold within that category.
+
+---
+
+## Requires an Existing Relationship
+
+Neither function works without an existing, active relationship connecting the two tables.
+
+```text
+DimProduct           FactSales
+    |                     |
+    +----- relationship --+
+             |
+    RELATED() / RELATEDTABLE() can now cross it
+```
+
+If the relationship is missing, inactive, or filtered out by `USERELATIONSHIP()` pointing elsewhere, both functions return blank instead of the expected value. See [USERELATIONSHIP](/docs/dax/userelationship) for working with inactive relationships.
+
+---
+
+## Common Mistakes
+
+### Using RELATED Across Multiple Relationship Hops
+
+`RELATED()` follows exactly one relationship. Pulling a value across two hops — fact table to dimension to another related dimension — needs a `RELATED()` on an intermediate calculated column, or a direct relationship, not a single call spanning both.
+
+### Forgetting RELATEDTABLE Returns a Table
+
+Using `RELATEDTABLE()` directly where a single value is expected produces an error — it needs to be wrapped in `COUNTROWS()`, `SUMX()`, or another aggregation.
+
+### Expecting RELATED to Work From the One Side
+
+`RELATED()` only pulls from one to many. Trying to use it on a dimension table's column to reach a fact table returns an error, since a dimension row doesn't correspond to a single fact row — that's what `RELATEDTABLE()` is for.
+
+---
+
+## Best Practices
+
+- Use `RELATED()` in calculated columns when a dimension attribute genuinely needs to live directly on the fact table, not as a substitute for a working relationship.
+- Wrap `RELATEDTABLE()` in an aggregation function; it's a table function, not a scalar one.
+- Confirm the relationship is active before relying on either function — an inactive relationship silently returns blank rather than erroring.
+- Prefer a direct relationship and native filter propagation over `RELATED()`/`RELATEDTABLE()` when the same result can be achieved without a calculated column.
+
+---
+
+## Next Steps
+
+Continue learning DAX functions:
+
+- [LOOKUPVALUE](/docs/dax/lookupvalue)
+- [USERELATIONSHIP](/docs/dax/userelationship)
+- [Relationships](/docs/modeling/relationships)

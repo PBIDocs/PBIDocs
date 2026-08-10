@@ -1,0 +1,126 @@
+---
+title: SELECTEDVALUE()
+description: Learn how SELECTEDVALUE safely returns a single selected value from a column, or a fallback when more than one value is selected.
+---
+
+# SELECTEDVALUE()
+
+`SELECTEDVALUE()` returns a column's value when exactly one value is in context — from a slicer selection, a filter, or a single row in a visual — and a fallback value otherwise.
+
+```dax lineNumbers
+SELECTEDVALUE(Column, [Alternate Result])
+```
+
+---
+
+## Basic Example
+
+```dax lineNumbers
+Selected Category =
+SELECTEDVALUE(DimProduct[Category])
+```
+
+```text
+Slicer: Category = "Bikes"  (one value selected)
+        |
+        SELECTEDVALUE returns "Bikes"
+
+Slicer: Category = "Bikes", "Accessories"  (two values selected)
+        |
+        SELECTEDVALUE returns BLANK (or the fallback, if supplied)
+```
+
+This is most often used in a card visual or a measure's title, to display which single value is currently in context — a title that should say "Bikes" when exactly one category is selected, and something else when multiple are.
+
+---
+
+## Providing a Fallback
+
+The second argument controls what's returned when zero or more than one value is present, instead of blank.
+
+```dax lineNumbers
+Selected Category =
+SELECTEDVALUE(DimProduct[Category], "Multiple Categories")
+```
+
+```text
+One category selected        -> "Bikes"
+Multiple categories selected -> "Multiple Categories"
+No selection (all categories) -> "Multiple Categories"
+```
+
+This pattern is common for dynamic report titles that need to read sensibly regardless of how a user has filtered the page.
+
+---
+
+## SELECTEDVALUE vs. VALUES + IF
+
+Before `SELECTEDVALUE()` existed, the same result required combining `VALUES()`, `HASONEVALUE()`, and `IF()`:
+
+```dax lineNumbers
+Selected Category (old pattern) =
+IF(
+    HASONEVALUE(DimProduct[Category]),
+    VALUES(DimProduct[Category]),
+    "Multiple Categories"
+)
+```
+
+```dax lineNumbers
+Selected Category (SELECTEDVALUE) =
+SELECTEDVALUE(DimProduct[Category], "Multiple Categories")
+```
+
+`SELECTEDVALUE()` is the equivalent shorthand — same result, one function instead of three combined.
+
+---
+
+## A Dynamic Measure Title
+
+A common use is building a title that names the current selection:
+
+```dax lineNumbers
+Report Title =
+"Sales for " & SELECTEDVALUE(DimDate[Year], "All Years")
+```
+
+```text
+Year slicer = 2026        -> "Sales for 2026"
+No year selected (all)     -> "Sales for All Years"
+```
+
+This keeps a report page's title accurate without a separate measure per possible selection.
+
+---
+
+## Common Mistakes
+
+### Expecting It to Aggregate
+
+`SELECTEDVALUE()` doesn't sum, average, or combine multiple selected values — if more than one value is in context, it returns the fallback (or blank), not a combined result.
+
+### Omitting the Fallback
+
+Without a second argument, a multi-selection or no-selection state silently returns blank, which can look like a bug in a card visual rather than an intentional "nothing specific is selected" state.
+
+### Using It Where HASONEVALUE Logic Differs
+
+`SELECTEDVALUE()` is equivalent to the `VALUES` + `HASONEVALUE` + `IF` pattern specifically — if custom logic beyond "one value vs. not one value" is needed, the manual pattern still has a place.
+
+---
+
+## Best Practices
+
+- Always supply a meaningful fallback value; a blank card or title reads as broken to a report viewer.
+- Use `SELECTEDVALUE()` for dynamic titles and single-value cards, rather than manually combining `VALUES()` and `HASONEVALUE()`.
+- Keep the fallback text specific enough to be useful ("Multiple Categories" rather than a generic blank or dash).
+
+---
+
+## Next Steps
+
+Continue learning DAX functions:
+
+- [SWITCH](/docs/dax/switch)
+- [LOOKUPVALUE](/docs/dax/lookupvalue)
+- [Measures](/docs/modeling/measures)

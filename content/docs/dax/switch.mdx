@@ -1,0 +1,153 @@
+---
+title: SWITCH()
+description: Learn how SWITCH evaluates an expression against multiple possible values, as a cleaner alternative to nested IF statements.
+---
+
+# SWITCH()
+
+`SWITCH()` evaluates an expression once, then compares it against a list of possible values, returning the result tied to the first match — a cleaner alternative to nesting several `IF()` calls.
+
+```dax lineNumbers
+SWITCH(
+    Expression,
+    Value1, Result1,
+    Value2, Result2,
+    ...,
+    [Else Result]
+)
+```
+
+---
+
+## Basic Example
+
+```dax lineNumbers
+Size Group =
+SWITCH(
+    DimProduct[Size],
+    "S", "Small",
+    "M", "Medium",
+    "L", "Large",
+    "Unknown Size"
+)
+```
+
+```text
+Size = "S"  -> "Small"
+Size = "M"  -> "Medium"
+Size = "L"  -> "Large"
+Size = "XL" -> "Unknown Size"   (falls through to the else result)
+```
+
+The final argument, with no matching value before it, acts as the "else" — returned when nothing else matched.
+
+---
+
+## SWITCH vs. Nested IF
+
+The same logic written with nested `IF()` gets harder to read fast:
+
+```dax lineNumbers
+Size Group (nested IF) =
+IF(
+    DimProduct[Size] = "S", "Small",
+    IF(
+        DimProduct[Size] = "M", "Medium",
+        IF(
+            DimProduct[Size] = "L", "Large",
+            "Unknown Size"
+        )
+    )
+)
+```
+
+```dax lineNumbers
+Size Group (SWITCH) =
+SWITCH(
+    DimProduct[Size],
+    "S", "Small",
+    "M", "Medium",
+    "L", "Large",
+    "Unknown Size"
+)
+```
+
+Both return the same result. `SWITCH()` reads as a flat list of cases instead of a growing pyramid of nested parentheses, which matters once there are more than two or three conditions.
+
+---
+
+## SWITCH(TRUE(), ...) for Range Conditions
+
+`SWITCH()` compares an expression against exact values, but combined with `TRUE()` as the expression, each "value" becomes a condition that's evaluated for truth instead of equality — useful for ranges rather than exact matches.
+
+```dax lineNumbers
+Sales Tier =
+SWITCH(
+    TRUE(),
+    [Total Sales] > 100000, "Gold",
+    [Total Sales] > 50000, "Silver",
+    [Total Sales] > 0, "Bronze",
+    "No Sales"
+)
+```
+
+```text
+Total Sales = 120,000  -> "Gold"
+Total Sales = 60,000   -> "Silver"
+Total Sales = 10,000   -> "Bronze"
+Total Sales = 0        -> "No Sales"
+```
+
+Conditions are checked top to bottom, and the first one that evaluates to `TRUE()` wins — order matters here, since a broader condition placed first would shadow the more specific ones below it.
+
+---
+
+## Order Matters in SWITCH(TRUE(), ...)
+
+```text
+Wrong order:                          Correct order:
+[Total Sales] > 0, "Bronze"           [Total Sales] > 100000, "Gold"
+[Total Sales] > 50000, "Silver"       [Total Sales] > 50000, "Silver"
+[Total Sales] > 100000, "Gold"        [Total Sales] > 0, "Bronze"
+
+Every positive sales value matches    Each tier only matches once the
+"Bronze" first, "Gold" and            broader ones above it have been
+"Silver" never get reached            ruled out
+```
+
+Conditions should be ordered from most specific to least specific when using the `SWITCH(TRUE(), ...)` pattern.
+
+---
+
+## Common Mistakes
+
+### Wrong Condition Order in SWITCH(TRUE(), ...)
+
+Placing a broad condition (`> 0`) before a narrower one (`> 100000`) means the broad condition always matches first, and the narrower cases never get evaluated.
+
+### Forgetting the Else Case
+
+Without a final fallback value, `SWITCH()` returns blank for anything that doesn't match one of the listed values — usually not the intended behavior for a report-facing measure.
+
+### Using SWITCH Where a Simple IF Would Do
+
+For a genuinely binary condition, a single `IF()` is more direct than a `SWITCH()` with only one real case and an else.
+
+---
+
+## Best Practices
+
+- Always include a final else-result, even if it's just a clear "Unknown" or "Other" label.
+- Order `SWITCH(TRUE(), ...)` conditions from most specific to least specific.
+- Prefer `SWITCH()` over nested `IF()` once there are more than two or three conditions, for readability.
+- Keep each branch's result the same data type; mixing text and numeric results across branches can produce unexpected formatting.
+
+---
+
+## Next Steps
+
+Continue learning DAX functions:
+
+- [SELECTEDVALUE](/docs/dax/selectedvalue)
+- [FILTER](/docs/dax/filter)
+- [CALCULATE](/docs/dax/calculate)

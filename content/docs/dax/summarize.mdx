@@ -1,0 +1,133 @@
+---
+title: SUMMARIZE()
+description: Learn how SUMMARIZE groups a table by columns and computes aggregations per group, and why ADDCOLUMNS is often the safer alternative.
+---
+
+# SUMMARIZE()
+
+`SUMMARIZE()` groups a table by one or more columns and, optionally, computes aggregated values for each group — the DAX equivalent of a SQL `GROUP BY`.
+
+```dax lineNumbers
+SUMMARIZE(
+    Table,
+    GroupBy Column1, GroupBy Column2, ...,
+    ["Name", Expression], ...
+)
+```
+
+---
+
+## Basic Example
+
+```dax lineNumbers
+Sales by Category =
+SUMMARIZE(
+    FactSales,
+    DimProduct[Category],
+    "Total Sales", SUM(FactSales[SalesAmount])
+)
+```
+
+```text
+FactSales joined to DimProduct, grouped by Category:
+
+Category    | Total Sales
+------------|-------------
+Bikes       | 120,000
+Accessories | 45,000
+```
+
+The result is a table — one row per distinct `Category`, with a computed `Total Sales` column alongside it.
+
+---
+
+## Grouping Without Aggregating
+
+`SUMMARIZE()` can also be used with no aggregation arguments at all, purely to get the distinct combinations of a set of columns.
+
+```dax lineNumbers
+Distinct Categories =
+SUMMARIZE(
+    DimProduct,
+    DimProduct[Category]
+)
+```
+
+This returns one row per unique category, similar to what `VALUES(DimProduct[Category])` would return for a single column.
+
+---
+
+## SUMMARIZE vs. ADDCOLUMNS + VALUES
+
+`SUMMARIZE()`'s aggregation arguments have a well-known limitation: expressions referencing measures inside them can behave inconsistently, particularly in older versions of the DAX engine. The more predictable alternative combines `ADDCOLUMNS()` with `VALUES()` (or `SUMMARIZE()` used only for grouping, with no aggregation arguments).
+
+```dax lineNumbers
+Sales by Category (SUMMARIZE) =
+SUMMARIZE(
+    FactSales,
+    DimProduct[Category],
+    "Total Sales", SUM(FactSales[SalesAmount])
+)
+```
+
+```dax lineNumbers
+Sales by Category (ADDCOLUMNS) =
+ADDCOLUMNS(
+    SUMMARIZE(FactSales, DimProduct[Category]),
+    "Total Sales", CALCULATE(SUM(FactSales[SalesAmount]))
+)
+```
+
+The `ADDCOLUMNS()` version is more explicit about filter context — each row's `Total Sales` is computed with `CALCULATE()` inside the row context that `ADDCOLUMNS()` sets up, which behaves more predictably than relying on `SUMMARIZE()`'s built-in aggregation arguments.
+
+---
+
+## SUMMARIZE in a Calculated Table
+
+`SUMMARIZE()` is a common building block for a calculated table that pre-aggregates data at a coarser grain than the base fact table.
+
+```dax lineNumbers
+Category Summary =
+SUMMARIZE(
+    FactSales,
+    DimProduct[Category],
+    DimDate[Year],
+    "Total Sales", SUM(FactSales[SalesAmount])
+)
+```
+
+This produces a small, category-by-year summary table — useful as the basis for an aggregation table, or a simplified export.
+
+---
+
+## Common Mistakes
+
+### Relying on SUMMARIZE's Aggregation Arguments for Complex Logic
+
+Simple `SUM()`/`COUNT()`-style aggregations are usually fine, but more complex expressions (especially ones referencing existing measures) are more reliable wrapped in `ADDCOLUMNS()` instead.
+
+### Using SUMMARIZE When VALUES Would Do
+
+For a single column's distinct values with no aggregation, `VALUES()` (or `DISTINCT()`) is simpler and more direct than a `SUMMARIZE()` with one grouping column and nothing else.
+
+### Forgetting It Returns a Table
+
+Like `FILTER()` and `TOPN()`, `SUMMARIZE()`'s result is a table — it needs to be consumed by something that expects one, not treated as a single value.
+
+---
+
+## Best Practices
+
+- Use `SUMMARIZE()` for grouping only (no aggregation arguments), and add computed columns with `ADDCOLUMNS()` for anything beyond a simple `SUM`/`COUNT`.
+- Prefer `VALUES()` or `DISTINCT()` over `SUMMARIZE()` when only a single column's distinct values are needed.
+- Use `SUMMARIZE()`-based calculated tables sparingly — they're a static snapshot, not a substitute for well-structured dimension and fact tables.
+
+---
+
+## Next Steps
+
+Continue learning DAX functions:
+
+- [Calculated Tables](/docs/dax/calculated-tables)
+- [FILTER](/docs/dax/filter)
+- [Star Schema](/docs/modeling/star-schema)
