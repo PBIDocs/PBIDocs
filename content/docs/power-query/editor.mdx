@@ -1,8 +1,159 @@
 ---
-title: Power Query Editor
-description: Learn the Power Query Editor interface.
+title: "Power Query Editor"
+description: A tour of the Power Query Editor interface — the Queries pane, preview grid, Applied Steps, and Query Settings.
 ---
 
 # Power Query Editor
 
-The Power Query Editor is where data preparation happens.
+The Power Query Editor is where every data source gets connected, previewed, and transformed before it loads into the Power BI model. It opens from **Home > Transform Data** in Power BI Desktop.
+
+```text
+Power BI Desktop
+       |
+       | Home > Transform Data
+       |
+Power Query Editor
+```
+
+---
+
+## Layout
+
+```text
++------------------+----------------------------+------------------+
+|  Queries pane     |  Data preview grid          |  Query Settings  |
+|  (left)           |  (center)                   |  (right)         |
+|                    |                              |                  |
+|  Sales             |  ID | Name | Amount           |  Name: Sales     |
+|  Customers         |  1  | ...  | ...              |  Applied Steps:  |
+|  Products          |  2  | ...  | ...              |   Source         |
+|                    |                              |   Filtered Rows  |
++------------------+----------------------------+------------------+
+```
+
+Three panels do most of the work: the query list on the left, a live preview of the current query in the center, and the step history for the selected query on the right.
+
+---
+
+## Queries Pane
+
+Every data source loaded into the editor appears here as a named query. Selecting a query switches the preview and Applied Steps to that query.
+
+```text
+Queries
+  |
+  +-- Sales
+  +-- Customers
+  +-- Products
+  +-- RawStaging (right-click > Enable Load: off)
+```
+
+Queries can be organized into groups, and a query's **Enable Load** setting can be turned off for staging queries that other queries reference but that shouldn't themselves load into the model.
+
+---
+
+## Data Preview Grid
+
+Shows the result of the query up to the currently selected step, using a sample of the source data rather than the full dataset, for performance.
+
+```text
+Applied Steps: Source -> [Filtered Rows] -> Renamed Columns
+                              ^
+                      preview reflects up to here
+```
+
+Right-clicking a column header in the preview exposes most common transformations directly — remove, rename, change type, filter, split, and more — without needing the ribbon.
+
+---
+
+## Applied Steps Pane
+
+Every transformation is recorded here, in the order it was applied, as part of Query Settings on the right.
+
+```text
+Applied Steps
+  Source
+  Changed Type
+  Filtered Rows
+> Renamed Columns   (currently selected)
+  Removed Columns
+```
+
+Clicking any step shows the preview as it looked at that point. Steps can be renamed (double-click), reordered (drag), or removed (the "x" that appears on hover) — though reordering can break later steps that depended on the original order.
+
+---
+
+## The Ribbon
+
+The ribbon's tabs group transformations by category:
+
+```text
+Home        — common actions: choose columns, reduce rows, combine queries
+Transform   — reshape existing columns: split, pivot, group by, data type
+Add Column  — create new columns from existing ones
+View        — toggle panes, formula bar, and the Advanced Editor
+```
+
+Most transformations are reachable from more than one place — the ribbon, a right-click on a column, or typed directly as M.
+
+---
+
+## Formula Bar
+
+Enabled from **View > Formula Bar**, this shows the M expression for the currently selected step, and allows editing it directly instead of going through the UI.
+
+```text
+= Table.SelectRows(#"Changed Type", each [Status] = "Active")
+```
+
+This is the fastest way to tweak a single step without reopening the full Advanced Editor.
+
+---
+
+## Advanced Editor
+
+Opened from **Home > Advanced Editor**, this shows the entire query as one M script — every step, in order, in a single `let...in` expression. See [M Language](/docs/power-query/m-language) for how to read and write it directly.
+
+---
+
+## Best Practices
+
+- Turn off **Enable Load** for staging queries that exist only to be referenced by other queries.
+- Rename steps to something descriptive instead of leaving the auto-generated names — "Filtered Rows1" tells the next person nothing.
+- Use the formula bar for small edits to a single step, and the Advanced Editor when reviewing or restructuring a whole query.
+- Check the preview after each step; catching a wrong result early is far cheaper than debugging it five steps later.
+
+---
+
+## Common Mistakes
+
+### Working Only in the Preview, Never Checking the Advanced Editor
+
+The preview shows the result, not the logic. Periodically reviewing the Advanced Editor catches inefficient or redundant steps that aren't obvious from the grid alone.
+
+### Leaving Staging Queries Loading Into the Model
+
+A query that exists only to be referenced by others, but still has **Enable Load** on, adds an unnecessary table to the model and slows refresh.
+
+### Reordering Steps Without Checking Dependencies
+
+A later step that references a column name or type set by an earlier step can silently break if that earlier step moves.
+
+---
+
+## Editor Checklist
+
+- Queries are named clearly, and staging-only queries have load disabled.
+- Applied Steps have descriptive names, not default auto-generated ones.
+- The query has been spot-checked in the Advanced Editor, not just the preview grid.
+- No leftover debug or test steps remain before publishing.
+
+---
+
+## Next Steps
+
+Continue learning Power Query:
+
+- [Transformations](/docs/power-query/transformations)
+- [M Language](/docs/power-query/m-language)
+- [Merge Queries](/docs/power-query/merge-queries)

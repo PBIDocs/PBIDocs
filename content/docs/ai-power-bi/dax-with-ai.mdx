@@ -1,13 +1,93 @@
 ---
-title: DAX with AI
-description: Use AI to write, explain, and optimize DAX calculations.
+title: "DAX with AI"
+description: Use AI to write, explain, debug, and optimize DAX calculations faster, without skipping the fundamentals.
 ---
 
 # DAX with AI
 
-AI can help Power BI developers:
+DAX is one of the areas where AI assistance pays off fastest — measures follow recognizable patterns, and a tool that's seen thousands of them can draft, explain, or debug a formula in seconds. It still takes a developer who understands filter context to check the result.
 
-- Explain existing measures
-- Create DAX patterns
-- Debug calculation errors
-- Improve performance
+## What AI Can Help With
+
+### Explaining Existing Measures
+
+Pasting an unfamiliar measure and asking for a plain-language walkthrough is one of the fastest ways to understand a model you didn't build.
+
+```text
+Prompt:
+"Explain what this DAX measure does, step by step:
+
+Sales YoY % =
+DIVIDE(
+    [Total Sales] - CALCULATE([Total Sales], SAMEPERIODLASTYEAR(DimDate[Date])),
+    CALCULATE([Total Sales], SAMEPERIODLASTYEAR(DimDate[Date]))
+)"
+```
+
+A good explanation should call out the `CALCULATE` context transition, what `SAMEPERIODLASTYEAR` shifts, and why `DIVIDE` is used instead of `/`.
+
+### Drafting New Measures
+
+Describing the business logic in plain language, rather than starting from a blank formula bar, tends to produce a solid first draft.
+
+```text
+Prompt:
+"Write a DAX measure for a running total of [Total Sales] by DimDate[Date],
+that resets at the start of each fiscal year (fiscal year starts in July)."
+```
+
+Treat the result as a first draft — verify function choices, especially around time intelligence, against the model's actual date table setup.
+
+### Debugging Calculation Errors
+
+Pasting the measure, the error message (or the wrong result), and a short description of what's expected usually gets a faster diagnosis than searching function documentation from scratch.
+
+```text
+Prompt:
+"This measure returns BLANK for every row instead of a percentage.
+What's wrong?
+
+Margin % = [Gross Margin] / [Total Sales]"
+```
+
+In this example, the fix is almost always to use `DIVIDE()` instead of `/`, so blank or zero denominators don't propagate as errors — a good AI response should catch that immediately.
+
+### Improving Performance
+
+AI can suggest alternative formulations of a slow measure — trading `FILTER` for a native filter argument, replacing iterators with a set-based function — though the actual impact should be confirmed with Performance Analyzer or DAX Studio, not assumed from the suggestion alone.
+
+---
+
+## Cautions
+
+- AI-generated DAX can look syntactically correct while still misunderstanding row context vs. filter context — test against known values, not just "it ran without an error."
+- AI doesn't know the actual model behind a pasted measure. Relationships, cardinality, and other measures it references all affect correctness, and none of that is visible from a snippet alone.
+- Time intelligence functions in particular depend on having a proper marked date table — AI suggestions assume one exists even if the current model doesn't have one.
+
+---
+
+## A Reasonable Workflow
+
+```text
+Describe the requirement
+        |
+        v
+Get an AI-drafted measure
+        |
+        v
+Read it: does the logic actually match the requirement?
+        |
+        v
+Test against a known value in the report
+        |
+        v
+Check performance if the measure is used in a heavily-filtered visual
+```
+
+---
+
+## Next Steps
+
+- [Power Query with AI](/docs/ai-power-bi/power-query-with-ai)
+- [Model Advisor](/docs/ai-power-bi/model-advisor)
+- [Prompt Library](/docs/ai-power-bi/prompt-library)

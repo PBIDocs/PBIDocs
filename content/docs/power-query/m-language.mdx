@@ -1,16 +1,204 @@
 ---
-title: M Language
-description: Learn the Power Query M programming language.
+title: "M Language"
+description: An introduction to M, the functional formula language behind every Power Query transformation.
 ---
 
 # M Language
 
-M is the formula language behind Power Query.
+M is the formula language that powers Power Query. Every action taken in the Editor's UI — removing a column, filtering rows, merging queries — generates M code behind the scenes.
 
-Example:
+```text
+Click "Remove Columns" in the UI
+        |
+        | generates
+        |
+Table.RemoveColumns(Source, {"Column1"})
+```
+
+Most work happens visually, but M can also be written or edited directly for transformations the UI doesn't expose.
+
+---
+
+## Where M Lives
+
+Every query is a single M expression, viewable and editable as a whole from **Home > Advanced Editor**.
+
+```text
+Power BI Desktop
+       |
+       | Home > Advanced Editor
+       |
+Full M script for the selected query
+```
+
+A single step can also be edited on its own from the formula bar (**View > Formula Bar**).
+
+---
+
+## The let...in Structure
+
+A query is a `let` expression: a series of named steps, followed by an `in` clause naming which step is the final result.
 
 ```powerquery lineNumbers
-Table.SelectRows(
-    Source,
-    each [Status] = "Active"
+let
+    Source = Excel.Workbook(File.Contents("Sales.xlsx")),
+    SalesTable = Source{[Name="Sales"]}[Data],
+    FilteredRows = Table.SelectRows(SalesTable, each [Status] = "Active"),
+    RenamedColumns = Table.RenameColumns(FilteredRows, {{"Amt", "Amount"}})
+in
+    RenamedColumns
+```
+
+Each step is a named value, and each subsequent step typically refers to the previous one by name — exactly what the Applied Steps pane displays.
+
+```text
+Source
+   |
+SalesTable       (references Source)
+   |
+FilteredRows     (references SalesTable)
+   |
+RenamedColumns   (references FilteredRows)   <- returned by "in"
+```
+
+---
+
+## Referencing Previous Steps
+
+Each step is just a variable name. Steps don't have to be used in strict order — a later step could reference an earlier one directly, skipping steps in between, though this is uncommon and can be harder to follow.
+
+```powerquery lineNumbers
+let
+    Source = Table.Buffer(SourceTable),
+    Step1 = Table.SelectRows(Source, each [Amount] > 0),
+    Step2 = Table.RemoveColumns(Step1, {"Notes"})
+in
+    Step2
+```
+
+Step names with spaces are wrapped in `#"..."` — this is why the Advanced Editor often shows names like `#"Changed Type"`.
+
+---
+
+## Core Data Types
+
+```text
+text        "Sales"
+number      1250, 3.14
+date        #date(2024, 1, 15)
+datetime    #datetime(2024, 1, 15, 9, 30, 0)
+logical     true, false
+list        {1, 2, 3}
+record      [Name = "Sales", Amount = 100]
+table       a full rectangular dataset
+function    (x) => x * 2
+```
+
+Tables, lists, and records are the three structured types most Power Query transformations move between.
+
+---
+
+## Common Functions
+
+```text
+Table.SelectRows       — filter rows by a condition
+Table.RemoveColumns    — drop columns
+Table.RenameColumns    — rename columns
+Table.TransformColumns — apply a function to a column's values
+Table.AddColumn        — add a computed column
+Table.Group            — aggregate rows, like SQL's GROUP BY
+Table.NestedJoin       — merge with another table
+Text.Trim / Text.Upper — common text cleanup
+List.Select            — filter a list
+```
+
+Example — filtering rows and transforming a column in one step:
+
+```powerquery lineNumbers
+Table.TransformColumns(
+    Table.SelectRows(Source, each [Status] = "Active"),
+    {{"Name", Text.Trim}}
 )
+```
+
+---
+
+## each and Functions
+
+`each` is shorthand for a one-argument function operating on the current row or value.
+
+```powerquery lineNumbers
+each [Amount] > 100
+```
+
+is equivalent to:
+
+```powerquery lineNumbers
+(row) => row[Amount] > 100
+```
+
+Custom functions can also be written and reused across steps or queries, useful when the same logic needs to apply in more than one place.
+
+```powerquery lineNumbers
+let
+    AddTax = (amount as number) as number => amount * 1.08
+in
+    AddTax(100)
+```
+
+---
+
+## Case Sensitivity
+
+M is case-sensitive throughout — function names, step names, and column references all need to match exactly.
+
+```text
+[Amount]  and  [amount]   are two different column references
+Table.SelectRows          is not the same as table.selectrows
+```
+
+A mismatch here is one of the more common causes of a query that looks correct but fails at a specific step.
+
+---
+
+## Best Practices
+
+- Give steps clear, descriptive names in the UI rather than leaving auto-generated ones — the Advanced Editor is far more readable when step names describe what happened.
+- Build custom functions for transformation logic reused across multiple queries, instead of duplicating the same M expression.
+- Prefer built-in `Table.*` and `Text.*` functions over manual record/list manipulation where one already does the job.
+- Review the Advanced Editor periodically, even for UI-built queries, to catch redundant or inefficient steps.
+
+---
+
+## Common Mistakes
+
+### Mismatched Case in References
+
+`[CustomerID]` and `[customerid]` look similar but are not the same column reference, and M won't be forgiving about it.
+
+### Overusing Custom M for Things the UI Already Does Well
+
+Hand-writing complex logic for something achievable with a couple of clicks in the Editor makes the query harder for others to maintain.
+
+### Breaking Query Folding with Unnecessary Custom Code
+
+Complex custom M — especially row-by-row logic — often can't be translated back to the source system's native query language, which stops [query folding](/docs/power-query/query-folding) partway through the query.
+
+---
+
+## M Language Checklist
+
+- Step names are descriptive, not default auto-generated names.
+- Reused transformation logic is captured in a custom function, not copy-pasted.
+- Case matches exactly for every column and function reference.
+- Custom M steps have been checked against **View Native Query** to confirm they don't unexpectedly break folding.
+
+---
+
+## Next Steps
+
+Continue learning Power Query:
+
+- [Power Query Editor](/docs/power-query/editor)
+- [Transformations](/docs/power-query/transformations)
+- [Query Folding](/docs/power-query/query-folding)

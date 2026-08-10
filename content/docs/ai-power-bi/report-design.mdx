@@ -1,13 +1,78 @@
 ---
-title: Report Design with AI
-description: Use AI to improve Power BI dashboards and reports.
+title: "Report Design with AI"
+description: Use AI to plan dashboard layouts, choose visuals, and improve the storytelling in a Power BI report.
 ---
 
 # Report Design with AI
 
-AI can help create:
+Report design is more subjective than DAX or Power Query, so AI works best here as a brainstorming partner — proposing layouts, visual choices, and structure to react to — rather than a tool that produces a finished report on its own.
 
-- Dashboard layouts
-- Visual recommendations
-- User experience improvements
-- Storytelling approaches
+## What AI Can Help With
+
+### Dashboard Layout Ideas
+
+Describing the audience and the questions the report needs to answer, rather than asking for "a good layout," tends to produce more useful suggestions.
+
+```text
+Prompt:
+"I'm building a sales executive dashboard. The audience is regional VPs who check it
+weekly. Key questions: are we hitting quarterly targets, which regions are behind,
+and what's driving any variance. Suggest a page layout and which visuals to use."
+```
+
+### Choosing the Right Visual
+
+Describing the data and the comparison being made is enough to get a recommendation, and a rationale worth checking against the site's own guidance in [Charts](/docs/visuals/charts).
+
+```text
+Prompt:
+"I want to show sales trend over the last 12 months, broken out by 4 product categories.
+Line chart, area chart, or something else?"
+```
+
+### Improving an Existing Report
+
+Describing an existing page's visuals and layout can surface issues — too many visuals competing for attention, inconsistent color use, unclear labeling.
+
+```text
+Prompt:
+"This report page has 9 visuals: 3 KPI cards, 2 bar charts, a matrix, a line chart,
+a map, and a slicer, all on one page. What would you simplify or restructure?"
+```
+
+### Storytelling and Narrative Flow
+
+AI can suggest an order for a multi-page report — the sequence a reader should move through, what belongs on a summary page versus a detail page — based on the intended audience and decision the report supports.
+
+---
+
+## Cautions
+
+- AI can't see the actual report, only a description of it. A screenshot-based review by a person, or user testing with real viewers, will catch things a text description misses.
+- Visual recommendations are general best practice, not a hard rule — some AI suggestions won't fit the organization's existing report theme or accessibility requirements. See [Report Themes](/docs/governance/report-themes) for house style constraints.
+- Good report design depends heavily on who's actually going to read it. A layout suggestion for "executives" and one for "analysts doing deep exploration" should look different — make sure the audience described in the prompt matches the real one.
+
+---
+
+## A Reasonable Workflow
+
+```text
+Describe the audience and the key questions the report answers
+        |
+        v
+Get layout and visual-choice suggestions
+        |
+        v
+Cross-check against house style / report theme guidelines
+        |
+        v
+Validate with a real viewer from the intended audience, not just visually
+```
+
+---
+
+## Next Steps
+
+- [Model Advisor](/docs/ai-power-bi/model-advisor)
+- [Prompt Library](/docs/ai-power-bi/prompt-library)
+- [Charts](/docs/visuals/charts)

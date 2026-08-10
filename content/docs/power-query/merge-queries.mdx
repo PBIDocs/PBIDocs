@@ -1,8 +1,177 @@
 ---
-title: Merge Queries
-description: Learn how to combine tables in Power Query.
+title: "Merge Queries"
+description: How to combine two Power Query tables on matching columns, and how to choose the right join kind.
 ---
 
 # Merge Queries
 
-Merge Queries combines data from multiple tables using matching columns.
+Merge Queries combines two queries into one, matching rows based on one or more common columns — the Power Query equivalent of a SQL join.
+
+```text
+Sales                    Customers
+CustomerID | Amount      CustomerID | Name
+-----------|-------      -----------|------
+1          | 100         1          | Alice
+2          | 200         2          | Bob
+```
+
+```text
+Sales
+   |
+   | merge on CustomerID
+   |
+Customers
+   |
+Sales + Customer Name
+```
+
+---
+
+## Starting a Merge
+
+From **Home > Merge Queries**, choose the query to merge into (the base table), the query to merge with, and the matching column(s) in each.
+
+```text
+Merge Queries
+  Base table:    Sales
+  Merge with:    Customers
+  Match on:      CustomerID <-> CustomerID
+  Join kind:     Left Outer
+```
+
+The result is a new column containing a nested table for each matched row, which is then expanded into regular columns.
+
+```text
+CustomerID | Amount | NewColumn
+-----------|--------|----------
+1          | 100     | Table
+2          | 200     | Table
+        |
+        | expand -> pick columns (e.g. Name)
+        v
+CustomerID | Amount | Name
+-----------|--------|------
+1          | 100     | Alice
+2          | 200     | Bob
+```
+
+---
+
+## Join Kinds
+
+| Join Kind | Keeps |
+|---|---|
+| Left Outer | All rows from the base table, matched where possible |
+| Right Outer | All rows from the merge-with table, matched where possible |
+| Full Outer | All rows from both tables |
+| Inner | Only rows that match in both tables |
+| Left Anti | Rows from the base table with **no** match in the other table |
+| Right Anti | Rows from the merge-with table with **no** match in the base table |
+
+```text
+Left Outer:            Inner:                 Left Anti:
+Sales  Customers        Sales  Customers        Sales  Customers
+  1  ->    1               1  ->    1              (no match rows only)
+  2  ->    2               2  ->    2              e.g. CustomerID 3
+  3  -> (no match, kept)   (3 dropped)              with no Customer row
+```
+
+**Left Outer** is the default and most common choice — every row from the base table survives, with customer details attached where a match exists.
+
+---
+
+## Left Anti: Finding Unmatched Rows
+
+Left Anti is useful specifically for finding rows in one table that have no counterpart in another — sales with no matching customer, or products with no sales at all.
+
+```text
+Sales (Left Anti against Customers)
+CustomerID | Amount
+-----------|-------
+99         | 50        <- CustomerID 99 doesn't exist in Customers
+```
+
+No columns are added — a Left Anti merge is a filter, not an enrichment, and typically doesn't need expanding.
+
+---
+
+## Merge vs. Append
+
+Merge combines tables **side by side**, adding columns. Append stacks tables **on top of each other**, adding rows.
+
+```text
+Merge (side by side, adds columns):
+Sales + Customers -> Sales with Customer Name attached
+
+Append (stacked, adds rows):
+January Sales
++
+February Sales
+= combined Sales for both months
+```
+
+---
+
+## Fan-Out from Duplicate Keys
+
+If the merge-with table has more than one row matching a given key, every base row gets duplicated once per match.
+
+```text
+Sales                 Customers (CustomerID 1 appears twice)
+CustomerID | Amount    CustomerID | Segment
+-----------|-------    -----------|--------
+1          | 100        1          | Retail
+                        1          | Wholesale
+
+After merge on CustomerID:
+CustomerID | Amount | Segment
+-----------|--------|----------
+1          | 100     | Retail
+1          | 100     | Wholesale    <- Amount duplicated
+```
+
+This is one of the most common sources of inflated totals after a merge — always confirm the merge-with table's key column is actually unique before merging.
+
+---
+
+## Best Practices
+
+- Confirm the merge-with table's key column is unique before merging, to avoid row duplication (fan-out).
+- Use **Left Anti** to find unmatched rows as a data-quality check, even outside of a full merge.
+- Expand only the columns actually needed — every expanded column becomes a new field in the query.
+- Prefer merging against a query with as few rows and columns as possible, since fewer rows on the merge-with side means less potential for fan-out and faster processing.
+
+---
+
+## Common Mistakes
+
+### Merging Against a Non-Unique Key
+
+Produces duplicated rows and inflated totals downstream, often without any obvious error — just numbers that are silently too high.
+
+### Choosing the Wrong Join Kind
+
+Using Inner when Left Outer was intended silently drops any base-table row that didn't find a match, which can understate totals just as easily as fan-out overstates them.
+
+### Expanding Every Column "Just in Case"
+
+Expanding unused columns adds width and clutter to the resulting table, and makes the query slower to preview and refresh.
+
+---
+
+## Merge Checklist
+
+- The merge-with table's key column has been confirmed unique, or fan-out has been deliberately accounted for.
+- The join kind matches the intended result (keep all base rows vs. only matches vs. only unmatched rows).
+- Only the needed columns are expanded from the merged table.
+- Resulting row counts have been spot-checked against expectations after the merge.
+
+---
+
+## Next Steps
+
+Continue learning Power Query:
+
+- [Transformations](/docs/power-query/transformations)
+- [Query Folding](/docs/power-query/query-folding)
+- [M Language](/docs/power-query/m-language)

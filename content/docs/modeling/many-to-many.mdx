@@ -1,8 +1,155 @@
-﻿---
-title: "Many To Many"
-description: Power BI documentation.
+---
+title: "Many-to-Many Relationships"
+description: How to model many-to-many relationships in Power BI, and when to use a native relationship versus a bridge table.
 ---
 
-# Dimension Tables
+# Many-to-Many Relationships
 
-Dimension tables describe business entities.
+A many-to-many relationship exists when rows in one table can match multiple rows in another table, in both directions.
+
+```text
+DimSalesperson          DimAccount
+      |                       |
+      +---- many : many ------+
+```
+
+A salesperson can be assigned to many accounts, and an account can be covered by many salespeople — neither side has a single unique key the other can filter through cleanly.
+
+---
+
+## Why It's Different From One-to-Many
+
+A star schema's dimension-to-fact relationships are normally one-to-many: one row in `DimProduct` matches many rows in `FactSales`.
+
+```text
+DimProduct (one)  ---->  FactSales (many)
+```
+
+A many-to-many relationship breaks that assumption on both sides, so Power BI has to handle filter propagation differently.
+
+```text
+DimSalesperson (many)  <---->  DimAccount (many)
+```
+
+---
+
+## Native Many-to-Many Relationships
+
+Power BI supports setting a relationship's cardinality directly to **Many to Many** in the relationship editor, without an intermediate table.
+
+```text
+DimSalesperson[AccountID] (many)
+            |
+            | many : many
+            |
+DimAccount[AccountID] (many)
+```
+
+This works when neither column is unique, and is useful for quick, ad hoc connections — but it comes with tradeoffs: ambiguous filter behavior once more than two tables are involved, and no natural place to store attributes about the relationship itself, like "since when" a salesperson covered an account.
+
+---
+
+## Bridge Tables: The More Robust Option
+
+For anything beyond a simple two-table relationship, a **bridge table** models the many-to-many relationship explicitly as its own table.
+
+```text
+DimSalesperson (one)
+      |
+      | one : many
+      |
+BridgeSalespersonAccount (many)
+      |
+      | many : one
+      |
+DimAccount (one)
+```
+
+Every relationship in the bridge design is one-to-many, which Power BI filters more predictably than a native many-to-many join. See [Bridge Tables](/docs/modeling/bridge-tables) for the full pattern.
+
+---
+
+## Example
+
+Products can belong to multiple sales categories, and categories can contain multiple products:
+
+```text
+DimProduct                    DimCategory
+ProductKey                    CategoryKey
+ProductName                   CategoryName
+```
+
+Native many-to-many:
+
+```text
+DimProduct[CategoryKey] (many) <----> DimCategory[CategoryKey] (many)
+```
+
+Bridge table version:
+
+```text
+DimProduct (one)
+     |
+BridgeProductCategory (many)
+     |
+DimCategory (one)
+```
+
+`BridgeProductCategory` stores one row per product/category pairing:
+
+| ProductKey | CategoryKey |
+|---|---|
+| 1001 | 10 |
+| 1001 | 11 |
+| 1002 | 10 |
+
+---
+
+## Performance and Filtering Considerations
+
+- Native many-to-many relationships only handle a single, non-ambiguous cross-filter direction cleanly; adding a third related table often introduces ambiguity Power BI can't resolve automatically.
+- Bridge tables keep every join one-to-many, which is easier for the DAX engine to optimize and easier for a developer to reason about.
+- Neither column in a many-to-many relationship needs to be unique — unlike a standard one-to-many relationship, where the "one" side must be unique.
+
+---
+
+## Best Practices
+
+- Prefer a bridge table over a native many-to-many relationship once more than two tables, or any attributes of the relationship itself, are involved.
+- Keep bridge tables narrow — just the keys needed to connect the two sides, plus any attributes specific to the relationship, like an assignment date.
+- Test filter behavior from both directions before shipping a many-to-many model; ambiguous propagation is easy to miss until a specific report page surfaces it.
+
+---
+
+## Common Mistakes
+
+### Defaulting to Native Many-to-Many Everywhere
+
+Native many-to-many is convenient for a quick, isolated case, but scales poorly once other tables need to filter through the same relationship.
+
+### Forgetting Cross-Filter Direction
+
+Many-to-many relationships often need **Both** cross-filter directions to behave as expected, which increases the risk of ambiguous or circular filter paths elsewhere in the model.
+
+### No Bridge Table for Relationship Attributes
+
+If the relationship itself carries information — an assignment start date, a percentage split — a native many-to-many relationship has nowhere to store it. A bridge table does.
+
+---
+
+## Many-to-Many Checklist
+
+- The relationship is genuinely many-to-many on both sides, not a one-to-many relationship modeled incorrectly.
+- A bridge table is used whenever more than two tables, or relationship-specific attributes, are involved.
+- Cross-filter direction has been tested from both sides of the relationship.
+- Performance has been validated on production-scale data, since many-to-many joins are more expensive than standard one-to-many joins.
+
+---
+
+## Next Steps
+
+Continue learning Power BI data modeling:
+
+- [Bridge Tables](/docs/modeling/bridge-tables)
+- [Relationships](/docs/modeling/relationships)
+- [Dimension Tables](/docs/modeling/dimension-tables)

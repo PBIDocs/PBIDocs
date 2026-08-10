@@ -1,13 +1,79 @@
 ---
-title: Model Advisor
-description: Use AI to review Power BI data models.
+title: "Model Advisor"
+description: Use AI as a second set of eyes on a Power BI data model's relationships, star schema design, and performance.
 ---
 
 # Model Advisor
 
-AI can help analyze:
+Reviewing a data model is harder to delegate to AI than a single DAX measure or Power Query step, since it depends on the whole model — but describing the model's structure and asking for a review still catches issues a developer might miss from being too close to their own work.
 
-- Relationships
-- Star schema design
-- DAX performance
-- Model organization
+## What AI Can Help Review
+
+### Relationship Design
+
+Describing a model's tables and how they connect can surface issues like missing relationships, relationships going the wrong direction, or an unintended many-to-many.
+
+```text
+Prompt:
+"Here are my tables and relationships:
+- DimDate (1) -> FactSales (many) on DateKey
+- DimProduct (1) -> FactSales (many) on ProductKey
+- DimCustomer (1) -> FactSales (many) on CustomerKey
+- FactSales (many) -> FactInventory (many) on ProductKey
+
+Does this relationship design look correct for a Power BI star schema?"
+```
+
+A good response should flag the direct fact-to-fact relationship as a problem, and suggest connecting both fact tables through a shared `DimProduct` relationship instead. See [Star Schema](/docs/modeling/star-schema) for why fact-to-fact relationships are avoided.
+
+### Star Schema Adherence
+
+Describing the model's tables — which are facts, which are dimensions, and how wide each one is — can help confirm the model actually follows a star schema shape rather than a flatter, harder-to-maintain design.
+
+```text
+Prompt:
+"I have one table called SalesData with columns: Date, CustomerName, CustomerRegion,
+ProductName, Category, Quantity, SalesAmount. Should I split this into a star schema,
+and if so, how?"
+```
+
+### DAX Performance Patterns
+
+Pasting a handful of measures alongside a description of the model can help identify patterns likely to cause slow visuals — heavy use of `FILTER` over large tables, iterators nested inside iterators, or measures that don't use variables and recompute the same subexpression repeatedly.
+
+### Model Organization
+
+AI can suggest naming conventions, folder structures for measures (display folders), and whether a model has grown enough tables that some restructuring or documentation would help maintainability.
+
+---
+
+## Cautions
+
+- AI can only review what it's told about the model; it has no visibility into actual data volumes, cardinality, or real-world query patterns, all of which matter for genuine performance analysis.
+- Treat model-level suggestions as a starting point for discussion, not a definitive verdict — validate real performance issues with Performance Analyzer or DAX Studio.
+- A model that looks fine described in a paragraph can still have relationship or filter-direction issues that only show up in the model view itself. Use AI review to complement a visual inspection, not replace it.
+
+---
+
+## A Reasonable Workflow
+
+```text
+Describe the model's tables and relationships
+        |
+        v
+Ask for a review against star schema principles
+        |
+        v
+Cross-check flagged issues against the actual Model view
+        |
+        v
+Validate any performance concern with Performance Analyzer / DAX Studio
+```
+
+---
+
+## Next Steps
+
+- [DAX with AI](/docs/ai-power-bi/dax-with-ai)
+- [Report Design with AI](/docs/ai-power-bi/report-design)
+- [Prompt Library](/docs/ai-power-bi/prompt-library)

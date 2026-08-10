@@ -1,8 +1,162 @@
-﻿---
+---
 title: "Bridge Tables"
-description: Power BI documentation.
+description: How bridge tables resolve many-to-many relationships in a Power BI star schema.
 ---
 
 # Bridge Tables
 
-Bridge tables describe business entities.
+A bridge table is a junction table that sits between two tables with a many-to-many relationship, turning two ambiguous joins into two clean one-to-many joins.
+
+```text
+DimSalesperson (one)
+      |
+      | one : many
+      |
+BridgeSalespersonAccount (many)
+      |
+      | many : one
+      |
+DimAccount (one)
+```
+
+Instead of connecting `DimSalesperson` and `DimAccount` directly, the bridge table stores one row per valid pairing between them.
+
+---
+
+## Why Bridge Tables Exist
+
+Some relationships genuinely can't be expressed as one-to-many. A salesperson can cover several accounts, and an account can be covered by several salespeople.
+
+```text
+DimSalesperson          DimAccount
+      |                       |
+      +---- many : many ------+
+```
+
+Power BI can create this as a native many-to-many relationship directly, but a bridge table keeps every relationship in the model one-to-many, which is easier to filter correctly and easier to extend later. See [Many-to-Many Relationships](/docs/modeling/many-to-many) for a comparison of the two approaches.
+
+---
+
+## Structure of a Bridge Table
+
+A bridge table is narrow — typically just the keys from both sides, plus any attributes specific to the pairing itself.
+
+```text
+BridgeSalespersonAccount
+
+SalespersonKey
+AccountKey
+AssignmentStartDate
+```
+
+Example data:
+
+| SalespersonKey | AccountKey | AssignmentStartDate |
+|---|---|---|
+| 1 | 100 | 2024-01-01 |
+| 1 | 101 | 2024-03-15 |
+| 2 | 100 | 2024-06-01 |
+
+Account 100 has two salespeople assigned to it; salesperson 1 has two accounts. Neither side is unique on its own — the bridge table is what makes each individual relationship one-to-many.
+
+---
+
+## How Filtering Flows Through a Bridge Table
+
+```text
+DimSalesperson
+      |
+      | filter: Salesperson = "Alice"
+      v
+BridgeSalespersonAccount
+      |
+      | rows where SalespersonKey matches Alice
+      v
+DimAccount
+      |
+      | only Alice's accounts remain
+      v
+FactRevenue
+```
+
+Selecting a salesperson filters the bridge table down to that salesperson's rows, which in turn filters the accounts — and any fact table connected to those accounts — down to a matching set.
+
+---
+
+## A Second Common Case: Products in Multiple Categories
+
+```text
+DimProduct (one)
+     |
+BridgeProductCategory (many)
+     |
+DimCategory (one)
+```
+
+| ProductKey | CategoryKey |
+|---|---|
+| 1001 | 10 |
+| 1001 | 11 |
+| 1002 | 10 |
+
+Product 1001 belongs to two categories. Filtering by `CategoryKey = 11` returns only product 1001, without needing a many-to-many relationship set directly on `DimProduct`.
+
+---
+
+## Bridge Tables and Double-Counting
+
+Because a single fact row can be reachable through more than one bridge row, a naive `SUM` can double-count if the fact table sits behind the bridge rather than in front of it.
+
+```text
+FactRevenue (one row per sale)
+      |
+BridgeSalespersonAccount (many rows per account)
+      |
+DimAccount
+```
+
+If revenue is placed on the many side of the bridge, the same revenue row can be counted once per matching bridge row. Keep the fact table upstream of the bridge — filtered by it, not joined through it as if it were another dimension — to avoid this.
+
+---
+
+## Best Practices
+
+- Keep bridge tables narrow: just the keys needed to connect both sides, plus attributes specific to the relationship.
+- Give bridge tables a clear name that states what they connect, like `BridgeSalespersonAccount` or `BridgeProductCategory`.
+- Watch for double-counting when a fact table sits on the many side of a bridge relationship — validate totals against a known-correct number.
+- Prefer a bridge table over a native many-to-many relationship whenever the relationship itself carries attributes, or more than two tables are involved.
+
+---
+
+## Common Mistakes
+
+### Putting a Fact Table on the Many Side of a Bridge
+
+This can silently double-count measures whenever a single fact row is reachable through more than one bridge row.
+
+### Making the Bridge Table Too Wide
+
+A bridge table that accumulates unrelated descriptive columns starts acting like a second dimension table, which defeats the purpose of keeping it a narrow join table.
+
+### Skipping Validation Against Known Totals
+
+Many-to-many patterns are one of the easier places to introduce silent double-counting. Always check a bridged measure against a total computed independently.
+
+---
+
+## Bridge Table Checklist
+
+- The bridge table contains only keys and relationship-specific attributes.
+- Both relationships to the bridge table are one-to-many, not many-to-many.
+- Measures passing through the bridge have been validated against a known-correct total.
+- The bridge table's name clearly states which two tables it connects.
+
+---
+
+## Next Steps
+
+Continue learning Power BI data modeling:
+
+- [Many-to-Many Relationships](/docs/modeling/many-to-many)
+- [Relationships](/docs/modeling/relationships)
+- [Dimension Tables](/docs/modeling/dimension-tables)
