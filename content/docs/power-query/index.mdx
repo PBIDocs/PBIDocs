@@ -1,16 +1,52 @@
-﻿---
-title: "Index"
-description: Power BI documentation.
+---
+title: "Power Query"
+description: Data transformation and preparation for Power BI — connect to sources, clean data, and shape it with the M language.
 ---
 
 # Power Query
 
-Power Query is the data transformation engine in Power BI.
+Power Query is the data transformation engine behind every Power BI model, handling everything from connecting to a source to producing the clean, well-typed tables a report is built on.
 
-Learn how to:
+```text
+Source Data
+     |
+     | Power Query
+     |
+Clean, Modeled Tables
+     |
+     | loaded into
+     |
+Power BI Data Model
+```
 
-- Connect data sources
-- Clean data
-- Transform tables
-- Create reusable queries
+## Start Here
 
+<Cards>
+  <Card
+    title="Introduction"
+    description="What Power Query does, and where it fits in a Power BI model."
+    href="/docs/power-query/introduction"
+  />
+  <Card
+    title="Power Query Editor"
+    description="A tour of the Queries pane, preview grid, and Applied Steps."
+    href="/docs/power-query/editor"
+  />
+  <Card
+    title="Transformations"
+    description="Common transformations for cleaning and reshaping data."
+    href="/docs/power-query/transformations"
+  />
+  <Card
+    title="Merge Queries"
+    description="Combine tables on matching columns, and choose the right join kind."
+    href="/docs/power-query/merge-queries"
+  />
+  <Card
+    title="Query Folding"
+    description="How Power Query pushes work back to the source for faster refreshes."
+    href="/docs/power-query/query-folding"
+  />
+</Cards>
+
+Want to work with the underlying formula language directly? See [M Language](/docs/power-query/m-language).

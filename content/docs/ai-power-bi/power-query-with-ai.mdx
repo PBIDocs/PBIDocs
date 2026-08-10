@@ -1,13 +1,89 @@
 ---
-title: Power Query with AI
-description: Using AI to create and improve Power Query transformations.
+title: "Power Query with AI"
+description: Use AI to generate, explain, and troubleshoot Power Query M code and transformation logic.
 ---
 
 # Power Query with AI
 
-AI can assist with:
+Power Query transformations are step-by-step and mechanical enough that AI tools handle them well: generating M code for a described transformation, explaining what an unfamiliar step does, or spotting why a query broke after a source change.
 
-- M code generation
-- Query optimization
-- Data cleaning logic
-- Transformation explanations
+## What AI Can Help With
+
+### Generating M Code from a Description
+
+Describing the desired shape of the output, rather than the exact M syntax, is usually enough for a solid starting point.
+
+```text
+Prompt:
+"Write Power Query M code that takes a table with columns [OrderID, ProductID, Quantity]
+and returns total Quantity per ProductID, sorted descending."
+```
+
+The result is usually close to `Table.Group` with a sum aggregation — a good response should use it directly rather than a manual loop.
+
+### Explaining Existing M Code
+
+Pasting a query from the Advanced Editor and asking what each step does is a fast way to understand a query someone else built.
+
+```text
+Prompt:
+"Explain what each step in this M query does:
+
+let
+    Source = Sql.Database("server", "db"),
+    Filtered = Table.SelectRows(Source, each [Region] = "West"),
+    Grouped = Table.Group(Filtered, {"ProductID"}, {{"TotalQty", each List.Sum([Quantity]), type number}})
+in
+    Grouped"
+```
+
+### Troubleshooting Errors
+
+Power Query error messages are often terse, like `Expression.Error: The column 'X' of the table wasn't found`. Pasting the error alongside the step that produced it usually gets a faster diagnosis than guessing.
+
+```text
+Prompt:
+"I'm getting this Power Query error after a Merge step:
+'Expression.Error: The column 'CustomerID' of the table wasn't found.'
+Here's the step: Table.ExpandTableColumn(Merged, "NewColumn", {"CustomerID"})
+What's causing it, and how do I fix it?"
+```
+
+This particular error usually means the merged column was renamed or the join produced no matches — a good answer should walk through both possibilities.
+
+### Optimizing for Query Folding
+
+AI can suggest reordering steps, or replacing a custom column with a foldable built-in transformation, to keep more of a query folding back to the source. See [Query Folding](/docs/power-query/query-folding) for why that matters for refresh performance.
+
+---
+
+## Cautions
+
+- AI doesn't know whether a suggested transformation will actually fold back to the source — check **View Native Query** after applying it, don't assume.
+- Generated M code should be reviewed against the actual column names and types in the source; AI will happily use plausible-looking names that don't exist in the real data.
+- For anything touching a production refresh schedule, test AI-suggested changes against a copy of the query first.
+
+---
+
+## A Reasonable Workflow
+
+```text
+Describe the transformation, or paste the failing step
+        |
+        v
+Get an AI-drafted M expression or explanation
+        |
+        v
+Paste into the Advanced Editor and check the preview
+        |
+        v
+Confirm folding didn't break, if working against a database source
+```
+
+---
+
+## Next Steps
+
+- [DAX with AI](/docs/ai-power-bi/dax-with-ai)
+- [Model Advisor](/docs/ai-power-bi/model-advisor)
+- [Prompt Library](/docs/ai-power-bi/prompt-library)

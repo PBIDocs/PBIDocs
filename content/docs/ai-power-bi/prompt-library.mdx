@@ -1,13 +1,114 @@
-﻿---
+---
 title: "Prompt Library"
-description: Power BI documentation.
+description: A curated collection of ready-to-use AI prompts for DAX, Power Query, data modeling, and report development.
 ---
 
 # Power BI AI Prompt Library
 
-A collection of prompts for:
+A starting set of prompts for common Power BI tasks. Replace the bracketed placeholders with your own measure, code, or context before using them.
 
-- DAX
-- Power Query
-- Data modeling
-- Report development
+## DAX
+
+```text
+Explain what this DAX measure does, step by step, including what filter context
+it changes:
+
+[paste measure]
+```
+
+```text
+Write a DAX measure that calculates [business logic], using the table
+[table name] and the column [column name].
+```
+
+```text
+This DAX measure returns [wrong result / an error]. What's wrong with it,
+and how should it be fixed?
+
+[paste measure]
+[paste error or describe the wrong result]
+```
+
+```text
+Suggest a more efficient version of this DAX measure, and explain why the
+original might be slow:
+
+[paste measure]
+```
+
+## Power Query / M
+
+```text
+Write Power Query M code that takes a table with columns [list columns] and
+produces [describe desired output].
+```
+
+```text
+Explain what each step in this M query does:
+
+[paste M code]
+```
+
+```text
+I'm getting this Power Query error: "[paste error message]"
+Here's the step that's failing: [paste step]
+What's causing it, and how do I fix it?
+```
+
+```text
+Will this M code fold back to a SQL source, or will it run locally? If not,
+what's breaking the fold, and how can I restructure it to preserve folding?
+
+[paste M code]
+```
+
+## Data Modeling
+
+```text
+Here are my tables and relationships: [describe tables and relationship
+cardinality/direction]. Does this follow star schema principles? What would
+you change?
+```
+
+```text
+I have one flat table with columns [list columns]. Should this be split into
+a star schema, and if so, what fact and dimension tables would you suggest?
+```
+
+```text
+I need to track [attribute] changing over time for [dimension]. Should this
+be a Type 1 or Type 2 slowly changing dimension, and why?
+```
+
+## Report Design
+
+```text
+I'm building a [type of report] for [audience]. The key questions it needs
+to answer are: [list questions]. Suggest a page layout and which visuals
+to use for each.
+```
+
+```text
+I want to compare [what's being compared] over [time period / categories].
+What visual type fits best, and why?
+```
+
+```text
+This report page has [list visuals]. What would you simplify, remove, or
+restructure, and why?
+```
+
+## Using These Prompts Well
+
+- Always include real context — table names, column names, actual measure text — rather than describing the situation abstractly. AI can't see the model; the prompt is the only information it has.
+- Treat the response as a draft. Verify DAX and M code against real data, and cross-check report design suggestions against your organization's report theme and the actual audience.
+- Iterate. If the first response doesn't fit, describe specifically what's wrong rather than starting a new prompt from scratch — most tools do better with a follow-up correction than a fresh, less-detailed request.
+
+---
+
+## Next Steps
+
+- [DAX with AI](/docs/ai-power-bi/dax-with-ai)
+- [Power Query with AI](/docs/ai-power-bi/power-query-with-ai)
+- [Model Advisor](/docs/ai-power-bi/model-advisor)
+- [Report Design with AI](/docs/ai-power-bi/report-design)

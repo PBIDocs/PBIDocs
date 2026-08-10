@@ -1,8 +1,158 @@
-﻿---
+---
 title: "Slowly Changing Dimensions"
-description: Power BI documentation.
+description: How to handle dimension attributes that change over time in a Power BI model, using Type 1 and Type 2 slowly changing dimension patterns.
 ---
 
-# Dimension Tables
+# Slowly Changing Dimensions
 
-Dimension tables describe business entities.
+A slowly changing dimension (SCD) is a dimension whose attributes change occasionally rather than never — a customer moves region, a product gets reassigned to a new category, an employee changes department.
+
+```text
+DimCustomer
+CustomerKey | CustomerName | Region
+1001        | Alice Smith  | West
+```
+
+The question an SCD strategy answers: when that row changes, should the history behind it change too?
+
+---
+
+## Type 0: Fixed, No Changes
+
+The attribute never changes after the row is created — a date of birth, an original signup date.
+
+```text
+No updates. The value written once stays as-is forever.
+```
+
+No special handling is needed; this is the default for anything that genuinely can't change.
+
+---
+
+## Type 1: Overwrite
+
+The old value is simply replaced with the new one, and history is not preserved.
+
+```text
+Before:                     After Alice moves to East:
+CustomerKey | Region        CustomerKey | Region
+1001        | West          1001        | East
+```
+
+Every past and future report using this dimension now shows Alice in the East, even for sales that happened while she was in the West.
+
+```text
+FactSales (unchanged)
+     |
+     | joins to
+     |
+DimCustomer[CustomerKey] = 1001, Region = East (always, even for old sales)
+```
+
+Type 1 is simple and appropriate when historical accuracy for that specific attribute doesn't matter — correcting a misspelled name, for example.
+
+---
+
+## Type 2: Preserve History with New Rows
+
+Instead of overwriting the row, a new row is added, and the old row is marked as no longer current.
+
+```text
+CustomerKey | CustomerName | Region | EffectiveDate | ExpiryDate | IsCurrent
+1001        | Alice Smith  | West   | 2020-01-01    | 2024-06-01 | No
+1002        | Alice Smith  | East   | 2024-06-01    | (null)     | Yes
+```
+
+Two structural changes make this work:
+
+- A **surrogate key** (`CustomerKey`) that's independent of the business key (Alice's real-world identity), so the same person can have multiple dimension rows.
+- **Effective/expiry dates** (or an `IsCurrent` flag) marking which row was valid at any point in time.
+
+```text
+FactSales (DateKey, CustomerKey)
+     |
+     | each historical sale references
+     |
+the CustomerKey that was current on the sale's date
+```
+
+A sale made in 2022 references `CustomerKey = 1001` (West), and a sale made in 2025 references `CustomerKey = 1002` (East) — history stays accurate to how things were at the time.
+
+---
+
+## Type 3: Track Limited History in Columns
+
+Rather than adding rows, a Type 3 dimension adds a column to hold the previous value.
+
+```text
+CustomerKey | Region | PreviousRegion
+1001        | East   | West
+```
+
+This only tracks one prior state, and is used far less often than Type 1 or Type 2 — mostly when a single "what was it before" comparison is enough, and full history isn't needed.
+
+---
+
+## Choosing a Type
+
+```text
+Does the attribute's history matter for reporting?
+        |
+        +-- No  -> Type 1 (overwrite)
+        |
+        +-- Yes -> Type 2 (new row per change)
+                     |
+                     +-- Only need the immediately prior value? -> Type 3
+```
+
+Most enterprise models use Type 1 for corrections and low-impact attributes, and Type 2 for anything that affects how past transactions should be grouped or filtered — like sales territory or customer segment.
+
+---
+
+## Implementing Type 2 in Power Query
+
+Detecting a changed row typically means comparing the incoming source row against the current dimension row, and inserting a new row — with a new surrogate key and updated effective date — whenever a tracked attribute differs. This logic usually lives in the ETL/Power Query layer, not in DAX. DAX consumes the resulting historized table; it doesn't create the history.
+
+---
+
+## Best Practices
+
+- Use a surrogate key, not the business key, whenever a dimension needs Type 2 history — the business key alone can't represent "this customer, but as they were before."
+- Only apply Type 2 to attributes where historical accuracy actually matters for reporting; applying it to every attribute bloats the dimension table with rows that don't add analytical value.
+- Store effective and expiry dates (or a clear `IsCurrent` flag) so "what was true on this date" can always be answered.
+- Keep the fact table's foreign key pointing at the surrogate key that was current when the transaction happened, not the current row.
+
+---
+
+## Common Mistakes
+
+### Using Type 1 When History Matters
+
+Overwriting a region or segment attribute that reports are sliced by silently rewrites history — a customer who moved regions last month now appears to have always been in the new region.
+
+### Using the Business Key Instead of a Surrogate Key
+
+Without a surrogate key, there's no way to have two rows represent "the same customer, at two different points in time."
+
+### Applying Type 2 to Everything
+
+Tracking full history for attributes nobody analyzes historically, like a phone number, just grows the dimension table and adds unnecessary complexity.
+
+---
+
+## Slowly Changing Dimension Checklist
+
+- Each attribute has a deliberate choice of Type 0, 1, 2, or 3 — not a default applied blindly.
+- Type 2 dimensions use a surrogate key, separate from the business key.
+- Type 2 dimensions store effective/expiry dates or an `IsCurrent` flag.
+- Fact tables reference the surrogate key that was current at the time of the transaction.
+
+---
+
+## Next Steps
+
+Continue learning Power BI data modeling:
+
+- [Dimension Tables](/docs/modeling/dimension-tables)
+- [Fact Tables](/docs/modeling/fact-tables)
+- [Relationships](/docs/modeling/relationships)
