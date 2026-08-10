@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation';
 import { DocsBody, DocsDescription, DocsTitle } from 'fumadocs-ui/layouts/docs/page';
 import { getMDXComponents } from '@/components/mdx';
 import { getBlogPost, getBlogPosts } from '@/lib/blog-source';
+import { BlogToc } from '@/components/blog-toc';
 
 function formatDate(date: string): string {
   return new Date(`${date}T00:00:00Z`).toLocaleDateString('en-US', {
@@ -30,7 +31,7 @@ export default async function BlogPostPage(props: { params: Promise<{ slug: stri
         ← Back to Blog
       </Link>
 
-      <div className="mt-10 flex flex-col gap-10 lg:flex-row lg:items-start">
+      <div className="mt-10 flex flex-col gap-10 lg:flex-row">
         <article className="min-w-0 max-w-3xl flex-1">
           <div className="mb-10 border-b border-fd-border pb-6">
             <DocsTitle>{post.title}</DocsTitle>
@@ -52,19 +53,9 @@ export default async function BlogPostPage(props: { params: Promise<{ slug: stri
 
         {post.toc.length > 0 && (
           <aside className="hidden w-64 shrink-0 lg:block">
-            <nav className="sticky top-24 flex flex-col gap-1.5 border-l border-fd-border text-sm">
-              <p className="mb-2 pl-4 text-sm font-medium text-fd-foreground">On this page</p>
-              {post.toc.map((item) => (
-                <a
-                  key={item.url}
-                  href={item.url}
-                  className="text-fd-muted-foreground transition-colors hover:text-fd-primary"
-                  style={{ paddingLeft: `${(item.depth - 2) * 12 + 16}px` }}
-                >
-                  {item.title}
-                </a>
-              ))}
-            </nav>
+            <div className="sticky top-24">
+              <BlogToc toc={post.toc} />
+            </div>
           </aside>
         )}
       </div>
