@@ -1,0 +1,126 @@
+---
+title: "DAX Time Intelligence Cheat Sheet"
+description: "A fast, scannable reference for the DAX time intelligence functions you'll actually reach for — YTD, prior period, and period-over-period comparisons."
+date: "2026-08-10"
+tags: ["DAX", "Cheat Sheet"]
+---
+
+Quick reference for the time intelligence functions that cover most real report requirements. Every function here assumes a proper marked date table — if `SAMEPERIODLASTYEAR` or `TOTALYTD` are returning wrong or blank results, check that first. See [Time Intelligence](/docs/dax/time-intelligence) for the full explanation of each pattern, and [Date Tables](/docs/modeling/date-tables) for how to set one up correctly.
+
+## Cumulative Totals (YTD / QTD / MTD)
+
+| Function | Returns |
+|---|---|
+| `TOTALYTD(expr, dates)` | Running total from the start of the year to the current date |
+| `TOTALQTD(expr, dates)` | Running total from the start of the quarter |
+| `TOTALMTD(expr, dates)` | Running total from the start of the month |
+
+```dax lineNumbers
+Sales YTD =
+TOTALYTD([Total Sales], DimDate[Date])
+```
+
+All three accept an optional fiscal year-end date argument for non-calendar fiscal years:
+
+```dax lineNumbers
+Sales YTD (Fiscal) =
+TOTALYTD([Total Sales], DimDate[Date], "06/30")
+```
+
+## Prior Period Comparisons
+
+| Function | Returns |
+|---|---|
+| `SAMEPERIODLASTYEAR(dates)` | The same date range, shifted back exactly one year |
+| `DATEADD(dates, n, interval)` | The date range shifted by `n` of the given interval (`YEAR`, `QUARTER`, `MONTH`, `DAY`) |
+| `PARALLELPERIOD(dates, n, interval)` | Like `DATEADD`, but returns the *entire* period rather than a day-aligned shift |
+
+```dax lineNumbers
+Sales LY =
+CALCULATE(
+    [Total Sales],
+    SAMEPERIODLASTYEAR(DimDate[Date])
+)
+```
+
+```dax lineNumbers
+Sales Prior Month =
+CALCULATE(
+    [Total Sales],
+    DATEADD(DimDate[Date], -1, MONTH)
+)
+```
+
+`DATEADD` is the more general-purpose tool — `SAMEPERIODLASTYEAR` is really just `DATEADD(dates, -1, YEAR)` with a clearer name.
+
+## Growth and Variance
+
+These aren't separate functions — they're the standard pattern built from `CALCULATE` + a prior-period function + `DIVIDE`:
+
+```dax lineNumbers
+Sales YoY % =
+VAR CurrentSales = [Total Sales]
+VAR PriorSales =
+    CALCULATE([Total Sales], SAMEPERIODLASTYEAR(DimDate[Date]))
+RETURN
+    DIVIDE(CurrentSales - PriorSales, PriorSales)
+```
+
+Always use `DIVIDE()` here, not `/` — it returns blank instead of an error when the prior period has no sales.
+
+## First and Last Dates in a Period
+
+| Function | Returns |
+|---|---|
+| `FIRSTDATE(dates)` | The earliest date in the current filter context |
+| `LASTDATE(dates)` | The latest date in the current filter context |
+| `STARTOFMONTH(dates)` / `ENDOFMONTH(dates)` | The first/last date of the month containing the current context |
+| `STARTOFYEAR(dates)` / `ENDOFYEAR(dates)` | The first/last date of the year containing the current context |
+
+```dax lineNumbers
+Ending Balance =
+CALCULATE(
+    [Account Balance],
+    LASTDATE(DimDate[Date])
+)
+```
+
+Common for "point in time" measures like inventory or account balances, where summing across a period is wrong and only the value on the last day of the period is meaningful.
+
+## Date Range Filters Without Time Intelligence Functions
+
+For anything the built-in functions don't cover directly, `FILTER` combined with `ALL` on the date table handles it:
+
+```dax lineNumbers
+Running Total (Custom) =
+CALCULATE(
+    [Total Sales],
+    FILTER(
+        ALL(DimDate[Date]),
+        DimDate[Date] <= MAX(DimDate[Date])
+    )
+)
+```
+
+See [Running Total](/docs/dax-patterns/running-total) for the general version of this pattern, which works over any sortable column, not just dates.
+
+## Quick Decision Table
+
+| Need | Function |
+|---|---|
+| Total so far this year | `TOTALYTD` |
+| Same period, one year back | `SAMEPERIODLASTYEAR` |
+| Same period, N periods back (month/quarter/year) | `DATEADD` |
+| Year-over-year growth % | `DIVIDE` + `SAMEPERIODLASTYEAR` |
+| Value as of a specific point in time | `LASTDATE` |
+| Custom running total | `FILTER(ALL(...), ...)` |
+
+## The One Prerequisite: A Real Date Table
+
+Every function above silently misbehaves without a proper date table — one continuous range of dates, marked as a date table in the model, related to every fact table that needs time intelligence. See [Date Tables](/docs/modeling/date-tables) if any of these functions are returning blank or obviously wrong results; the cause is almost always the date table setup, not the function call itself.
+
+## Next Steps
+
+- [Time Intelligence](/docs/dax/time-intelligence)
+- [Date Tables](/docs/modeling/date-tables)
+- [Running Total](/docs/dax-patterns/running-total)

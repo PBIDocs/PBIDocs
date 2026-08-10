@@ -1,0 +1,130 @@
+---
+title: "How to Fix a Circular Dependency Error in DAX"
+description: "\"A circular dependency was detected\" usually comes from a calculated column, not a measure. Here's how to find the cycle and break it."
+date: "2026-08-10"
+tags: ["DAX", "Troubleshooting"]
+---
+
+If Power BI just told you *"A circular dependency was detected"*, the fix is almost always the same shape: something you built (usually a calculated column) references itself, either directly or through a chain of other calculated columns and relationships that loop back around.
+
+```text
+"A circular dependency was detected:
+Table[ColumnA], Table[ColumnB], Table[ColumnA]."
+```
+
+Measures almost never cause this — a measure is only evaluated when queried, and its "self-reference" (if any) happens across a filter context change, not a literal loop. Calculated columns are the usual suspect, because they're evaluated row by row, once, at refresh time, and DAX needs to resolve a strict evaluation order to do that.
+
+## The Simplest Case: Direct Self-Reference
+
+```dax lineNumbers
+Margin =
+FactSales[Margin] * 1.1
+```
+
+This is the most obvious version — a calculated column referencing its own column name inside its own definition. There's no order DAX could evaluate this in that doesn't require the value before it's computed.
+
+**Fix:** reference the underlying columns the calculation actually needs, not the column being defined.
+
+```dax lineNumbers
+Margin =
+FactSales[SalesAmount] - FactSales[Cost]
+```
+
+## The Less Obvious Case: A Loop Through Other Columns
+
+This is the version that actually confuses people, because no single line looks wrong on its own.
+
+```dax lineNumbers
+-- ColumnA
+ColumnA =
+FactSales[ColumnB] * 2
+
+-- ColumnB
+ColumnB =
+FactSales[ColumnA] + 1
+```
+
+```text
+ColumnA depends on ColumnB
+      |
+ColumnB depends on ColumnA
+      |
+      back to ColumnA -> cycle
+```
+
+Neither column can be computed first, because each one needs the other to already exist. DAX detects this at design time and refuses to build the model rather than guessing at an order.
+
+**Fix:** figure out which value is actually the source of truth, and have the other one derive from that — not from each other.
+
+```dax lineNumbers
+-- ColumnA (the real source calculation)
+ColumnA =
+FactSales[Quantity] * FactSales[UnitPrice]
+
+-- ColumnB (derives from ColumnA, not the reverse)
+ColumnB =
+FactSales[ColumnA] + 1
+```
+
+## A Loop Through a Relationship
+
+The same problem can happen indirectly, through a relationship rather than a direct column reference — a calculated column on `FactSales` uses `RELATED()` to pull from `DimProduct`, and a calculated column on `DimProduct` uses `RELATEDTABLE()` to pull something back from `FactSales` that depends on the first column.
+
+```text
+FactSales[ProductMargin]
+      |
+      | RELATED() reads DimProduct[TargetMargin]
+      |
+DimProduct[TargetMargin]
+      |
+      | RELATEDTABLE() reads FactSales[ProductMargin]
+      |
+      back to FactSales[ProductMargin] -> cycle
+```
+
+**Fix:** the same principle applies — one side needs to be the actual source, computed from raw data, and the other side reads from it. It can't be circular in both directions. See [RELATED & RELATEDTABLE](/docs/dax/related) for how these functions cross relationships.
+
+## Why This Doesn't Happen With Measures
+
+A measure is evaluated on demand, inside whatever filter context a visual or another measure hands it — there's no fixed "column order" to resolve ahead of time the way a calculated column needs.
+
+```text
+Calculated column: evaluated once per row, at refresh, in a fixed order
+Measure:           evaluated per query, inside a filter context, no fixed order needed
+```
+
+If a calculated column's logic doesn't genuinely need to be a column — if it's only ever used inside a visual, not as a filter or relationship key — it's usually simpler and safer as a measure instead. See [Calculated Columns](/docs/dax/calculated-columns) for when a column is the right choice versus when a measure is.
+
+## How to Actually Find the Cycle
+
+Power BI's error message names the columns involved, but in a wider model it helps to trace it manually:
+
+1. Open each calculated column named in the error and list what it references.
+2. Draw the dependency as an arrow: `A -> whatever A reads`.
+3. Follow the arrows. If they loop back to where you started, that's the cycle.
+
+```text
+Margin -> Cost -> AdjustedMargin -> Margin   <- found it
+```
+
+Once the cycle is visible, break it at whichever link is actually redundant — usually the one that "shouldn't" have depended on the others in the first place.
+
+## Common Mistakes
+
+### Adding a "Correction" Column That References the Original
+
+A common way to introduce this by accident: building `ColumnA`, then later adding `ColumnA Adjusted` that references `ColumnA`, and then going back to tweak `ColumnA` to account for the adjustment — closing the loop without meaning to.
+
+### Not Realizing RELATED/RELATEDTABLE Can Create a Cycle
+
+Because the two calculated columns live on different tables, it's easy not to notice they're circularly dependent through the relationship between them, since neither one *looks* self-referential in isolation.
+
+### Reaching for a Calculated Column When a Measure Would Do
+
+If the value doesn't need to exist as a physical column (for filtering, slicing, or a relationship key), a measure sidesteps this entire class of error — it's never evaluated in a way that requires a fixed dependency order.
+
+## Next Steps
+
+- [Calculated Columns](/docs/dax/calculated-columns)
+- [Measures](/docs/dax/measures)
+- [RELATED & RELATEDTABLE](/docs/dax/related)
