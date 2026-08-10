@@ -1,0 +1,143 @@
+---
+title: "Data Warehouse"
+description: Fabric's T-SQL-first alternative to the Lakehouse, for teams who want a traditional warehousing experience over Delta tables in OneLake.
+---
+
+# Data Warehouse
+
+A Fabric Warehouse gives teams a full T-SQL experience — tables, views, stored procedures, multi-statement transactions — over data that's still stored as Delta tables in OneLake underneath.
+
+```text
+Warehouse
+  |
+  +-- Schemas
+  |     +-- Tables
+  |     +-- Views
+  |     +-- Stored Procedures
+  |
+  all backed by Delta tables in OneLake
+```
+
+Where a Lakehouse is built around notebooks and Files/Tables, a Warehouse is built around the same relational concepts a SQL Server or Synapse dedicated pool user already knows.
+
+---
+
+## A Familiar SQL Surface
+
+A Warehouse supports standard DDL and DML — `CREATE TABLE`, `INSERT`, `UPDATE`, `DELETE`, multi-table transactions, stored procedures — the way a traditional relational warehouse would.
+
+```sql
+CREATE TABLE dbo.FactSales (
+    SalesKey INT,
+    ProductKey INT,
+    Amount DECIMAL(18,2)
+);
+
+INSERT INTO dbo.FactSales
+SELECT SalesKey, ProductKey, Amount
+FROM staging.RawSales
+WHERE Status = 'Completed';
+```
+
+This is the main practical difference from a Lakehouse's SQL analytics endpoint, which is read-only — a Warehouse can be written to directly with T-SQL, not just queried.
+
+---
+
+## Cross-Database Queries
+
+A Warehouse can query across other Warehouses and Lakehouse SQL analytics endpoints in the same workspace, without needing to physically move data between them first.
+
+```text
+Warehouse: Sales
+     |
+     | SELECT ... FROM Inventory.dbo.StockLevels
+     |
+Warehouse: Inventory (separate item, same workspace)
+```
+
+This makes it possible to keep data organized across multiple warehouses or lakehouses by domain, while still writing queries that join across them when needed.
+
+---
+
+## Cloning Tables
+
+Fabric Warehouse supports zero-copy table cloning — creating a new table that points at the same underlying Delta files as the source, instead of physically duplicating the data.
+
+```text
+dbo.FactSales
+     |
+     | CREATE TABLE dbo.FactSales_dev AS CLONE OF dbo.FactSales
+     |
+dbo.FactSales_dev   (same files, new pointer, until either diverges)
+```
+
+This is useful for spinning up a development or testing copy of a large table instantly, without waiting on or paying for a full physical copy.
+
+---
+
+## Lakehouse vs. Warehouse
+
+| Aspect | Lakehouse | Warehouse |
+|---|---|---|
+| Primary interface | Spark notebooks, read-only SQL endpoint | Full read/write T-SQL |
+| Best for | Data engineering, semi-structured data, large-scale transforms | Traditional warehousing, structured schemas, SQL-first teams |
+| Write access | Via Spark/notebooks | Direct via T-SQL (`INSERT`/`UPDATE`/`DELETE`) |
+| Underlying format | Delta tables in OneLake | Delta tables in OneLake |
+
+Both ultimately produce the same Delta table format in OneLake — a Warehouse table and a Lakehouse table look identical to anything reading them afterward, including Power BI.
+
+---
+
+## When to Choose a Warehouse
+
+```text
+Team is SQL-first, wants T-SQL writes and stored procedures -> Warehouse
+Team is Spark/Python-first, needs large-scale transforms      -> Lakehouse
+Need both                                                       -> Both, in the same workspace
+```
+
+It's common for a single workspace to contain both — a Lakehouse for ingesting and Spark-transforming messy source data, and a Warehouse for the SQL-first team building the final, curated schema on top of it.
+
+---
+
+## Best Practices
+
+- Choose Warehouse over Lakehouse when the team's primary skill is T-SQL and the workload benefits from direct writes and stored procedures.
+- Use zero-copy cloning for development and testing copies of large tables, instead of physically duplicating them.
+- Organize warehouses by domain (Sales, Inventory, Finance) and use cross-database queries to join across them, rather than building one enormous warehouse.
+- Remember that Warehouse and Lakehouse tables are both just Delta tables underneath — a report or pipeline reading one doesn't need to know or care which produced it.
+
+---
+
+## Common Mistakes
+
+### Choosing Warehouse or Lakehouse Based on Perceived Prestige, Not Fit
+
+The right choice depends on the team's skills and the workload's needs, not which one sounds more "modern." A SQL-first team forced into Spark notebooks will be slower, not better off.
+
+### Physically Copying Instead of Cloning
+
+Creating a full physical copy of a large table for a dev/test environment wastes storage and time when a zero-copy clone would have done the job instantly.
+
+### Ignoring Cross-Database Query Capability
+
+Building one sprawling warehouse to avoid cross-database joins adds unnecessary complexity — splitting by domain and querying across warehouses is usually cleaner.
+
+---
+
+## Warehouse Checklist
+
+- The choice between Warehouse and Lakehouse matches the team's actual skills, not just habit.
+- Dev/test copies of large tables use zero-copy cloning.
+- Warehouses are organized by domain, with cross-database queries used to join across them.
+- Downstream consumers (Power BI, other pipelines) don't need to know whether a table came from a Warehouse or a Lakehouse.
+
+---
+
+## Next Steps
+
+Continue exploring Microsoft Fabric:
+
+- [Lakehouse](/docs/fabric/lakehouse)
+- [OneLake](/docs/fabric/onelake)
+- [Direct Lake Mode](/docs/fabric/direct-lake)

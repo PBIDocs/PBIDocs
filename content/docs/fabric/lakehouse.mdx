@@ -1,0 +1,150 @@
+---
+title: "Lakehouse"
+description: How a Fabric Lakehouse organizes raw and curated data, and how notebooks transform it into queryable Delta tables.
+---
+
+# Lakehouse
+
+A Lakehouse is a single Fabric item that combines file storage with a SQL query layer, aimed at data engineering work — ingesting raw data, transforming it, and landing clean, structured tables for everything downstream to use.
+
+```text
+Lakehouse
+  |
+  +-- Files    — raw/unstructured storage
+  +-- Tables   — structured Delta tables, SQL-queryable
+  |
+  both backed by OneLake
+```
+
+Unlike a traditional data lake, where "queryable" usually means standing up a separate compute engine, a Lakehouse's Tables area is queryable the moment data lands in it.
+
+---
+
+## Getting Data In
+
+Data typically arrives in a Lakehouse through one of a few paths, depending on the source and how much transformation is needed on the way in.
+
+```text
+Getting data into a Lakehouse
+  |
+  +-- Pipelines       — scheduled, orchestrated copy from a source
+  +-- Dataflows Gen2  — Power Query-based transformation, output lands as a table
+  +-- Notebooks       — Spark code reads a source and writes Delta tables directly
+  +-- Manual upload   — drag-and-drop files into the Files area
+```
+
+See [Data Factory](/docs/fabric/data-factory) for how Pipelines and Dataflows Gen2 fit into this.
+
+---
+
+## Files vs. Tables in Practice
+
+Raw data usually lands in **Files** first, in whatever format the source provides it — CSV, JSON, Parquet, or arbitrary folders of files. A transformation step then reads from Files and writes a cleaned result into **Tables** as a Delta table.
+
+```text
+Files/raw/orders_2024_01.csv
+        |
+        | notebook or dataflow reads, cleans, types columns
+        |
+Tables/dbo/FactOrders   (Delta table)
+```
+
+Only what's in Tables is queryable through the SQL analytics endpoint or readable by Direct Lake — Files-area content needs to be processed into a Delta table before Power BI or T-SQL can use it directly.
+
+---
+
+## Notebooks and Spark
+
+A Lakehouse's primary transformation tool is the notebook: cells of PySpark, Spark SQL, or Scala that run against a Spark compute session attached to the workspace.
+
+```python
+df = spark.read.format("csv").option("header", "true").load("Files/raw/orders_2024_01.csv")
+
+cleaned = df.filter(df.Status == "Completed").withColumnRenamed("Amt", "Amount")
+
+cleaned.write.format("delta").mode("overwrite").save("Tables/FactOrders")
+```
+
+Notebooks are well suited to large-scale or complex transformations — deduplication across millions of rows, joins against multiple large sources, or logic that's easier to express in code than in a visual query editor.
+
+---
+
+## The SQL Analytics Endpoint
+
+Every Lakehouse automatically gets a read-only SQL analytics endpoint, letting the Tables area be queried with standard T-SQL without provisioning anything separately.
+
+```text
+Lakehouse/Tables (Delta tables)
+        |
+        | auto-generated, read-only
+        |
+SQL Analytics Endpoint
+        |
+        | queried by
+        |
+T-SQL clients, Power BI (DirectQuery / Direct Lake)
+```
+
+This is what lets a BI tool, or a analyst who only knows SQL, work with Lakehouse data without touching Spark at all.
+
+---
+
+## Medallion Architecture
+
+A common pattern for organizing Lakehouse data is the medallion architecture: three progressively cleaner layers, often built as three separate Lakehouses (or three schemas within one).
+
+```text
+Bronze                    Silver                     Gold
+raw, as-landed      ->    cleaned, deduplicated  ->   business-ready,
+                          typed, conformed             aggregated for reporting
+```
+
+- **Bronze** holds data close to its original form — minimal transformation, kept mainly for traceability and reprocessing.
+- **Silver** applies cleaning, deduplication, and type correction, producing a trustworthy but still fairly granular dataset.
+- **Gold** shapes the data into the star schema or aggregated form a Power BI semantic model actually consumes.
+
+Each layer is a Delta table (or set of tables) in OneLake, and later layers are typically built by notebooks or pipelines reading the layer before them.
+
+---
+
+## Best Practices
+
+- Land raw data in Files, and only promote cleaned, typed data to Tables as Delta tables.
+- Use the medallion pattern (bronze/silver/gold) once transformations get complex enough that a single raw-to-final step becomes hard to debug or reprocess.
+- Prefer notebooks for large-scale or code-heavy transformations, and Dataflows Gen2 for transformations a Power Query-literate team can maintain visually.
+- Query the SQL analytics endpoint for BI and ad hoc analysis instead of pulling data out through Spark, which is slower for simple queries.
+
+---
+
+## Common Mistakes
+
+### Skipping the Bronze Layer for "Simplicity"
+
+Transforming raw data directly into a final table with no intermediate raw copy makes it much harder to reprocess history when a transformation bug is found later.
+
+### Using Notebooks for Everything
+
+Spark notebooks are powerful, but a Power Query-based Dataflow Gen2 is often easier for the wider team to read and maintain when the transformation itself is simple.
+
+### Querying Files Directly Instead of Tables
+
+Files-area content isn't optimized for querying — always transform into a proper Delta table in Tables before treating the data as something reports should consume.
+
+---
+
+## Lakehouse Checklist
+
+- Raw data lands in Files before being transformed into Tables.
+- Transformation approach (notebook vs. Dataflow Gen2) matches the complexity of the logic and the skill set of who maintains it.
+- Final, report-ready tables exist in a clearly identifiable "gold" layer.
+- The SQL analytics endpoint, not raw Spark queries, is the entry point for BI tools.
+
+---
+
+## Next Steps
+
+Continue exploring Microsoft Fabric:
+
+- [OneLake](/docs/fabric/onelake)
+- [Data Warehouse](/docs/fabric/data-warehouse)
+- [Data Factory](/docs/fabric/data-factory)

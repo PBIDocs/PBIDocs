@@ -1,0 +1,174 @@
+---
+title: "OneLake"
+description: How OneLake organizes Fabric's data as one shared lake — Files vs. Tables, shortcuts, and the security model behind it.
+---
+
+# OneLake
+
+OneLake is the storage layer every Fabric workload reads and writes to. Every tenant gets exactly one OneLake, automatically, with no separate provisioning step — it's there the moment a Fabric workspace exists.
+
+```text
+Tenant
+  |
+  +-- OneLake (one per tenant, automatic)
+        |
+        +-- Workspace A
+        |     +-- Lakehouse -> writes Delta tables
+        |     +-- Warehouse -> writes Delta tables
+        |
+        +-- Workspace B
+              +-- Lakehouse -> writes Delta tables
+```
+
+Every workspace gets its own area inside that single OneLake, and every Fabric item that stores data — Lakehouse, Warehouse, KQL Database — writes into it using the open Delta Lake format.
+
+---
+
+## One Copy of Data
+
+OneLake's core idea, sometimes called "OneCopy," is that a table only needs to exist once. A Lakehouse produces a Delta table; a Warehouse can query that same table; a Power BI semantic model can read it directly — without any of them making their own copy first.
+
+```text
+Lakehouse writes DimProduct (Delta table)
+        |
+        | same file, no copy
+        |
+Warehouse queries DimProduct
+        |
+        | same file, no copy
+        |
+Power BI (Direct Lake) reads DimProduct
+```
+
+This is the structural reason Fabric feels different from stitching together separate products: the data doesn't move between them, only compute does.
+
+---
+
+## Files vs. Tables
+
+Every Lakehouse (and by extension, its slice of OneLake) is split into two areas.
+
+```text
+Lakehouse
+  |
+  +-- Files    — unstructured/raw storage: CSV, JSON, images, arbitrary folders
+  |
+  +-- Tables   — structured storage: Delta tables only, queryable with SQL
+```
+
+**Files** behaves like a general-purpose file system — anything can land there, in any format, in any folder structure. **Tables** is more constrained: everything in it is a Delta table, which is what makes it queryable from the SQL analytics endpoint, from Spark, and from Power BI.
+
+A typical flow lands raw data in Files first, then a transformation step (a notebook, a pipeline, a dataflow) writes a cleaned Delta table into Tables.
+
+```text
+Raw file lands in Files (e.g. Files/raw/sales_2024.csv)
+        |
+        | transform (notebook, dataflow, pipeline)
+        |
+Delta table written to Tables (e.g. Tables/dbo/FactSales)
+```
+
+---
+
+## Shortcuts: Referencing Data Without Copying It
+
+A **shortcut** is a pointer inside OneLake to data that physically lives somewhere else — another OneLake location, Azure Data Lake Storage Gen2, or an S3-compatible source — without copying it.
+
+```text
+Lakehouse/Tables/FactSales (shortcut)
+        |
+        | points to, doesn't copy
+        |
+Azure Data Lake Storage Gen2: /raw/sales/
+```
+
+Querying through a shortcut reads the data live from wherever it actually sits. This is what lets a Lakehouse reference a Warehouse's tables, or a Fabric workspace reference data in an existing ADLS Gen2 account, without an ingestion job just to get a copy into OneLake first.
+
+```text
+Common shortcut targets
+  |
+  +-- Another OneLake location (cross-workspace)
+  +-- Azure Data Lake Storage Gen2
+  +-- Amazon S3 / S3-compatible storage
+  +-- Google Cloud Storage
+```
+
+---
+
+## OneLake Security
+
+Access to OneLake data follows the same permission model as the Fabric item it belongs to — a user with access to a Lakehouse has the corresponding access to its Files and Tables in OneLake, without a separate storage-level permission to manage.
+
+```text
+Workspace role (Admin/Member/Contributor/Viewer)
+        |
+        | grants access to
+        |
+Items in the workspace (Lakehouse, Warehouse, ...)
+        |
+        | which grants access to
+        |
+Their data in OneLake
+```
+
+For finer-grained control than item-level access allows, OneLake data access roles can scope permissions down to specific folders or tables within a single Lakehouse, similar to row-level security but for folder/file access rather than rows.
+
+---
+
+## OneLake File Explorer
+
+OneLake also exposes itself as a mapped drive on Windows through the OneLake file explorer, letting Files-area content be browsed and edited with familiar desktop tools rather than only through the Fabric portal.
+
+```text
+File Explorer (Windows)
+     |
+     | OneLake mapped as a drive
+     |
+Tenant > Workspace > Lakehouse > Files
+```
+
+This is convenient for ad hoc file drops or inspection, though production data movement should still go through a pipeline, dataflow, or notebook rather than manual drag-and-drop.
+
+---
+
+## Best Practices
+
+- Prefer a shortcut over copying data into OneLake whenever the source already lives somewhere Fabric can reference — ADLS Gen2, S3, or another workspace.
+- Keep raw, unprocessed data in Files, and only promote cleaned, structured output to Tables as Delta tables.
+- Use OneLake data access roles when different teams need different visibility into the same Lakehouse, instead of splitting one Lakehouse into several just for permission boundaries.
+- Treat OneLake File Explorer as a convenience for browsing and manual work, not as the primary way production data gets loaded.
+
+---
+
+## Common Mistakes
+
+### Copying Data That Could Have Been Shortcut
+
+Ingesting a full copy of data that already lives in ADLS Gen2 duplicates storage and adds a sync problem that a shortcut would have avoided entirely.
+
+### Treating Files Like Tables
+
+Landing structured, tabular data only in the Files area — say, as CSV — means it can't be queried with SQL or read by Direct Lake the way a proper Delta table in Tables can.
+
+### Assuming Workspace Access Alone Is Fine-Grained Enough
+
+For data with department- or team-specific sensitivity within a single Lakehouse, workspace-level roles alone are too coarse — that's what OneLake data access roles exist for.
+
+---
+
+## OneLake Checklist
+
+- Data available from an existing external source uses a shortcut, not a full copy.
+- Structured output lands as Delta tables in Tables, not as loose files.
+- Sensitive subsets of a Lakehouse use OneLake data access roles where workspace-level access is too broad.
+- Production data loading goes through a pipeline, dataflow, or notebook — not manual OneLake File Explorer edits.
+
+---
+
+## Next Steps
+
+Continue exploring Microsoft Fabric:
+
+- [Lakehouse](/docs/fabric/lakehouse)
+- [Direct Lake Mode](/docs/fabric/direct-lake)
+- [Introduction](/docs/fabric/introduction)
