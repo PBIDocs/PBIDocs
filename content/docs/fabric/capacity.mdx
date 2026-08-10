@@ -1,0 +1,160 @@
+---
+title: "Fabric Capacity & Cost Management"
+description: How Fabric capacity SKUs, Capacity Units, and smoothing work, and how to manage cost as workloads grow.
+---
+
+# Fabric Capacity & Cost Management
+
+Every Fabric workload — Lakehouse Spark jobs, Warehouse queries, Direct Lake framing, Power BI report queries — draws from a shared pool of compute called a capacity, sized by SKU and measured in Capacity Units (CUs).
+
+```text
+Fabric Capacity (e.g. F64)
+        |
+        +-- Workspace A
+        |     +-- Lakehouse Spark job    -> consumes CUs
+        |     +-- Power BI report query  -> consumes CUs
+        |
+        +-- Workspace B
+              +-- Warehouse query        -> consumes CUs
+              +-- Direct Lake framing    -> consumes CUs
+```
+
+Unlike Power BI Pro, which licenses individual users, capacity is a shared resource that every workload assigned to it competes for.
+
+---
+
+## Capacity SKUs
+
+Fabric capacity comes in SKUs from F2 up through F2048, each roughly double the Capacity Units of the one before it.
+
+```text
+F2 -> F4 -> F8 -> F16 -> F32 -> F64 -> F128 -> ... -> F2048
+```
+
+F64 is commonly treated as roughly equivalent to the old Power BI Premium P1 SKU in terms of capacity, which is a useful anchor point when estimating what size a workload that previously ran on Premium would need on Fabric.
+
+---
+
+## Smoothing and Bursting
+
+Fabric doesn't charge every operation at face value the instant it runs. Background operations (like scheduled refreshes or Spark jobs) are smoothed over a 24-hour window, and interactive operations get short-term burst capacity beyond the SKU's baseline.
+
+```text
+Background operation (e.g. a large refresh)
+        |
+        | cost smoothed across 24 hours, not charged all at once
+        |
+Interactive operation (e.g. a user opening a report)
+        |
+        | can briefly burst above baseline capacity for responsiveness
+```
+
+This is why a single heavy job doesn't necessarily throttle the capacity outright — but sustained, consistent overuse across many operations will.
+
+---
+
+## Throttling
+
+When a capacity is consistently over its available Capacity Units, Fabric throttles it — starting with delaying background operations, and escalating to rejecting interactive requests if the overage continues.
+
+```text
+Capacity usage over time
+        |
+        | briefly over -> smoothed, minimal impact
+        |
+        | consistently over -> background operations delayed
+        |
+        | still over -> interactive operations rejected
+```
+
+Throttling is the practical signal that a capacity is undersized for its assigned workloads, not just a temporary spike worth ignoring.
+
+---
+
+## Autoscale and Pausing
+
+Capacity doesn't have to run at a fixed size all the time.
+
+```text
+Autoscale  — automatically increases capacity size temporarily during sustained overage
+Pause      — stops billing entirely for a capacity that isn't in active use
+```
+
+Pausing a development or test capacity outside of working hours, and relying on autoscale for a production capacity with unpredictable peak load, are both common ways to avoid paying for headroom that sits idle most of the time.
+
+---
+
+## Migrating from Power BI Premium
+
+Power BI Premium (P SKUs) is being phased out in favor of Fabric capacity (F SKUs). Existing Premium capacities can be migrated to an equivalent Fabric capacity from the admin portal, generally without needing to rebuild workspaces or content.
+
+```text
+Power BI Premium (P1, P2, P3, ...)
+        |
+        | admin portal migration
+        |
+Fabric Capacity (F64, F128, F256, ...)
+```
+
+Workspaces assigned to the old Premium capacity carry over to the new Fabric capacity, keeping the same reports, datasets, and permissions in place.
+
+---
+
+## Monitoring Usage
+
+The Fabric Capacity Metrics app, installed from the admin portal, shows Capacity Unit consumption broken out by workspace, item, and operation type (background vs. interactive), which is the main tool for understanding what's actually driving a capacity's usage.
+
+```text
+Fabric Capacity Metrics app
+        |
+        +-- Usage by workspace
+        +-- Usage by item (which Lakehouse, which report)
+        +-- Background vs. interactive breakdown
+        +-- Throttling history
+```
+
+Reviewing this regularly is what turns "the capacity feels slow" into a specific, actionable finding — a particular Spark job, a particular report, or a particular refresh schedule.
+
+---
+
+## Best Practices
+
+- Size capacity based on actual measured usage from the Capacity Metrics app, not a guess extrapolated from Premium sizing alone.
+- Pause non-production capacities outside of active working hours.
+- Use autoscale for production capacities with unpredictable peaks, rather than permanently over-provisioning a fixed size to cover worst case.
+- Review the Capacity Metrics app regularly, not just when something is already noticeably slow.
+
+---
+
+## Common Mistakes
+
+### Sizing Capacity Once and Never Revisiting It
+
+Workloads grow as more teams and reports land on a capacity. A SKU sized correctly at launch can become undersized months later without anyone noticing until throttling starts.
+
+### Leaving Dev/Test Capacity Running Around the Clock
+
+A development capacity used only during business hours but left running 24/7 pays for idle time that pausing would have avoided entirely.
+
+### Diagnosing Slowness Without the Metrics App
+
+Guessing which workload is causing throttling, instead of checking the Capacity Metrics app's breakdown by workspace and item, wastes time chasing the wrong fix.
+
+---
+
+## Fabric Capacity Checklist
+
+- Capacity size is based on measured usage, reviewed periodically.
+- Non-production capacities are paused when not in active use.
+- Autoscale is enabled for production capacities with unpredictable peak load.
+- The Capacity Metrics app is checked regularly, not only after a slowdown is reported.
+
+---
+
+## Next Steps
+
+Continue exploring Microsoft Fabric:
+
+- [Introduction](/docs/fabric/introduction)
+- [Direct Lake Mode](/docs/fabric/direct-lake)
+- [Workspaces](/docs/power-bi-service/workspaces)

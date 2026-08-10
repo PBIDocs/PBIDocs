@@ -1,4 +1,12 @@
 {
   "title": "Microsoft Fabric",
-  "pages": ["introduction"]
+  "pages": [
+    "introduction",
+    "onelake",
+    "lakehouse",
+    "data-warehouse",
+    "data-factory",
+    "direct-lake",
+    "capacity"
+  ]
 }

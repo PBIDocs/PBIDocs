@@ -1,0 +1,145 @@
+---
+title: "Direct Lake Mode"
+description: How Direct Lake reads OneLake's Delta tables directly into Power BI's engine, when it falls back to DirectQuery, and how to keep it fast.
+---
+
+# Direct Lake Mode
+
+Direct Lake is a Power BI storage mode built specifically for OneLake. It reads Delta tables directly from OneLake into Power BI's query engine, aiming for Import-like query speed without a traditional import step.
+
+```text
+Import:       Source -> copied into Power BI on refresh -> fast, but stale until refresh
+DirectQuery:  Source -> queried live every time -> fresh, but slower
+Direct Lake:  OneLake Delta tables -> read directly, no copy step -> fast and current
+```
+
+See [DirectQuery vs. Import](/docs/modeling/storage-modes) for how the two older modes work — Direct Lake is a third option that sits alongside them, available only for OneLake-backed data.
+
+---
+
+## Framing and Transcoding
+
+Direct Lake doesn't import data ahead of time. Instead, when a semantic model is opened, it goes through a process called **framing**: reading the Delta table's metadata and mapping its Parquet files into structures the VertiPaq engine can query, without copying the actual column values yet.
+
+```text
+Delta table (Parquet files in OneLake)
+        |
+        | framing: read metadata, map row groups
+        |
+Semantic model "knows about" the data, hasn't loaded values yet
+        |
+        | a query touches a column
+        |
+That column's data is transcoded into memory on demand
+```
+
+Column data is only paged into memory the first time a query actually needs it — this is why Direct Lake can open instantly even against a very large table, while still returning fast, in-memory-speed results once columns are "warmed up."
+
+---
+
+## When Direct Lake Falls Back to DirectQuery
+
+Certain conditions cause a query, or an entire table, to silently fall back to DirectQuery-style behavior instead of using the fast in-memory path.
+
+```text
+Direct Lake query
+       |
+       | can it be answered from the framed, in-memory structures?
+       |
+       +-- Yes -> fast, VertiPaq-speed answer
+       |
+       +-- No  -> falls back to querying OneLake directly (DirectQuery-like)
+```
+
+Common triggers for fallback:
+
+- The Delta table has too many row groups (heavily fragmented Parquet files that haven't been optimized).
+- The model or query uses a feature Direct Lake doesn't support at the storage layer.
+- Fabric capacity is throttled or has hit a guardrail limiting Direct Lake operations.
+
+Fallback doesn't produce an error — the report still returns a result, just slower, which makes it easy to miss unless it's actively monitored.
+
+---
+
+## Reframing Instead of Refresh
+
+Direct Lake models don't need a traditional data refresh, since there's no copy to refresh — but they do need **reframing** to pick up new data written to the underlying Delta tables.
+
+```text
+New data written to Delta table (by a pipeline, notebook, or dataflow)
+        |
+        | model still shows old framing until...
+        |
+Reframing occurs (scheduled, or triggered manually / via API)
+        |
+        | model now reflects the new data
+```
+
+Reframing can be scheduled like a refresh, or triggered on demand — but until it happens, the semantic model keeps showing data as of its last framing, even though the underlying table has already changed.
+
+---
+
+## Table Maintenance Matters
+
+Because framing works against a Delta table's actual Parquet file layout, how that table is maintained directly affects Direct Lake performance.
+
+```text
+Well-maintained table:                 Fragmented table:
+Few, well-sized Parquet files    vs.   Many small Parquet files
+        |                                      |
+Fast framing, low fallback risk        Slower framing, higher fallback risk
+```
+
+Running `OPTIMIZE` (and periodically `VACUUM`) on Delta tables from a Lakehouse notebook compacts small files into larger ones, keeping row group counts low and reducing the odds of a query falling back to DirectQuery.
+
+---
+
+## Limitations
+
+- Calculated columns and calculated tables aren't supported directly on Direct Lake tables — they typically require converting the table (or the specific column) to Import.
+- Some DAX functions and modeling features carry restrictions similar to DirectQuery, since a fallback effectively behaves like DirectQuery against OneLake.
+- Row-level security is supported, but adds overhead worth testing specifically, since it changes what has to be evaluated per query rather than answered straight from the framed structures.
+
+---
+
+## Best Practices
+
+- Run `OPTIMIZE` regularly on Delta tables feeding a Direct Lake model, to keep row group counts low.
+- Schedule reframing to run shortly after the pipelines or notebooks that update the underlying tables finish, the same way a dataset refresh would be scheduled after a dataflow.
+- Monitor for fallback to DirectQuery using the Fabric Capacity Metrics app rather than assuming Direct Lake speed is guaranteed.
+- Reserve calculated columns and calculated tables for cases that genuinely need them, since they push a table (or column) out of pure Direct Lake behavior.
+
+---
+
+## Common Mistakes
+
+### Assuming Direct Lake Always Performs Like Import
+
+Direct Lake is fast when the underlying tables are well-maintained, but a fragmented or poorly-optimized Delta table can silently fall back to DirectQuery-level performance with no obvious error.
+
+### Forgetting to Reframe After Loading New Data
+
+A pipeline that successfully loads new data doesn't automatically update what a Direct Lake model shows — without a reframe, the report keeps showing the previous framing.
+
+### Skipping Delta Table Maintenance
+
+Treating Delta tables as "write once and forget" lets small file fragmentation build up over time, gradually degrading Direct Lake performance until it's investigated.
+
+---
+
+## Direct Lake Checklist
+
+- Underlying Delta tables are regularly optimized (`OPTIMIZE`, periodic `VACUUM`).
+- Reframing is scheduled to run after the data pipeline that updates the source tables.
+- Fallback to DirectQuery is monitored, not assumed away.
+- Calculated columns/tables are used deliberately, with their effect on Direct Lake behavior understood.
+
+---
+
+## Next Steps
+
+Continue exploring Microsoft Fabric:
+
+- [DirectQuery vs. Import](/docs/modeling/storage-modes)
+- [OneLake](/docs/fabric/onelake)
+- [Lakehouse](/docs/fabric/lakehouse)

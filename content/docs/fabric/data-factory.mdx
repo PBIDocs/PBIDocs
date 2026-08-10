@@ -1,0 +1,136 @@
+---
+title: "Data Factory"
+description: Orchestrating and transforming data in Microsoft Fabric with Pipelines and Dataflows Gen2.
+---
+
+# Data Factory
+
+Data Factory is Fabric's data movement and orchestration workload, built around two complementary tools: Pipelines for scheduling and moving data, and Dataflows Gen2 for Power Query-based transformation that lands directly in OneLake.
+
+```text
+Data Factory
+  |
+  +-- Pipelines       — orchestration: move data, run activities, on a schedule or trigger
+  +-- Dataflows Gen2   — transformation: Power Query logic, output lands as a Delta table
+```
+
+The two are often used together — a pipeline triggers a dataflow as one of its steps, then continues on to whatever depends on that dataflow's output.
+
+---
+
+## Pipelines
+
+A pipeline is a sequence of activities, similar in concept to Azure Data Factory pipelines, that move and orchestrate data across a workflow.
+
+```text
+Pipeline: "Daily Sales Load"
+  |
+  +-- Copy Data activity     — pulls from source system into a Lakehouse
+  +-- Dataflow activity      — runs a Dataflow Gen2 to clean the copied data
+  +-- Notebook activity      — runs a Spark notebook for further transformation
+  +-- Stored Procedure       — calls a Warehouse stored procedure
+```
+
+Activities run in a defined order, with support for branching, conditionals, and parameters — the same orchestration concepts as a traditional ETL tool, built into the Fabric workspace.
+
+---
+
+## Triggers
+
+Pipelines run either on a schedule or in response to an event.
+
+```text
+Trigger types
+  |
+  +-- Scheduled   — e.g. every day at 6:00 AM
+  +-- Event-based — e.g. runs when a file lands in a storage location
+```
+
+Event-based triggers are useful when a source system delivers data irregularly, and waiting for the next scheduled run would introduce unnecessary delay.
+
+---
+
+## Dataflows Gen2
+
+A Dataflow Gen2 uses the same Power Query Online editor as a Power BI dataflow, but with Fabric-native output: instead of landing in a Power BI-only dataset format, its output writes directly to a Lakehouse table or Warehouse table in OneLake.
+
+```text
+Source
+   |
+   | Power Query transformations (same engine as Power BI Desktop)
+   |
+Output destination: a Lakehouse table or Warehouse table
+```
+
+This makes Dataflow Gen2 output immediately usable by anything else reading OneLake — a notebook, a Warehouse query, or a Power BI semantic model — without an extra export step.
+
+---
+
+## Dataflows Gen2 vs. Pipeline Copy Activity
+
+Both can move data from a source into OneLake, but they solve different parts of the problem.
+
+| Aspect | Copy Data Activity (Pipeline) | Dataflow Gen2 |
+|---|---|---|
+| Best for | Fast, large-volume copying with minimal transformation | Transformation-heavy logic (filtering, reshaping, merging) |
+| Editor | Simple source/destination mapping | Full Power Query Editor |
+| Typical use | Landing raw data into Files or a staging table | Producing a cleaned, shaped table ready for reporting |
+
+A common pattern uses a pipeline's Copy activity to land raw data quickly, then a Dataflow Gen2 (or a notebook) to clean and shape it.
+
+---
+
+## How This Differs from Power BI Dataflows (Gen1)
+
+Fabric's Dataflows Gen2 is a successor to the dataflows already available directly in the Power BI Service — see [Dataflows](/docs/power-bi-service/dataflows) for that earlier version. The core Power Query experience is the same; the main differences are where the output lands (OneLake, as a queryable Delta table, rather than a Power BI-only dataset format) and Gen2's tighter integration with Pipelines as an orchestration step.
+
+```text
+Dataflow Gen1 (Power BI Service)     Dataflow Gen2 (Fabric)
+        |                                    |
+Output: Power BI-only              Output: Delta table in OneLake,
+        dataset format                      readable by any Fabric workload
+```
+
+---
+
+## Best Practices
+
+- Use a pipeline's Copy activity for fast bulk movement, and Dataflow Gen2 for the transformation logic itself.
+- Prefer event-based triggers over tight scheduled polling when a source delivers data irregularly.
+- Chain a Dataflow Gen2 as a pipeline activity when both orchestration and transformation are needed in one workflow, rather than running them as disconnected, manually-sequenced pieces.
+- Land Dataflow Gen2 output as a proper Lakehouse or Warehouse table, so downstream consumers can read it without re-running the transformation.
+
+---
+
+## Common Mistakes
+
+### Using Dataflow Gen2 for Simple Bulk Copies
+
+Running a heavy Power Query transformation just to move data unchanged from source to destination is slower than a plain Copy Data activity built for that exact job.
+
+### Ignoring Pipeline Dependencies
+
+Triggering a pipeline before an upstream data source has actually finished landing its data produces a run against incomplete data, with no error to signal it — dependency and timing need to be designed deliberately.
+
+### Confusing Dataflow Gen1 and Gen2
+
+Gen1 dataflows (Power BI Service) and Gen2 dataflows (Fabric) share an editor but have different output destinations and different downstream compatibility — assuming they're interchangeable can lead to building against the wrong version's output.
+
+---
+
+## Data Factory Checklist
+
+- Bulk copying and transformation-heavy logic are split between Copy activities and Dataflow Gen2, not forced into one tool.
+- Triggers match how the source actually delivers data — scheduled for predictable cadences, event-based for irregular arrivals.
+- Pipeline dependencies and run order are explicit, not assumed.
+- Dataflow Gen2 output lands as a queryable table, not left stranded in an intermediate format.
+
+---
+
+## Next Steps
+
+Continue exploring Microsoft Fabric:
+
+- [Lakehouse](/docs/fabric/lakehouse)
+- [Data Warehouse](/docs/fabric/data-warehouse)
+- [Dataflows (Power BI Service)](/docs/power-bi-service/dataflows)
