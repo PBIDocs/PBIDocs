@@ -3,6 +3,7 @@
   "pages": [
     "introduction",
     "editor",
+    "m-language",
     "transformations",
     "merge-queries",
     "query-folding"
