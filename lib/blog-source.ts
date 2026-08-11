@@ -1,7 +1,12 @@
 import { blog } from 'collections/server';
+import { blogImageRoute } from './shared';
 
 function toSlug(path: string): string {
   return path.replace(/\.mdx$/, '');
+}
+
+export function getBlogPostImageUrl(slug: string): string {
+  return `${blogImageRoute}/${slug}/image.png`;
 }
 
 export function getBlogPosts() {

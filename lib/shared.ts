@@ -2,6 +2,7 @@ export const appName = 'PBIDocs';
 export const docsRoute = '/docs';
 export const docsImageRoute = '/og/docs';
 export const docsContentRoute = '/llms.mdx/docs';
+export const blogImageRoute = '/og/blog';
 
 export const gitConfig = {
   user: 'PBIDocs',
