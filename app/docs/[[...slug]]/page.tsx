@@ -13,6 +13,7 @@ import type { Metadata } from 'next';
 import { createRelativeLink } from 'fumadocs-ui/mdx';
 import { gitConfig } from '@/lib/shared';
 import { PageFeedback } from '@/components/page-feedback';
+import { getBreadcrumbItems } from 'fumadocs-core/breadcrumb';
 
 export default async function Page(props: PageProps<'/docs/[[...slug]]'>) {
   const params = await props.params;
@@ -23,6 +24,21 @@ export default async function Page(props: PageProps<'/docs/[[...slug]]'>) {
   const markdownUrl = getPageMarkdownUrl(page).url;
   const issueTitle = encodeURIComponent(`Docs issue: ${page.data.title}`);
   const issueBody = encodeURIComponent(`Page: https://pbidocs.com${page.url}\n\nDescribe the issue:\n`);
+
+  const breadcrumbItems = getBreadcrumbItems(page.url, source.getPageTree(), {
+    includePage: true,
+    includeRoot: { url: '/docs' },
+  });
+  const breadcrumbJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: breadcrumbItems.map((item, index) => ({
+      '@type': 'ListItem',
+      position: index + 1,
+      name: typeof item.name === 'string' ? item.name : String(item.name),
+      ...(item.url ? { item: `https://pbidocs.com${item.url}` } : {}),
+    })),
+  };
 
   return (
     <DocsPage
@@ -40,6 +56,11 @@ export default async function Page(props: PageProps<'/docs/[[...slug]]'>) {
         ),
       }}
     >
+      <script
+        type="application/ld+json"
+        // eslint-disable-next-line react/no-danger
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
       <DocsTitle>{page.data.title}</DocsTitle>
       <DocsDescription className="mb-0">{page.data.description}</DocsDescription>
       <div className="flex flex-row gap-2 items-center border-b pb-6">

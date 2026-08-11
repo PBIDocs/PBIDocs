@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
-import { Calendar } from 'lucide-react';
+import { Calendar, Rss } from 'lucide-react';
 import { getBlogPosts, type BlogPost } from '@/lib/blog-source';
 
 export const metadata: Metadata = {
@@ -55,6 +55,13 @@ export default function BlogIndexPage() {
             Real errors, real causes, real fixes — plus cheat sheets that don&apos;t fit the
             reference docs.
           </p>
+          <a
+            href="/rss.xml"
+            className="mt-4 inline-flex items-center gap-1.5 text-sm text-fd-muted-foreground transition-colors hover:text-fd-primary"
+          >
+            <Rss className="size-3.5" />
+            RSS feed
+          </a>
         </div>
 
         {latest && (

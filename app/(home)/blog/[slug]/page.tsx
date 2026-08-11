@@ -22,8 +22,31 @@ export default async function BlogPostPage(props: { params: Promise<{ slug: stri
 
   const MDX = post.body;
 
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BlogPosting',
+    headline: post.title,
+    description: post.description,
+    datePublished: post.date,
+    dateModified: post.date,
+    url: `https://pbidocs.com/blog/${post.slug}`,
+    image: `https://pbidocs.com${getBlogPostImageUrl(post.slug)}`,
+    keywords: post.tags?.join(', '),
+    author: { '@type': 'Organization', name: 'PBIDocs', url: 'https://pbidocs.com' },
+    publisher: { '@type': 'Organization', name: 'PBIDocs', url: 'https://pbidocs.com' },
+    mainEntityOfPage: {
+      '@type': 'WebPage',
+      '@id': `https://pbidocs.com/blog/${post.slug}`,
+    },
+  };
+
   return (
     <div className="mx-auto max-w-6xl px-6 py-16 sm:py-24">
+      <script
+        type="application/ld+json"
+        // eslint-disable-next-line react/no-danger
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <Link
         href="/blog"
         className="text-sm text-fd-muted-foreground hover:text-fd-foreground transition-colors"
