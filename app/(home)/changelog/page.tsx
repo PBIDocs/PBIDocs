@@ -9,6 +9,66 @@ export const metadata: Metadata = {
 
 const changelog: { date: string; entries: ReactNode[] }[] = [
   {
+    date: '2026-08-11',
+    entries: [
+      <>
+        Added a <Link href="/docs/dax/functions">DAX Function Reference</Link> — a categorized
+        index of common DAX functions, linking to the full explanations where available.
+      </>,
+      <>
+        Launched the <Link href="/blog">Blog</Link> — practical fixes and cheat sheets, starting
+        with{' '}
+        <Link href="/blog/fix-circular-dependency-dax">Fix a Circular Dependency in DAX</Link>,{' '}
+        <Link href="/blog/power-query-expression-error-field-not-found">
+          Power Query&apos;s &quot;field wasn&apos;t found&quot; error
+        </Link>
+        , and a{' '}
+        <Link href="/blog/dax-time-intelligence-cheat-sheet">
+          DAX Time Intelligence Cheat Sheet
+        </Link>
+        .
+      </>,
+    ],
+  },
+  {
+    date: '2026-08-10',
+    entries: [
+      <>
+        Built out the <Link href="/docs/fabric/introduction">Microsoft Fabric</Link> section:{' '}
+        <Link href="/docs/fabric/onelake">OneLake</Link>,{' '}
+        <Link href="/docs/fabric/lakehouse">Lakehouse</Link>,{' '}
+        <Link href="/docs/fabric/data-warehouse">Data Warehouse</Link>,{' '}
+        <Link href="/docs/fabric/data-factory">Data Factory</Link>,{' '}
+        <Link href="/docs/fabric/direct-lake">Direct Lake Mode</Link>, and{' '}
+        <Link href="/docs/fabric/capacity">Fabric Capacity &amp; Cost Management</Link>.
+      </>,
+      <>
+        Added <Link href="/docs/dax/related">RELATED &amp; RELATEDTABLE</Link>,{' '}
+        <Link href="/docs/dax/lookupvalue">LOOKUPVALUE</Link>,{' '}
+        <Link href="/docs/dax/selectedvalue">SELECTEDVALUE</Link>,{' '}
+        <Link href="/docs/dax/switch">SWITCH</Link>, <Link href="/docs/dax/rankx">RANKX</Link>,{' '}
+        <Link href="/docs/dax/topn">TOPN</Link>,{' '}
+        <Link href="/docs/dax/summarize">SUMMARIZE</Link>,{' '}
+        <Link href="/docs/dax/userelationship">USERELATIONSHIP</Link>, and{' '}
+        <Link href="/docs/dax/performance">Performance Optimization</Link>.
+      </>,
+      <>
+        Filled in several placeholder pages that had little or no real content, across{' '}
+        <Link href="/docs/modeling/bridge-tables">Modeling</Link>,{' '}
+        <Link href="/docs/power-query/editor">Power Query</Link>, and{' '}
+        <Link href="/docs/ai-power-bi/dax-with-ai">AI-Assisted Power BI</Link>.
+      </>,
+      <>
+        Added worked <Link href="/docs/power-query/editor">Advanced Editor</Link> examples: error
+        handling with <code>try...otherwise</code>, and what a UI-built merge actually generates.
+      </>,
+      <>
+        Fixed 11 broken internal links and wired two pages that existed but weren&apos;t
+        reachable from navigation back into the site.
+      </>,
+    ],
+  },
+  {
     date: '2026-08-06',
     entries: [
       <>
