@@ -2,6 +2,7 @@
   "title": "DAX",
   "pages": [
     "introduction",
+    "functions",
     "basics",
     "variables",
     "measures",
