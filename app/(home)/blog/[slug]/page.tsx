@@ -3,7 +3,7 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { DocsBody, DocsDescription, DocsTitle } from 'fumadocs-ui/layouts/docs/page';
 import { getMDXComponents } from '@/components/mdx';
-import { getBlogPost, getBlogPosts } from '@/lib/blog-source';
+import { getBlogPost, getBlogPostImageUrl, getBlogPosts } from '@/lib/blog-source';
 import { BlogToc } from '@/components/blog-toc';
 
 function formatDate(date: string): string {
@@ -77,5 +77,10 @@ export async function generateMetadata(props: {
   return {
     title: post.title,
     description: post.description,
+    openGraph: {
+      title: post.title,
+      description: post.description,
+      images: getBlogPostImageUrl(post.slug),
+    },
   };
 }
