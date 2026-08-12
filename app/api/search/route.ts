@@ -1,5 +1,6 @@
 import { source } from '@/lib/source';
 import { getBlogPosts } from '@/lib/blog-source';
+import { getTutorials } from '@/lib/tutorial-source';
 import { createSearchAPI } from 'fumadocs-core/search/server';
 import type { AdvancedIndex } from 'fumadocs-core/search/server';
 
@@ -30,7 +31,19 @@ async function buildIndexes(): Promise<AdvancedIndex[]> {
     })),
   );
 
-  return [...docsIndexes, ...blogIndexes];
+  const tutorialIndexes = await Promise.all(
+    getTutorials().map(async (tutorial) => ({
+      title: tutorial.title,
+      description: tutorial.description,
+      url: `/tutorials/${tutorial.slug}`,
+      id: `/tutorials/${tutorial.slug}`,
+      structuredData: (await resolveStructuredData(
+        tutorial.structuredData,
+      )) as AdvancedIndex['structuredData'],
+    })),
+  );
+
+  return [...docsIndexes, ...blogIndexes, ...tutorialIndexes];
 }
 
 export const { staticGET: GET } = createSearchAPI('advanced', {
