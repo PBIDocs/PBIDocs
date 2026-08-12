@@ -6,6 +6,9 @@ import { getBlogPosts, type BlogPost } from '@/lib/blog-source';
 export const metadata: Metadata = {
   title: 'Blog',
   description: 'Practical fixes, cheat sheets, and deep dives for Power BI, DAX, and Power Query.',
+  alternates: {
+    canonical: '/blog',
+  },
 };
 
 function formatDate(date: string): string {

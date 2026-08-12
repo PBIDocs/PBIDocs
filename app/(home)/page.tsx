@@ -9,6 +9,9 @@ export const metadata: Metadata = {
   },
   description:
     'Learn DAX, Power Query, Data Modeling, Microsoft Fabric, and AI-assisted Power BI development with clear documentation and practical examples.',
+  alternates: {
+    canonical: '/',
+  },
 };
 
 const topics = [
