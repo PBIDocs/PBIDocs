@@ -1,0 +1,353 @@
+---
+title: "Build a Complete Sales Analysis Report"
+description: "An end-to-end Power BI tutorial: clean raw sales data in Power Query, model it as a star schema, write real DAX measures, and lay out a report — using one consistent dataset from start to finish."
+date: "2026-08-12"
+tags: ["Tutorial", "Power Query", "Data Modeling", "DAX"]
+---
+
+Most Power BI content teaches one piece at a time — a DAX function here, a Power Query transformation there. This tutorial builds one thing start to finish: a working sales analysis report, from a messy raw export to a finished set of measures and visuals, using the same dataset the whole way through.
+
+```text
+Raw Sales Export (messy, wide, one flat table)
+        |
+        | Power Query: clean, split, type
+        |
+Star Schema (FactSales, DimProduct, DimCustomer, DimDate)
+        |
+        | DAX: measures
+        |
+Report (KPIs, trend, breakdown by category and region)
+```
+
+No downloadable file — the raw data is small enough to paste directly into Excel or a `.csv` file yourself, which is also a more honest starting point: real sales exports usually arrive exactly this messy.
+
+---
+
+## What You're Building
+
+A one-page sales report for a small bike/outdoor gear retailer, answering four questions a sales manager actually asks:
+
+- What are total sales, and how does that compare to last year?
+- Which categories and regions are driving (or dragging) performance?
+- What does the sales trend look like over time?
+- Who are the top customers?
+
+```text
++------------------------------------------------------------+
+|  Total Sales   |  Orders   |  Avg Order Value  |  YoY %     |
++------------------------------------------------------------+
+|  Sales Trend (line chart, by month)                         |
++------------------------------------------------+-----------+
+|  Sales by Category (bar chart)                  | Top 10    |
+|                                                   | Customers |
+|  Sales by Region (map or bar chart)              | (table)   |
++------------------------------------------------------------+
+```
+
+---
+
+## Step 1: The Raw Data
+
+Real sales exports rarely arrive already shaped for reporting. This one is deliberately realistic: one wide table, inconsistent casing, a text-formatted amount column, and customer/product details repeated on every row instead of split into their own tables.
+
+```text
+OrderID,OrderDate,CustomerName,Region,ProductName,Category,Qty,UnitPrice,Unit Cost
+1001,2024-01-03,Alice Chen,West,Trail Runner Tire,Tires,2,"$45.00","$22.00"
+1002,2024-01-03,Bob Kessler,East,Commuter Helmet,Accessories,1,"$68.00","$31.00"
+1003,2024-01-05,Alice Chen,West,All-Terrain Tire,Tires,1,"$52.00","$26.00"
+1004,2024-01-08,Priya Nair,South,Trail Runner Tire,Tires,3,"$45.00","$22.00"
+1005,2024-01-12,Bob Kessler,East,Repair Kit,Accessories,2,"$18.00","$7.00"
+1006,2024-02-02,Diego Ruiz,West,Commuter Helmet,Accessories,1,"$68.00","$31.00"
+1007,2024-02-14,Priya Nair,South,All-Terrain Tire,Tires,2,"$52.00","$26.00"
+1008,2024-02-20,Alice Chen,West,Bike Lock,Accessories,1,"$35.00","$14.00"
+1009,2025-01-06,Alice Chen,West,Trail Runner Tire,Tires,4,"$45.00","$22.00"
+1010,2025-01-18,Diego Ruiz,West,Repair Kit,Accessories,3,"$18.00","$7.00"
+1011,2025-02-09,Priya Nair,South,Commuter Helmet,Accessories,2,"$68.00","$31.00"
+1012,2025-02-22,Bob Kessler,East,All-Terrain Tire,Tires,1,"$52.00","$26.00"
+```
+
+Paste this into a `.csv` file (or straight into an Excel sheet) — that's the source this tutorial connects to. A real dataset would have thousands of rows; the shape and problems are the same at any size.
+
+---
+
+## Step 2: Connect and Clean in Power Query
+
+Open Power BI Desktop, **Get Data > Text/CSV**, and point it at the file. Then **Transform Data** to open the Power Query Editor.
+
+### Fix the Money Columns
+
+`UnitPrice` and `Unit Cost` come in as text, formatted with a `$` sign — Power BI can't do math on that. Select both columns and use **Transform > Data Type > Decimal Number**; Power Query's default text-to-number conversion strips the `$` and comma formatting automatically.
+
+```powerquery lineNumbers
+#"Changed Type" = Table.TransformColumnTypes(
+    Source,
+    {{"UnitPrice", type number}, {"Unit Cost", type number}}
+)
+```
+
+### Add a Calculated Sales Amount
+
+The raw data has quantity and unit price, but not an extended amount — add it as a custom column so it doesn't need to be recalculated in every DAX measure later.
+
+```powerquery lineNumbers
+#"Added Sales Amount" = Table.AddColumn(
+    #"Changed Type", "SalesAmount",
+    each [Qty] * [UnitPrice], type number
+)
+```
+
+### Fix Inconsistent Column Naming
+
+Rename `Unit Cost` to `UnitCost` (no space) — inconsistent naming like this is exactly the kind of thing that causes confusing errors later when a DAX formula references a column by a name that doesn't quite match.
+
+```powerquery lineNumbers
+#"Renamed Columns" = Table.RenameColumns(
+    #"Added Sales Amount", {{"Unit Cost", "UnitCost"}}
+)
+```
+
+See [Transformations](/docs/power-query/transformations) and [M Language](/docs/power-query/m-language) for more on what's happening under the hood here.
+
+---
+
+## Step 3: Split Into a Star Schema
+
+Right now, everything — order, customer, product, region — lives in one flat table. That works for a handful of rows in a tutorial; at real scale it means the same customer and product details get repeated on every single order row, bloating the model and making relationships impossible to express cleanly.
+
+```text
+Flat table (what we have now):
+OrderID | CustomerName | Region | ProductName | Category | Qty | SalesAmount
+
+Star schema (what we want):
+DimCustomer          DimProduct           DimDate
+CustomerKey          ProductKey           DateKey
+CustomerName                ProductName
+                     Category
+        \                  |                  /
+         \                 |                 /
+                     FactSales
+              OrderID, CustomerKey, ProductKey,
+              DateKey, Qty, SalesAmount, UnitCost
+```
+
+See [Star Schema](/docs/modeling/star-schema) for the full reasoning behind this shape — this tutorial applies it directly rather than re-explaining it.
+
+### Build DimCustomer
+
+Reference the cleaned query (right-click it in the Queries pane → **Reference**), then reduce it to just the distinct customers:
+
+```powerquery lineNumbers
+let
+    Source = #"Cleaned Sales",
+    #"Kept Columns" = Table.SelectColumns(Source, {"CustomerName", "Region"}),
+    #"Removed Duplicates" = Table.Distinct(#"Kept Columns"),
+    #"Added Index" = Table.AddIndexColumn(#"Removed Duplicates", "CustomerKey", 1, 1)
+in
+    #"Added Index"
+```
+
+`Table.AddIndexColumn` generates the surrogate key (`CustomerKey`) — a clean, model-internal ID, separate from the customer's actual name. See [Dimension Tables](/docs/modeling/dimension-tables) for why dimension tables are built this way.
+
+### Build DimProduct
+
+Same pattern, referencing the cleaned sales query again:
+
+```powerquery lineNumbers
+let
+    Source = #"Cleaned Sales",
+    #"Kept Columns" = Table.SelectColumns(Source, {"ProductName", "Category"}),
+    #"Removed Duplicates" = Table.Distinct(#"Kept Columns"),
+    #"Added Index" = Table.AddIndexColumn(#"Removed Duplicates", "ProductKey", 1, 1)
+in
+    #"Added Index"
+```
+
+### Build FactSales
+
+Reference the cleaned sales query one more time, then merge in the two new key columns and drop the now-redundant descriptive text.
+
+```powerquery lineNumbers
+let
+    Source = #"Cleaned Sales",
+    #"Merged Customer" = Table.NestedJoin(
+        Source, {"CustomerName", "Region"},
+        DimCustomer, {"CustomerName", "Region"},
+        "CustomerData", JoinKind.LeftOuter
+    ),
+    #"Expanded Customer" = Table.ExpandTableColumn(
+        #"Merged Customer", "CustomerData", {"CustomerKey"}
+    ),
+    #"Merged Product" = Table.NestedJoin(
+        #"Expanded Customer", {"ProductName", "Category"},
+        DimProduct, {"ProductName", "Category"},
+        "ProductData", JoinKind.LeftOuter
+    ),
+    #"Expanded Product" = Table.ExpandTableColumn(
+        #"Merged Product", "ProductData", {"ProductKey"}
+    ),
+    #"Removed Columns" = Table.RemoveColumns(
+        #"Expanded Product",
+        {"CustomerName", "Region", "ProductName", "Category"}
+    )
+in
+    #"Removed Columns"
+```
+
+See [Merge Queries](/docs/power-query/merge-queries) for how `Table.NestedJoin` and `Table.ExpandTableColumn` work together — this is the exact pattern from that page, applied here to build real foreign keys instead of a demonstration.
+
+---
+
+## Step 4: Add a Date Table
+
+`FactSales` has an `OrderDate` column, but time intelligence (year-over-year, running totals) needs a proper, continuous date table — not just the dates that happen to appear in the fact table.
+
+```dax lineNumbers
+DimDate =
+CALENDAR(DATE(2024, 1, 1), DATE(2025, 12, 31))
+```
+
+Add a few supporting columns, then mark this table as the model's official date table (**Table tools > Mark as Date Table**, pointing at the `Date` column):
+
+```dax lineNumbers
+Year = YEAR(DimDate[Date])
+MonthName = FORMAT(DimDate[Date], "MMMM")
+MonthNumber = MONTH(DimDate[Date])
+```
+
+Relate `FactSales[OrderDate]` to `DimDate[Date]` (one-to-many, DimDate on the "one" side). See [Date Tables](/docs/modeling/date-tables) for the full explanation of why this step matters, including handling fiscal years if that applies to a real model.
+
+---
+
+## Step 5: Write the Core Measures
+
+With the star schema in place, the actual calculations are short — this is the payoff for doing the modeling work first. Create a dedicated measures table (**Modeling > New Table**, or a blank query) to keep measures organized separately from the data tables. See [Measures](/docs/dax/measures) for why a dedicated measures table is worth doing.
+
+```dax lineNumbers
+Total Sales = SUM(FactSales[SalesAmount])
+
+Total Orders = DISTINCTCOUNT(FactSales[OrderID])
+
+Total Cost = SUMX(FactSales, FactSales[Qty] * FactSales[UnitCost])
+
+Gross Profit = [Total Sales] - [Total Cost]
+
+Avg Order Value = DIVIDE([Total Sales], [Total Orders])
+```
+
+`Avg Order Value` uses `DIVIDE()` instead of `/` so a period with zero orders returns blank instead of an error — see [FILTER](/docs/dax/filter) and the [DAX Performance](/docs/dax/performance) page for more on why `DIVIDE` is the default choice.
+
+### Year-over-Year Growth
+
+```dax lineNumbers
+Sales LY =
+CALCULATE(
+    [Total Sales],
+    SAMEPERIODLASTYEAR(DimDate[Date])
+)
+
+Sales YoY % =
+VAR CurrentSales = [Total Sales]
+VAR PriorSales = [Sales LY]
+RETURN
+    DIVIDE(CurrentSales - PriorSales, PriorSales)
+```
+
+This is the exact pattern from the [DAX Time Intelligence Cheat Sheet](/blog/dax-time-intelligence-cheat-sheet) — worth a look for more time intelligence patterns beyond what this report needs.
+
+### Running Total
+
+```dax lineNumbers
+Sales Running Total =
+CALCULATE(
+    [Total Sales],
+    FILTER(
+        ALL(DimDate[Date]),
+        DimDate[Date] <= MAX(DimDate[Date])
+    )
+)
+```
+
+See [Running Total](/docs/dax-patterns/running-total) for the general version of this pattern.
+
+### Rank Customers
+
+```dax lineNumbers
+Customer Rank =
+RANKX(
+    ALL(DimCustomer),
+    [Total Sales]
+)
+```
+
+See [RANKX](/docs/dax/rankx) for why `ALL(DimCustomer)` is required here — without it, every customer would rank 1st in a table visual.
+
+---
+
+## Step 6: Lay Out the Report
+
+With the measures written, the report itself is mostly visual choices, not new logic.
+
+```text
+Page: "Sales Overview"
+
+Row 1 (KPI cards):
+  [Total Sales]  [Total Orders]  [Avg Order Value]  [Sales YoY %]
+
+Row 2 (line chart):
+  X-axis: DimDate[MonthName] (sorted by MonthNumber)
+  Y-axis: [Total Sales]
+  Also plot: [Sales LY] as a second line, for visual YoY comparison
+
+Row 3 (left, bar chart):        Row 3 (right, table):
+  X-axis: DimProduct[Category]    Columns: DimCustomer[CustomerName],
+  Y-axis: [Total Sales]                    [Total Sales], [Customer Rank]
+                                   Sorted by: [Customer Rank] ascending
+                                   Filter: Customer Rank <= 10
+
+Slicer (top of page): DimDate[Year]
+```
+
+A few specific choices worth calling out:
+
+- The line chart plots `[Total Sales]` and `[Sales LY]` together, not just the YoY % — a visual overlay reads faster than a single percentage on its own.
+- `DimDate[MonthName]` needs its sort order set explicitly (**Column tools > Sort by Column > MonthNumber**), or "April" will sort alphabetically before "January."
+- The Top 10 Customers table filters on `[Customer Rank] <= 10` inside a visual-level filter, rather than trying to build that limit into the measure itself.
+
+See [Charts](/docs/visuals/charts) and [Tables](/docs/visuals/tables) for more on choosing and configuring these visual types.
+
+---
+
+## Common Mistakes
+
+### Building Measures Before the Model Is Right
+
+Every measure in this tutorial is short specifically because the star schema was built first. Writing `SUMX` gymnastics to work around a flat table is almost always more effort than fixing the model.
+
+### Forgetting to Mark the Date Table
+
+Without explicitly marking `DimDate` as the model's date table, `SAMEPERIODLASTYEAR` and other time intelligence functions either error or silently return wrong results.
+
+### Skipping the Sort-by-Column Step on Month Names
+
+A chart that sorts "April, August, December, February..." alphabetically instead of chronologically is one of the most common first-report mistakes — and one of the easiest to fix once you know where to look.
+
+---
+
+## Tutorial Checklist
+
+- Raw data is cleaned and typed correctly in Power Query (no text-formatted numbers).
+- The model follows a star schema: one fact table, dimension tables with surrogate keys.
+- `DimDate` is a continuous calendar table, explicitly marked as the model's date table.
+- Core measures use `DIVIDE()`, not `/`, for anything that could divide by zero.
+- Time intelligence measures have been checked against a known value, not just assumed correct.
+
+---
+
+## Next Steps
+
+This tutorial deliberately kept the dataset small. To go further with the same model:
+
+- [Composite Models](/docs/modeling/composite-models) — mixing storage modes as the fact table grows.
+- [Row-Level Security](/docs/power-bi-service/security) — restricting each region's manager to their own data.
+- [Aggregations](/docs/modeling/aggregations) — pre-summarizing this same star schema for faster queries at real scale.
+- [Workspaces](/docs/power-bi-service/workspaces) — publishing this report for a team to actually use.

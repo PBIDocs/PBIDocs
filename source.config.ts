@@ -29,6 +29,17 @@ export const blog = defineCollections({
   }),
 });
 
+export const tutorials = defineCollections({
+  type: 'doc',
+  dir: 'content/tutorials',
+  schema: z.object({
+    title: z.string(),
+    description: z.string(),
+    date: z.string(),
+    tags: z.array(z.string()).optional(),
+  }),
+});
+
 export default defineConfig({
   mdxOptions: {
     rehypeCodeOptions: {
