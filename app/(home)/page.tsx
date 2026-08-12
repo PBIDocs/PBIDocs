@@ -2,6 +2,11 @@ import Link from 'next/link';
 import type { Metadata } from 'next';
 import { appName, gitConfig } from '@/lib/shared';
 import { NewsletterForm } from '@/components/newsletter-form';
+import { HeroSearch } from '@/components/hero-search';
+import { source } from '@/lib/source';
+import { getBlogPosts } from '@/lib/blog-source';
+import { getTutorials } from '@/lib/tutorial-source';
+import docsMeta from '@/content/docs/meta.json';
 
 export const metadata: Metadata = {
   title: {
@@ -71,13 +76,26 @@ const topics = [
   },
 ];
 
+const stats = [
+  {
+    value: `${source.getPages().length + getBlogPosts().length + getTutorials().length}+`,
+    label: 'Pages',
+  },
+  {
+    value: `${source.getPages().filter((page) => page.url.startsWith('/docs/dax/')).length}+`,
+    label: 'DAX Pages',
+  },
+  { value: `${docsMeta.pages.length}`, label: 'Topics' },
+];
+
 export default function HomePage() {
   return (
     <div className="relative overflow-hidden flex flex-col items-center text-center px-6 py-24">
-     <div className="absolute inset-0 -z-10">
-      <div className="absolute left-1/2 top-0 h-[400px] w-[100%] -translate-x-1/2 rounded-full bg-fd-primary/10 blur-3xl" />
-     </div>
-
+      <div className="absolute inset-0 -z-10 overflow-hidden">
+        <div className="absolute left-1/2 top-[-120px] h-[500px] w-[900px] -translate-x-1/2 rounded-full bg-fd-primary/15 blur-3xl animate-pulse [animation-duration:6s]" />
+        <div className="absolute right-[10%] top-[100px] h-[300px] w-[300px] rounded-full bg-fd-primary/10 blur-3xl" />
+        <div className="absolute left-[5%] top-[250px] h-[250px] w-[250px] rounded-full bg-fd-primary/10 blur-3xl" />
+      </div>
 
       {/* Hero */}
       <section className="max-w-4xl animate-in fade-in slide-in-from-bottom-4 duration-700">
@@ -86,17 +104,21 @@ export default function HomePage() {
         </div>
 
         <h1 className="text-5xl font-bold tracking-tight mb-6">
-        Master Power BI.
+        Master <span className="text-fd-primary">Power BI</span>.
         <br />
         Build smarter with AI.
         </h1>
 
-        <p className="text-lg text-fd-muted-foreground max-w-2xl mx-auto mb-10">
+        <p className="text-lg text-fd-muted-foreground max-w-2xl mx-auto mb-8">
           Learn DAX, Power Query, Data Modeling, Microsoft Fabric, and AI-assisted
           Power BI development with clear documentation and practical examples.
         </p>
 
-        <div className="flex justify-center gap-4">
+        <div className="mb-8">
+          <HeroSearch />
+        </div>
+
+        <div className="flex justify-center gap-4 mb-14">
           <Link
             href="/docs"
             className="rounded-lg bg-fd-primary hover:bg-fd-primary/90 text-fd-primary-foreground px-6 py-3 font-semibold"
@@ -110,6 +132,15 @@ export default function HomePage() {
           >
             Get Started
           </Link>
+        </div>
+
+        <div className="flex justify-center gap-10">
+          {stats.map((stat) => (
+            <div key={stat.label}>
+              <div className="text-3xl font-bold text-fd-primary">{stat.value}</div>
+              <div className="text-sm text-fd-muted-foreground">{stat.label}</div>
+            </div>
+          ))}
         </div>
       </section>
 
