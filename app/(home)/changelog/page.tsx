@@ -5,6 +5,9 @@ import type { ReactNode } from 'react';
 export const metadata: Metadata = {
   title: 'Changelog',
   description: "What's new and changed in the PBIDocs Power BI content.",
+  alternates: {
+    canonical: '/changelog',
+  },
 };
 
 const changelog: { date: string; entries: ReactNode[] }[] = [
