@@ -45,16 +45,38 @@ export function SpotlightCard({
           background: `radial-gradient(500px circle at ${pos.x}% ${pos.y}%, color-mix(in srgb, var(--color-fd-primary) 22%, transparent), transparent 70%)`,
         }}
       />
+      {/* Border highlight: same tracked position, masked so only the nearby edge segment is visible */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 rounded-[inherit] transition-opacity duration-300"
+        style={{
+          opacity: canHover ? opacity : 0,
+          border: '2px solid var(--color-fd-primary)',
+          maskImage: `radial-gradient(140px circle at ${pos.x}% ${pos.y}%, black, transparent 80%)`,
+          WebkitMaskImage: `radial-gradient(140px circle at ${pos.x}% ${pos.y}%, black, transparent 80%)`,
+        }}
+      />
       {/* Ambient fallback for touch devices: no hover/cursor, so a slow drift instead */}
       {!canHover && (
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-0 animate-pulse [animation-duration:5s]"
-          style={{
-            background:
-              'radial-gradient(500px circle at 30% 20%, color-mix(in srgb, var(--color-fd-primary) 14%, transparent), transparent 70%)',
-          }}
-        />
+        <>
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-0 animate-pulse [animation-duration:5s]"
+            style={{
+              background:
+                'radial-gradient(500px circle at 30% 20%, color-mix(in srgb, var(--color-fd-primary) 14%, transparent), transparent 70%)',
+            }}
+          />
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-0 rounded-[inherit] animate-pulse [animation-duration:5s]"
+            style={{
+              border: '2px solid var(--color-fd-primary)',
+              maskImage: 'radial-gradient(140px circle at 30% 20%, black, transparent 80%)',
+              WebkitMaskImage: 'radial-gradient(140px circle at 30% 20%, black, transparent 80%)',
+            }}
+          />
+        </>
       )}
       {children}
     </div>
