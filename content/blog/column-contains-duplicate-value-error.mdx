@@ -1,0 +1,155 @@
+---
+title: "Power BI Error: Column Contains a Duplicate Value"
+description: "\"The column 'X' in table 'Y' contains a duplicate value\" happens when you try to build a relationship on a column that isn't actually unique. Here's how to find and fix the duplicates."
+date: "2026-08-13"
+tags: ["Data Modeling", "Power Query", "Troubleshooting"]
+---
+
+The full error usually reads:
+
+```text
+The column 'ProductKey' in table 'DimProduct' contains a duplicate value
+'1001', and this is not allowed for columns on the "one" side of a
+many-to-one relationship or for columns that are used as the primary
+key of a table.
+```
+
+The meaning is exact: you tried to create a relationship where `DimProduct` is the "one" side, but `ProductKey` has the same value on more than one row. Power BI requires the "one" side of a relationship to genuinely have one row per key — this is that requirement failing.
+
+---
+
+## Step One: Find the Actual Duplicates
+
+Before fixing anything, confirm which values are duplicated and how many times. In Power Query, on the query that's supposed to be your dimension table:
+
+1. Select the key column (e.g. `ProductKey`).
+2. **Transform > Group By**, grouping on that column, with a **Count Rows** aggregation.
+3. Sort the result descending by count — anything above 1 is a duplicate.
+
+```powerquery lineNumbers
+let
+    Source = DimProduct,
+    #"Grouped Rows" = Table.Group(
+        Source, {"ProductKey"},
+        {{"Count", each Table.RowCount(_), Int64.Type}}
+    ),
+    #"Filtered Rows" = Table.SelectRows(#"Grouped Rows", each [Count] > 1)
+in
+    #"Filtered Rows"
+```
+
+This returns exactly the keys that are duplicated, and how many times each one appears — the starting point for figuring out *why*, which determines the right fix.
+
+---
+
+## Cause 1: The Table Isn't Actually a Dimension Table Yet
+
+The most common cause: the query feeding "DimProduct" hasn't actually been reduced to one row per product. It might still be transaction-level data, or a join that fanned out rows.
+
+```text
+What DimProduct should be:            What it might actually be:
+ProductKey | ProductName               ProductKey | ProductName | OrderDate
+1001       | Trail Runner Tire         1001       | Trail Runner | 2024-01-03
+1002       | Commuter Helmet           1001       | Trail Runner | 2024-01-05  <- same key, different row
+                                       1002       | Commuter     | 2024-01-08
+```
+
+**Fix:** reduce to distinct keys explicitly, the way a real dimension table is built — select just the descriptive columns, then remove duplicates.
+
+```powerquery lineNumbers
+#"Kept Columns" = Table.SelectColumns(Source, {"ProductKey", "ProductName", "Category"}),
+#"Removed Duplicates" = Table.Distinct(#"Kept Columns", {"ProductKey"})
+```
+
+See [Dimension Tables](/docs/modeling/dimension-tables) for what a properly-shaped dimension table looks like, and [Merge Queries](/docs/power-query/merge-queries) if a merge/join step is what introduced the fan-out in the first place.
+
+---
+
+## Cause 2: A Merge Step Fanned Out the Rows
+
+If a `Table.NestedJoin` merged against a table where the join key wasn't actually unique on the other side, every match multiplies the row count — turning what looked like a clean dimension table into one with duplicate keys.
+
+```text
+DimProduct (before merge)          Lookup table (join key not unique)
+ProductKey | ProductName            ProductKey | Warehouse
+1001       | Trail Runner           1001       | East
+                                    1001       | West   <- ProductKey 1001 appears twice
+
+After merging on ProductKey:
+ProductKey | ProductName | Warehouse
+1001       | Trail Runner | East
+1001       | Trail Runner | West     <- duplicate ProductKey introduced by the merge
+```
+
+**Fix:** confirm the table being merged *in* has a unique key before merging, the same check covered in [Merge Queries](/docs/power-query/merge-queries#fan-out-from-duplicate-keys). If the relationship genuinely needs multiple warehouses per product, that's not a simple one-to-many dimension anymore — see the many-to-many case below.
+
+---
+
+## Cause 3: It's Genuinely Many-to-Many, Not One-to-Many
+
+Sometimes the duplicates aren't a mistake — the real-world relationship actually is many-to-many. A product genuinely can belong to multiple categories, or a salesperson genuinely can cover multiple regions. Forcing that into a one-to-many relationship is what's failing, not the data.
+
+```text
+DimProduct                    DimCategory
+ProductKey | CategoryKey       CategoryKey | CategoryName
+1001       | 10                10          | Off-Road
+1001       | 11                11          | Commuter
+```
+
+`ProductKey` here is legitimately duplicated — product 1001 has two categories. **Fix:** don't force a one-to-many relationship on it. Use a proper many-to-many pattern instead — see [Many-to-Many Relationships](/docs/modeling/many-to-many) and [Bridge Tables](/docs/modeling/bridge-tables) for the two ways to model this correctly.
+
+---
+
+## Cause 4: The Source Data Itself Has Genuine Duplicate Records
+
+Sometimes it's neither a modeling mistake nor a real many-to-many relationship — the source system has actual duplicate rows for the same key, often from a bad export, a repeated sync, or a system bug upstream.
+
+```text
+DimCustomer (raw export)
+CustomerKey | CustomerName
+5001        | Alice Chen
+5001        | Alice Chen    <- exact duplicate row, same everything
+```
+
+**Fix:** `Table.Distinct()` on the full row (not just the key) removes exact duplicates safely. If the duplicate rows have *different* values for the same key (not exact duplicates), that's actually [Cause 1](#cause-1-the-table-isnt-actually-a-dimension-table-yet) or a data quality issue that needs a decision about which row is authoritative — usually the most recent one:
+
+```powerquery lineNumbers
+#"Sorted Rows" = Table.Sort(Source, {{"LastModified", Order.Descending}}),
+#"Removed Duplicates" = Table.Distinct(#"Sorted Rows", {"CustomerKey"})
+```
+
+`Table.Distinct` keeps the *first* row it encounters per key, which is why sorting by most-recent-first beforehand matters.
+
+---
+
+## Common Mistakes
+
+### Deduplicating Before Checking Why
+
+Running `Table.Distinct()` immediately without checking *why* the duplicates exist can silently discard real data — if it's actually a many-to-many relationship, deduplicating just hides the problem instead of modeling it correctly.
+
+### Fixing It in the Fact Table Instead of the Dimension Table
+
+The error names the "one" side specifically. Deduplication needs to happen on the dimension table's key — trying to fix it by changing something on the fact table side doesn't address what Power BI is actually complaining about.
+
+### Not Checking for Fan-Out After Every Merge
+
+A merge step is one of the most common places a previously-unique key silently becomes duplicated. After any merge in a query meant to stay one-row-per-key, it's worth a quick `Table.Group` check like the one at the top of this post.
+
+---
+
+## Duplicate Value Checklist
+
+- The actual duplicated keys have been identified (via `Table.Group` + row count), not just guessed at.
+- The cause is understood — a shaping mistake, a merge fan-out, a genuine many-to-many relationship, or real source duplicates — before applying a fix.
+- If it's a real many-to-many relationship, it's modeled as one (bridge table or native many-to-many), not force-fit into one-to-many.
+- After the fix, the key column has been re-checked for uniqueness before building the relationship.
+
+---
+
+## Next Steps
+
+- [Dimension Tables](/docs/modeling/dimension-tables)
+- [Many-to-Many Relationships](/docs/modeling/many-to-many)
+- [Bridge Tables](/docs/modeling/bridge-tables)
+- [Merge Queries](/docs/power-query/merge-queries)
