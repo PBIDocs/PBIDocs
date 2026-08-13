@@ -108,7 +108,7 @@ export default function HomePage() {
          Power BI + AI Documentation Platform
         </div>
 
-        <h1 className="text-5xl font-bold tracking-tight mb-6">
+        <h1 className="text-6xl sm:text-7xl font-bold tracking-tighter leading-[1.05] mb-6">
         Master <span className="text-fd-primary">Power BI</span>.
         <br />
         Build smarter with AI.
