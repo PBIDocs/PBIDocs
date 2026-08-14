@@ -60,7 +60,7 @@ export default async function TutorialPage(props: { params: Promise<{ slug: stri
   };
 
   return (
-    <div className="mx-auto w-full min-w-0 max-w-6xl overflow-x-hidden px-6 py-16 sm:py-24">
+    <div className="mx-auto w-full min-w-0 max-w-6xl px-6 py-16 sm:py-24">
       <script
         type="application/ld+json"
         // eslint-disable-next-line react/no-danger
@@ -74,7 +74,7 @@ export default async function TutorialPage(props: { params: Promise<{ slug: stri
       </Link>
 
       <div className="mt-10 flex flex-col gap-10 lg:flex-row">
-        <article className="min-w-0 max-w-3xl flex-1">
+        <article className="min-w-0 max-w-3xl flex-1 overflow-x-hidden">
           <div className="mb-10 border-b border-fd-border pb-6">
             <DocsTitle>{tutorial.title}</DocsTitle>
             <DocsDescription className="mb-0">{tutorial.description}</DocsDescription>
