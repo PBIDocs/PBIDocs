@@ -1,4 +1,5 @@
 import { getBlogPosts } from '@/lib/blog-source';
+import { getTutorials } from '@/lib/tutorial-source';
 import { appName } from '@/lib/shared';
 
 export const revalidate = false;
@@ -15,18 +16,33 @@ function escapeXml(str: string): string {
 }
 
 export function GET() {
-  const posts = getBlogPosts();
+  const entries = [
+    ...getBlogPosts().map((post) => ({
+      title: post.title,
+      description: post.description,
+      date: post.date,
+      tags: post.tags,
+      url: `${baseUrl}/blog/${post.slug}`,
+    })),
+    ...getTutorials().map((tutorial) => ({
+      title: tutorial.title,
+      description: tutorial.description,
+      date: tutorial.date,
+      tags: [...(tutorial.tags ?? []), 'Tutorial'],
+      url: `${baseUrl}/tutorials/${tutorial.slug}`,
+    })),
+  ].sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0));
 
-  const items = posts
+  const items = entries
     .map(
-      (post) => `
+      (entry) => `
     <item>
-      <title>${escapeXml(post.title)}</title>
-      <link>${baseUrl}/blog/${post.slug}</link>
-      <guid>${baseUrl}/blog/${post.slug}</guid>
-      <description>${escapeXml(post.description)}</description>
-      <pubDate>${new Date(`${post.date}T00:00:00Z`).toUTCString()}</pubDate>
-      ${(post.tags ?? []).map((tag) => `<category>${escapeXml(tag)}</category>`).join('\n      ')}
+      <title>${escapeXml(entry.title)}</title>
+      <link>${entry.url}</link>
+      <guid>${entry.url}</guid>
+      <description>${escapeXml(entry.description)}</description>
+      <pubDate>${new Date(`${entry.date}T00:00:00Z`).toUTCString()}</pubDate>
+      ${(entry.tags ?? []).map((tag) => `<category>${escapeXml(tag)}</category>`).join('\n      ')}
     </item>`,
     )
     .join('');
@@ -34,9 +50,9 @@ export function GET() {
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>${appName} Blog</title>
+    <title>${appName} Blog & Tutorials</title>
     <link>${baseUrl}/blog</link>
-    <description>Practical fixes, cheat sheets, and deep dives for Power BI, DAX, and Power Query.</description>
+    <description>Practical fixes, cheat sheets, and end-to-end tutorials for Power BI, DAX, and Power Query.</description>
     <language>en-us</language>
     <atom:link href="${baseUrl}/rss.xml" rel="self" type="application/rss+xml" />${items}
   </channel>

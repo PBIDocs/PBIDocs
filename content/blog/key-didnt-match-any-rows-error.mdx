@@ -1,0 +1,157 @@
+---
+title: "Power BI Error: The Key Didn't Match Any Rows in the Table"
+description: "\"The key didn't match any rows in the table\" comes from LOOKUPVALUE finding zero matches, not too many. Here's how to find why, and the four usual causes."
+date: "2026-08-14"
+tags: ["DAX", "Troubleshooting"]
+---
+
+The full error reads:
+
+```text
+The key didn't match any rows in the table
+```
+
+This is the opposite problem from a [duplicate value error](/blog/column-contains-duplicate-value-error). That one means `LOOKUPVALUE()` (or a relationship) found *too many* matching rows. This one means it found *zero* — the search value you gave it doesn't exist anywhere in the target column.
+
+```dax lineNumbers
+Product Category =
+LOOKUPVALUE(
+    DimProduct[Category],
+    DimProduct[ProductKey], FactSales[ProductKey]
+)
+```
+
+If some `ProductKey` in `FactSales` has no matching row in `DimProduct`, this measure throws that exact error for those rows.
+
+---
+
+## Step One: Find Which Values Are Actually Missing
+
+Before guessing at a cause, find the specific values that don't match. A quick way: build a calculated column that checks membership directly.
+
+```dax lineNumbers
+Key Exists =
+CONTAINS(DimProduct, DimProduct[ProductKey], FactSales[ProductKey])
+```
+
+Filter this to `FALSE` in a table visual alongside `FactSales[ProductKey]`, and you have the exact list of keys causing the problem — the starting point for figuring out which of the causes below actually applies.
+
+---
+
+## Cause 1: A Data Type Mismatch
+
+The single most common cause. If `FactSales[ProductKey]` is text and `DimProduct[ProductKey]` is a whole number (or vice versa), `LOOKUPVALUE()` won't match them even when the underlying values "look" the same.
+
+```text
+FactSales[ProductKey] = "1001"   (text)
+DimProduct[ProductKey] = 1001    (whole number)
+
+LOOKUPVALUE searching for "1001" in a column of numbers -> no match
+```
+
+**Fix:** make both columns the same type before the relationship or lookup is built — usually in Power Query, on whichever side came in with the wrong type.
+
+```powerquery lineNumbers
+#"Changed Type" = Table.TransformColumnTypes(
+    Source,
+    {{"ProductKey", Int64.Type}}
+)
+```
+
+---
+
+## Cause 2: Trailing Whitespace or Case Differences
+
+For text keys specifically, invisible whitespace or inconsistent casing breaks an exact match even though the values look identical in a visual.
+
+```text
+FactSales[SKU] = "AB-1001 "   (trailing space)
+DimProduct[SKU] = "AB-1001"
+
+Look identical when displayed. Not equal to LOOKUPVALUE.
+```
+
+**Fix:** clean both sides with `Text.Trim` (and `Text.Upper`/`Text.Lower` if casing is inconsistent) in Power Query before the values are used as keys — see [M Language](/docs/power-query/m-language) for these functions.
+
+```powerquery lineNumbers
+#"Trimmed Text" = Table.TransformColumns(
+    Source,
+    {{"SKU", Text.Trim}}
+)
+```
+
+---
+
+## Cause 3: The Value Genuinely Doesn't Exist Yet
+
+Sometimes it's not a data quality bug — the fact table legitimately references something the dimension table doesn't have. A product was discontinued and removed from `DimProduct`, but historical `FactSales` rows still reference its old key. Or a new product started selling before the dimension table's daily refresh caught up.
+
+```text
+FactSales (2024-2026, includes discontinued products)
+DimProduct (current catalog only, discontinued products removed)
+
+ProductKey 1001 sold in 2024, but DimProduct no longer has it
+```
+
+**Fix:** this is a referential integrity gap, not a formula bug. Either keep discontinued/historical members in the dimension table (with a flag like `IsActive = FALSE` instead of deleting the row), or add a placeholder row for exactly this case:
+
+```text
+DimProduct
+ProductKey | ProductName
+1001       | Trail Runner Tire
+1002       | Commuter Helmet
+-1         | Unknown Product      <- catches orphaned keys
+```
+
+See [Dimension Tables](/docs/modeling/dimension-tables) for why dimension tables are built to be the complete, authoritative list a fact table can always join against.
+
+---
+
+## Cause 4: A Default Value Was Never Set
+
+Independent of fixing the underlying data, `LOOKUPVALUE()` has an optional final argument specifically for this situation — a value to return instead of erroring when nothing matches.
+
+```dax lineNumbers
+Product Category =
+LOOKUPVALUE(
+    DimProduct[Category],
+    DimProduct[ProductKey], FactSales[ProductKey],
+    "Unknown"
+)
+```
+
+This doesn't fix *why* the key is missing, but it stops one bad row from breaking the entire calculation while the underlying cause gets investigated. See [LOOKUPVALUE](/docs/dax/lookupvalue) for the full syntax.
+
+---
+
+## Common Mistakes
+
+### Adding a Default Value Without Investigating Why
+
+`LOOKUPVALUE(..., "Unknown")` makes the error go away, but if the missing keys represent a real data quality problem (like Cause 3), silently defaulting to "Unknown" can hide it indefinitely instead of fixing it.
+
+### Assuming It's Always a Relationship Problem
+
+This specific error comes from `LOOKUPVALUE()` and similar functions evaluated directly — not from a standard modeled relationship, which handles unmatched keys differently (rows just don't appear, or appear under a blank member, rather than throwing this error). Don't go looking in Model view for a broken relationship when the actual cause is a DAX formula.
+
+### Fixing the Symptom on Only One Side
+
+A type or whitespace mismatch usually needs fixing wherever the *bad* data originates, not just patching the lookup formula — otherwise the same mismatch reappears the next time new data loads.
+
+---
+
+## Checklist
+
+- The specific missing keys have been identified (via a membership check), not just guessed at.
+- Data types match exactly between the two columns being compared.
+- Text keys are trimmed and case-normalized before being used as lookup keys.
+- If the value is legitimately absent from the dimension table, that's addressed as a modeling decision (keep historical rows, or add a placeholder), not just papered over with a default.
+
+---
+
+## Next Steps
+
+- [LOOKUPVALUE](/docs/dax/lookupvalue)
+- [Column Contains a Duplicate Value](/blog/column-contains-duplicate-value-error)
+- [Dimension Tables](/docs/modeling/dimension-tables)
+- [M Language](/docs/power-query/m-language)
