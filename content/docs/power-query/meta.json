@@ -2,6 +2,7 @@
   "title": "Power Query",
   "pages": [
     "introduction",
+    "functions",
     "editor",
     "m-language",
     "transformations",
