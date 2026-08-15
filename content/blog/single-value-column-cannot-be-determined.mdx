@@ -1,0 +1,124 @@
+---
+title: "Power BI Error: A Single Value for Column Cannot Be Determined"
+description: "This error means a measure referenced a column directly instead of aggregating it. Here's why it often works at the row level and breaks at the total, and how to fix it."
+date: "2026-08-15"
+tags: ["DAX", "Troubleshooting"]
+---
+
+The full error usually reads:
+
+```text
+A single value for column 'SalesAmount' in table 'FactSales' cannot
+be determined. This can happen when a measure formula refers to a
+column that contains many values without specifying an aggregation
+such as min, max, first, or sum to get a single result.
+```
+
+It means exactly what it says: somewhere in a measure, a column is being used directly — not wrapped in `SUM`, `AVERAGE`, `MIN`, `MAX`, or another aggregator — and DAX was asked to collapse many row values into one, with no instruction for how to do that.
+
+## The Simplest Case
+
+```dax lineNumbers
+Bad Measure =
+FactSales[SalesAmount] * 1.1
+```
+
+This references `FactSales[SalesAmount]` directly. A measure has no row context of its own — there's no "current row" to pull a single value from — so DAX has no way to turn a column of thousands of values into the one number a measure needs to return.
+
+**Fix:** aggregate the column first.
+
+```dax lineNumbers
+Good Measure =
+SUM(FactSales[SalesAmount]) * 1.1
+```
+
+## Why It Often "Works" Until Someone Adds a Total Row
+
+This is the version that actually confuses people, because the measure can look completely fine for a while.
+
+```dax lineNumbers
+Unit Price =
+FactSales[SalesAmount] / FactSales[Quantity]
+```
+
+Dropped into a table visual with `ProductKey` on rows, this can appear to work — Power BI evaluates the measure once per visible row, and at the individual product level there genuinely is only one `SalesAmount` and one `Quantity` value involved, so DAX can resolve it without complaint.
+
+```text
+Table visual, one row per product:
+ProductKey | SalesAmount | Quantity | Unit Price
+1001       | 500         | 10       | 50            <- looks fine
+
+Add a Total row:
+Total      | 50,000      | 850      | ERROR          <- breaks here
+```
+
+The moment a subtotal or grand total row is added, the measure has to evaluate across many products at once — many `SalesAmount` values, many `Quantity` values — and the same formula that "worked" now has nothing to collapse them with.
+
+**Fix:** the same as above — aggregate both sides explicitly, and use `DIVIDE()` instead of `/` so a zero-quantity row returns blank instead of an error.
+
+```dax lineNumbers
+Unit Price =
+DIVIDE(
+    SUM(FactSales[SalesAmount]),
+    SUM(FactSales[Quantity])
+)
+```
+
+## Referencing a Column Instead of a Measure
+
+A common copy-paste mistake: meaning to reference an existing measure, but referencing the underlying column instead.
+
+```dax lineNumbers
+-- Existing measure
+Total Sales =
+SUM(FactSales[SalesAmount])
+```
+
+```dax lineNumbers
+-- Meant to reference [Total Sales], typed the column name instead
+Sales Rounded =
+ROUND(FactSales[SalesAmount], 0)
+```
+
+`[Total Sales]` (square brackets, no table name) refers to the measure. `FactSales[SalesAmount]` refers to the raw column. They look similar enough in a hurry that this is easy to type without noticing.
+
+**Fix:** reference the measure.
+
+```dax lineNumbers
+Sales Rounded =
+ROUND([Total Sales], 0)
+```
+
+## Why This Doesn't Happen in Calculated Columns
+
+The identical expression works without error as a calculated column:
+
+```dax lineNumbers
+Unit Price =
+FactSales[SalesAmount] / FactSales[Quantity]
+```
+
+A calculated column has an implicit row context — it's evaluated once per row, and inside that context `FactSales[SalesAmount]` genuinely does mean "the value in this row." A measure has no such context by default; it starts out evaluating across whatever set of rows the current filter context includes, which is why a bare column reference is ambiguous there in a way it isn't in a calculated column. See [Calculated Columns](/docs/dax/calculated-columns) and [Measures](/docs/dax/measures) for how the two evaluate differently.
+
+## How to Actually Find It
+
+The error names the column, but in a longer measure it helps to check systematically:
+
+1. Open the measure and find every place a table/column reference (`Table[Column]`) appears, as opposed to a measure reference (`[MeasureName]`).
+2. For each one, check whether it's already inside an aggregator (`SUM`, `AVERAGE`, `MIN`, `MAX`, `COUNT`) or a function that resolves it another way (`SELECTEDVALUE`, iterator row context).
+3. Any bare column reference outside one of those is the likely cause.
+
+## Common Mistakes
+
+**Testing only at the detail level.** A measure like the unit price example above can pass every manual check if it's only ever tested in a table with one row per key — always check it with a total/subtotal visible before considering it done.
+
+**Reaching for SELECTEDVALUE as a blanket fix.** `SELECTEDVALUE()` resolves this specific error by returning a fallback when multiple values are present, but it's meant for genuinely single-value scenarios (a slicer selection, a title). Using it to silence this error on a column that should be summed just replaces a clear error with a wrong number. See [SELECTEDVALUE](/docs/dax/selectedvalue) for where it actually belongs.
+
+**Not noticing the column-vs-measure typo.** Because `Table[Column]` and `[Measure]` are visually similar, this mistake tends to survive a quick read-through — worth a second look specifically for it when the error names a column that has a same-named measure built on top of it.
+
+## Next Steps
+
+- [Measures](/docs/dax/measures)
+- [Calculated Columns](/docs/dax/calculated-columns)
+- [SELECTEDVALUE](/docs/dax/selectedvalue)
+- [Filter Context](/docs/dax/filter-context)
