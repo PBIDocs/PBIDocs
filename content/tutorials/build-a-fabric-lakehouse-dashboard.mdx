@@ -1,0 +1,305 @@
+---
+title: "Build a Product Usage Dashboard on a Fabric Lakehouse"
+description: "An end-to-end Microsoft Fabric tutorial: land raw usage events in a Lakehouse, clean and shape them with a notebook into a star schema, connect Power BI in Direct Lake mode, and build a report — no Import refresh involved."
+date: "2026-08-19"
+tags: ["Tutorial", "Fabric", "Data Modeling", "DAX"]
+---
+
+The [sales analysis tutorial](/tutorials/build-a-sales-analysis-report) builds a model the traditional way: Power Query connects straight to a file, and Power BI imports the result. This tutorial builds the same kind of star schema a different way — landing raw data in a Fabric Lakehouse, shaping it with a notebook, and connecting Power BI in **Direct Lake** mode, which reads the Lakehouse's Delta tables directly with no import step at all.
+
+```text
+Raw Usage Events (messy, one flat table, CSV)
+        |
+        | Land in Lakehouse Files
+        |
+Bronze: raw Delta table (as landed)
+        |
+        | Notebook: clean, dedupe, split into a star schema
+        |
+Gold: FactEvents, DimUser, DimFeature, DimDate
+        |
+        | Power BI semantic model (Direct Lake — no import)
+        |
+Report (active users, feature adoption, trend)
+```
+
+This needs a Fabric-enabled workspace (a free trial capacity is enough) — everything else is small enough to paste in directly, the same honest-about-messy-data approach as the sales tutorial.
+
+---
+
+## What You're Building
+
+A one-page usage report for a small SaaS product, answering four questions a product manager actually asks:
+
+- How many people are actively using the product, and on which days?
+- Which features are actually getting used?
+- Are a handful of power users driving most of the activity?
+- Is usage trending up or down over time?
+
+```text
++------------------------------------------------------------+
+|  Active Users  |  Total Events  |  Events/User  |  7-Day AU  |
++------------------------------------------------------------+
+|  Active Users Trend (line chart, by day)                    |
++------------------------------------------------+-----------+
+|  Feature Adoption % (bar chart)                  | Top 10    |
+|                                                   | Users     |
+|                                                   | (table)   |
++------------------------------------------------------------+
+```
+
+---
+
+## Step 1: The Raw Data
+
+A real product's event log arrives as a firehose of rows — one per action, no structure beyond "something happened." This one is deliberately small but has the same shape: repeated user and feature details on every row, mixed casing, and a few exact duplicate rows from a retried write upstream.
+
+```text
+EventID,EventDate,UserEmail,FeatureName,EventType
+1,2026-06-01,alice@acme.io,Dashboard,view
+2,2026-06-01,Bob@Acme.io,Export,click
+3,2026-06-01,alice@acme.io,Export,click
+4,2026-06-02,priya@acme.io,Dashboard,view
+5,2026-06-02,priya@acme.io,Dashboard,view
+5,2026-06-02,priya@acme.io,Dashboard,view
+6,2026-06-03,bob@acme.io,Alerts,click
+7,2026-06-03,diego@acme.io,Dashboard,view
+8,2026-06-04,alice@acme.io,Alerts,click
+9,2026-06-05,priya@acme.io,Export,click
+10,2026-06-05,diego@acme.io,Export,click
+11,2026-06-06,alice@acme.io,Dashboard,view
+12,2026-06-06,bob@acme.io,Dashboard,view
+```
+
+Note row 5 appears twice, and `UserEmail` casing is inconsistent (`Bob@Acme.io` vs `bob@acme.io`) — both get fixed in the notebook step below, not by hand. Save this as `usage_events.csv`.
+
+---
+
+## Step 2: Create the Lakehouse and Land the Raw File
+
+In a Fabric-enabled workspace: **New > Lakehouse**, give it a name (e.g. `UsageLakehouse`). Once it opens, use the **Files** pane's upload button to drop `usage_events.csv` into a `raw` folder.
+
+```text
+UsageLakehouse
+  Files/
+    raw/
+      usage_events.csv     <- landed here, untouched
+  Tables/
+    (empty so far)
+```
+
+In production this landing step would usually be a scheduled [Data Factory](/docs/fabric/data-factory) pipeline instead of a manual upload — the notebook work below is identical either way.
+
+---
+
+## Step 3: Clean the Raw Data with a Notebook
+
+Attach a new notebook to the Lakehouse (**Open notebook > New notebook**, then select `UsageLakehouse` as the default Lakehouse). Read the raw file, fix the casing and duplicate rows, and land the result as a Delta table — this is the "bronze" layer described in [Lakehouse](/docs/fabric/lakehouse#medallion-architecture).
+
+```python lineNumbers
+from pyspark.sql.functions import trim, lower, to_date
+
+raw = spark.read.format("csv").option("header", "true").load("Files/raw/usage_events.csv")
+
+cleaned = (
+    raw
+    .withColumn("UserEmail", trim(lower("UserEmail")))
+    .withColumn("EventDate", to_date("EventDate"))
+    .dropDuplicates(["EventID"])
+)
+
+cleaned.write.format("delta").mode("overwrite").save("Tables/bronze_events")
+```
+
+`dropDuplicates(["EventID"])` removes the exact-duplicate row from earlier, and `lower()` fixes the inconsistent email casing before it ever becomes a join key — the same problem, and the same fix, as [Trailing Whitespace or Case Differences](/blog/key-didnt-match-any-rows-error#cause-2-trailing-whitespace-or-case-differences) causing a lookup to silently fail.
+
+---
+
+## Step 4: Split Into a Star Schema
+
+`bronze_events` is still one flat table. Build the dimension and fact tables from it, the same star schema shape as [Star Schema](/docs/modeling/star-schema) describes — just built in PySpark instead of Power Query.
+
+```text
+Flat table (what we have now):
+EventID | EventDate | UserEmail | FeatureName | EventType
+
+Star schema (what we want):
+DimUser              DimFeature           DimDate
+UserKey              FeatureKey           Date
+UserEmail            FeatureName
+        \                  |                  /
+         \                 |                 /
+                     FactEvents
+              EventID, UserKey, FeatureKey,
+              Date, EventType
+```
+
+### Build DimUser and DimFeature
+
+```python lineNumbers
+from pyspark.sql.window import Window
+from pyspark.sql.functions import row_number
+
+bronze = spark.read.format("delta").load("Tables/bronze_events")
+
+dim_user = (
+    bronze.select("UserEmail").distinct()
+    .withColumn("UserKey", row_number().over(Window.orderBy("UserEmail")))
+)
+dim_user.write.format("delta").mode("overwrite").save("Tables/DimUser")
+
+dim_feature = (
+    bronze.select("FeatureName").distinct()
+    .withColumn("FeatureKey", row_number().over(Window.orderBy("FeatureName")))
+)
+dim_feature.write.format("delta").mode("overwrite").save("Tables/DimFeature")
+```
+
+`row_number()` over a defined ordering generates the surrogate key — the notebook equivalent of `Table.AddIndexColumn` in the sales tutorial's Power Query version.
+
+### Build DimDate
+
+```python lineNumbers
+dim_date = spark.sql("""
+    SELECT explode(sequence(to_date('2026-06-01'), to_date('2026-06-30'), interval 1 day)) AS Date
+""")
+
+dim_date.write.format("delta").mode("overwrite").save("Tables/DimDate")
+```
+
+A continuous date range, not just the dates that happen to appear in the events — the same reasoning as [Date Tables](/docs/modeling/date-tables), built with `sequence()` instead of DAX's `CALENDAR()`.
+
+### Build FactEvents
+
+```python lineNumbers
+fact_events = (
+    bronze
+    .join(dim_user, on="UserEmail", how="left")
+    .join(dim_feature, on="FeatureName", how="left")
+    .select("EventID", "UserKey", "FeatureKey", "EventDate", "EventType")
+    .withColumnRenamed("EventDate", "Date")
+)
+
+fact_events.write.format("delta").mode("overwrite").save("Tables/FactEvents")
+```
+
+Refresh the Lakehouse's **Tables** pane and all four Delta tables should be visible and queryable through the SQL analytics endpoint immediately — no separate load step, the same point [Lakehouse](/docs/fabric/lakehouse#the-sql-analytics-endpoint) makes.
+
+---
+
+## Step 5: Build the Semantic Model in Direct Lake
+
+From the Lakehouse, **New semantic model**, and select all four tables. This is the key difference from the sales tutorial: there's no **Get Data**, no **Refresh** button, and no wait for an import to finish — the model reads `Tables/` directly.
+
+```text
+Import mode:        Source -> copy into the model on refresh -> stale until refreshed
+Direct Lake mode:    OneLake Delta tables -> read directly -> always current
+```
+
+In the semantic model's **Model view**, draw the relationships exactly as the star schema diagram shows: `FactEvents[UserKey]` to `DimUser[UserKey]`, `FactEvents[FeatureKey]` to `DimFeature[FeatureKey]`, `FactEvents[Date]` to `DimDate[Date]` — all one-to-many, dimension tables on the "one" side. Then mark `DimDate` as the model's date table (**Table tools > Mark as Date Table**) exactly as in a normal Import model. See [Direct Lake Mode](/docs/fabric/direct-lake) for how framing and transcoding work under the hood — worth reading before this model goes anywhere near production data.
+
+---
+
+## Step 6: Write the Core Measures
+
+DAX in a Direct Lake model is written exactly like DAX in an Import model — the storage mode doesn't change the language.
+
+```dax lineNumbers
+Active Users =
+DISTINCTCOUNT(FactEvents[UserKey])
+
+Total Events =
+COUNTROWS(FactEvents)
+
+Events Per User =
+DIVIDE([Total Events], [Active Users])
+```
+
+### Feature Adoption %
+
+```dax lineNumbers
+Total Active Users =
+CALCULATE(
+    [Active Users],
+    ALL(DimFeature)
+)
+
+Feature Adoption % =
+DIVIDE([Active Users], [Total Active Users])
+```
+
+`ALL(DimFeature)` removes whatever feature the current row is filtered to, so `[Total Active Users]` always means "everyone," not just users of the currently-filtered feature — the same percent-of-total shape as the [DAX CALCULATE Modifiers Cheat Sheet](/blog/dax-calculate-modifiers-cheat-sheet). With `DimFeature[FeatureName]` on the rows of a table or bar chart, `[Feature Adoption %]` shows what share of all active users touched each feature.
+
+### 7-Day Active Users
+
+```dax lineNumbers
+Active Users (7-Day) =
+CALCULATE(
+    [Active Users],
+    DATESINPERIOD(DimDate[Date], MAX(DimDate[Date]), -7, DAY)
+)
+```
+
+A rolling window is a steadier signal than raw daily active users, which can look noisy day to day on a small user base. See [Time Intelligence](/docs/dax/time-intelligence) for more patterns like this one.
+
+---
+
+## Step 7: Lay Out the Report
+
+```text
+Page: "Usage Overview"
+
+Row 1 (KPI cards):
+  [Active Users]  [Total Events]  [Events Per User]  [Active Users (7-Day)]
+
+Row 2 (line chart):
+  X-axis: DimDate[Date]
+  Y-axis: [Active Users]
+  Also plot: [Active Users (7-Day)] as a second line, to smooth the daily trend
+
+Row 3 (left, bar chart):        Row 3 (right, table):
+  X-axis: DimFeature[FeatureName]  Columns: DimUser[UserEmail],
+  Y-axis: [Feature Adoption %]              [Total Events]
+                                   Sorted by: [Total Events] descending
+
+Slicer (top of page): DimDate[Date]
+```
+
+See [Charts](/docs/visuals/charts) and [Tables](/docs/visuals/tables) for choosing and configuring these visual types — the same guidance applies regardless of storage mode.
+
+---
+
+## Common Mistakes
+
+### Adding a Calculated Column Instead of Fixing It Upstream
+
+Direct Lake doesn't support calculated columns or calculated tables directly — a column like a derived `UserDomain` needs to be added in the notebook (Step 3 or 4) before the table is written, not bolted on afterward in the semantic model. See [Direct Lake Limitations](/docs/fabric/direct-lake#limitations) for the full list of what doesn't carry over from Import.
+
+### Forgetting to Reframe After New Data Lands
+
+Re-running the notebook to add a new day's events doesn't automatically update the report — Direct Lake needs to **reframe** to pick up the change. See [Reframing Instead of Refresh](/docs/fabric/direct-lake#reframing-instead-of-refresh) for how that works and how to schedule it.
+
+### Building Every Table as One Big Notebook Cell
+
+Splitting bronze, dimension, and fact table logic into separate cells (as done above) makes it possible to re-run just the piece that changed, and to actually see which step produced a wrong result — a single giant cell hides both.
+
+---
+
+## Tutorial Checklist
+
+- Raw data lands in Files before any transformation touches it.
+- The star schema is built in Tables as separate Delta tables, with surrogate keys generated explicitly.
+- `DimDate` is a continuous date range, explicitly marked as the model's date table.
+- Relationships and the date table are set the same way they would be in an Import model — Direct Lake doesn't change this step.
+- Any derived/calculated logic lives in the notebook, not as a calculated column on the semantic model.
+
+---
+
+## Next Steps
+
+This tutorial deliberately kept the pipeline manual. To go further with the same model:
+
+- [Data Factory](/docs/fabric/data-factory) — automate the Files upload and notebook run on a schedule instead of running them by hand.
+- [OneLake](/docs/fabric/onelake) — what's actually storing these Delta tables underneath the Lakehouse.
+- [Row-Level Security](/docs/power-bi-service/security) — restricting each team to their own slice of usage data.
+- [Aggregations](/docs/modeling/aggregations) — pre-summarizing `FactEvents` as event volume grows past what a single table comfortably handles.
