@@ -1,0 +1,122 @@
+---
+title: "DAX CALCULATE Modifiers Cheat Sheet"
+description: "A fast, scannable reference for the filter-modifying functions used inside CALCULATE — ALL, ALLEXCEPT, ALLSELECTED, REMOVEFILTERS, KEEPFILTERS, and USERELATIONSHIP."
+date: "2026-08-17"
+tags: ["DAX", "Cheat Sheet"]
+---
+
+Quick reference for the functions you'll actually pass as filter arguments to `CALCULATE()`. See [CALCULATE](/docs/dax/calculate) for the full explanation of how filter context modification works, and [ALL, ALLEXCEPT, ALLSELECTED & REMOVEFILTERS](/docs/dax/filter-functions) for the deep dive on the filter-removal functions specifically.
+
+## Removing Filters
+
+| Function | Removes |
+|---|---|
+| `ALL(Table)` | Every filter on the entire table |
+| `ALL(Table[Column])` | Filters on just that one column |
+| `ALLEXCEPT(Table, Column1, ...)` | Every filter on the table *except* the columns listed |
+| `REMOVEFILTERS(Table or Column)` | Same effect as `ALL`, with a name that says what it does |
+
+```dax lineNumbers
+Total Sales (All Products) =
+CALCULATE(
+    [Total Sales],
+    ALL(DimProduct)
+)
+```
+
+```dax lineNumbers
+Total Sales (All Products) =
+CALCULATE(
+    [Total Sales],
+    REMOVEFILTERS(DimProduct)
+)
+```
+
+`ALL()` and `REMOVEFILTERS()` do the same thing here — `REMOVEFILTERS()` exists purely for clarity of intent, and most style guides now prefer it for new code.
+
+## Keeping Only Some Filters
+
+`ALLEXCEPT()` is the inverse of listing columns to remove — it clears everything on a table *except* the columns named.
+
+```dax lineNumbers
+Sales by Category Only =
+CALCULATE(
+    [Total Sales],
+    ALLEXCEPT(DimProduct, DimProduct[Category])
+)
+```
+
+```text
+Report filtered to: Category = Bikes, Color = Red, Size = Large
+        |
+ALLEXCEPT(DimProduct, DimProduct[Category]) keeps only Category
+        |
+Result: sales for all Bikes, ignoring Color and Size filters
+```
+
+## Respecting User Selections Anyway
+
+`ALLSELECTED()` removes filters from inside the visual's own context (like `ALL()`), but still respects filters coming from outside it — slicers, page filters, other visuals.
+
+| Function | Ignores | Still respects |
+|---|---|---|
+| `ALL(Table)` | Everything, including slicers and page filters | Nothing |
+| `ALLSELECTED(Table)` | The visual's own row/column context | Slicers, page filters, report filters |
+
+```dax lineNumbers
+Percent of Filtered Total =
+DIVIDE(
+    [Total Sales],
+    CALCULATE([Total Sales], ALLSELECTED(DimProduct))
+)
+```
+
+This is the function behind "percent of visible total" calculations that need to respect whatever a user has already filtered the page to, rather than always dividing by the true grand total.
+
+## Adding Instead of Replacing
+
+By default, `CALCULATE()` replaces an existing filter on the same column. `KEEPFILTERS()` changes that to combine (AND) instead of overwrite.
+
+```dax lineNumbers
+Bike Sales =
+CALCULATE(
+    [Total Sales],
+    KEEPFILTERS(DimProduct[Category] = "Bikes")
+)
+```
+
+```text
+Without KEEPFILTERS: report filtered to Accessories -> CALCULATE overrides it -> shows Bikes
+With KEEPFILTERS:    report filtered to Accessories -> combined with Bikes -> shows nothing (no overlap)
+```
+
+Reach for this specifically when a measure needs to intersect with the existing filter rather than override it.
+
+## Switching Which Relationship Is Used
+
+```dax lineNumbers
+Sales by Ship Date =
+CALCULATE(
+    [Total Sales],
+    USERELATIONSHIP(FactSales[ShipDate], DimDate[Date])
+)
+```
+
+Only one relationship between two tables can be active at a time. `USERELATIONSHIP()` temporarily activates a specific inactive one for the duration of the calculation — common when a fact table has multiple date columns (order date, ship date, due date) but only one relationship can drive the date table by default.
+
+## Quick Decision Table
+
+| Need | Function |
+|---|---|
+| Ignore every filter on a table | `ALL(Table)` or `REMOVEFILTERS(Table)` |
+| Ignore filters on one specific column | `ALL(Table[Column])` |
+| Keep only certain columns' filters | `ALLEXCEPT(Table, Column, ...)` |
+| Ignore visual context but respect slicers/page filters | `ALLSELECTED(Table)` |
+| Combine a new filter with the existing one, not replace it | `KEEPFILTERS(...)` |
+| Use an inactive relationship for this calculation | `USERELATIONSHIP(...)` |
+
+## Next Steps
+
+- [CALCULATE](/docs/dax/calculate)
+- [ALL, ALLEXCEPT, ALLSELECTED & REMOVEFILTERS](/docs/dax/filter-functions)
+- [Percent of Total](/docs/dax-patterns/percent-of-total)

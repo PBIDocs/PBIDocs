@@ -1,0 +1,98 @@
+---
+title: "Power BI Error: Couldn't Load the Data for This Visual"
+description: "\"Couldn't load the data for this visual\" is a generic banner covering several unrelated causes. Here's how to read the real error underneath it, and the four usual culprits."
+date: "2026-08-16"
+tags: ["Power BI Service", "Troubleshooting"]
+---
+
+The visual itself shows just a short, unhelpful banner:
+
+```text
+Couldn't load the data for this visual
+```
+
+This message is a wrapper — it means the visual's query failed, but it doesn't say why. The real cause is always in the details behind it.
+
+## Step One: Always Click "See Details"
+
+Underneath the banner, or in a small expandable link, Power BI shows the actual underlying error. This single step matters more than anything else in this post — the specific wording there determines which of the causes below applies.
+
+```text
+Couldn't load the data for this visual
+[See details]
+        |
+        v
+The actual error: resource limit, DAX error, connection failure, or model error
+```
+
+Skipping this and guessing at a cause is the single biggest reason this error takes longer to fix than it needs to.
+
+## Cause 1: "Resources Exceeded" / Query Complexity
+
+```text
+The query has exceeded the available resources.
+```
+
+or
+
+```text
+This visual has exceeded the available resources.
+```
+
+This means the visual asked for more raw, unaggregated data than Power BI (or the underlying source, in DirectQuery) is willing to return in one query — usually a table or matrix showing a very high-cardinality column (a raw ID, a timestamp to the second) at full detail, or one with "Show items with no data" turned on across a large dimension.
+
+**Fix:** reduce what the visual actually needs to return.
+
+```text
+Table with a raw TransactionID + Timestamp per row, no aggregation -> exceeds limits
+Same table, grouped by Date and Category, values summed -> fine
+```
+
+Adding grouping, a higher-level date hierarchy, or a top-N filter usually resolves it without losing the point of the visual.
+
+## Cause 2: A DAX Error Inside a Measure the Visual Uses
+
+```text
+MdxScript(Model) (5, 22) Calculation error in measure 'FactSales'[Unit Price]:
+Cannot convert value '0' of type Number to type True/False.
+```
+
+The visual itself is fine — a measure it depends on is throwing an error, and it only surfaces when the visual actually tries to render (rather than when the measure was first written), because that's the first time it's evaluated against real data in that combination of filters.
+
+**Fix:** open the measure named in the details and fix the underlying formula error. A divide-by-zero is the most common version of this — see [A Single Value for Column Cannot Be Determined](/blog/single-value-column-cannot-be-determined) for a related DAX error with the same "worked until it didn't" pattern, and always use `DIVIDE()` instead of `/` for exactly this reason.
+
+## Cause 3: A DirectQuery Connection or Gateway Failure
+
+```text
+Couldn't refresh the connection. Please try again later or contact support.
+```
+
+or a timeout / credential-related message naming the data source directly. This means the visual is on a DirectQuery table and the live connection to the source (a database, a gateway) failed — expired credentials, the gateway is offline, or the source itself timed out or is unreachable.
+
+**Fix:** this isn't fixable from inside the report — it needs the data source connection or gateway checked. In Power BI Desktop, **Transform Data > Data source settings** shows the current credentials; in the Service, check the gateway's status and the dataset's connection settings.
+
+## Cause 4: An Ambiguous or Broken Relationship Path
+
+```text
+The results might contain incorrect values because the relationship
+'FactSales'[CustomerKey]-'DimCustomer'[CustomerKey] is inactive.
+```
+
+or a message about circular or ambiguous relationships. This means the model's relationships don't give the query engine a single unambiguous path to resolve the visual's fields — usually multiple active paths between the same two tables, or a relationship that's inactive but needed by this specific visual without a `USERELATIONSHIP()` to activate it.
+
+**Fix:** check **Model view** for the relationship named in the error. If it's intentionally inactive, the measure needs `USERELATIONSHIP()` to use it — see [CALCULATE](/docs/dax/calculate#userelationship) for the pattern. If there are genuinely multiple active paths, only one relationship between two tables can be active at a time; the others need to be inactive or the model needs restructuring.
+
+## Common Mistakes
+
+**Guessing at a fix before reading the details.** Because the banner is generic, it's tempting to try the same fix that worked last time — but a resource-limit fix does nothing for a broken relationship, and vice versa. The details link always names the actual cause.
+
+**Assuming it's the visual's fault.** The visual is almost never broken by itself — it's reporting a failure from the model, a measure, or the data source underneath it. Fixing the actual cause (not the visual's settings) is what resolves it.
+
+**Retrying without changing anything.** A refresh sometimes clears a transient gateway timeout, which can make it look "fixed" — but if the same visual fails again on the next refresh, that's Cause 3, not a fluke.
+
+## Next Steps
+
+- [CALCULATE](/docs/dax/calculate)
+- [Relationships](/docs/modeling/relationships)
+- [A Single Value for Column Cannot Be Determined](/blog/single-value-column-cannot-be-determined)
+- [Workspaces](/docs/power-bi-service/workspaces)
