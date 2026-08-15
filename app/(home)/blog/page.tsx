@@ -40,7 +40,20 @@ function PostMeta({ post }: { post: BlogPost }) {
 }
 
 export default function BlogIndexPage() {
-  const [latest, ...rest] = getBlogPosts();
+  const posts = getBlogPosts();
+  const [latest, ...rest] = posts;
+
+  const topicCount = new Set(posts.flatMap((post) => post.tags ?? [])).size;
+  const earliestYear = posts.reduce(
+    (min, post) => Math.min(min, new Date(`${post.date}T00:00:00Z`).getUTCFullYear()),
+    new Date().getUTCFullYear(),
+  );
+
+  const stats = [
+    { value: `${posts.length}`, label: 'Posts' },
+    { value: `${topicCount}`, label: 'Topics' },
+    { value: `${earliestYear}`, label: 'Since' },
+  ];
 
   return (
     <div className="relative overflow-hidden">
@@ -65,6 +78,15 @@ export default function BlogIndexPage() {
             <Rss className="size-3.5" />
             RSS feed
           </a>
+
+          <div className="mt-8 flex justify-center gap-10">
+            {stats.map((stat) => (
+              <div key={stat.label}>
+                <div className="text-2xl font-bold text-fd-primary">{stat.value}</div>
+                <div className="text-sm text-fd-muted-foreground">{stat.label}</div>
+              </div>
+            ))}
+          </div>
         </div>
 
         {latest && (
