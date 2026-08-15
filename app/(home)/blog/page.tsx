@@ -48,7 +48,7 @@ export default function BlogIndexPage() {
         <div className="absolute left-1/2 top-0 h-[400px] w-[100%] -translate-x-1/2 rounded-full bg-fd-primary/10 blur-3xl" />
       </div>
 
-      <div className="mx-auto max-w-3xl px-6 py-16 sm:py-24">
+      <div className="mx-auto max-w-5xl px-6 py-16 sm:py-24">
         <div className="mb-16 text-center animate-in fade-in slide-in-from-bottom-4 duration-700">
           <div className="mb-6 inline-flex rounded-full border px-4 py-1 text-sm text-fd-muted-foreground">
             Practical Power BI Fixes
@@ -83,18 +83,20 @@ export default function BlogIndexPage() {
           </Link>
         )}
 
-        <div className="space-y-4">
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
           {rest.map((post) => (
             <Link
               key={post.slug}
               href={`/blog/${post.slug}`}
-              className="group block rounded-xl border border-fd-border p-6 transition-all duration-300 hover:-translate-y-1 hover:border-fd-primary/50 hover:bg-fd-accent/50 hover:shadow-md"
+              className="group flex flex-col rounded-xl border border-fd-border p-6 transition-all duration-300 hover:-translate-y-1 hover:border-fd-primary/50 hover:bg-fd-accent/50 hover:shadow-md"
             >
               <h2 className="mb-2 text-xl font-semibold transition-colors group-hover:text-fd-primary">
                 {post.title}
               </h2>
-              <p className="mb-4 text-fd-muted-foreground">{post.description}</p>
-              <PostMeta post={post} />
+              <p className="mb-4 text-fd-muted-foreground line-clamp-2">{post.description}</p>
+              <div className="mt-auto">
+                <PostMeta post={post} />
+              </div>
             </Link>
           ))}
         </div>
