@@ -5,6 +5,7 @@ import { appName, gitConfig } from '@/lib/shared';
 import { NewsletterForm } from '@/components/newsletter-form';
 import { HeroSearch } from '@/components/hero-search';
 import { SpotlightCard } from '@/components/spotlight-card';
+import { FunctionTicker } from '@/components/function-ticker';
 import { source } from '@/lib/source';
 import { getBlogPosts } from '@/lib/blog-source';
 import { getTutorials } from '@/lib/tutorial-source';
@@ -147,6 +148,11 @@ export default function HomePage() {
             </div>
           ))}
         </div>
+      </section>
+
+      {/* Function Ticker */}
+      <section className="mt-16 w-full max-w-5xl">
+        <FunctionTicker />
       </section>
 
       {/* Topics */}
