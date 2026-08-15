@@ -228,7 +228,15 @@ export default function HomePage() {
       </section>
 
       {/* Newsletter */}
-      <section className="mt-24 flex w-full max-w-5xl flex-col items-center gap-4 rounded-xl border border-fd-border p-8 text-center">
+      <section
+        className="relative mt-24 flex w-full max-w-5xl flex-col items-center gap-4 rounded-xl border border-transparent p-8 text-center"
+        style={{
+          background: `
+            linear-gradient(color-mix(in srgb, var(--color-fd-background) 97%, var(--color-fd-primary)), color-mix(in srgb, var(--color-fd-background) 97%, var(--color-fd-primary))) padding-box,
+            linear-gradient(135deg, color-mix(in srgb, var(--color-fd-primary) 45%, transparent), transparent 55%, color-mix(in srgb, var(--color-fd-primary) 25%, transparent)) border-box
+          `,
+        }}
+      >
         <div>
           <h2 className="text-xl font-semibold">Stay in the loop</h2>
           <p className="mt-1 text-fd-muted-foreground">
