@@ -5,6 +5,7 @@ import { DocsBody, DocsDescription, DocsTitle } from 'fumadocs-ui/layouts/docs/p
 import { getMDXComponents } from '@/components/mdx';
 import { getBlogPost, getBlogPostImageUrl, getBlogPosts } from '@/lib/blog-source';
 import { BlogToc } from '@/components/blog-toc';
+import { Faq } from '@/components/faq';
 
 function formatDate(date: string): string {
   return new Date(`${date}T00:00:00Z`).toLocaleDateString('en-US', {
@@ -40,6 +41,18 @@ export default async function BlogPostPage(props: { params: Promise<{ slug: stri
     },
   };
 
+  const faqJsonLd = post.faq && post.faq.length > 0
+    ? {
+        '@context': 'https://schema.org',
+        '@type': 'FAQPage',
+        mainEntity: post.faq.map((item) => ({
+          '@type': 'Question',
+          name: item.question,
+          acceptedAnswer: { '@type': 'Answer', text: item.answer },
+        })),
+      }
+    : null;
+
   return (
     <div className="mx-auto w-full min-w-0 max-w-6xl px-6 py-16 sm:py-24">
       <script
@@ -47,6 +60,13 @@ export default async function BlogPostPage(props: { params: Promise<{ slug: stri
         // eslint-disable-next-line react/no-danger
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
+      {faqJsonLd && (
+        <script
+          type="application/ld+json"
+          // eslint-disable-next-line react/no-danger
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+        />
+      )}
       <Link
         href="/blog"
         className="text-sm text-fd-muted-foreground hover:text-fd-foreground transition-colors"
@@ -72,6 +92,8 @@ export default async function BlogPostPage(props: { params: Promise<{ slug: stri
           <DocsBody>
             <MDX components={getMDXComponents()} />
           </DocsBody>
+
+          {post.faq && post.faq.length > 0 && <Faq items={post.faq} />}
         </article>
 
         {post.toc.length > 0 && (

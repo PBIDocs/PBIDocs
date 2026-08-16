@@ -18,6 +18,10 @@ export const docs = defineDocs({
   },
 });
 
+const faqSchema = z
+  .array(z.object({ question: z.string(), answer: z.string() }))
+  .optional();
+
 export const blog = defineCollections({
   type: 'doc',
   dir: 'content/blog',
@@ -26,6 +30,7 @@ export const blog = defineCollections({
     description: z.string(),
     date: z.string(),
     tags: z.array(z.string()).optional(),
+    faq: faqSchema,
   }),
 });
 
@@ -37,6 +42,7 @@ export const tutorials = defineCollections({
     description: z.string(),
     date: z.string(),
     tags: z.array(z.string()).optional(),
+    faq: faqSchema,
   }),
 });
 
