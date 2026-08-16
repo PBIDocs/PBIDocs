@@ -1,0 +1,262 @@
+---
+title: "Build an Earned Value Management (EVM) Dashboard in Power BI"
+description: "An end-to-end tutorial for systems and program engineers: turn a task list into real CPI, SPI, and EAC measures in DAX, using a disconnected date table to project planned value over time."
+date: "2026-08-21"
+tags: ["Tutorial", "DAX", "Data Modeling"]
+faq:
+  - question: "What is CPI in Earned Value Management?"
+    answer: "Cost Performance Index = Earned Value divided by Actual Cost. A CPI below 1 means the work performed so far cost more than it was budgeted for."
+  - question: "What is SPI in Earned Value Management?"
+    answer: "Schedule Performance Index = Earned Value divided by Planned Value. An SPI below 1 means less work has been completed than was planned by this point in the schedule."
+  - question: "What's the difference between EAC and BAC?"
+    answer: "BAC (Budget at Completion) is the original total budget. EAC (Estimate at Completion) is a revised total-cost forecast based on how the program is actually performing, calculated as BAC divided by CPI in its simplest form."
+  - question: "Can Power BI calculate EVM metrics without dedicated project management software?"
+    answer: "Yes. Every metric in this tutorial — PV, EV, AC, CPI, SPI, EAC — is a standard DAX measure built from a task list with planned dates, budgeted cost, percent complete, and actual cost. No specialized PM tool is required."
+---
+
+Most Power BI tutorials build a sales report. This one builds something systems and program engineers actually need: an Earned Value Management dashboard — the standard framework (PV, EV, AC, CPI, SPI, EAC) program offices use to answer one question honestly: *is this program on budget and on schedule, and if not, by how much?*
+
+```text
+Task List (planned dates, budget, % complete, actual cost)
+        |
+        | DAX: PV, EV, AC measures
+        |
+CPI, SPI, EAC, VAC — the standard EVM metric set
+        |
+Dashboard (S-curve, variance table, status cards)
+```
+
+No downloadable file — the task list below is small enough to paste directly into a `.csv` file, and every EVM formula used is shown in full, not just referenced.
+
+---
+
+## What You're Building
+
+A one-page program status dashboard answering the four questions an EVM review actually asks:
+
+- Are we over or under budget for the work completed so far? (CPI)
+- Are we ahead of or behind schedule? (SPI)
+- If current performance continues, what will this program actually cost? (EAC)
+- Which specific tasks are driving the variance?
+
+```text
++------------------------------------------------------------+
+|  CPI    |  SPI    |  Cost Variance  |  Schedule Variance    |
++------------------------------------------------------------+
+|  PV / EV / AC over time (the classic EVM "S-curve")         |
++------------------------------------------------------------+
+|  Task-level table: BAC, % Complete, EV, AC, CV, SV          |
++------------------------------------------------------------+
+```
+
+---
+
+## Step 1: The Raw Data
+
+A program's task list, with the fields an EVM analysis actually needs: a planned start and end date per task (the baseline schedule), a budgeted cost, and — as of the current status date — how complete each task is and what's actually been spent.
+
+```text
+TaskID,TaskName,PlannedStart,PlannedEnd,BAC,PercentComplete,ActualCost
+1,Requirements Analysis,2026-01-01,2026-02-15,45000,1.00,42000
+2,System Architecture,2026-01-15,2026-03-15,60000,0.90,58000
+3,Subsystem A Design,2026-02-15,2026-04-30,80000,0.65,58000
+4,Subsystem B Design,2026-02-15,2026-04-30,75000,0.55,50000
+5,Integration Planning,2026-03-01,2026-04-15,30000,0.40,15000
+6,Prototype Build,2026-04-01,2026-06-30,120000,0.20,30000
+7,Verification & Test,2026-05-01,2026-07-31,90000,0.05,5000
+8,Documentation,2026-01-01,2026-07-31,25000,0.35,10000
+```
+
+`BAC` (Budget at Completion) is each task's total planned cost. `PercentComplete` and `ActualCost` are as-of-today status values — in a real program these come from whoever owns each task, updated on a regular reporting cadence. Save this as `program_status.csv`.
+
+---
+
+## Step 2: Clean and Type in Power Query
+
+Open Power BI Desktop, **Get Data > Text/CSV**, point it at the file, then **Transform Data**.
+
+```powerquery lineNumbers
+#"Changed Type" = Table.TransformColumnTypes(
+    Source,
+    {
+        {"PlannedStart", type date},
+        {"PlannedEnd", type date},
+        {"BAC", type number},
+        {"PercentComplete", type number},
+        {"ActualCost", type number}
+    }
+)
+```
+
+That's the whole cleaning step — this table is already at the right grain (one row per task), so there's no splitting into a star schema the way a transactional dataset needs. See [Transformations](/docs/power-query/transformations) if any of these type conversions aren't familiar.
+
+---
+
+## Step 3: Add a Disconnected Date Table
+
+Time intelligence here works differently than a typical sales model. There's no fact table full of dated transactions — just a baseline schedule (`PlannedStart`/`PlannedEnd` per task) and a single current status snapshot (`PercentComplete`, `ActualCost`). To plot Planned Value as a curve over time, the model needs a date table — but **not related to the task table by a foreign key**, since there's no `Date` column on a task to join against.
+
+```dax lineNumbers
+DimDate =
+CALENDAR(DATE(2026, 1, 1), DATE(2026, 7, 31))
+```
+
+Leave it unrelated to the task table. This is a **disconnected table** — a deliberate modeling choice, not a mistake. See [Date Tables](/docs/modeling/date-tables) for the general pattern; the difference here is that this date table drives a projection (see Step 4), not a join.
+
+---
+
+## Step 4: Write the EVM Measures
+
+Create a dedicated measures table (**Modeling > New Table**) to keep these separate from the task data. See [Measures](/docs/dax/measures) for why a dedicated measures table is worth doing.
+
+### Planned Value (PV)
+
+```dax lineNumbers
+PV (Planned Value) =
+SUMX(
+    Tasks,
+    Tasks[BAC] *
+    MIN(
+        1,
+        MAX(
+            0,
+            DIVIDE(
+                MAX(DimDate[Date]) - Tasks[PlannedStart],
+                Tasks[PlannedEnd] - Tasks[PlannedStart]
+            )
+        )
+    )
+)
+```
+
+This is the technique that makes the disconnected `DimDate` useful: `MAX(DimDate[Date])` reads whatever date is currently in context — a single day on a chart's x-axis, or the latest date under a slicer — and computes what fraction of each task's baseline duration has elapsed by that date. `MIN(1, MAX(0, ...))` clamps that fraction between 0% (before the task starts) and 100% (after it ends), so each task contributes its full `BAC` once its planned end date has passed, and nothing before its planned start.
+
+### Earned Value (EV) and Actual Cost (AC)
+
+```dax lineNumbers
+EV (Earned Value) =
+SUMX(Tasks, Tasks[BAC] * Tasks[PercentComplete])
+
+AC (Actual Cost) =
+SUM(Tasks[ActualCost])
+
+BAC (Budget at Completion) =
+SUM(Tasks[BAC])
+```
+
+Unlike `PV`, these aren't projected across time — `PercentComplete` and `ActualCost` are only known as of the last status update, not for every day in between. A real program tracks these historically too (a snapshot per reporting period), which would let `EV`/`AC` plot as curves the same way `PV` does; this tutorial keeps to a single current snapshot to stay focused on the core formulas.
+
+### Variances
+
+```dax lineNumbers
+CV (Cost Variance) =
+[EV (Earned Value)] - [AC (Actual Cost)]
+
+SV (Schedule Variance) =
+[EV (Earned Value)] - [PV (Planned Value)]
+```
+
+```text
+CV negative -> spent more than the value earned (over budget)
+SV negative -> earned less value than planned by this point (behind schedule)
+```
+
+### CPI and SPI
+
+```dax lineNumbers
+CPI (Cost Performance Index) =
+DIVIDE([EV (Earned Value)], [AC (Actual Cost)])
+
+SPI (Schedule Performance Index) =
+DIVIDE([EV (Earned Value)], [PV (Planned Value)])
+```
+
+```text
+CPI < 1 -> over budget for the work completed
+CPI > 1 -> under budget for the work completed
+SPI < 1 -> behind schedule
+SPI > 1 -> ahead of schedule
+```
+
+### EAC, ETC, VAC, and TCPI
+
+```dax lineNumbers
+EAC (Estimate at Completion) =
+DIVIDE([BAC (Budget at Completion)], [CPI (Cost Performance Index)])
+
+ETC (Estimate to Complete) =
+[EAC (Estimate at Completion)] - [AC (Actual Cost)]
+
+VAC (Variance at Completion) =
+[BAC (Budget at Completion)] - [EAC (Estimate at Completion)]
+
+TCPI (To-Complete Performance Index) =
+DIVIDE(
+    [BAC (Budget at Completion)] - [EV (Earned Value)],
+    [BAC (Budget at Completion)] - [AC (Actual Cost)]
+)
+```
+
+`EAC` here uses the simplest standard formula — it assumes the program's cost efficiency so far (`CPI`) continues unchanged for the remaining work. `TCPI` answers a different question: given what's actually been spent, how efficiently does the remaining work need to be performed to still hit the original `BAC`? A `TCPI` well above 1 is a sign that the original budget is no longer realistic.
+
+---
+
+## Step 5: Lay Out the Report
+
+```text
+Page: "Program Status"
+
+Row 1 (KPI cards):
+  [CPI (Cost Performance Index)]  [SPI (Schedule Performance Index)]
+  [CV (Cost Variance)]  [SV (Schedule Variance)]
+
+Row 2 (line chart, the S-curve):
+  X-axis: DimDate[Date]
+  Y-axis: [PV (Planned Value)]
+  Reference line or card: current [EV (Earned Value)] and [AC (Actual Cost)]
+
+Row 3 (table):
+  Columns: Tasks[TaskName], Tasks[BAC], Tasks[PercentComplete],
+           [EV (Earned Value)], [AC (Actual Cost)],
+           [CV (Cost Variance)], [SV (Schedule Variance)]
+  Conditional formatting: CV and SV columns, red below zero
+```
+
+With this dataset (status as of mid-May against a program running January through July), the numbers tell a specific, realistic story: `CPI` lands around **0.90** and `SPI` around **0.64** — a program that's both over budget and significantly behind schedule, with `TCPI` climbing above **1.10** as a result. That combination (both indices below 1) is exactly the pattern an EVM dashboard exists to surface early, before it shows up as a missed milestone.
+
+See [Charts](/docs/visuals/charts) and [Tables](/docs/visuals/tables) for configuring these visual types, and [Conditional Formatting](/docs/visuals/formatting) for the red/green variance treatment.
+
+---
+
+## Common Mistakes
+
+### Computing EV as a Single Program-Wide Percentage
+
+Multiplying total program budget by an overall "percent complete" produces a number that looks like EV but isn't — EVM is computed **per task**, then summed. A program that's 100% done on cheap tasks and 0% done on expensive ones is nowhere near 50% complete in EV terms, even if a naive average says so.
+
+### Confusing SPI With Actual Time Elapsed
+
+`SPI` measures work completed against work planned — it isn't the same as "percent of the calendar elapsed." A program can be exactly on schedule by date and still have a poor `SPI` if the wrong tasks were prioritized.
+
+### Treating a Single EAC Formula as Definitive
+
+`EAC = BAC / CPI` is the simplest standard formula, but it's one of several (others weight in `SPI`, or let managers substitute a bottom-up re-estimate). Treat it as a data point that starts a conversation, not a number to report as certain.
+
+---
+
+## Tutorial Checklist
+
+- Task data has one row per task with a planned start, planned end, budget, percent complete, and actual cost.
+- `DimDate` exists as a continuous calendar but is **not** related to the task table — it's used to project `PV`, not to join.
+- `PV` is computed per task and clamped between 0% and 100% of that task's baseline duration before summing.
+- `EV` and `AC` are computed per task then summed — never as a single program-wide percentage.
+- `CPI`, `SPI`, and `EAC` have been sanity-checked against the underlying `BAC`/`EV`/`AC`/`PV` numbers, not just trusted at face value.
+
+---
+
+## Next Steps
+
+- [Date Tables](/docs/modeling/date-tables) — the general pattern behind Step 3's calendar table.
+- [CALCULATE](/docs/dax/calculate) — for filtering these measures to a specific task, phase, or program.
+- [DAX CALCULATE Modifiers Cheat Sheet](/blog/dax-calculate-modifiers-cheat-sheet) — useful once this model needs a "percent of total budget" style measure.
+- [Row-Level Security](/docs/power-bi-service/security) — restricting each program manager to their own set of tasks.
