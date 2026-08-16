@@ -21,7 +21,7 @@ A quick-scan index of the M functions most commonly used in Power Query, grouped
 | `Table.TransformColumns` | Applies a function to every value in a column, transforming it in place. |
 | `Table.AddColumn` | Adds a new column, computed from an expression evaluated per row. |
 | `Table.AddIndexColumn` | Adds a sequential index column — the standard way to generate a surrogate key. |
-| `Table.Group` | Groups rows and computes an aggregation per group, like SQL's `GROUP BY`. |
+| [Table.Group](/docs/power-query/table-group) | Groups rows and computes an aggregation per group, like SQL's `GROUP BY`. |
 | `Table.Sort` | Sorts a table by one or more columns. |
 | `Table.Distinct` | Removes duplicate rows, optionally based on specific columns. |
 | `Table.RowCount` | Returns the number of rows in a table. |
@@ -30,7 +30,7 @@ A quick-scan index of the M functions most commonly used in Power Query, grouped
 | `Table.CombineColumns` | Merges multiple columns into one, with a separator. |
 | `Table.Pivot` / `Table.Unpivot` | Turns row values into columns, or columns into rows. |
 | `Table.ReplaceValue` | Replaces specific values throughout a column. |
-| `Table.Buffer` | Loads a table fully into memory, useful for stabilizing a source before repeated reads. |
+| [Table.Buffer](/docs/power-query/table-buffer) | Loads a table fully into memory, useful for stabilizing a source before repeated reads. |
 
 See [Transformations](/docs/power-query/transformations) for most of these applied to a real dataset, and [Power Query Editor](/docs/power-query/editor#what-the-applied-steps-pane-produces) for how Applied Steps map directly to these function calls.
 
@@ -71,7 +71,7 @@ See [Transformations](/docs/power-query/transformations) for most of these appli
 | `List.Distinct` | Removes duplicate values from a list. |
 | `List.Contains` | Returns true if a list contains a given value. |
 | `List.Transform` | Applies a function to every value in a list. |
-| `List.Generate` | Builds a list by repeatedly applying a function, useful for custom sequences. |
+| [List.Generate](/docs/power-query/list-generate) | Builds a list by repeatedly applying a function, useful for custom sequences. |
 
 ---
 
@@ -124,7 +124,7 @@ See [Transformations](/docs/power-query/transformations) for most of these appli
 | `Excel.Workbook` | Reads an Excel file's sheets and tables. |
 | `Sql.Database` | Connects to a SQL Server database. |
 | `Json.Document` | Parses JSON content into a record or list. |
-| `Web.Contents` | Fetches raw content from a URL — the basis of most API-based connectors. |
+| [Web.Contents](/docs/power-query/web-contents) | Fetches raw content from a URL — the basis of most API-based connectors. |
 | `File.Contents` | Reads the raw binary contents of a local file. |
 
 See [M Language](/docs/power-query/m-language) for how these source functions typically appear as the first step (`Source =`) in a generated query.

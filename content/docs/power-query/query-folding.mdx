@@ -112,7 +112,10 @@ Complex custom M expressions
 Merging with a non-foldable source
 Adding an index column
 Certain text/date functions with no SQL equivalent
+Table.Buffer, and anything else that forces full materialization
 ```
+
+See [Table.Buffer](/docs/power-query/table-buffer#the-real-cost-table-buffer-breaks-query-folding) specifically — it's one of the easiest ways to break folding by accident, since it doesn't look like a transformation at all.
 
 Once folding breaks at a step, every step after it also runs locally, even if those later steps individually could have folded.
 
