@@ -18,6 +18,7 @@ export function baseOptions(): BaseLayoutProps {
       { text: 'Tutorials', url: '/tutorials' },
       { text: 'Blog', url: '/blog' },
       { text: 'Changelog', url: '/changelog' },
+      { text: 'FAQ', url: '/faq' },
       {
         type: 'icon',
         label: 'GitHub',

@@ -3,12 +3,12 @@ interface FaqItem {
   answer: string;
 }
 
-export function Faq({ items }: { items: FaqItem[] }) {
+export function Faq({ items, showHeading = true }: { items: FaqItem[]; showHeading?: boolean }) {
   if (items.length === 0) return null;
 
   return (
-    <section className="mt-10 border-t border-fd-border pt-8">
-      <h2 className="mb-4 text-xl font-semibold">FAQ</h2>
+    <section className={showHeading ? 'mt-10 border-t border-fd-border pt-8' : ''}>
+      {showHeading && <h2 className="mb-4 text-xl font-semibold">FAQ</h2>}
       <div className="flex flex-col divide-y divide-fd-border">
         {items.map((item) => (
           <details key={item.question} className="group py-3">
