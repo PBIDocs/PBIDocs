@@ -3,6 +3,13 @@ title: "Power BI Error: Couldn't Load the Data for This Visual"
 description: "\"Couldn't load the data for this visual\" is a generic banner covering several unrelated causes. Here's how to read the real error underneath it, and the four usual culprits."
 date: "2026-08-16"
 tags: ["Power BI Service", "Troubleshooting"]
+faq:
+  - question: "What does \"Couldn't load the data for this visual\" actually mean?"
+    answer: "It's a generic banner — the real cause (resource limits, a DAX error, a connection failure, or a relationship problem) is shown behind the \"See details\" link."
+  - question: "Why does this error only appear on some visuals, not the whole report?"
+    answer: "Each visual runs its own query, so the failure is specific to whatever fields, measures, or filters that one visual is asking for."
+  - question: "Is this error caused by the visual itself?"
+    answer: "Almost never — it's the visual reporting a failure from the model, a measure, or the data source underneath it, not a bug in the visual's formatting."
 ---
 
 The visual itself shows just a short, unhelpful banner:

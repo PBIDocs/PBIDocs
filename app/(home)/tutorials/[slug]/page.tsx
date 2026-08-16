@@ -6,6 +6,7 @@ import { DocsBody, DocsDescription, DocsTitle } from 'fumadocs-ui/layouts/docs/p
 import { getMDXComponents } from '@/components/mdx';
 import { getTutorial, getTutorialImageUrl, getTutorials } from '@/lib/tutorial-source';
 import { BlogToc } from '@/components/blog-toc';
+import { Faq } from '@/components/faq';
 
 function extractText(node: ReactNode): string {
   if (typeof node === 'string') return node;
@@ -59,6 +60,18 @@ export default async function TutorialPage(props: { params: Promise<{ slug: stri
     step: steps,
   };
 
+  const faqJsonLd = tutorial.faq && tutorial.faq.length > 0
+    ? {
+        '@context': 'https://schema.org',
+        '@type': 'FAQPage',
+        mainEntity: tutorial.faq.map((item) => ({
+          '@type': 'Question',
+          name: item.question,
+          acceptedAnswer: { '@type': 'Answer', text: item.answer },
+        })),
+      }
+    : null;
+
   return (
     <div className="mx-auto w-full min-w-0 max-w-6xl px-6 py-16 sm:py-24">
       <script
@@ -66,6 +79,13 @@ export default async function TutorialPage(props: { params: Promise<{ slug: stri
         // eslint-disable-next-line react/no-danger
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
+      {faqJsonLd && (
+        <script
+          type="application/ld+json"
+          // eslint-disable-next-line react/no-danger
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+        />
+      )}
       <Link
         href="/tutorials"
         className="text-sm text-fd-muted-foreground hover:text-fd-foreground transition-colors"
@@ -91,6 +111,8 @@ export default async function TutorialPage(props: { params: Promise<{ slug: stri
           <DocsBody>
             <MDX components={getMDXComponents()} />
           </DocsBody>
+
+          {tutorial.faq && tutorial.faq.length > 0 && <Faq items={tutorial.faq} />}
         </article>
 
         {tutorial.toc.length > 0 && (
