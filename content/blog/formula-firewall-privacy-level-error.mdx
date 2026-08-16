@@ -1,0 +1,102 @@
+---
+title: "Power Query Error: Formula.Firewall and Privacy Level Errors"
+description: "\"Formula.Firewall: Query references other queries or steps, so it may not directly access a data source\" comes from Power Query's privacy level checks, not a bug in the query. Here's what triggers it and how to fix it properly."
+date: "2026-08-20"
+tags: ["Power Query", "Troubleshooting"]
+---
+
+The full error usually reads:
+
+```text
+Formula.Firewall: Query 'Orders' (step 'Added Custom') references
+other queries or steps, so it may not directly access a data source.
+Please rebuild this data combination.
+```
+
+This isn't a syntax error or a bug in the query — it's Power Query's **Formula Firewall** refusing to combine data from more than one source until it knows whether that's actually safe. Combining a private/organizational source with a public one (an internal database and a public web API, for example) can leak data from one into the other; the firewall blocks it by default rather than guessing.
+
+## Why This Exists
+
+Every data source in Power Query has a **privacy level** — Public, Organizational, or Private — set the first time it's connected to. When a query's steps end up needing to send data from one source *into* a call against a different source, Power Query checks whether the privacy levels involved allow that combination.
+
+```text
+Query pulls from Source A (Private)
+        |
+        | a step sends a value from Source A into a call against Source B (Public)
+        |
+Formula Firewall: is this combination allowed?
+        |
+        +-- Privacy levels compatible -> proceeds
+        +-- Privacy levels conflict, unset, or ambiguous -> Formula.Firewall error
+```
+
+## Cause 1: Privacy Levels Were Never Set
+
+The most common cause. The first time a data source is connected, Power BI usually prompts for a privacy level — but if that prompt was dismissed, skipped, or the source was added programmatically, Power Query has no privacy level to reason about and errs on the side of blocking the combination.
+
+**Fix:** set them explicitly. In Power BI Desktop: **File > Options and Settings > Data Source Settings**, select the source, **Edit Permissions**, and set a **Privacy Level**. Do this for every source involved in the query, not just the one named in the error.
+
+## Cause 2: A Step References a Query From Inside a Per-Row Function
+
+This is the version that actually confuses people, because the query "looks" like it only uses one source. It happens when a custom column or function calls out to another query *per row*, and that other query pulls from a different source.
+
+```powerquery lineNumbers
+#"Added Custom" = Table.AddColumn(
+    Orders, "ExchangeRate",
+    each GetRate([Currency])
+    // GetRate is a separate query hitting a web API —
+    // this runs it once per row, with a value from Orders fed into it
+)
+```
+
+Each row's call effectively sends a value from `Orders` into a call against whatever source `GetRate` connects to — exactly the cross-source pattern the firewall exists to catch, even though nothing about the M code looks unusual at a glance.
+
+**Fix:** pull what's needed out of the per-row call. If `GetRate` only depends on a small set of distinct currency codes, calculate the rates once as their own table first, then merge it in — rather than invoking a separate-source function on every row.
+
+```powerquery lineNumbers
+Rates = Table.Distinct(Table.SelectColumns(Orders, {"Currency"})),
+#"Rates Table" = Table.AddColumn(Rates, "ExchangeRate", each GetRate([Currency])),
+#"Merged" = Table.NestedJoin(Orders, {"Currency"}, #"Rates Table", {"Currency"}, "RateData", JoinKind.LeftOuter)
+```
+
+This still calls `GetRate` once per distinct currency, but it's no longer a per-row cross-source call buried inside `Orders` itself — see [Merge Queries](/docs/power-query/merge-queries) for the merge pattern used here.
+
+## Cause 3: Mismatched Privacy Levels Between Sources
+
+Sometimes privacy levels *are* set, but set inconsistently — one source marked Private, another marked Public, combined in a way Power Query's rules don't allow regardless of what the query actually does with the data.
+
+```text
+Source A: Private        Source B: Public
+        \                    /
+         combined in a query
+                |
+        Formula.Firewall (Private + Public combination not permitted)
+```
+
+**Fix:** align the privacy levels to reflect reality. If both sources genuinely belong to the same trust boundary (e.g., two internal systems), setting both to **Organizational** is usually the accurate fix — not defaulting everything to Public just to make the error disappear.
+
+## The "Ignore Privacy Levels" Setting — Use With Real Caution
+
+Power BI Desktop has an option (**File > Options and Settings > Options > Privacy** > *"Always ignore Privacy Level settings"*) that suppresses this check entirely.
+
+```text
+"Combine data according to Privacy Level settings" (default) -> firewall enforced
+"Always ignore Privacy Level settings"                        -> firewall disabled entirely
+```
+
+This does make the error go away, but it removes the protection that stops private data from being sent to a public source through query combination — it's a real setting for a real reason, not just an annoying default. Reserve it for cases where every source involved is genuinely trusted at the same level, not as a first response to this error.
+
+## Common Mistakes
+
+**Reaching for "Ignore Privacy Levels" before understanding why the error fired.** It's the fastest fix and often the wrong one — it silences the check rather than addressing whether the data combination is actually safe.
+
+**Not setting privacy levels for every source in the query, only the one named in the error.** The error names one query/step, but the conflict is between two (or more) sources — the fix usually needs attention on both sides.
+
+**Assuming this is a bug because the query "worked before."** It's common for this to appear after a seemingly unrelated change — a new column, a new merge, a refactored custom function — because that change is what introduced the first genuine cross-source dependency. See [Query Folding](/docs/power-query/query-folding#what-breaks-folding) for a related class of "worked yesterday, breaks today" Power Query surprises.
+
+## Next Steps
+
+- [Merge Queries](/docs/power-query/merge-queries)
+- [M Language](/docs/power-query/m-language)
+- [Query Folding](/docs/power-query/query-folding)
+- [Power Query Editor](/docs/power-query/editor)
