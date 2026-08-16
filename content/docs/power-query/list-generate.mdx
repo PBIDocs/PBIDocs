@@ -1,0 +1,132 @@
+---
+title: List.Generate()
+description: Learn how List.Generate builds a custom sequence by repeatedly applying a function, the M equivalent of a while loop.
+---
+
+# List.Generate()
+
+`List.Generate()` builds a list by repeatedly applying a function, continuing until a condition is no longer met — the closest thing M has to a traditional `while` loop.
+
+```powerquery lineNumbers
+List.Generate(
+    initial as function,
+    condition as function,
+    next as function,
+    optional selector as nullable function
+) as list
+```
+
+---
+
+## Basic Example: A Custom Number Sequence
+
+```powerquery lineNumbers
+#"Custom List" = List.Generate(
+    () => 1,
+    each _ < 10,
+    each _ + 1
+)
+```
+
+```text
+initial: 1
+condition: _ < 10        -> keep going while true
+next: _ + 1               -> each step, add 1
+
+Result: {1, 2, 3, 4, 5, 6, 7, 8, 9}
+```
+
+Each argument is itself a function (note the `() =>` and `each` syntax) — `initial` produces the starting value, `condition` decides whether to continue, and `next` computes the following value from the current one.
+
+---
+
+## Generating a Date Range
+
+```powerquery lineNumbers
+#"Date List" = List.Generate(
+    () => #date(2026, 1, 1),
+    each _ <= #date(2026, 12, 31),
+    each Date.AddDays(_, 1)
+)
+```
+
+A manual alternative to `{#date(2026,1,1) .. #date(2026,12,31)}` list syntax, useful when the step size isn't a simple day-by-day increment, or when the stopping condition depends on something more complex than a fixed end date.
+
+---
+
+## Carrying State With a Record
+
+The current value doesn't have to be a single number or date — using a record lets each step track more than one piece of state at once.
+
+```powerquery lineNumbers
+#"Running Total" = List.Generate(
+    () => [i = 0, total = 0],
+    each [i] < 5,
+    each [i = [i] + 1, total = [total] + [i] + 1]
+)
+```
+
+```text
+Step 0: i=0, total=0
+Step 1: i=1, total=1
+Step 2: i=2, total=3
+Step 3: i=3, total=6
+Step 4: i=4, total=10
+```
+
+Each step's record carries forward everything the next step needs — the same pattern used for pagination (see below), where each step needs both a page number and an accumulated result.
+
+---
+
+## Paging Through an API
+
+The most common real-world use: an API that returns results one page at a time, where the next request depends on something from the previous response (a `nextPageToken`, or simply incrementing a page number until an empty result comes back).
+
+```powerquery lineNumbers
+#"All Pages" = List.Generate(
+    () => [page = 1, result = Json.Document(Web.Contents("https://api.example.com/data?page=1"))],
+    each List.Count([result]) > 0,
+    each [
+        page = [page] + 1,
+        result = Json.Document(Web.Contents("https://api.example.com/data?page=" & Text.From([page] + 1)))
+    ],
+    each [result]
+)
+```
+
+The optional fourth argument (`selector`) picks what actually ends up in the final list — here, just the `result` field from each step's record, not the page number used to track progress. See [Web.Contents](/docs/power-query/web-contents) for the connector this pattern is built on.
+
+---
+
+## Common Mistakes
+
+### Forgetting the Zero-Argument Function Syntax for `initial`
+
+`initial` must be a function that takes no arguments (`() => ...`), not a bare value — a common typo is writing `initial = 1` instead of `() => 1`, which errors immediately.
+
+### An Off-by-One in the Condition
+
+Since `condition` is checked *before* each step (including the very first), a boundary condition like `_ <= 10` vs `_ < 10` changes whether the final value is included — worth checking against a known expected count.
+
+### A Condition That Never Becomes False
+
+If `next` doesn't actually move the state toward whatever `condition` checks, the loop runs indefinitely — the same infinite-loop risk as a `while` loop in any other language, and just as easy to introduce with a typo in the state update.
+
+---
+
+## Best Practices
+
+- Use a record for `initial`/`next` as soon as more than one piece of state needs to be tracked between steps.
+- Always double-check the `condition` boundary (`<` vs `<=`) against the expected number of results.
+- Use the `selector` argument to return only what's actually needed in the final list, not the full tracking state.
+- For simple fixed-size sequences, prefer list range syntax (`{1..10}`) where it fits — reserve `List.Generate` for cases that genuinely need per-step logic.
+
+---
+
+## Next Steps
+
+Continue learning Power Query:
+
+- [Web.Contents](/docs/power-query/web-contents)
+- [M Language](/docs/power-query/m-language)
+- [M Function Reference](/docs/power-query/functions)

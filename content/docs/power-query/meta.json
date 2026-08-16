@@ -7,6 +7,10 @@
     "m-language",
     "transformations",
     "merge-queries",
-    "query-folding"
+    "table-group",
+    "table-buffer",
+    "query-folding",
+    "list-generate",
+    "web-contents"
   ]
 }

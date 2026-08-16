@@ -1,0 +1,131 @@
+---
+title: Web.Contents()
+description: Learn how Web.Contents fetches data from a URL, the options that control headers and query parameters, and why RelativePath matters for query folding and refresh in the Service.
+---
+
+# Web.Contents()
+
+`Web.Contents()` fetches raw content from a URL — the function behind every web-based connector, from a simple public JSON endpoint to an authenticated REST API.
+
+```powerquery lineNumbers
+Web.Contents(
+    url as text,
+    optional options as nullable record
+) as binary
+```
+
+It returns raw binary content — almost always piped straight into `Json.Document()` or `Xml.Tables()` to parse the response into something Power Query can work with.
+
+---
+
+## Basic Example
+
+```powerquery lineNumbers
+Source = Json.Document(Web.Contents("https://api.example.com/products"))
+```
+
+```text
+Web.Contents fetches raw bytes
+        |
+        | Json.Document parses them
+        |
+A record or list, ready to convert to a table with Table.FromRecords or similar
+```
+
+---
+
+## Query Parameters: Use the Query Option, Not String Concatenation
+
+```powerquery lineNumbers
+Source = Json.Document(
+    Web.Contents(
+        "https://api.example.com/products",
+        [Query = [category = "bikes", limit = "50"]]
+    )
+)
+```
+
+This builds `?category=bikes&limit=50` correctly, including proper URL encoding — string-concatenating query parameters onto the URL directly works for simple cases but breaks silently the moment a value contains a character that needs encoding.
+
+---
+
+## RelativePath: Why It Matters for the Service
+
+```powerquery lineNumbers
+Source = Json.Document(
+    Web.Contents(
+        "https://api.example.com",
+        [RelativePath = "products", Query = [category = "bikes"]]
+    )
+)
+```
+
+Splitting the URL into a base (`https://api.example.com`) and a `RelativePath` looks equivalent to writing the full URL directly, but it isn't — the Power BI Service's data source credentials are matched against the **base URL only**. A query with the full URL baked in for every different endpoint registers as a separate data source per endpoint; using `RelativePath` keeps every call to the same API registered under one data source, with one set of credentials.
+
+---
+
+## Headers and Authentication
+
+```powerquery lineNumbers
+Source = Json.Document(
+    Web.Contents(
+        "https://api.example.com/products",
+        [Headers = [#"Authorization" = "Bearer " & apiKey, #"Accept" = "application/json"]]
+    )
+)
+```
+
+For anything beyond a public, unauthenticated endpoint, credentials typically belong in **Data Source Settings** (Web API / Anonymous / API Key credential types) rather than hard-coded directly in the query — hard-coding a key here means it travels with the query text itself, including into version control if the .pbix is stored there.
+
+---
+
+## Handling Non-200 Responses
+
+By default, any HTTP response outside the 200 range throws an error, which stops the query entirely. `ManualStatusHandling` opts out of that, letting the query inspect the response itself.
+
+```powerquery lineNumbers
+Response = Web.Contents(
+    "https://api.example.com/products",
+    [ManualStatusHandling = {404, 500}]
+),
+StatusCode = Value.Metadata(Response)[Response.Status]
+```
+
+Useful for an API where a 404 is a meaningful, expected response (e.g., "no data for this date") rather than a genuine failure that should stop the refresh.
+
+---
+
+## Common Mistakes
+
+### Concatenating Query Parameters Into the URL String
+
+`"https://api.example.com/products?category=" & category` works until `category` contains a space, an `&`, or another character that needs URL encoding — the `Query` record option handles this automatically.
+
+### Using the Full URL Instead of RelativePath
+
+Baking every endpoint into a full literal URL means the Power BI Service sees each one as a separate data source needing its own credentials — a query that calls ten different endpoints on the same API ends up needing ten credential entries instead of one.
+
+### Not Handling Formula.Firewall When Combining With Other Sources
+
+Passing a value from another query or source into `Web.Contents()` per row (inside a custom column, for example) is exactly the cross-source pattern that triggers a privacy-level error — see [Formula.Firewall and Privacy Level Errors](/blog/formula-firewall-privacy-level-error) for why, and the fix.
+
+---
+
+## Best Practices
+
+- Use the `Query` record option for query parameters, never manual string concatenation.
+- Split the URL into a base and `RelativePath` so the Service registers one data source per API, not one per endpoint.
+- Keep credentials in Data Source Settings, not hard-coded into the query text.
+- Use `ManualStatusHandling` only for response codes that are genuinely expected and meaningful, not to silently swallow real failures.
+
+---
+
+## Next Steps
+
+Continue learning Power Query:
+
+- [List.Generate](/docs/power-query/list-generate)
+- [M Language](/docs/power-query/m-language)
+- [M Function Reference](/docs/power-query/functions)
+
+Getting a "Formula.Firewall" error combining this with another source? See [Formula.Firewall and Privacy Level Errors](/blog/formula-firewall-privacy-level-error).

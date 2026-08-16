@@ -1,0 +1,92 @@
+---
+title: Table.Buffer()
+description: Learn how Table.Buffer loads a table fully into memory, why that stabilizes a volatile source, and why it can silently break query folding.
+---
+
+# Table.Buffer()
+
+`Table.Buffer()` loads a table fully into memory the first time it's referenced, rather than re-reading or re-evaluating the source on every subsequent reference.
+
+```powerquery lineNumbers
+Table.Buffer(table as table) as table
+```
+
+---
+
+## Why Buffer a Table
+
+Without buffering, a query can re-evaluate its source more than once — every reference to an earlier step *can* re-trigger evaluation, not just read a cached result. For most sources this doesn't matter, but for a volatile source (data that can change between reads, or a function with side effects), it does.
+
+```text
+Without Table.Buffer:
+Source referenced twice -> hit twice, possibly returning different data each time
+
+With Table.Buffer:
+Source wrapped in Table.Buffer, referenced twice -> hit once, same data both times
+```
+
+```powerquery lineNumbers
+#"Buffered Source" = Table.Buffer(
+    Json.Document(Web.Contents("https://api.example.com/rates"))
+)
+```
+
+---
+
+## The Real Cost: Table.Buffer Breaks Query Folding
+
+This is the caveat that matters most. Once a table is buffered, it's fully materialized in memory — any step after it can no longer fold back to the source, even if every step before the buffer would have folded cleanly.
+
+```text
+Source (SQL, folds) -> Filter (folds) -> Table.Buffer -> Group (does NOT fold, runs locally)
+```
+
+See [Query Folding](/docs/power-query/query-folding#what-breaks-folding) for why folding matters for refresh performance — adding `Table.Buffer()` partway through an otherwise-folding query is one of the most common accidental ways folding gets broken.
+
+---
+
+## When It's Actually Worth Using
+
+- A source with genuine side effects or volatility (an API that returns different data on each call, a function using `DateTime.LocalNow()` internally) that needs to return one consistent result for the rest of the query.
+- A small reference/lookup table used repeatedly inside a per-row function, where re-evaluating it on every row would be wasteful.
+- Debugging: buffering a step makes its output deterministic for the rest of the query, useful when tracking down a bug that seems to depend on evaluation order.
+
+## When It's Not
+
+- "Just in case" performance tuning on a source that already folds — this usually makes performance *worse*, not better, since it forces full materialization instead of letting the source (a database) do the filtering.
+- Very large tables, where loading everything into memory at once can be slower and more memory-intensive than letting the source handle it natively.
+
+---
+
+## Common Mistakes
+
+### Treating It as a General Performance Button
+
+`Table.Buffer()` is a stabilization tool, not a speed-up — on a source that folds well, it typically hurts performance by forcing early materialization instead of letting the source do the work.
+
+### Buffering Large Tables Unnecessarily
+
+Loading a genuinely large table fully into memory can be slower and more memory-hungry than the unbuffered alternative — reserve it for tables that are small, or where volatility genuinely requires it.
+
+### Not Knowing Where Folding Already Stopped
+
+Adding `Table.Buffer()` after a step that already breaks folding (a custom column using a non-foldable function, for example) doesn't cost anything extra — but adding it *before* that point, on an otherwise-folding chain, gives up folding that would otherwise have worked.
+
+---
+
+## Best Practices
+
+- Reserve `Table.Buffer()` for genuinely volatile sources or small, repeatedly-referenced lookup tables.
+- Check whether a query folds (see [Checking Whether a Query Folds](/docs/power-query/query-folding#checking-whether-a-query-folds)) before adding a buffer — don't add it reflexively.
+- Place it as late as possible in a query, after any steps that would otherwise fold to the source.
+- Avoid buffering large fact-table-sized data — let the source (a database, a folding-capable connector) handle filtering and aggregation instead.
+
+---
+
+## Next Steps
+
+Continue learning Power Query:
+
+- [Query Folding](/docs/power-query/query-folding)
+- [M Language](/docs/power-query/m-language)
+- [M Function Reference](/docs/power-query/functions)

@@ -44,7 +44,7 @@ This is the version that actually confuses people, because the query "looks" lik
 #"Added Custom" = Table.AddColumn(
     Orders, "ExchangeRate",
     each GetRate([Currency])
-    // GetRate is a separate query hitting a web API —
+    // GetRate is a separate query wrapping Web.Contents —
     // this runs it once per row, with a value from Orders fed into it
 )
 ```
@@ -100,3 +100,4 @@ This does make the error go away, but it removes the protection that stops priva
 - [M Language](/docs/power-query/m-language)
 - [Query Folding](/docs/power-query/query-folding)
 - [Power Query Editor](/docs/power-query/editor)
+- [Web.Contents](/docs/power-query/web-contents)
