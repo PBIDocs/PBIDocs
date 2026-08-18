@@ -1,0 +1,137 @@
+---
+title: "Power Query Error: We Couldn't Convert to Number (or Date)"
+description: "\"DataFormat.Error: We couldn't convert to Number\" (or Date) usually isn't bad data — it's a locale mismatch, hidden whitespace, or a stray non-numeric value. Here's how to find which, and the fix for each."
+date: "2026-08-22"
+tags: ["Power Query", "Troubleshooting"]
+faq:
+  - question: "Why does \"We couldn't convert to Number\" happen in Power Query?"
+    answer: "A value in the column doesn't match the expected numeric format — often stray text, a locale mismatch between decimal comma and decimal period, or hidden whitespace that isn't visible when just looking at the cell."
+  - question: "Why do some bad dates fail loudly while others just parse wrong with no error?"
+    answer: "A date like 13/04/2026 has no valid month-13 interpretation, so it fails outright. A date like 03/04/2026 is valid as either March 4th or April 3rd, so a locale mismatch parses it \"successfully\" into the wrong date with no error at all."
+  - question: "How do I fix a locale mismatch in Power Query?"
+    answer: "Right-click the column, choose Transform > Using Locale (or use Table.TransformColumnTypes with an explicit locale argument), and specify the locale the source data was actually formatted in — not Power Query's default."
+  - question: "How do I find exactly which values are causing the conversion error?"
+    answer: "After the failing type-conversion step, right-click the column and choose \"Keep Errors.\" This filters the table down to just the rows whose values didn't convert, instead of guessing."
+---
+
+The full error usually reads:
+
+```text
+DataFormat.Error: We couldn't convert to Number.
+Details:
+    1.234,56
+```
+
+or the date equivalent:
+
+```text
+DataFormat.Error: We couldn't parse the input provided as a Date.
+```
+
+The instinct is to assume the source data is just messy. Sometimes it is — but just as often, the value is perfectly valid and Power Query is parsing it under the wrong assumptions.
+
+## Step One: Isolate the Actual Bad Rows
+
+Don't guess. After the failing type-conversion step, right-click the column header and choose **Keep Errors** — this filters the table down to only the rows that failed, instead of scrolling to find them.
+
+```text
+Full table (10,000 rows)
+        |
+        | Keep Errors, after the type conversion step
+        |
+Just the rows that failed (often a handful, sometimes just one pattern)
+```
+
+## Cause 1: A Locale Mismatch on the Decimal Separator
+
+The most common cause with numbers specifically. `1.234,56` is a perfectly valid number in most of continental Europe — comma as the decimal separator, period as the thousands separator. Power Query, using a different default locale, reads that same text as `1.234` followed by garbage, and fails.
+
+```text
+Value in source: "1.234,56"   (intended: one thousand, two hundred thirty-four point five six)
+Parsed with US locale (period = decimal): fails or misreads entirely
+Parsed with the correct locale: 1234.56
+```
+
+**Fix:** convert with an explicit locale rather than the default. Right-click the column, **Transform > Using Locale**, and pick the locale the source data actually uses.
+
+```powerquery lineNumbers
+#"Changed Type with Locale" = Table.TransformColumnTypes(
+    Source, {{"Amount", type number}}, "de-DE"
+)
+```
+
+## Cause 2: An Ambiguous Date Format — and the Silent Version Is Worse
+
+`13/04/2026` fails loudly, because no locale reads month 13 as valid — that's the easy case. The genuinely dangerous version is a date like `03/04/2026`, which is valid in *both* `DD/MM/YYYY` and `MM/DD/YYYY` — one means March 4th, the other April 3rd. If the locale assumption is wrong, this parses **successfully into the wrong date**, with no error at all.
+
+```text
+"03/04/2026" with DD/MM locale -> April 3rd
+"03/04/2026" with MM/DD locale -> March 4th
+
+Both "succeed." Only one is correct. Nothing flags the other.
+```
+
+**Fix:** the same locale-aware conversion as Cause 1 — but critically, this cause won't show up in a **Keep Errors** check, since nothing errors. If dates look off by a matter of days or months in a way that smells like this, check the locale explicitly rather than trusting the absence of an error.
+
+```powerquery lineNumbers
+#"Changed Type with Locale" = Table.TransformColumnTypes(
+    Source, {{"OrderDate", type date}}, "en-GB"
+)
+```
+
+## Cause 3: A Stray Non-Numeric Value
+
+The straightforward version: a column that's otherwise numbers has a handful of rows containing `"N/A"`, `"TBD"`, `"-"`, or an empty string — often placeholders someone typed in a spreadsheet for "not applicable yet."
+
+```text
+Amount
+1200
+850
+N/A       <- this row fails the whole conversion
+430
+```
+
+**Fix:** replace the placeholder with `null` (or a real default) before converting type, not after.
+
+```powerquery lineNumbers
+#"Replaced Value" = Table.ReplaceValue(
+    Source, "N/A", null, Replacer.ReplaceValue, {"Amount"}
+),
+#"Changed Type" = Table.TransformColumnTypes(#"Replaced Value", {{"Amount", type number}})
+```
+
+## Cause 4: Hidden Whitespace or Non-Breaking Spaces
+
+Data that's passed through a PDF export, a copy-paste from a web page, or certain legacy systems can carry non-breaking space characters or trailing whitespace that look identical to a normal space — or nothing at all — but aren't.
+
+```text
+"1234 "   (trailing space, invisible)
+"1234"    (clean)
+
+Look identical. Only one converts.
+```
+
+**Fix:** `Text.Trim` before the type conversion — but note plain `Text.Trim` doesn't always catch a non-breaking space (`Unicode 00A0`), which sometimes needs an explicit replace first.
+
+```powerquery lineNumbers
+#"Cleaned" = Table.TransformColumns(
+    Source, {{"Amount", each Text.Trim(Text.Replace(_, "#(00A0)", " "))}}
+),
+#"Changed Type" = Table.TransformColumnTypes(#"Cleaned", {{"Amount", type number}})
+```
+
+See [M Language](/docs/power-query/m-language#core-data-types) for more on M's text and type functions.
+
+## Common Mistakes
+
+**Fixing one bad value without checking for others.** Replacing the specific value from the error message feels done, but the same source often has more than one placeholder pattern (`"N/A"` *and* `"TBD"` *and* a blank) — a single replace fixes only the one that happened to error first.
+
+**Trusting a date just because it didn't error.** As Cause 2 shows, the silent locale mismatch never produces an error to catch — the only defense is checking the locale explicitly, not waiting for Power Query to complain.
+
+**Fixing the symptom in Power Query without asking why the source exports inconsistent formats.** If the same source keeps producing this on every refresh, the more durable fix is often upstream — a consistent export format or a documented locale — not a growing pile of `Table.ReplaceValue` steps.
+
+## Next Steps
+
+- [M Language](/docs/power-query/m-language)
+- [Transformations](/docs/power-query/transformations)
+- [Power Query Editor](/docs/power-query/editor#adding-error-handling-the-ui-doesnt-expose)
