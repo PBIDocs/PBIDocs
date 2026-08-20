@@ -115,7 +115,7 @@ Certain text/date functions with no SQL equivalent
 Table.Buffer, and anything else that forces full materialization
 ```
 
-See [Table.Buffer](/docs/power-query/table-buffer#the-real-cost-table-buffer-breaks-query-folding) specifically — it's one of the easiest ways to break folding by accident, since it doesn't look like a transformation at all.
+See [Table.Buffer](/docs/power-query/table-buffer#the-real-cost-tablebuffer-breaks-query-folding) specifically — it's one of the easiest ways to break folding by accident, since it doesn't look like a transformation at all.
 
 Once folding breaks at a step, every step after it also runs locally, even if those later steps individually could have folded.
 
@@ -193,3 +193,5 @@ Continue learning Power Query:
 - [Merge Queries](/docs/power-query/merge-queries)
 
 A query that "worked yesterday" and suddenly throws [Formula.Firewall and Privacy Level Errors](/blog/formula-firewall-privacy-level-error) is a related class of surprise worth knowing about too.
+
+A refresh that's just gotten slower, with no error at all? See [Why Did My Power Query Refresh Suddenly Get Slower?](/blog/refresh-suddenly-slow-query-folding-broke) for how to find exactly which step broke folding.
