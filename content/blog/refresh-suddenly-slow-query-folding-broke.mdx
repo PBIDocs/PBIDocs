@@ -1,0 +1,102 @@
+---
+title: "Why Did My Power Query Refresh Suddenly Get Slower?"
+description: "A refresh that used to take seconds and now takes minutes, with no error and no obvious cause, almost always means query folding silently broke somewhere. Here's how to find exactly which step, and the four usual causes."
+date: "2026-08-23"
+tags: ["Power Query", "Troubleshooting"]
+faq:
+  - question: "Why did my Power Query refresh suddenly get slower without me changing anything major?"
+    answer: "A small step — a custom column, a rename, a Table.Buffer — likely broke query folding somewhere in the chain, forcing everything after it to run locally against the full dataset instead of at the source."
+  - question: "How do I know if a query is folding?"
+    answer: "Right-click any step in Applied Steps and check whether \"View Native Query\" is available. If it's grayed out, folding has already stopped by that step or an earlier one."
+  - question: "Does the order of steps really affect performance?"
+    answer: "Yes. Folding breaks at the first non-foldable step and never resumes for anything after it, so a step that could fold gets no benefit from folding if it's placed after one that already broke it."
+  - question: "Can a broken folding chain be fixed without removing the step that broke it?"
+    answer: "Often, yes — by moving foldable steps (filters, column selection, type changes) before non-foldable ones (custom columns, Table.Buffer) rather than in whatever order they were originally added."
+---
+
+There's no error message for this one — the refresh just finishes. It's just slower. A query that used to take ten seconds now takes ten minutes, nothing was obviously changed, and there's nothing in the UI shouting about why.
+
+```text
+Last week: refresh in 8 seconds
+This week: refresh in 6 minutes
+No error. No warning. Nothing "broke" in the way an error implies.
+```
+
+This almost always means [query folding](/docs/power-query/query-folding) stopped somewhere in the query — silently, since a broken fold isn't an error condition, just a much slower execution path.
+
+## How to Actually Check
+
+Right-click any step in **Applied Steps** and look at **View Native Query**. If it's available, everything up to and including that step is still folding to the source. The moment it's grayed out, folding has already stopped at or before that step.
+
+```text
+Source          -> View Native Query available
+Filtered Rows   -> View Native Query available
+Added Custom    -> View Native Query grayed out   <- folding stopped here
+Renamed Columns -> still grayed out (nothing after a break can fold again)
+```
+
+Work backward from the last step, checking each one, until the option is available again — that's the exact boundary where folding broke.
+
+## Cause 1: A New Step Was Added in the Wrong Position
+
+The most common cause of a query that "used to be fast." Adding a new step doesn't insert it at the end of a logical plan — it inserts it exactly where Applied Steps shows it, and everything downstream inherits whatever folding state that step leaves behind.
+
+```text
+Before:  Source -> Filter (folds) -> Select Columns (folds) -> Changed Type (folds)
+After:   Source -> Filter (folds) -> Added Custom Column (doesn't fold) -> Select Columns -> Changed Type
+                                            ^
+                                   everything from here runs locally now
+```
+
+**Fix:** move steps that can't fold (custom columns, complex conditional logic) as late in the sequence as possible — after filtering and column selection, not before. See [Ordering Steps to Preserve Folding](/docs/power-query/query-folding#ordering-steps-to-preserve-folding).
+
+## Cause 2: A Custom Column With Row-by-Row Logic
+
+`Table.AddColumn` with an `each` expression referencing M functions that have no equivalent in the source's native query language can't be translated back — the entire step, and everything after it, has to run locally.
+
+```powerquery lineNumbers
+#"Added Custom" = Table.AddColumn(
+    Source, "Flag",
+    each if Text.Contains([Notes], "urgent") then "Y" else "N"
+)
+```
+
+This is often unavoidable — not every transformation has a source-side equivalent — but it's worth knowing it's the trade being made, and placing it as late as possible so it affects the smallest number of rows and downstream steps.
+
+## Cause 3: Table.Buffer in the Wrong Spot
+
+`Table.Buffer()` forces full materialization into memory — useful for stabilizing a volatile source, but it also ends folding immediately at that point, even if every step before and after it would otherwise fold cleanly.
+
+```text
+Source (folds) -> Filter (folds) -> Table.Buffer -> Group (doesn't fold, runs locally)
+```
+
+See [Table.Buffer](/docs/power-query/table-buffer#the-real-cost-tablebuffer-breaks-query-folding) — this one is easy to miss specifically because it doesn't look like a transformation at all, just a performance-sounding function name.
+
+## Cause 4: A Merge Against a Non-Folding Source
+
+Merging a folding query (say, a SQL table) with a query from a source that can't fold (an Excel file, a CSV, an API call) means the combined result can't be pushed back to a single source's native query language — there's no one engine that understands both halves.
+
+```text
+SQL query (folds) + Excel query (never folds)
+        |
+        merged
+        |
+Result: doesn't fold, regardless of how well the SQL side folds alone
+```
+
+This is sometimes unavoidable (the data genuinely lives in two different places), but it's worth knowing the merge itself is where folding ends, not something to debug further downstream.
+
+## Common Mistakes
+
+**Assuming a slow refresh means the source is just slow.** It's easy to blame the database or the network before checking whether the query itself stopped folding — check **View Native Query** before escalating to infrastructure.
+
+**Adding steps in whatever order feels natural, not a folding-aware order.** Applied Steps records the order things were built, not necessarily the order they should stay in — reordering after the fact is normal and often the entire fix.
+
+**Not re-checking folding after adding new steps to a previously-fast query.** A query that folded perfectly last month can silently stop folding the moment one new step is added — checking once at the start isn't enough if the query keeps evolving.
+
+## Next Steps
+
+- [Query Folding](/docs/power-query/query-folding)
+- [Table.Buffer](/docs/power-query/table-buffer)
+- [Merge Queries](/docs/power-query/merge-queries)
