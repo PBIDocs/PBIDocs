@@ -35,6 +35,9 @@ export function SiteFooter() {
           >
             GitHub
           </a>
+          <Link href="/privacy" className="transition-colors hover:text-fd-foreground">
+            Privacy
+          </Link>
           <p>
             &copy; {new Date().getFullYear()} {appName}
           </p>
