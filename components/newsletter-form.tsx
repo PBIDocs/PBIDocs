@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, type FormEvent } from 'react';
+import Link from 'next/link';
 
 type Status = 'idle' | 'loading' | 'success' | 'error';
 
@@ -73,6 +74,12 @@ export function NewsletterForm() {
           {error}
         </p>
       )}
+      <p className="text-xs text-fd-muted-foreground/70">
+        Just your email, nothing else.{' '}
+        <Link href="/privacy" className="underline hover:text-fd-foreground">
+          Privacy policy
+        </Link>
+      </p>
     </div>
   );
 }
