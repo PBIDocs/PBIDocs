@@ -1,0 +1,85 @@
+---
+title: "Row-Level Security Works in Desktop But Not in the Power BI Service"
+description: "RLS filters correctly when testing with \"View as Roles\" in Desktop, then shows everyone all the data once published. Here's why that happens, and the four usual causes."
+date: "2026-08-25"
+tags: ["Power BI Service", "Governance", "Troubleshooting"]
+faq:
+  - question: "Why does Row-Level Security work in Power BI Desktop but not after publishing?"
+    answer: "\"View as Roles\" in Desktop only proves the DAX filter logic is correct. It doesn't test real user identity resolution or role membership, which only get exercised once the report is actually published and opened by a real user in the Service."
+  - question: "Why can I see all the data even though I'm assigned to a restricted role?"
+    answer: "Anyone with Admin, Member, or Contributor access to the workspace bypasses Row-Level Security entirely — RLS only applies to people accessing the report as a Viewer. This is the single most common cause of \"RLS isn't working.\""
+  - question: "Do I need to assign users to a role separately after defining it in Desktop?"
+    answer: "Yes. Defining a role and its DAX filter in Desktop only creates the role — no one is actually a member of it until you explicitly add users or security groups under the dataset's Security settings in the Service."
+  - question: "Why doesn't USERPRINCIPALNAME() match the user I expect?"
+    answer: "USERPRINCIPALNAME() returns the exact identity Entra ID assigned, which isn't always the same as someone's email address or alias — organizations with multiple domains or email aliases are the most common place this mismatch shows up."
+---
+
+The report is built, a role is defined with the right DAX filter, and **View as Roles** in Power BI Desktop shows exactly the right slice of data. It gets published — and suddenly a test user sees everything, unfiltered.
+
+```text
+Power BI Desktop:  View as Roles -> filtered correctly
+Power BI Service:   Same report, real user -> sees all the data
+```
+
+This is one of the most common Row-Level Security surprises, and it's rarely a bug in the DAX filter itself — the filter already proved itself correct in Desktop. The gap is almost always in what happens *after* publishing, which Desktop's testing tool doesn't exercise at all.
+
+## Cause 1: The User Has Workspace Access Above Viewer
+
+By far the most common cause. RLS only applies to someone accessing a report as a **Viewer** — anyone with **Admin**, **Member**, or **Contributor** access to the workspace sees all the data, regardless of any role they're also assigned to, because that level of access already implies they could open the dataset directly and remove the filter themselves.
+
+```text
+Workspace role: Admin / Member / Contributor -> RLS bypassed entirely
+Workspace role: Viewer                        -> RLS enforced
+```
+
+**Fix:** for an actual test, use an account whose *only* access is Viewer (or share via an app, which enforces Viewer-level access regardless of the underlying workspace roles). Testing with your own account while you're a Member or Admin of the workspace will never show RLS in effect, no matter how correct the DAX filter is.
+
+## Cause 2: No One Was Actually Assigned to the Role
+
+Defining a role and its filter expression in Desktop creates the role — it does not put anyone in it. That's a separate step, done in the Service, after publishing.
+
+```text
+Desktop: Role "Regional Manager" created, DAX filter attached
+        |
+        | publish
+        |
+Service: Dataset Settings > Security > "Regional Manager" -> members: (empty)
+        |
+        | no one assigned -> role never applies to anyone
+```
+
+**Fix:** in the Service, go to the dataset's **Security** settings, select the role, and explicitly add the users or security groups who should be members. See [Assigning Users to Roles](/docs/power-bi-service/security#assigning-users-to-roles).
+
+## Cause 3: USERPRINCIPALNAME() Doesn't Match What You Expect
+
+For dynamic RLS keyed off `USERPRINCIPALNAME()`, the function returns the exact identity string Entra ID assigned to that user — which isn't always identical to their email address, especially in organizations with multiple accepted domains, aliases, or guest accounts.
+
+```text
+Assumed:  USERPRINCIPALNAME() = "jsmith@company.com"
+Actual:   USERPRINCIPALNAME() = "jsmith@company.onmicrosoft.com"
+
+Mapping table has one, function returns the other -> no match, no rows
+```
+
+**Fix:** confirm the actual UPN value (Entra ID admin center, or `SELECTEDVALUE(USERPRINCIPALNAME())` in a test measure) rather than assuming it matches the email address people use day to day. See [Dynamic Row-Level Security](/docs/power-bi-service/security#dynamic-row-level-security) and [Dynamic RLS with a Mapping Table](/docs/power-bi-service/security#dynamic-rls-with-a-mapping-table).
+
+## Cause 4: Testing as an Admin Without Realizing It
+
+A quieter version of Cause 1 — testing directly from the account that built and published the report, which is almost always a workspace Admin by default, without deliberately switching to a genuinely restricted test account.
+
+**Fix:** always test with a dedicated non-admin account, or use the Service's **"Test as role"** feature under dataset Security — which simulates a role's filter directly, closer to (but still not identical to) what a real restricted Viewer experiences. See [Testing as an Admin](/docs/power-bi-service/security#testing-as-an-admin).
+
+## Common Mistakes
+
+**Trusting Desktop's "View as Roles" as proof it'll work in production.** It validates the DAX filter expression, nothing more — it can't test workspace roles, actual member assignments, or real UPN resolution, which are exactly the things that go wrong in practice.
+
+**Assuming RLS applies uniformly regardless of workspace access.** It's easy to forget that Admin/Member/Contributor access is a blanket bypass, especially since it's not called out anywhere in the report itself — it's a Service-level permission model interacting with RLS, not a setting on the role.
+
+**Debugging the DAX filter first.** Since the filter almost always already proved correct in Desktop, checking workspace access and role membership first (Causes 1 and 2) resolves this far more often than re-examining the filter expression itself.
+
+## Next Steps
+
+- [Row-Level Security](/docs/power-bi-service/security)
+- [RLS and Admins](/docs/power-bi-service/security#rls-and-admins)
+- [Assigning Users to Roles](/docs/power-bi-service/security#assigning-users-to-roles)
+- [Governance: RLS Role Matrix](/docs/governance/rls-matrix)
