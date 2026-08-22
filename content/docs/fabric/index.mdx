@@ -1,0 +1,51 @@
+---
+title: "Microsoft Fabric"
+description: How Power BI fits into Microsoft Fabric — OneLake, Lakehouse, Data Warehouse, Data Factory, and Direct Lake mode.
+---
+
+# Microsoft Fabric
+
+Microsoft Fabric is the unified data platform Power BI now sits inside — one shared lake (OneLake) underneath Lakehouses, Warehouses, pipelines, and the semantic models that report on top of them.
+
+```text
+OneLake (one shared lake for the whole tenant)
+     |
+     +-- Lakehouse / Data Warehouse (store and transform data)
+     +-- Data Factory (Pipelines, Dataflows Gen2)
+     |
+     | Direct Lake
+     |
+Power BI Semantic Model
+```
+
+## Start Here
+
+<Cards>
+  <Card
+    title="Introduction"
+    description="What Microsoft Fabric is, and how its workloads fit together on OneLake."
+    href="/docs/fabric/introduction"
+  />
+  <Card
+    title="OneLake"
+    description="How OneLake organizes Fabric's data as one shared lake — Files vs. Tables, shortcuts, and security."
+    href="/docs/fabric/onelake"
+  />
+  <Card
+    title="Lakehouse"
+    description="How a Fabric Lakehouse organizes raw and curated data, and how notebooks transform it."
+    href="/docs/fabric/lakehouse"
+  />
+  <Card
+    title="Data Warehouse"
+    description="Fabric's T-SQL-first alternative to the Lakehouse."
+    href="/docs/fabric/data-warehouse"
+  />
+  <Card
+    title="Direct Lake Mode"
+    description="How Direct Lake reads OneLake's Delta tables directly into Power BI's engine."
+    href="/docs/fabric/direct-lake"
+  />
+</Cards>
+
+See it applied end to end: [Build a Product Usage Dashboard on a Fabric Lakehouse](/tutorials/build-a-fabric-lakehouse-dashboard) lands data, shapes it with a notebook, and connects Power BI in Direct Lake mode, start to finish.

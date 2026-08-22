@@ -1,0 +1,56 @@
+---
+title: "Data Modeling"
+description: Star schemas, fact and dimension tables, relationships, and date tables — the foundation everything else in Power BI is built on.
+---
+
+# Data Modeling
+
+A well-shaped data model is what makes DAX simple and reports fast — this section covers star schemas, the fact/dimension split, relationships, and the patterns (bridge tables, slowly changing dimensions) that come up as a model grows.
+
+```text
+Fact Table (transactions, events — the numbers)
+     |
+     | relationships
+     |
+Dimension Tables (who, what, where, when — the descriptive context)
+```
+
+## Start Here
+
+<Cards>
+  <Card
+    title="Introduction"
+    description="What a data model is, and why its shape matters more than any single DAX formula."
+    href="/docs/modeling/introduction"
+  />
+  <Card
+    title="Star Schema"
+    description="The standard shape for a Power BI model — one fact table surrounded by dimension tables."
+    href="/docs/modeling/star-schema"
+  />
+  <Card
+    title="Relationships"
+    description="How tables connect, cardinality, and cross-filter direction."
+    href="/docs/modeling/relationships"
+  />
+  <Card
+    title="Fact Tables"
+    description="What belongs in a fact table, and what doesn't."
+    href="/docs/modeling/fact-tables"
+  />
+  <Card
+    title="Dimension Tables"
+    description="Building the descriptive tables a fact table relates to."
+    href="/docs/modeling/dimension-tables"
+  />
+  <Card
+    title="Date Tables"
+    description="Why time intelligence needs a real, continuous calendar table."
+    href="/docs/modeling/date-tables"
+  />
+</Cards>
+
+## Where to Go Next
+
+- [Bridge Tables](/docs/modeling/bridge-tables) and [Many-to-Many Relationships](/docs/modeling/many-to-many) — for relationships a simple one-to-many can't represent.
+- [DAX](/docs/dax/introduction) — the calculations this model shape is built to support.
