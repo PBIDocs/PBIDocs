@@ -1,0 +1,281 @@
+---
+title: "Build a Requirements Traceability Matrix (RTM) Dashboard in Power BI"
+description: "An end-to-end tutorial for systems engineers: model a real many-to-many bridge table connecting requirements to test cases, and write DAX that finds exactly which requirements have no verification coverage."
+date: "2026-08-24"
+tags: ["Tutorial", "Data Modeling", "DAX"]
+faq:
+  - question: "What is a Requirements Traceability Matrix (RTM)?"
+    answer: "A model that maps each requirement to the test case (or cases) that verify it, so gaps — requirements with no verification at all — are visible, and an auditor can trace any design decision back to the requirement that drove it."
+  - question: "Why does this need a many-to-many bridge table instead of a normal relationship?"
+    answer: "Because one requirement can be verified by multiple test cases, and one test case can verify multiple requirements. A direct one-to-many relationship can't represent that in both directions at once, so a bridge table sits between the two dimension tables instead."
+  - question: "How do you find requirements with no test coverage using DAX?"
+    answer: "Compare the total requirement count against a distinct count of RequirementID values that actually appear in the bridge table. The difference between those two numbers is exactly the set of requirements with zero verification coverage."
+  - question: "What are the four verification methods — Test, Analysis, Inspection, Demonstration?"
+    answer: "The standard systems engineering categories (often called \"TADI\") for how a requirement gets confirmed: direct testing, engineering analysis or calculation, physical/visual inspection, or a demonstration of the behavior in question."
+---
+
+Most Power BI tutorials model sales data. This one models something systems engineers actually build by hand in spreadsheets: a Requirements Traceability Matrix — the artifact that proves every requirement has been verified, and flags the ones that haven't.
+
+```text
+Requirements (what the system must do)
+        |
+        | many-to-many bridge table
+        |
+Test Cases (how each requirement gets verified)
+        |
+        | one-to-many
+        |
+Test Results (pass / fail / not yet run)
+        |
+        | DAX: coverage and verification measures
+        |
+Dashboard (coverage %, verification gaps, pass rate)
+```
+
+No downloadable file — four small tables, small enough to paste directly into `.csv` files.
+
+---
+
+## What You're Building
+
+A one-page verification status dashboard answering the four questions an RTM review actually asks:
+
+- What percentage of requirements have at least one test case mapped to them at all?
+- Of those, how many have actually *passed* a verification?
+- Which specific requirements have zero test coverage — a real compliance gap?
+- Which verification methods (Test, Analysis, Inspection, Demonstration) is the program actually relying on?
+
+```text
++------------------------------------------------------------+
+|  Total Reqs  |  Coverage %  |  Verified %  |  Pass Rate     |
++------------------------------------------------------------+
+|  Requirements with No Test Mapped (table — the gap list)    |
++------------------------------------------------+-----------+
+|  Requirements by Category (bar chart)            | Tests by  |
+|                                                   | Method    |
++------------------------------------------------------------+
+```
+
+---
+
+## Step 1: The Raw Data
+
+Four small tables, reflecting how this data usually actually lives: a requirements list, a test case list, a mapping between them, and a log of which tests have actually been run.
+
+```text
+requirements.csv
+RequirementID,RequirementText,Category,Priority
+REQ-001,System shall power on within 5 seconds,Functional,High
+REQ-002,System shall operate at -20C to 50C,Performance,High
+REQ-003,System shall log all user actions,Functional,Medium
+REQ-004,System shall encrypt data at rest,Safety,High
+REQ-005,System shall support 100 concurrent users,Performance,Medium
+REQ-006,System shall provide an audible alarm on failure,Safety,High
+REQ-007,System shall support firmware update without data loss,Functional,Medium
+REQ-008,System shall meet MTBF of 5000 hours,Performance,Low
+```
+
+```text
+test_cases.csv
+TestCaseID,TestCaseName,VerificationMethod
+TC-01,Power-On Timing Test,Test
+TC-02,Thermal Chamber Test,Test
+TC-03,Action Logging Verification,Demonstration
+TC-04,Encryption Algorithm Review,Analysis
+TC-05,Load Test - 100 Users,Test
+TC-06,Alarm Audibility Test,Test
+TC-07,Firmware Update Procedure Review,Inspection
+TC-08,Regression Test Suite,Test
+TC-09,Penetration Test,Test
+```
+
+```text
+requirement_test_map.csv
+RequirementID,TestCaseID
+REQ-001,TC-01
+REQ-001,TC-08
+REQ-002,TC-02
+REQ-003,TC-03
+REQ-003,TC-08
+REQ-004,TC-04
+REQ-004,TC-09
+REQ-005,TC-05
+REQ-006,TC-06
+REQ-007,TC-07
+```
+
+```text
+test_results.csv
+TestCaseID,ExecutionDate,Status
+TC-01,2026-06-01,Pass
+TC-02,2026-06-02,Pass
+TC-03,2026-06-03,Pass
+TC-04,2026-06-04,Pass
+TC-05,2026-06-05,Fail
+TC-06,2026-06-06,Pass
+TC-08,2026-06-09,Pass
+TC-09,2026-06-10,Pass
+```
+
+Two details worth noticing before building anything: **REQ-008 never appears** in `requirement_test_map.csv` — that's a requirement with zero test coverage, deliberately left in to verify the dashboard actually catches it. And **TC-07 never appears** in `test_results.csv` — that test exists and is mapped to a requirement, but hasn't been executed yet.
+
+---
+
+## Step 2: Load and Type in Power Query
+
+Connect each file (**Get Data > Text/CSV**), and set `ExecutionDate` to a proper date type in `test_results`:
+
+```powerquery lineNumbers
+#"Changed Type" = Table.TransformColumnTypes(
+    Source, {{"ExecutionDate", type date}}
+)
+```
+
+That's the only real cleaning needed — unlike a typical sales export, this data starts out already well-typed and one-row-per-record.
+
+---
+
+## Step 3: Build the Model — a Real Bridge Table
+
+`requirement_test_map` isn't a fact table and isn't a dimension table — it's a **bridge table**, sitting between `DimRequirement` and `DimTestCase` specifically because the relationship between them is many-to-many: one requirement can need several tests, and one test (like `TC-08`, the regression suite) can cover several requirements.
+
+```text
+DimRequirement                BridgeRequirementTest              DimTestCase
+RequirementID                 RequirementID, TestCaseID          TestCaseID
+RequirementText                                                  TestCaseName
+Category, Priority                                                VerificationMethod
+        \                            |                                  /
+         \___________________________|_________________________________/
+                                      |
+                              (many-to-one on both sides)
+                                      |
+                                DimTestCase (1) --- FactTestResults (many)
+```
+
+Relate `DimRequirement[RequirementID]` to `BridgeRequirementTest[RequirementID]` (one-to-many), and `DimTestCase[TestCaseID]` to `BridgeRequirementTest[TestCaseID]` (one-to-many) — the bridge table sits on the "many" side of both relationships. Then relate `DimTestCase[TestCaseID]` to `FactTestResults[TestCaseID]` (one-to-many). See [Bridge Tables](/docs/modeling/bridge-tables) and [Many-to-Many Relationships](/docs/modeling/many-to-many) for the general pattern this applies directly.
+
+---
+
+## Step 4: Write the Coverage and Verification Measures
+
+Create a dedicated measures table. See [Measures](/docs/dax/measures) for why.
+
+### Total Requirements and Coverage
+
+```dax lineNumbers
+Total Requirements =
+COUNTROWS(DimRequirement)
+
+Requirements Covered =
+DISTINCTCOUNT(BridgeRequirementTest[RequirementID])
+
+Requirements With No Test Mapped =
+[Total Requirements] - [Requirements Covered]
+
+Coverage % =
+DIVIDE([Requirements Covered], [Total Requirements])
+```
+
+`Requirements Covered` counts distinct requirements that appear *anywhere* in the bridge table — regardless of whether their test has passed, failed, or even run yet. It just means "at least one test case exists for this requirement." The gap (`REQ-008`) is caught because it never appears in `BridgeRequirementTest` at all, so it's never counted here.
+
+### Requirements Actually Verified (Passed)
+
+This is the harder question: not just "does a test exist," but "has a test for this requirement actually passed." Rather than relying on the bridge table's relationships to propagate filters in a direction they don't by default, this is written explicitly:
+
+```dax lineNumbers
+Requirements Verified =
+VAR PassingTestCaseIDs =
+    CALCULATETABLE(
+        VALUES(FactTestResults[TestCaseID]),
+        FactTestResults[Status] = "Pass"
+    )
+VAR VerifiedRequirementIDs =
+    CALCULATETABLE(
+        VALUES(BridgeRequirementTest[RequirementID]),
+        FILTER(
+            BridgeRequirementTest,
+            BridgeRequirementTest[TestCaseID] IN PassingTestCaseIDs
+        )
+    )
+RETURN
+    COUNTROWS(VerifiedRequirementIDs)
+
+Verified % =
+DIVIDE([Requirements Verified], [Total Requirements])
+```
+
+`PassingTestCaseIDs` is the set of test cases with at least one passing result. `VerifiedRequirementIDs` then filters the bridge table down to only the rows whose test case is in that passing set, and pulls the distinct requirement IDs out of what's left. This reads almost exactly like the English description of the question — deliberately, since "traceability" means being able to walk this exact path by hand if needed.
+
+### Test Execution and Pass Rate
+
+```dax lineNumbers
+Tests Executed =
+COUNTROWS(FactTestResults)
+
+Tests Passed =
+CALCULATE([Tests Executed], FactTestResults[Status] = "Pass")
+
+Pass Rate =
+DIVIDE([Tests Passed], [Tests Executed])
+```
+
+---
+
+## Step 5: Lay Out the Report
+
+```text
+Page: "Verification Status"
+
+Row 1 (KPI cards):
+  [Total Requirements]  [Coverage %]  [Verified %]  [Pass Rate]
+
+Row 2 (table — the gap list):
+  Columns: DimRequirement[RequirementID], DimRequirement[RequirementText],
+           DimRequirement[Category]
+  Filter: [Requirements Covered] = BLANK() for this requirement
+          (equivalently: this requirement has no row in the bridge table)
+
+Row 3 (left, bar chart):        Row 3 (right, bar/pie chart):
+  X-axis: DimRequirement[Category]  X-axis: DimTestCase[VerificationMethod]
+  Y-axis: [Total Requirements]      Y-axis: Count of DimTestCase[TestCaseID]
+
+Slicer (top of page): DimRequirement[Priority]
+```
+
+With this dataset, the gap-list table shows exactly one row — `REQ-008` — and `Coverage %` reads as 7 out of 8, or 87.5%. `Verified %` is lower than `Coverage %`, since `TC-05` (mapped to `REQ-005`) failed and `TC-07` (mapped to `REQ-007`) hasn't run yet — both of those requirements have coverage but aren't yet verified. That gap between "covered" and "verified" is exactly the distinction this dashboard exists to surface.
+
+See [Charts](/docs/visuals/charts) and [Tables](/docs/visuals/tables) for configuring these visual types.
+
+---
+
+## Common Mistakes
+
+### Treating "Covered" and "Verified" as the Same Thing
+
+A requirement with a test case mapped to it isn't verified until that test has actually passed. Reporting `Coverage %` alone as if it answers "is this done" overstates progress — a requirement can be 100% covered and 0% verified if every mapped test has failed or hasn't run.
+
+### Double-Counting Through the Bridge Table
+
+Summing a value across `BridgeRequirementTest` directly (rather than using `DISTINCTCOUNT` on the ID columns) counts a requirement once per test case it's linked to — `REQ-001` and `REQ-003` would each be counted twice, since both are linked to two test cases. See [Bridge Tables and Double-Counting](/docs/modeling/bridge-tables#bridge-tables-and-double-counting).
+
+### Assuming No Result Means Failed
+
+`TC-07` has no row in `FactTestResults` at all — that's "not yet run," a different state from "failed." Conflating the two in a measure (treating a blank as a fail) would misreport a requirement's real status.
+
+---
+
+## Tutorial Checklist
+
+- The requirement-to-test relationship is modeled as a real bridge table, not forced into a direct one-to-many relationship.
+- `Requirements Covered` and `Requirements Verified` are two distinct measures, not one.
+- The gap list (requirements with zero bridge rows) is checked directly, not inferred from a percentage.
+- "Not yet run" and "Failed" are treated as different states, not collapsed into one.
+
+---
+
+## Next Steps
+
+- [Bridge Tables](/docs/modeling/bridge-tables)
+- [Many-to-Many Relationships](/docs/modeling/many-to-many)
+- [DAX CALCULATE Modifiers Cheat Sheet](/blog/dax-calculate-modifiers-cheat-sheet) — for filtering these measures further (by category, by priority) without disturbing the bridge logic.
+- [Row-Level Security](/docs/power-bi-service/security) — restricting each engineering team to their own subsystem's requirements.
