@@ -1,0 +1,32 @@
+---
+title: "Governance"
+description: Reference formats for keeping RLS, gateway architecture, and report themes auditable and consistent as a Power BI tenant grows.
+---
+
+# Governance
+
+As a Power BI tenant grows past a handful of reports, keeping security, refresh architecture, and visual standards consistent stops being something one person can just remember — this section covers reference formats for documenting each of those explicitly.
+
+## Start Here
+
+<Cards>
+  <Card
+    title="RLS Role Matrix"
+    description="Mapping Power BI roles to their DAX filter logic and table scope, so RLS stays auditable as it grows."
+    href="/docs/governance/rls-matrix"
+  />
+  <Card
+    title="Gateway & Refresh Architecture"
+    description="Mapping on-premises gateways to the datasets and refresh schedules that depend on them."
+    href="/docs/governance/gateway-refresh"
+  />
+  <Card
+    title="Report Theme JSON Files"
+    description="How Power BI theme files are structured, and distributing one standard theme across a team."
+    href="/docs/governance/report-themes"
+  />
+</Cards>
+
+## Where to Go Next
+
+- [Row-Level Security](/docs/power-bi-service/security) — the mechanism the RLS Role Matrix documents.
