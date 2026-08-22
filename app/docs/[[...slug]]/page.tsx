@@ -45,6 +45,7 @@ export default async function Page(props: PageProps<'/docs/[[...slug]]'>) {
       toc={page.data.toc}
       full={page.data.full}
       role="main"
+      breadcrumb={{ includeRoot: { url: '/docs' }, includePage: true }}
       tableOfContent={{
         container: { role: 'complementary', 'aria-labelledby': 'toc-title' },
         footer: (
