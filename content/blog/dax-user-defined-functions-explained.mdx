@@ -1,0 +1,79 @@
+---
+title: "DAX User-Defined Functions Are Here — What You Need to Know"
+description: "DAX user-defined functions reached general availability with the June 2026 release. Here's what changed, the FUNCTION syntax in plain terms, and when they're actually worth using over a measure."
+date: "2026-08-24"
+tags: ["DAX", "Cheat Sheet"]
+faq:
+  - question: "When did DAX user-defined functions become generally available?"
+    answer: "DAX UDFs reached general availability in Power BI Desktop and the Power BI Service with the June 2026 release. They require database compatibility level 1702 or higher."
+  - question: "Do DAX user-defined functions replace measures?"
+    answer: "No. A UDF packages reusable logic that a measure (or calculated column, or another UDF) can call — it's a building block, not a replacement for measures."
+  - question: "Can a DAX user-defined function call itself?"
+    answer: "No, recursion and mutual recursion aren't supported. A UDF also can't be overloaded (defined twice with different parameter signatures) or declare an explicit return type."
+  - question: "Where do you write a DAX user-defined function?"
+    answer: "In DAX query view or TMDL view — not inline inside a single measure. Once saved to the model, it becomes a first-class object visible under the Functions node in Model Explorer."
+---
+
+For as long as DAX has existed, "reusable logic" meant one of two things: copy-paste the same expression into every measure that needed it, or build a base measure and reference it everywhere. Both work, but neither is quite a real function — a base measure still runs inside the calling measure's context in ways that aren't always obvious, and copy-pasted logic drifts out of sync the moment one copy gets updated and the others don't.
+
+DAX now has actual functions. **User-defined functions (UDFs)** reached general availability in Power BI Desktop and the Power BI Service with the June 2026 release.
+
+```dax lineNumbers
+DEFINE
+    FUNCTION AddTax = ( amount : NUMERIC, taxRate : NUMERIC = 0.1 ) =>
+        amount * ( 1 + taxRate )
+
+EVALUATE
+{ AddTax ( 10 ) }
+// Returns 11
+```
+
+## What Actually Changed
+
+A UDF is a named, reusable calculation defined once and callable from measures, calculated columns, visual calculations, and other UDFs — the same way you'd call `SUM()` or `CALCULATE()`. It's written with the new `FUNCTION` keyword in DAX query view or TMDL view, then saved into the model as a real object, visible under **Functions** in Model Explorer.
+
+```dax lineNumbers
+Total Sales with Tax = AddTax ( [Total Sales] )
+```
+
+That's the whole point: the tax logic lives in exactly one place. Change `AddTax`, and every measure calling it picks up the change automatically.
+
+## The Part That Actually Takes Getting Used To: val vs. expr
+
+Parameters can declare a **type**, a **subtype**, and — this is the one worth understanding before writing anything non-trivial — a **parameter mode**: `val` or `expr`.
+
+```text
+val  (default) -> the argument is evaluated once, before the function runs
+expr            -> the argument is passed unevaluated — the function controls when/how
+```
+
+This matters the moment a UDF needs to *change* filter context internally, rather than just receive a value. A `val` table parameter arrives already fixed — nothing left to filter. An `expr` table parameter arrives as an unevaluated expression, so `CALCULATETABLE` inside the function can still meaningfully apply `ALL()` or other modifiers to it. Getting this backwards is the most common way a first UDF "doesn't work" without an obvious error — it just silently ignores whatever filter logic was supposed to run inside it.
+
+## When a UDF Is Actually Worth It
+
+Not every reusable expression needs to become a UDF. It's the right tool when:
+
+- The same non-trivial logic needs to live in more than one measure, calculated column, *and* stay in sync automatically.
+- The calculation needs to accept different inputs each time (a currency conversion, a tax calculation, a business rule with parameters) — not just a fixed base measure with no inputs.
+- The logic is complex enough that documenting it with `///` comments and getting IntelliSense support on it is genuinely useful to whoever else touches the model.
+
+For a single reusable value with no parameters, a base measure referenced by other measures is still simpler and works exactly as it always has.
+
+## What's Not Supported Yet
+
+Worth knowing going in, so it's not a surprise mid-build:
+
+- No recursion or mutual recursion.
+- No function overloading (can't define the same name twice for different parameter signatures).
+- No explicit return type declaration — it's inferred from the function body.
+- Live-connected reports get no IntelliSense for UDFs from the source model.
+
+## Full Reference
+
+This post covers the shape of the feature — for the complete syntax, the full type/subtype table, type-checking functions, and worked examples (including the classic "table val vs. table expr" comparison), see [DAX User-Defined Functions (UDFs)](/docs/dax/user-defined-functions).
+
+## Next Steps
+
+- [DAX User-Defined Functions (UDFs)](/docs/dax/user-defined-functions)
+- [CALCULATE](/docs/dax/calculate)
+- [Variables (VAR)](/docs/dax/variables)
