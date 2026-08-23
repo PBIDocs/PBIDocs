@@ -1,5 +1,6 @@
 {
   "title": "Microsoft Fabric",
+  "icon": "Cloud",
   "pages": [
     "introduction",
     "onelake",
