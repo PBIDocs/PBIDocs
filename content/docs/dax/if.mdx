@@ -1,0 +1,136 @@
+---
+title: IF()
+description: Learn how IF branches a DAX calculation on a condition, and when to reach for SWITCH instead once there's more than one condition to check.
+---
+
+# IF()
+
+`IF()` evaluates a condition and returns one of two results depending on whether it's true or false — the most basic branching function in DAX.
+
+```dax lineNumbers
+IF(LogicalTest, ResultIfTrue, [ResultIfFalse])
+```
+
+---
+
+## Basic Example
+
+```dax lineNumbers
+Sales Status =
+IF([Total Sales] > 100000, "On Target", "Below Target")
+```
+
+```text
+Total Sales = 150,000  -> "On Target"
+Total Sales = 80,000   -> "Below Target"
+```
+
+---
+
+## The Third Argument Is Optional
+
+Omitting `ResultIfFalse` returns `BLANK()` when the condition isn't met, rather than an explicit value.
+
+```dax lineNumbers
+High Value Flag =
+IF([Total Sales] > 100000, "High Value")
+```
+
+```text
+Total Sales = 150,000 -> "High Value"
+Total Sales = 80,000  -> BLANK
+```
+
+This is a reasonable choice when "not flagged" should genuinely look empty in a table, rather than showing a literal "No" or "False" in every other row.
+
+---
+
+## Nesting IF, and When to Stop
+
+`IF()` can nest inside itself for more than two outcomes, but it gets hard to read fast.
+
+```dax lineNumbers
+Sales Tier =
+IF(
+    [Total Sales] > 500000,
+    "Platinum",
+    IF(
+        [Total Sales] > 100000,
+        "Gold",
+        "Silver"
+    )
+)
+```
+
+```text
+Total Sales = 600,000 -> "Platinum"
+Total Sales = 200,000 -> "Gold"
+Total Sales = 50,000  -> "Silver"
+```
+
+This works, but each additional tier adds another level of nesting. See [SWITCH](/docs/dax/switch#switch-vs-nested-if) for the point where `SWITCH(TRUE(), ...)` becomes the more readable choice — as a rough rule, more than two or three conditions is usually that point.
+
+---
+
+## IF vs. SWITCH
+
+| | Best for |
+|---|---|
+| `IF()` | A single, genuinely binary condition |
+| `SWITCH()` | Three or more discrete outcomes, or several range conditions |
+
+Reaching for `SWITCH()` on a true yes/no condition is the opposite mistake — a single `IF()` is more direct than a `SWITCH()` with one real case and a default.
+
+---
+
+## A Common Trap: IF Inside an Aggregation
+
+```dax lineNumbers
+Total High Value Sales =
+SUMX(
+    FactSales,
+    IF(FactSales[SalesAmount] > 1000, FactSales[SalesAmount], 0)
+)
+```
+
+This is a correct and common pattern — `IF()` used *inside* an iterator to conditionally include each row's value. It's a different thing from using `IF()` to branch an entire measure's logic, and it's worth recognizing the two shapes are solving different problems.
+
+---
+
+## Common Mistakes
+
+### Nesting Past the Point of Readability
+
+More than two or three nested `IF()` calls is a strong signal to switch to `SWITCH(TRUE(), ...)` instead — see [SWITCH](/docs/dax/switch) for the equivalent pattern.
+
+### Comparing to BLANK() Incorrectly
+
+```dax lineNumbers
+Status = IF([Total Sales] = BLANK(), "No Sales", "Has Sales")
+```
+
+This works but `ISBLANK([Total Sales])` is clearer and is the idiomatic way to test for blank specifically, rather than an equality comparison against `BLANK()`.
+
+### Returning Inconsistent Types
+
+```dax lineNumbers
+Result = IF([Total Sales] > 0, [Total Sales], "N/A")
+```
+
+Returning a number in one branch and text in the other forces an implicit type conversion that can produce unexpected formatting — keep both branches the same data type.
+
+---
+
+## Best Practices
+
+- Keep `IF()` to genuinely binary conditions; move to `SWITCH()` once there are more than two or three outcomes.
+- Use `ISBLANK()` to test for blank specifically, rather than comparing to `BLANK()` with `=`.
+- Return the same data type from both branches to avoid implicit conversion surprises.
+
+---
+
+## Next Steps
+
+- [SWITCH](/docs/dax/switch)
+- [Iterators](/docs/dax/iterator)
+- [Filter Context](/docs/dax/filter-context)

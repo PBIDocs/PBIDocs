@@ -1,0 +1,109 @@
+---
+title: DIVIDE()
+description: Learn how DIVIDE safely handles division in DAX, returning blank (or a chosen fallback) instead of an error when the denominator is zero or blank.
+---
+
+# DIVIDE()
+
+`DIVIDE()` performs division and safely handles the case where the denominator is zero or blank — returning `BLANK()` (or a specified fallback) instead of an error.
+
+```dax lineNumbers
+DIVIDE(Numerator, Denominator, [AlternateResult])
+```
+
+---
+
+## Basic Example
+
+```dax lineNumbers
+Profit Margin =
+DIVIDE([Total Profit], [Total Sales])
+```
+
+```text
+Total Sales = 500,000  -> Profit Margin = 0.24
+Total Sales = 0        -> Profit Margin = BLANK (not an error)
+```
+
+The equivalent written with the `/` operator errors out the entire visual the moment any row or subtotal has a zero or blank denominator:
+
+```dax lineNumbers
+Profit Margin (Unsafe) =
+[Total Profit] / [Total Sales]
+```
+
+```text
+Total Sales = 0  -> "Can't divide by zero" — the whole visual breaks, not just that one value
+```
+
+---
+
+## The Optional Fallback
+
+The third argument controls what's returned instead of blank when the denominator is zero or blank.
+
+```dax lineNumbers
+Profit Margin =
+DIVIDE([Total Profit], [Total Sales], 0)
+```
+
+```text
+No AlternateResult supplied -> BLANK (shows as an empty cell)
+AlternateResult = 0          -> shows as an actual 0
+```
+
+A chart that needs a real zero bar (rather than a gap in the axis) is the most common reason to supply this — otherwise, leaving it as blank is usually the more honest representation of "no data," not "zero."
+
+---
+
+## Why Not Just Use `/`?
+
+`/` is fine for a calculation where the denominator is mathematically guaranteed never to be zero or blank — inside a fixed conversion constant, for example. The moment a denominator comes from data (a measure, a column, an aggregation that could legitimately be empty for some filter combination), `/` is one edge case away from breaking a report.
+
+```text
+/ (division operator):  fast to type, breaks the visual on a zero/blank denominator
+DIVIDE():                one extra argument, handles zero/blank cleanly every time
+```
+
+`DIVIDE()` also has a minor performance edge over wrapping `/` in a manual `IF(denominator = 0, ...)` check, since it's a single optimized operation rather than an extra conditional evaluated on every row.
+
+---
+
+## Common Mistakes
+
+### Still Reaching for `/` in Report-Facing Measures
+
+The habit of typing `/` is hard to break, but any measure a report visual will actually display should default to `DIVIDE()` — the cost of being wrong (a broken visual) is much higher than the cost of typing a few extra characters.
+
+### Assuming DIVIDE Returns 0 by Default
+
+Without a third argument, `DIVIDE()` returns `BLANK()`, not `0` — a measure expected to show `0%` instead shows an empty cell unless the fallback is supplied explicitly.
+
+### Wrapping DIVIDE in a Redundant Blank Check
+
+```dax lineNumbers
+Profit Margin =
+IF(
+    ISBLANK([Total Sales]),
+    BLANK(),
+    DIVIDE([Total Profit], [Total Sales])
+)
+```
+
+`DIVIDE()` already handles this — the surrounding `IF`/`ISBLANK` adds nothing but extra evaluation cost.
+
+---
+
+## Best Practices
+
+- Default to `DIVIDE()` for every report-facing ratio, percentage, or average calculation.
+- Reserve `/` for divisions where the denominator is a fixed, known-safe constant.
+- Only supply an explicit `AlternateResult` when the visual genuinely needs a real zero instead of a blank — don't default to `0` out of habit.
+
+---
+
+## Next Steps
+
+- [Percent of Total](/docs/dax-patterns/percent-of-total)
+- [Performance Optimization](/docs/dax/performance)
+- [Measures](/docs/dax/measures)

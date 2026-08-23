@@ -99,7 +99,7 @@ See [Time Intelligence](/docs/dax/time-intelligence) for the full explanation, o
 
 | Function | Description |
 |---|---|
-| `IF` | Returns one of two results based on whether a condition is true. |
+| [IF](/docs/dax/if) | Returns one of two results based on whether a condition is true. |
 | [SWITCH](/docs/dax/switch) | Evaluates an expression against multiple possible values — a flatter alternative to nested `IF`. |
 | `AND` / `OR` / `NOT` | Combine or invert logical conditions. (`&&` and `\|\|` work the same as `AND`/`OR` inline.) |
 | `IFERROR` | Returns a fallback value if an expression errors, instead of the error itself. |
@@ -142,9 +142,9 @@ See [Date Tables](/docs/modeling/date-tables) for how `CALENDAR`/`CALENDARAUTO` 
 | `ISBLANK` | Returns true if a value is blank. |
 | `ISERROR` | Returns true if an expression would produce an error. |
 | `HASONEVALUE` | Returns true if exactly one value is visible in the current filter context for a column. |
-| `DIVIDE` | Divides two numbers, returning blank (or a specified fallback) instead of an error on division by zero. |
+| [DIVIDE](/docs/dax/divide) | Divides two numbers, returning blank (or a specified fallback) instead of an error on division by zero. |
 
-`DIVIDE` in particular should be the default over the `/` operator in report-facing measures — see [Filter](/docs/dax/filter) and [Best Practices](/docs/dax/performance) for where this comes up.
+`DIVIDE` in particular should be the default over the `/` operator in report-facing measures — see [Best Practices](/docs/dax/performance) for where this comes up.
 
 ---
 
