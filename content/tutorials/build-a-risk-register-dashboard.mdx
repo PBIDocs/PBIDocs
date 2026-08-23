@@ -1,0 +1,278 @@
+---
+title: "Build a Risk Register and Risk Matrix Dashboard in Power BI"
+description: "An end-to-end tutorial for systems and program engineers: turn a risk register into a real 5x5 risk matrix in Power BI, using a disconnected axis table and a \"latest assessment per risk\" DAX pattern."
+date: "2026-08-26"
+tags: ["Tutorial", "DAX", "Data Modeling"]
+faq:
+  - question: "What is a risk matrix in Power BI?"
+    answer: "A grid — usually 5x5 — plotting likelihood against impact, used to visually categorize risks by severity. Each cell shows how many risks currently fall into that likelihood/impact combination, typically color-coded from low (green) to critical (red)."
+  - question: "How do you calculate a risk score?"
+    answer: "Multiply likelihood by impact, both usually rated 1 to 5. The resulting score (1 to 25) is then bucketed into risk levels like Low, Medium, High, and Critical using threshold ranges."
+  - question: "How do you get a risk's current values if it's been assessed more than once?"
+    answer: "Filter to the most recent assessment date for that specific risk, rather than summing or averaging every historical assessment — a risk's history matters for trend, but its status right now is defined by the latest row only."
+  - question: "Why use a disconnected table for the risk matrix's likelihood and impact axes?"
+    answer: "The 1-5 likelihood and impact scale isn't its own dimension in the risk data — a small disconnected table lets the matrix visual show every combination, including empty cells with zero risks, not just the combinations that happen to already exist."
+---
+
+A risk register is one of the most common program-management artifacts in systems engineering, and one of the least often built well in Power BI — usually because the "current status" of a risk that's been reassessed multiple times isn't a simple aggregation. This tutorial builds a real 5x5 risk matrix from an actual risk register, including a risk whose score changes between assessments.
+
+```text
+Risk Register (risks + a history of assessments)
+        |
+        | DAX: find each risk's LATEST assessment
+        |
+Risk Score = Likelihood x Impact -> Risk Level
+        |
+        | disconnected 1-5 axis tables
+        |
+Dashboard (5x5 risk matrix, gap list, level breakdown)
+```
+
+No downloadable file — three small tables, small enough to paste into `.csv` files.
+
+---
+
+## What You're Building
+
+A one-page risk status dashboard answering the questions an actual risk review asks:
+
+- How many risks are currently Critical, High, Medium, or Low?
+- Which specific risks are Critical or High right now?
+- Has any risk's score changed since it was last reviewed?
+- Where do risks cluster on a likelihood-vs-impact matrix?
+
+```text
++------------------------------------------------------------+
+|  Total Risks  |  Critical  |  High  |  Avg Risk Score        |
++------------------------------------------------------------+
+|  5x5 Risk Matrix (Likelihood x Impact, count per cell)       |
++------------------------------------------------+-----------+
+|  Critical & High Risks (table)                   | Risks by  |
+|                                                   | Category  |
++------------------------------------------------------------+
+```
+
+---
+
+## Step 1: The Raw Data
+
+Two tables: the risks themselves, and a history of assessments — since a risk register's whole point is tracking how a risk's likelihood and impact change as it's reviewed over time.
+
+```text
+risks.csv
+RiskID,RiskDescription,Category,Owner
+RISK-01,Key supplier delivery delay,Schedule,J. Smith
+RISK-02,Requirements change after design freeze,Technical,A. Chen
+RISK-03,Budget overrun on subsystem integration,Cost,M. Patel
+RISK-04,Single point of failure in power supply,Safety,J. Smith
+RISK-05,Test facility unavailable during critical window,Schedule,A. Chen
+RISK-06,Software defect rate exceeds threshold,Technical,M. Patel
+RISK-07,Key personnel attrition,Schedule,J. Smith
+RISK-08,Regulatory approval delay,Compliance,A. Chen
+```
+
+```text
+risk_assessments.csv
+RiskID,AssessmentDate,Likelihood,Impact,Status
+RISK-01,2026-05-01,3,4,Open
+RISK-01,2026-07-01,4,4,Open
+RISK-02,2026-05-01,1,3,Open
+RISK-03,2026-05-01,3,3,Open
+RISK-03,2026-07-01,2,3,Mitigated
+RISK-04,2026-05-01,2,5,Open
+RISK-05,2026-05-01,4,2,Open
+RISK-06,2026-05-01,3,3,Open
+RISK-07,2026-05-01,2,4,Open
+RISK-08,2026-05-01,3,5,Open
+```
+
+Notice `RISK-01` and `RISK-03` each have two assessments — `RISK-01` got worse (likelihood went from 3 to 4), `RISK-03` improved after mitigation. Every other risk has only been assessed once so far. This mix is deliberate: it's what makes "current status" a real question, not just a straight read of the table.
+
+---
+
+## Step 2: Load and Type in Power Query
+
+Connect both files, and set `AssessmentDate` to a proper date type:
+
+```powerquery lineNumbers
+#"Changed Type" = Table.TransformColumnTypes(
+    Source, {{"AssessmentDate", type date}}
+)
+```
+
+---
+
+## Step 3: Build the Model
+
+`DimRisk` and `FactRiskAssessment` relate one-to-many on `RiskID` — standard star schema, one row per risk in the dimension, one row per assessment in the fact table.
+
+```text
+DimRisk (1)                    FactRiskAssessment (many)
+RiskID                         RiskID
+RiskDescription                AssessmentDate
+Category                       Likelihood
+Owner                          Impact
+                                Status
+```
+
+See [Star Schema](/docs/modeling/star-schema) and [Fact Tables](/docs/modeling/fact-tables) for the general shape this follows.
+
+---
+
+## Step 4: Write the Measures
+
+### Finding Each Risk's Latest Assessment
+
+The core problem: a naive `SUM` or `AVERAGE` over `Likelihood`/`Impact` would blend `RISK-01`'s two assessments together, which isn't what "current likelihood" means. The fix is finding the single most recent row per risk.
+
+```dax lineNumbers
+Current Likelihood =
+VAR LatestDate =
+    CALCULATE(MAX(FactRiskAssessment[AssessmentDate]))
+RETURN
+    CALCULATE(
+        SELECTEDVALUE(FactRiskAssessment[Likelihood]),
+        FactRiskAssessment[AssessmentDate] = LatestDate
+    )
+
+Current Impact =
+VAR LatestDate =
+    CALCULATE(MAX(FactRiskAssessment[AssessmentDate]))
+RETURN
+    CALCULATE(
+        SELECTEDVALUE(FactRiskAssessment[Impact]),
+        FactRiskAssessment[AssessmentDate] = LatestDate
+    )
+```
+
+In a table visual with `DimRisk[RiskID]` on rows, filter context already narrows `FactRiskAssessment` down to just that risk's rows — `LatestDate` finds the most recent assessment date *within that narrowed set*, and the outer `CALCULATE` then pulls the `Likelihood`/`Impact` value from that one specific row.
+
+### Risk Score and Risk Level
+
+```dax lineNumbers
+Risk Score =
+[Current Likelihood] * [Current Impact]
+
+Risk Level =
+SWITCH(
+    TRUE(),
+    [Risk Score] >= 15, "Critical",
+    [Risk Score] >= 9, "High",
+    [Risk Score] >= 4, "Medium",
+    [Risk Score] > 0, "Low",
+    BLANK()
+)
+```
+
+`SWITCH(TRUE(), ...)` checks each condition in order and returns the first match — see [SWITCH](/docs/dax/switch#switchtrue--for-range-conditions) for why this pattern beats nested `IF()` once there are more than two or three thresholds.
+
+### Counting Risks by Level
+
+```dax lineNumbers
+Critical Risks =
+CALCULATE(
+    DISTINCTCOUNT(DimRisk[RiskID]),
+    FILTER(DimRisk, [Risk Level] = "Critical")
+)
+
+High Risks =
+CALCULATE(
+    DISTINCTCOUNT(DimRisk[RiskID]),
+    FILTER(DimRisk, [Risk Level] = "High")
+)
+```
+
+`FILTER(DimRisk, ...)` iterates every risk, evaluating the `[Risk Level]` measure once per risk (each risk's own row context resolves `Current Likelihood`/`Current Impact` correctly), then keeps only the ones matching.
+
+---
+
+## Step 5: Build the Risk Matrix
+
+The matrix needs a 1-5 axis for both likelihood and impact — but that scale doesn't exist as its own table in the data yet. Create two small calculated tables:
+
+```dax lineNumbers
+DimLikelihood =
+SELECTCOLUMNS(GENERATESERIES(1, 5, 1), "Likelihood", [Value])
+
+DimImpact =
+SELECTCOLUMNS(GENERATESERIES(1, 5, 1), "Impact", [Value])
+```
+
+Leave both **disconnected** — not related to `DimRisk` or `FactRiskAssessment` — the same technique as the disconnected date table in [Build an Earned Value Management Dashboard](/tutorials/build-an-evm-dashboard). The measure below reads whatever likelihood/impact value is in context (a matrix cell) directly, rather than through a relationship.
+
+```dax lineNumbers
+Risks in Cell =
+VAR SelectedLikelihood = SELECTEDVALUE(DimLikelihood[Likelihood])
+VAR SelectedImpact = SELECTEDVALUE(DimImpact[Impact])
+RETURN
+CALCULATE(
+    DISTINCTCOUNT(DimRisk[RiskID]),
+    FILTER(
+        DimRisk,
+        [Current Likelihood] = SelectedLikelihood && [Current Impact] = SelectedImpact
+    )
+)
+```
+
+Build a **Matrix** visual: `DimLikelihood[Likelihood]` on rows, `DimImpact[Impact]` on columns, `[Risks in Cell]` as the value. Add conditional formatting (background color, red for high combinations, green for low) to turn it into an actual heat map.
+
+---
+
+## Step 6: Lay Out the Report
+
+```text
+Page: "Risk Register"
+
+Row 1 (KPI cards):
+  [Total Risks]  [Critical Risks]  [High Risks]  [Average Risk Score]
+
+Row 2 (matrix, the risk heat map):
+  Rows: DimLikelihood[Likelihood]
+  Columns: DimImpact[Impact]
+  Values: [Risks in Cell]
+
+Row 3 (left, table):                Row 3 (right, bar chart):
+  Filter: [Risk Level] IN {"Critical", "High"}   X-axis: DimRisk[Category]
+  Columns: RiskDescription, Owner,               Y-axis: [Total Risks]
+           [Risk Score], [Risk Level]
+
+Slicer (top of page): DimRisk[Category]
+```
+
+With this dataset, the Critical/High table shows exactly `RISK-01` (score 16), `RISK-08` (score 15), `RISK-04` (score 10), and `RISK-06` (score 9) — and the matrix visually clusters them in the upper-right, high-likelihood/high-impact corner, which is the point of building the matrix in the first place: severity that's easy to miss in a table jumps out immediately as a heat map.
+
+See [Charts](/docs/visuals/charts) and [Tables](/docs/visuals/tables) for configuring these visual types.
+
+---
+
+## Common Mistakes
+
+### Averaging or Summing Every Historical Assessment
+
+Blending `RISK-01`'s two assessments (likelihood 3, then 4) into an average of 3.5 hides the fact that the risk has gotten worse — the current status is 4, not an average of everything ever recorded.
+
+### Forgetting the Relationship Should NOT Exist for the Axis Tables
+
+`DimLikelihood` and `DimImpact` need to stay disconnected. Relating them to `FactRiskAssessment` would filter the fact table down to only existing likelihood/impact combinations, breaking the matrix's ability to show empty cells (a 1×1 combination with zero risks is still meaningful — it means nothing is currently that low-severity).
+
+### Treating Risk Score as Precise Instead of a Sorting Tool
+
+A score of 15 isn't meaningfully more "exact" than 14 — the score exists to bucket and rank risks for review priority, not to imply false precision. The threshold bands (`Risk Level`) matter more than the raw number for actually deciding what gets attention first.
+
+---
+
+## Tutorial Checklist
+
+- Each risk's current likelihood and impact come from its most recent assessment only, not a blend of every historical row.
+- The likelihood and impact axis tables for the matrix are disconnected from the rest of the model.
+- Risk Level uses `SWITCH(TRUE(), ...)` with clear threshold bands, not a raw score alone.
+- The Critical/High risk list is checked directly against the underlying data, not assumed from the matrix visual alone.
+
+---
+
+## Next Steps
+
+- [SWITCH](/docs/dax/switch)
+- [IF](/docs/dax/if)
+- [Star Schema](/docs/modeling/star-schema)
+- [Governance: RLS Role Matrix](/docs/governance/rls-matrix) — restricting each risk owner to their own category.
