@@ -1,0 +1,246 @@
+---
+title: "Build a Reliability (MTBF/MTTR) Dashboard in Power BI"
+description: "An end-to-end tutorial for reliability and systems engineers: turn a raw failure/repair log into real MTBF, MTTR, and availability measures in DAX, including a per-asset uptime calculation with no dedicated date table."
+date: "2026-08-27"
+tags: ["Tutorial", "DAX", "Data Modeling"]
+faq:
+  - question: "What is MTBF in reliability engineering?"
+    answer: "Mean Time Between Failures — the average uptime an asset accumulates between one failure and the next, calculated as total uptime divided by number of failures. A higher MTBF means a more reliable asset."
+  - question: "What is MTTR and how is it different from MTBF?"
+    answer: "Mean Time To Repair — the average time spent fixing an asset once it fails, calculated as total repair time divided by number of failures. MTBF measures how often something breaks; MTTR measures how long it takes to fix once it does."
+  - question: "How do you calculate availability from MTBF and MTTR?"
+    answer: "Availability % = MTBF / (MTBF + MTTR). It expresses what fraction of total time (uptime plus downtime) an asset is actually available, as a single percentage."
+  - question: "Can Power BI calculate uptime between failures without a dedicated date table?"
+    answer: "Yes — this pattern uses DATEDIFF and a per-row lookup of each asset's previous repair completion time, computed directly in a calculated column, rather than relying on a calendar table relationship."
+---
+
+Reliability engineering runs on two numbers: how often something breaks (MTBF), and how long it takes to fix once it does (MTTR). Both come from the same raw source — a log of failure and repair timestamps — but getting from that log to real MTBF/MTTR measures needs one non-obvious step: finding the uptime *between* one repair and the next failure, per asset.
+
+```text
+Failure/Repair Log (per event: start, repair complete)
+        |
+        | DAX: find each event's PREVIOUS repair completion, per asset
+        |
+Uptime per event, Repair time per event
+        |
+        | aggregate
+        |
+MTBF, MTTR, Availability %
+```
+
+No downloadable file — two small tables, small enough to paste into `.csv` files.
+
+---
+
+## What You're Building
+
+A one-page reliability dashboard answering the questions a maintenance review actually asks:
+
+- On average, how long does each asset run before it fails?
+- Once it fails, how long does it take to get it running again?
+- What percentage of the time is each asset actually available?
+- Which specific asset is the least reliable?
+
+```text
++------------------------------------------------------------+
+|  Total Failures  |  MTBF (Hours)  |  MTTR (Hours)  |  Avail %|
++------------------------------------------------------------+
+|  MTBF by Asset (bar chart)                                   |
++------------------------------------------------------------+
+|  Failure Log (table: asset, start, repair complete, hours)   |
++------------------------------------------------------------+
+```
+
+---
+
+## Step 1: The Raw Data
+
+An asset list, and a log of failure events — each row is one breakdown, from when it started to when the repair finished.
+
+```text
+assets.csv
+AssetID,AssetName,AssetType,CommissionedDate
+AST-01,Conveyor Motor A,Mechanical,2026-01-01
+AST-02,Pump Unit B,Mechanical,2026-01-01
+AST-03,PLC Controller C,Electrical,2026-01-01
+```
+
+```text
+failure_events.csv
+AssetID,FailureStart,RepairComplete
+AST-01,2026-01-11 00:00,2026-01-11 12:00
+AST-01,2026-01-26 12:00,2026-01-27 00:00
+AST-02,2026-01-06 00:00,2026-01-06 06:00
+AST-02,2026-01-16 06:00,2026-01-16 18:00
+AST-02,2026-01-28 18:00,2026-01-29 02:00
+AST-03,2026-01-21 00:00,2026-01-21 04:00
+```
+
+`AST-03` has only one recorded failure so far — worth keeping in mind later, since a reliability figure based on a single event is statistically thin no matter how the math works out.
+
+---
+
+## Step 2: Load and Type in Power Query
+
+Connect both files, and set the two datetime columns to a proper type:
+
+```powerquery lineNumbers
+#"Changed Type" = Table.TransformColumnTypes(
+    Source,
+    {{"FailureStart", type datetime}, {"RepairComplete", type datetime}}
+)
+```
+
+---
+
+## Step 3: Build the Model
+
+`DimAsset` relates one-to-many to `FactFailureEvents` on `AssetID` — standard star schema, one row per asset, one row per failure/repair cycle.
+
+```text
+DimAsset (1)                FactFailureEvents (many)
+AssetID                     AssetID
+AssetName                   FailureStart
+AssetType                   RepairComplete
+CommissionedDate
+```
+
+No separate date table is needed here — every calculation below works directly off the two timestamp columns already in `FactFailureEvents`. See [Fact Tables](/docs/modeling/fact-tables) for the general shape this follows.
+
+---
+
+## Step 4: Find Each Event's Uptime
+
+This is the part that actually takes a calculated column, not a simple measure: for each failure, how long was the asset running *before* it broke? That's the gap between this failure's start and whichever came before it for the *same asset* — either the previous repair completion, or the asset's commissioning date if this is its first recorded failure.
+
+### Previous Repair Complete (Calculated Column)
+
+```dax lineNumbers
+Previous Repair Complete =
+VAR CurrentAsset = FactFailureEvents[AssetID]
+VAR CurrentFailureStart = FactFailureEvents[FailureStart]
+VAR PriorRepairs =
+    FILTER(
+        FactFailureEvents,
+        FactFailureEvents[AssetID] = CurrentAsset &&
+        FactFailureEvents[RepairComplete] < CurrentFailureStart
+    )
+RETURN
+    MAXX(PriorRepairs, FactFailureEvents[RepairComplete])
+```
+
+`VAR` captures the current row's `AssetID` and `FailureStart` before `FILTER()` introduces its own, inner row context over the whole table — the same reason [Variables (VAR)](/docs/dax/variables) have mostly replaced `EARLIER()` for exactly this kind of calculated column. `PriorRepairs` ends up holding every earlier repair for *this* asset only; `MAXX()` picks the most recent one. For an asset's first-ever failure, no prior repair exists, so this returns blank — handled next.
+
+### Uptime Hours (Calculated Column)
+
+```dax lineNumbers
+Uptime Hours =
+VAR PriorComplete = FactFailureEvents[Previous Repair Complete]
+VAR StartPoint =
+    IF(
+        ISBLANK(PriorComplete),
+        RELATED(DimAsset[CommissionedDate]),
+        PriorComplete
+    )
+RETURN
+    DATEDIFF(StartPoint, FactFailureEvents[FailureStart], HOUR)
+```
+
+`RELATED()` pulls the asset's `CommissionedDate` across the relationship for that first-failure case — see [RELATED & RELATEDTABLE](/docs/dax/related) — and `DATEDIFF()` (with `HOUR` as the interval) turns the gap into a plain number of hours. `IF()` here is exactly the two-branch case it's meant for — see [IF](/docs/dax/if).
+
+### Repair Hours (Calculated Column)
+
+```dax lineNumbers
+Repair Hours =
+DATEDIFF(FactFailureEvents[FailureStart], FactFailureEvents[RepairComplete], HOUR)
+```
+
+---
+
+## Step 5: Write the Reliability Measures
+
+```dax lineNumbers
+Total Failures =
+COUNTROWS(FactFailureEvents)
+
+Total Uptime Hours =
+SUM(FactFailureEvents[Uptime Hours])
+
+Total Repair Hours =
+SUM(FactFailureEvents[Repair Hours])
+
+MTBF (Hours) =
+DIVIDE([Total Uptime Hours], [Total Failures])
+
+MTTR (Hours) =
+DIVIDE([Total Repair Hours], [Total Failures])
+
+Availability % =
+DIVIDE([MTBF (Hours)], [MTBF (Hours)] + [MTTR (Hours)])
+```
+
+Every division uses [DIVIDE](/docs/dax/divide) rather than `/` — with only one or two failures recorded per asset, a filtered view with zero failures is a real possibility, not an edge case to ignore.
+
+---
+
+## Step 6: Lay Out the Report
+
+```text
+Page: "Reliability Overview"
+
+Row 1 (KPI cards):
+  [Total Failures]  [MTBF (Hours)]  [MTTR (Hours)]  [Availability %]
+
+Row 2 (bar chart):
+  X-axis: DimAsset[AssetName]
+  Y-axis: [MTBF (Hours)]
+
+Row 3 (table, the failure log):
+  Columns: DimAsset[AssetName], FactFailureEvents[FailureStart],
+           FactFailureEvents[RepairComplete], [Uptime Hours], [Repair Hours]
+
+Slicer (top of page): DimAsset[AssetType]
+```
+
+With this dataset, `AST-02` has the worst `MTBF` (216 hours across 3 failures) — it fails most often relative to how long it runs. `AST-03` shows the best `MTBF` (480 hours) but from a single recorded failure, which is exactly the "too little data" case worth flagging rather than trusting at face value.
+
+See [Charts](/docs/visuals/charts) and [Tables](/docs/visuals/tables) for configuring these visual types.
+
+---
+
+## Common Mistakes
+
+### Trusting MTBF From a Single Failure
+
+`AST-03`'s 480-hour MTBF is a real number, but it's based on one data point — statistically, it says almost nothing about how reliable the asset actually is going forward. A reliability figure needs enough failures behind it before it's worth acting on.
+
+### Averaging Repair Time Instead of Summing First
+
+```dax lineNumbers
+MTTR (Wrong) =
+AVERAGE(FactFailureEvents[Repair Hours])
+```
+
+This happens to produce the same number as `DIVIDE([Total Repair Hours], [Total Failures])` at the total level, but breaks the moment `MTTR` needs to combine with other filtered totals (like blending across multiple assets with a weighted view) — building it from explicit sums keeps it consistent with `MTBF`, which can't be expressed as a simple `AVERAGE()` at all.
+
+### Forgetting the First Failure Needs a Fallback
+
+Without the `CommissionedDate` fallback in `Uptime Hours`, an asset's very first failure would show a blank uptime instead of the real time since commissioning — quietly excluding it from `Total Uptime Hours` and understating `MTBF`.
+
+---
+
+## Tutorial Checklist
+
+- Each failure event's uptime is calculated from the *previous* repair for that specific asset, not a fixed calendar period.
+- The first failure per asset falls back to the asset's commissioning date, rather than going blank.
+- `MTBF` and `MTTR` are built from summed totals divided by failure count, not averaged directly.
+- Every division uses `DIVIDE()`, and an asset with very few recorded failures is flagged as statistically thin, not treated as equally reliable data.
+
+---
+
+## Next Steps
+
+- [Variables (VAR)](/docs/dax/variables)
+- [RELATED & RELATEDTABLE](/docs/dax/related)
+- [DIVIDE](/docs/dax/divide)
+- [Fact Tables](/docs/modeling/fact-tables)
