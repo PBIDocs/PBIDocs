@@ -23,6 +23,7 @@
     "topn",
     "summarize",
     "userelationship",
-    "performance"
+    "performance",
+    "user-defined-functions"
   ]
 }

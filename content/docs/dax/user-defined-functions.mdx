@@ -1,0 +1,225 @@
+---
+title: "DAX User-Defined Functions (UDFs)"
+description: "Learn the FUNCTION syntax for DAX user-defined functions, generally available since the June 2026 release — parameter types, val vs. expr evaluation, and where UDFs can and can't be used."
+---
+
+# DAX User-Defined Functions (UDFs)
+
+DAX user-defined functions let you package a calculation once and reuse it across measures, calculated columns, visual calculations, and other UDFs — instead of copying the same expression into multiple places and hoping they stay in sync. UDFs reached general availability in Power BI Desktop and the Power BI Service with the June 2026 release, and require database compatibility level 1702 or higher.
+
+```dax lineNumbers
+DEFINE
+    FUNCTION <FunctionName> = (
+        [<ParameterName> [: [<Type>] [<Subtype>] [<ParameterMode>]] [= <DefaultExpression>], ...]
+    ) => <FunctionBody>
+```
+
+---
+
+## A First Example
+
+```dax lineNumbers
+DEFINE
+    /// AddTax takes an amount and returns the amount including tax
+    /// @param {NUMERIC} amount - The pre-tax value
+    /// @param {NUMERIC} [taxRate] - Optional tax rate, default 0.1 (10%)
+    /// @returns The amount including tax
+    FUNCTION AddTax = 
+        ( amount : NUMERIC, taxRate : NUMERIC = 0.1 ) =>
+            amount * ( 1 + taxRate )
+
+EVALUATE
+{ AddTax ( 10 ) }
+// Returns 11
+```
+
+The `///` comments aren't decoration — they're JSDoc-style documentation comments that show up in IntelliSense when someone types the function name later. A plain `//` or `/* */` comment won't appear there.
+
+---
+
+## Where UDFs Are Defined
+
+UDFs are authored in **DAX query view** or **TMDL view** — not inline inside a single measure. Once defined, click **Update model with changes** (DAX query view) or **Apply** (TMDL view) to save the function to the model, where it becomes a first-class object visible under the **Functions** node in Model Explorer.
+
+```text
+DAX query view / TMDL view
+        |
+        | define + save to model
+        |
+Function becomes a model object
+        |
+        | callable from
+        |
+Measures, calculated columns, visual calculations, other UDFs
+```
+
+---
+
+## Calling a UDF
+
+Once saved, a UDF is called exactly like a built-in function.
+
+```dax lineNumbers
+Total Sales with Tax = AddTax ( [Total Sales] )
+```
+
+In a calculated column, cast the result explicitly if the column needs a specific type:
+
+```dax lineNumbers
+Sales Amount with Tax = CONVERT ( AddTax ( 'Sales'[Sales Amount] ), CURRENCY )
+```
+
+UDFs can also call each other:
+
+```dax lineNumbers
+DEFINE
+    FUNCTION AddTax = ( amount : NUMERIC ) => amount * 1.1
+    FUNCTION AddTaxAndDiscount = ( amount : NUMERIC, discount : NUMERIC ) =>
+        AddTax ( amount - discount )
+
+EVALUATE
+{ AddTaxAndDiscount ( 10, 2 ) }
+// Returns 8.8
+```
+
+Visual calculations can call UDFs too, but only on fields already present in that visual — a UDF used in a visual calculation can't reach a model column or measure that isn't already in the visual.
+
+---
+
+## Parameters: Type, Subtype, and val vs. expr
+
+This is the part that actually trips people up. Every parameter can optionally declare three things: a **type**, a **subtype**, and a **parameter mode**.
+
+```text
+[type] [subtype] [parameterMode]
+```
+
+Omitting everything is valid — `amount` alone behaves as `AnyVal val`, evaluated immediately at call time. That's fine for simple functions.
+
+### Type
+
+| Type | Accepts |
+|---|---|
+| `AnyVal` (default) | A scalar or a table |
+| `Scalar` | A scalar value |
+| `Table` | A table |
+| `AnyRef` | Any reference |
+| `ColumnRef` | A reference to a column |
+| `MeasureRef` | A reference to a measure |
+| `TableRef` | A reference to a table |
+| `CalendarRef` | A reference to a calendar |
+
+### Subtype (for `Scalar` only)
+
+`Variant`, `Int64`, `Decimal`, `Double`, `String`, `DateTime`, `Boolean`, or `Numeric` (any of the three numeric subtypes).
+
+### ParameterMode: val vs. expr
+
+This is the important one. It controls **when** the argument is actually evaluated.
+
+```text
+val  (eager, default) -> evaluated once, before the function runs — inherits the caller's row AND filter context
+expr (lazy)            -> passed unevaluated, function decides when/how — inherits only filter context
+```
+
+`Scalar` and `Table` parameters can use either. `AnyRef`, `ColumnRef`, `MeasureRef`, `TableRef`, and `CalendarRef` **must** be `expr`, since a reference has to be resolved inside the function's own context, not the caller's.
+
+The difference is easiest to see with a table parameter used inside `CALCULATETABLE`:
+
+```dax lineNumbers
+DEFINE
+    /// val: receives an already-materialized table — context inside can't change it
+    FUNCTION CountRowsNow = ( t : TABLE VAL ) =>
+        COUNTROWS ( CALCULATETABLE ( t, ALL ( 'Date' ) ) )
+
+    /// expr: receives the unevaluated expression — context inside CAN change it
+    FUNCTION CountRowsLater = ( t : TABLE EXPR ) =>
+        COUNTROWS ( CALCULATETABLE ( t, ALL ( 'Date' ) ) )
+
+EVALUATE
+{
+    CALCULATE ( CountRowsNow ( 'Sales' ), 'Date'[Fiscal Year] = "FY2020" ),
+    CALCULATE ( CountRowsLater ( 'Sales' ), 'Date'[Fiscal Year] = "FY2020" )
+}
+// CountRowsNow returns rows for FY2020 only — 'Sales' was already filtered before entering the function.
+// CountRowsLater returns rows for all years — ALL('Date') inside the function actually takes effect.
+```
+
+`CountRowsNow`'s `ALL('Date')` does nothing, because by the time it runs, `t` is already a fixed, filtered table — there's no filter context left to remove. `CountRowsLater` receives the *expression* `'Sales'`, not its already-evaluated result, so `CALCULATETABLE` inside the function genuinely gets to apply `ALL('Date')` before the table is materialized. See [CALCULATE](/docs/dax/calculate) for the filter-context mechanics this depends on.
+
+---
+
+## Default Expressions (Optional Parameters)
+
+Adding `= <DefaultExpression>` makes a parameter optional.
+
+```dax lineNumbers
+FUNCTION AddTax = ( amount : NUMERIC, taxRate : NUMERIC = 0.1 ) =>
+    amount * ( 1 + taxRate )
+```
+
+A default expression can only reference names visible where the function is *defined*, not where it's called, and it can't reference another optional parameter. Required parameters can technically follow optional ones — a caller can leave a gap (`MyFunc(1, , 3)`) to use the default — but the function's minimum argument count is still set by the rightmost required parameter.
+
+---
+
+## Type Checking Inside a UDF
+
+Since parameters often accept more than one shape of input, DAX provides boolean type-check functions for use inside a UDF body: `ISNUMERIC`, `ISNUMBER`, `ISDOUBLE`, `ISINT64`, `ISINTEGER`, `ISDECIMAL`, `ISCURRENCY`, `ISSTRING`, `ISTEXT`, `ISBOOLEAN`, `ISLOGICAL`, `ISDATETIME`.
+
+```dax lineNumbers
+DEFINE
+    /// Accepts a currency key (Int64) or a currency code (String)
+    FUNCTION GetCurrencyName = ( currency ) =>
+        IF (
+            ISINT64 ( currency ),
+            LOOKUPVALUE ( 'Currency'[Currency], 'Currency'[CurrencyKey], currency ),
+            LOOKUPVALUE ( 'Currency'[Currency], 'Currency'[Code], currency )
+        )
+
+EVALUATE
+{ GetCurrencyName ( 36 ), GetCurrencyName ( "USD" ) }
+// returns "Euro", "US Dollar"
+```
+
+`TABLEOF()` (returns the full table behind a column, measure, or calendar reference) and `NAMEOF()` (returns an object's name as text) are the two information functions most commonly used alongside type checking when a UDF needs to work generically across different inputs.
+
+---
+
+## Common Mistakes
+
+**Expecting recursion to work.** UDFs don't support recursion or mutual recursion — a function calling itself, directly or through another function, isn't allowed.
+
+**Using `val` when the function needs to control context.** If a UDF's whole purpose is to apply a filter modification (like `ALL()`) inside `CALCULATETABLE`, a `val` parameter defeats it — the table arrives already evaluated, with nothing left to filter. Reach for `expr` (or `TableRef`/`ColumnRef`) whenever the function needs to affect *how* something is evaluated, not just *what value* it receives.
+
+**Assuming Object-Level Security carries over.** OLS on a measure or column doesn't automatically apply to a UDF that references it, and it doesn't transfer the other way either. A UDF wrapping a secured measure isn't secured just because the measure is.
+
+**Expecting an explicit return type or function overloading.** Neither is supported — a UDF's return type is inferred from its body, and you can't define two versions of the same function name for different parameter signatures.
+
+---
+
+## Limitations
+
+- No recursion or mutual recursion.
+- No function overloading, and no explicit return type declaration.
+- Parameters can't have their own descriptions (only the function itself can, via `///`).
+- A UDF can't return an `enum` value.
+- Can't be hidden/unhidden, put in display folders, or combined with translations.
+- Live-connected reports get no IntelliSense for UDFs from the source model; composite models can't reference source-model UDFs from model-based measures at all.
+
+---
+
+## Best Practices
+
+- Add `///` documentation comments to every UDF meant for reuse — it's the only way the function's purpose shows up in IntelliSense later.
+- Use `expr`/reference parameter types specifically when a function needs to control filter or row context internally — don't default to `val` out of habit.
+- Add type-checking (`ISINT64`, `ISSTRING`, etc.) at the top of a function that accepts more than one shape of input, rather than assuming the caller always passes the expected type.
+- Keep a UDF's logic focused on one reusable calculation — nest smaller UDFs together rather than building one large function that tries to do everything.
+
+---
+
+## Next Steps
+
+- [CALCULATE](/docs/dax/calculate)
+- [Measures](/docs/dax/measures)
+- [Variables (VAR)](/docs/dax/variables)
+- [DAX Function Reference](/docs/dax/functions)
