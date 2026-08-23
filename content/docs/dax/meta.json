@@ -11,6 +11,8 @@
     "row-context",
     "filter-context",
     "calculate",
+    "if",
+    "divide",
     "iterator",
     "time-intelligence",
     "filter-functions",
