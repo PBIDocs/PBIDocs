@@ -17,8 +17,8 @@ A quick-scan index of the DAX functions most commonly used in Power BI, grouped 
 | `AVERAGE` | Returns the arithmetic mean of a column. |
 | `COUNT` | Counts rows where the column contains a number. |
 | `COUNTA` | Counts rows where the column contains any non-blank value. |
-| `COUNTROWS` | Counts the rows in a table, regardless of column content. |
-| `DISTINCTCOUNT` | Counts the distinct values in a column. |
+| [COUNTROWS](/docs/dax/countrows) | Counts the rows in a table, regardless of column content. |
+| [DISTINCTCOUNT](/docs/dax/distinctcount) | Counts the distinct values in a column. |
 | `MIN` / `MAX` | Returns the smallest or largest value in a column. |
 
 These accept a single column and evaluate it within the current filter context — no row-by-row iteration involved. See [Measures](/docs/dax/measures) for how they're typically wrapped into named calculations.
@@ -34,6 +34,7 @@ These accept a single column and evaluate it within the current filter context �
 | [ALL, ALLEXCEPT, ALLSELECTED & REMOVEFILTERS](/docs/dax/filter-functions) | Remove or partially restore filters — the basis of percent-of-total and grand-total patterns. |
 | `KEEPFILTERS` | Adds a filter without overwriting an existing one on the same column, inside `CALCULATE`. |
 | `CROSSFILTER` | Changes a relationship's cross-filter direction or disables it, for a single calculation. |
+| [EARLIER](/docs/dax/earlier) | Reaches back to an outer row context from inside a nested one — mostly replaced by `VAR` in modern DAX. |
 
 See [Filter Context](/docs/dax/filter-context) for how these functions interact with what's currently filtering a calculation.
 
@@ -43,7 +44,7 @@ See [Filter Context](/docs/dax/filter-context) for how these functions interact 
 
 | Function | Description |
 |---|---|
-| `SUMX` | Evaluates an expression per row, then sums the results. |
+| [SUMX](/docs/dax/sumx) | Evaluates an expression per row, then sums the results. |
 | `AVERAGEX` | Evaluates an expression per row, then averages the results. |
 | `COUNTX` / `COUNTAX` | Evaluates an expression per row, then counts non-blank results. |
 | `MAXX` / `MINX` | Evaluates an expression per row, then returns the largest or smallest result. |

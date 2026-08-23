@@ -1,0 +1,131 @@
+---
+title: EARLIER()
+description: Learn how EARLIER reaches back to an outer row context from inside a nested row context, and why VAR has mostly replaced it in modern DAX.
+---
+
+# EARLIER()
+
+`EARLIER()` refers to a value from an *outer* row context, from inside a calculation that has created a *nested* (inner) row context — most often inside a calculated column that uses `FILTER()` internally.
+
+```dax lineNumbers
+EARLIER(Column, [Number])
+```
+
+This is one of the more confusing corners of DAX, largely because it's rarely needed in modern DAX — variables usually solve the same problem more clearly. It's still worth understanding, since it shows up constantly in older tutorials, forum answers, and existing models.
+
+---
+
+## Why It's Needed: Two Row Contexts at Once
+
+A calculated column already has one row context — "the current row." Using `FILTER()` inside that column's expression creates a *second*, inner row context for evaluating the filter condition. Inside that inner context, a bare column reference means the *inner* row, not the original one — `EARLIER()` is how the expression reaches back to the outer row's value instead.
+
+```text
+Calculated column's own row context:      Row context #1 (outer)
+        |
+        | FILTER() inside the expression creates:
+        |
+Row context #2 (inner) — a bare column reference now means THIS row, not the outer one
+        |
+        | EARLIER(Column) reaches back to
+        |
+Row context #1's value
+```
+
+---
+
+## Classic Example: Ranking Within a Calculated Column
+
+```dax lineNumbers
+Sales Rank =
+COUNTROWS(
+    FILTER(
+        FactSales,
+        FactSales[SalesAmount] > EARLIER(FactSales[SalesAmount])
+    )
+) + 1
+```
+
+```text
+For each row, count how many OTHER rows have a higher SalesAmount, then add 1.
+
+SalesAmount = 500  -> 2 rows have more -> Rank 3
+SalesAmount = 900  -> 0 rows have more -> Rank 1
+```
+
+`FactSales[SalesAmount]` inside `FILTER()` refers to each row `FILTER()` is currently examining (the inner context). `EARLIER(FactSales[SalesAmount])` refers back to the row the calculated column itself is being computed for (the outer context) — without it, the comparison would just be `FactSales[SalesAmount] > FactSales[SalesAmount]`, which is never true.
+
+---
+
+## The Modern Alternative: Just Use a Measure
+
+The example above is a calculated column doing what [RANKX](/docs/dax/rankx) already does, as a measure, without any nested row context to manage:
+
+```dax lineNumbers
+Sales Rank =
+RANKX(ALL(FactSales), [Total Sales])
+```
+
+For genuinely one-off cases where a calculated column really is the right tool (not every ranking-shaped problem is), `VAR` typically replaces `EARLIER()` more clearly when the outer value is captured before entering the nested expression:
+
+```dax lineNumbers
+Sales Rank (Calculated Column) =
+VAR CurrentSales = FactSales[SalesAmount]
+RETURN
+    COUNTROWS(
+        FILTER(
+            FactSales,
+            FactSales[SalesAmount] > CurrentSales
+        )
+    ) + 1
+```
+
+`VAR` captures `CurrentSales` in the outer row context *before* `FILTER()` creates the inner one, so there's no ambiguity about which context a bare column reference belongs to — see [Variables (VAR)](/docs/dax/variables) for why this is generally the clearer pattern now.
+
+---
+
+## When EARLIER(Column, 2) Shows Up
+
+With three or more nested row contexts, a single `EARLIER()` only reaches back one level — the optional second argument specifies how many levels to skip.
+
+```text
+Row context #1 (outermost)
+Row context #2
+Row context #3 (innermost)
+
+EARLIER(Column)     -> reaches row context #2 (one level back)
+EARLIER(Column, 2)  -> reaches row context #1 (two levels back)
+```
+
+This is exactly the kind of nested-context bookkeeping that makes `EARLIER()` hard to read — it's a strong signal to restructure with variables instead, once the nesting goes this deep.
+
+---
+
+## Common Mistakes
+
+### Reaching for EARLIER Inside a Measure
+
+`EARLIER()` requires a genuine outer row context to reach back to — a measure has no row context of its own by default, so `EARLIER()` inside a measure almost always means the calculation was designed for a calculated column, or should be rewritten as an iterator/`CALCULATE()`-based measure instead.
+
+### Not Realizing VAR Solves the Same Problem More Clearly
+
+Since `VAR` captures a value before a nested context is introduced, most real-world `EARLIER()` uses can be rewritten with a variable instead — and most style guides now recommend doing so, since `VAR` doesn't require counting context levels.
+
+### Assuming EARLIER "Looks Ahead"
+
+The name is easy to misread — `EARLIER()` refers to a context that already existed *before* the current (inner) one was created, not a future or upcoming row in some sequence.
+
+---
+
+## Best Practices
+
+- Prefer `VAR` over `EARLIER()` in new DAX — it's clearer and doesn't depend on counting nesting levels.
+- Reserve calculated columns (and therefore `EARLIER()`) for logic that genuinely needs to be stored per row; a measure is usually the better fit for ranking, running totals, and similar patterns.
+- If `EARLIER(Column, 2)` or deeper ever seems necessary, treat it as a signal to restructure the calculation rather than push the nesting further.
+
+---
+
+## Next Steps
+
+- [Variables (VAR)](/docs/dax/variables)
+- [Row Context](/docs/dax/row-context)
+- [RANKX](/docs/dax/rankx)

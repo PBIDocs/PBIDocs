@@ -1,0 +1,114 @@
+---
+title: COUNTROWS()
+description: Learn how COUNTROWS counts every row in a table regardless of column content, and how it differs from COUNT and COUNTA.
+---
+
+# COUNTROWS()
+
+`COUNTROWS()` counts the number of rows in a table — every row, regardless of whether any particular column contains a value.
+
+```dax lineNumbers
+COUNTROWS(Table)
+```
+
+---
+
+## Basic Example
+
+```dax lineNumbers
+Total Orders =
+COUNTROWS(FactSales)
+```
+
+```text
+FactSales
+OrderID | Discount
+1001    | 10
+1002    | (blank)
+1003    | 5
+
+COUNTROWS(FactSales) -> 3
+```
+
+Every row counts, including the one with a blank `Discount` — `COUNTROWS()` doesn't look at any specific column at all.
+
+---
+
+## COUNTROWS vs. COUNT vs. COUNTA
+
+| Function | Counts |
+|---|---|
+| `COUNTROWS(Table)` | Every row in the table |
+| `COUNT(Column)` | Rows where that column contains a number |
+| `COUNTA(Column)` | Rows where that column contains any non-blank value |
+
+```text
+Same FactSales table as above:
+
+COUNTROWS(FactSales)          -> 3 (every row)
+COUNT(FactSales[Discount])    -> 2 (skips the blank)
+COUNTA(FactSales[Discount])   -> 2 (skips the blank)
+```
+
+`COUNT()` and `COUNTA()` are tied to one specific column and skip blanks in it; `COUNTROWS()` doesn't reference a column at all, so it can't be affected by blanks in any particular field.
+
+---
+
+## Counting Distinct Combinations
+
+`COUNTROWS()` is the standard way to count distinct *combinations* of values, by pairing it with `SUMMARIZE()` or `VALUES()` on more than one column.
+
+```dax lineNumbers
+Distinct Customer-Region Pairs =
+COUNTROWS(
+    SUMMARIZE(FactSales, DimCustomer[CustomerKey], DimCustomer[Region])
+)
+```
+
+`DISTINCTCOUNT()` only works on a single column — for a distinct count across a *combination* of columns, `COUNTROWS()` over a summarized table is the pattern. See [SUMMARIZE](/docs/dax/summarize) and [DISTINCTCOUNT](/docs/dax/distinctcount).
+
+---
+
+## Counting Rows in a Filtered Table
+
+Since the argument is any table expression, `COUNTROWS()` combines naturally with `FILTER()`.
+
+```dax lineNumbers
+Large Orders =
+COUNTROWS(
+    FILTER(FactSales, FactSales[SalesAmount] > 1000)
+)
+```
+
+---
+
+## Common Mistakes
+
+### Using COUNT Instead of COUNTROWS to Count "All Rows"
+
+```dax lineNumbers
+Total Orders (Fragile) =
+COUNT(FactSales[OrderID])
+```
+
+This happens to work only if `OrderID` is never blank. `COUNTROWS(FactSales)` counts every row unconditionally, regardless of what any column contains — it's the more robust choice whenever the intent is genuinely "how many rows."
+
+### Expecting COUNTROWS to Deduplicate
+
+`COUNTROWS()` counts rows exactly as they exist in the table given to it — it doesn't remove duplicates on its own. Pair it with `DISTINCT()` or `SUMMARIZE()` first if the actual goal is a distinct count.
+
+---
+
+## Best Practices
+
+- Use `COUNTROWS()` whenever the question is "how many rows," not "how many non-blank values in this specific column."
+- Combine with `SUMMARIZE()` (or `VALUES()` for a single column) to count distinct combinations, rather than reaching for `DISTINCTCOUNT()` on the wrong grain.
+- Filter the table argument with `FILTER()` to count only rows meeting a condition.
+
+---
+
+## Next Steps
+
+- [DISTINCTCOUNT](/docs/dax/distinctcount)
+- [SUMMARIZE](/docs/dax/summarize)
+- [Filter Context](/docs/dax/filter-context)

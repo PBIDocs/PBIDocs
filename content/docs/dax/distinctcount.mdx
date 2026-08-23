@@ -1,0 +1,121 @@
+---
+title: DISTINCTCOUNT()
+description: Learn how DISTINCTCOUNT counts unique values in a column, how it treats blanks, and when to use DISTINCTCOUNTNOBLANK instead.
+---
+
+# DISTINCTCOUNT()
+
+`DISTINCTCOUNT()` counts the number of distinct values in a column, evaluated within the current filter context.
+
+```dax lineNumbers
+DISTINCTCOUNT(Column)
+```
+
+---
+
+## Basic Example
+
+```dax lineNumbers
+Unique Customers =
+DISTINCTCOUNT(FactSales[CustomerKey])
+```
+
+```text
+FactSales[CustomerKey]
+101
+102
+101
+103
+102
+
+DISTINCTCOUNT -> 3 (101, 102, 103 — each counted once)
+```
+
+This is the standard way to answer "how many unique X" — unique customers, unique products sold, unique visits — from a fact table where the same key can legitimately repeat across many rows.
+
+---
+
+## How DISTINCTCOUNT Handles Blanks
+
+`DISTINCTCOUNT()` counts a blank value as one distinct value, if the column contains any blanks at all.
+
+```text
+FactSales[PromoCode]
+"SAVE10"
+"SAVE10"
+(blank)
+"WELCOME"
+
+DISTINCTCOUNT -> 3 ("SAVE10", blank, "WELCOME")
+```
+
+If the intent is "how many distinct promo codes were actually used," including blank as a countable value overstates it by one. `DISTINCTCOUNTNOBLANK()` excludes the blank:
+
+```dax lineNumbers
+Promo Codes Used =
+DISTINCTCOUNTNOBLANK(FactSales[PromoCode])
+```
+
+```text
+DISTINCTCOUNTNOBLANK -> 2 ("SAVE10", "WELCOME")
+```
+
+---
+
+## DISTINCTCOUNT Is Filter-Context Aware
+
+Like any DAX aggregation, `DISTINCTCOUNT()` only counts distinct values among the rows visible in the current filter context — not the whole table unconditionally.
+
+```dax lineNumbers
+Unique Customers =
+DISTINCTCOUNT(FactSales[CustomerKey])
+```
+
+```text
+No filters applied         -> counts distinct customers across all sales
+Category = "Bikes" filter  -> counts distinct customers who bought Bikes specifically
+```
+
+To get an unfiltered total for comparison (a "percent of all customers" style measure), wrap it in `CALCULATE()` with `ALL()`:
+
+```dax lineNumbers
+Unique Customers (All Categories) =
+CALCULATE(
+    DISTINCTCOUNT(FactSales[CustomerKey]),
+    ALL(DimProduct)
+)
+```
+
+See the [DAX CALCULATE Modifiers Cheat Sheet](/blog/dax-calculate-modifiers-cheat-sheet) for this pattern applied more generally.
+
+---
+
+## Common Mistakes
+
+### Not Accounting for Blank Inflating the Count by One
+
+A `DISTINCTCOUNT()` that's consistently one higher than expected is often the blank-counts-as-a-value behavior, not a data quality bug — check whether `DISTINCTCOUNTNOBLANK()` is actually the intended function.
+
+### Using DISTINCTCOUNT for a Multi-Column Distinct Count
+
+`DISTINCTCOUNT()` only accepts a single column. Counting distinct *combinations* of two or more columns needs `COUNTROWS()` over a `SUMMARIZE()`'d table instead — see [COUNTROWS](/docs/dax/countrows#counting-distinct-combinations).
+
+### Running It Against a High-Cardinality Column on a Huge Table
+
+`DISTINCTCOUNT()` on a column with millions of unique values (a raw transaction ID, for example) is one of the more expensive DAX aggregations — worth checking whether a lower-cardinality key would answer the same business question.
+
+---
+
+## Best Practices
+
+- Use `DISTINCTCOUNTNOBLANK()` when a blank value shouldn't count as a real, distinct answer.
+- Reach for `COUNTROWS()` + `SUMMARIZE()` for a distinct count across more than one column.
+- Be mindful of running `DISTINCTCOUNT()` against very high-cardinality columns on large fact tables — it's not free.
+
+---
+
+## Next Steps
+
+- [COUNTROWS](/docs/dax/countrows)
+- [SUMMARIZE](/docs/dax/summarize)
+- [DAX CALCULATE Modifiers Cheat Sheet](/blog/dax-calculate-modifiers-cheat-sheet)
