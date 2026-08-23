@@ -26,6 +26,10 @@
     "summarize",
     "userelationship",
     "performance",
-    "user-defined-functions"
+    "user-defined-functions",
+    "sumx",
+    "countrows",
+    "distinctcount",
+    "earlier"
   ]
 }

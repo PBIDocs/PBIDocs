@@ -1,0 +1,124 @@
+---
+title: SUMX()
+description: Learn how SUMX evaluates an expression per row before summing, and when that row-by-row evaluation is actually necessary instead of a plain SUM.
+---
+
+# SUMX()
+
+`SUMX()` evaluates an expression once per row of a table, then adds up the results — the most commonly used iterator function in DAX.
+
+```dax lineNumbers
+SUMX(Table, Expression)
+```
+
+---
+
+## SUM vs. SUMX
+
+```dax lineNumbers
+Total Sales =
+SUM(FactSales[SalesAmount])
+```
+
+```dax lineNumbers
+Total Sales (SUMX) =
+SUMX(FactSales, FactSales[SalesAmount])
+```
+
+These two return the same result — but only because the expression is just a single column. `SUM()` only ever adds up one column, as-is. `SUMX()` earns its keep the moment the thing being summed has to be *computed per row first*, not just read directly from a column.
+
+```text
+Table has Quantity and UnitPrice, but no SalesAmount column:
+
+SUM(FactSales[SalesAmount])                          -> error, no such column
+SUMX(FactSales, FactSales[Quantity] * FactSales[UnitPrice])  -> computes it per row, then sums
+```
+
+---
+
+## How It Actually Works
+
+```text
+FactSales
+Quantity | UnitPrice
+2        | 45          -> 2 * 45 = 90
+1        | 68          -> 1 * 68 = 68
+3        | 45          -> 3 * 45 = 135
+                            SUM: 293
+```
+
+`SUMX()` walks the table row by row, evaluating `Quantity * UnitPrice` in each row's own row context, then sums the per-row results — conceptually identical to a spreadsheet helper column that gets summed afterward, except nothing is actually materialized as a stored column.
+
+```dax lineNumbers
+Total Revenue =
+SUMX(FactSales, FactSales[Quantity] * FactSales[UnitPrice])
+```
+
+---
+
+## Using a Measure Inside SUMX
+
+The expression can reference other measures, not just columns — useful when the per-row logic itself already exists as a reusable measure.
+
+```dax lineNumbers
+Total Profit =
+SUMX(
+    FactSales,
+    FactSales[Quantity] * (FactSales[UnitPrice] - FactSales[UnitCost])
+)
+```
+
+See [Iterators](/docs/dax/iterator#how-sumx-works) for how row context and iteration interact more generally, and [Row Context](/docs/dax/row-context) for what "each row" actually means underneath an iterator.
+
+---
+
+## Filtering the Table SUMX Iterates Over
+
+`SUMX()`'s first argument doesn't have to be a bare table reference — it can be any table expression, including one already filtered.
+
+```dax lineNumbers
+Revenue from Bikes =
+SUMX(
+    FILTER(FactSales, RELATED(DimProduct[Category]) = "Bikes"),
+    FactSales[Quantity] * FactSales[UnitPrice]
+)
+```
+
+This restricts the iteration to only rows where the related product category is "Bikes," before the per-row multiplication happens.
+
+---
+
+## Common Mistakes
+
+### Using SUMX Where SUM Would Do
+
+```dax lineNumbers
+Total Sales (Unnecessary SUMX) =
+SUMX(FactSales, FactSales[SalesAmount])
+```
+
+If the expression is just a single existing column with no per-row computation, `SUM()` is simpler and typically performs at least as well — reach for `SUMX()` specifically when something needs to be calculated per row first.
+
+### Iterating Over a Huge Table Unnecessarily
+
+`SUMX()` evaluates its expression once per row of whatever table it's given — on a multi-million-row fact table, an expensive per-row expression (nested `CALCULATE`, multiple `RELATED` calls) can get slow fast. See [Performance Optimization](/docs/dax/performance) for iterator-specific performance guidance.
+
+### Forgetting the Expression Runs in Row Context, Not Filter Context
+
+Inside `SUMX()`, a bare column reference like `FactSales[UnitPrice]` means "this row's value," the same as inside a calculated column — not an aggregation. Wrapping it in `SUM()` again inside the expression is a common, redundant instinct carried over from measure-writing habits.
+
+---
+
+## Best Practices
+
+- Use `SUM()` for a single existing column; reserve `SUMX()` for expressions that need per-row computation first.
+- Filter the table argument (with `FILTER()`, or implicitly through relationships and context) rather than computing over more rows than necessary.
+- Keep the per-row expression simple — push complex logic into a variable or a separate measure where it stays readable and testable on its own.
+
+---
+
+## Next Steps
+
+- [Iterators](/docs/dax/iterator)
+- [Row Context](/docs/dax/row-context)
+- [Performance Optimization](/docs/dax/performance)
