@@ -1,6 +1,18 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
-import { ArrowRight, BookOpen } from 'lucide-react';
+import {
+  ArrowRight,
+  BookOpen,
+  Sigma,
+  Database,
+  Table,
+  Cloud,
+  BarChart3,
+  Server,
+  TrendingUp,
+  Sparkles,
+  Shield,
+} from 'lucide-react';
 import { NewsletterForm } from '@/components/newsletter-form';
 import { HeroSearch } from '@/components/hero-search';
 import { SpotlightCard } from '@/components/spotlight-card';
@@ -27,54 +39,63 @@ const topics = [
     description:
       'Learn measures, functions, filter context, and advanced calculations.',
     href: '/docs/dax/introduction',
+    icon: Sigma,
   },
   {
     title: 'Power Query',
     description:
       'Master data transformation using M language and query techniques.',
     href: '/docs/power-query',
+    icon: Database,
   },
   {
     title: 'Data Modeling',
     description:
       'Build efficient star schemas, relationships, and semantic models.',
     href: '/docs/modeling/introduction',
+    icon: Table,
   },
   {
     title: 'Microsoft Fabric',
     description:
       'Explore Lakehouse, Warehouse, pipelines, and modern analytics.',
     href: '/docs/fabric/introduction',
+    icon: Cloud,
   },
   {
     title: 'Visuals',
     description:
       'Design effective charts, tables, slicers, and custom formatting.',
     href: '/docs/visuals/charts',
+    icon: BarChart3,
   },
   {
     title: 'Power BI Service',
     description:
       'Manage workspaces, dashboards, scheduled refresh, and security.',
     href: '/docs/power-bi-service/workspaces',
+    icon: Server,
   },
   {
     title: 'DAX Patterns',
     description:
       'Ready-made patterns for totals, ranking, and running calculations.',
     href: '/docs/dax-patterns/totals',
+    icon: TrendingUp,
   },
   {
     title: 'AI-Assisted Power BI',
     description:
       'Use AI to accelerate DAX, Power Query, modeling, and report development.',
     href: '/docs/ai-power-bi/introduction',
+    icon: Sparkles,
   },
   {
     title: 'Governance',
     description:
       'Reference sheets for RLS matrices, gateway architecture, and report themes.',
     href: '/docs/governance/rls-matrix',
+    icon: Shield,
   },
 ];
 
@@ -161,6 +182,7 @@ export default function HomePage() {
             key={topic.title}
             href={topic.href}
             className="group rounded-xl border border-fd-border p-6 text-left transition-all duration-300 hover:-translate-y-1 hover:border-fd-primary/50 hover:bg-fd-accent/50 hover:shadow-md">
+            <topic.icon className="mb-3 size-6 text-fd-primary" />
             <h2 className="text-xl font-semibold mb-2 group-hover:text-fd-primary transition-colors">
               {topic.title}
             </h2>
