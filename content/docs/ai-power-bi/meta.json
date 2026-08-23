@@ -1,5 +1,6 @@
 {
   "title": "AI-Assisted Power BI",
+  "icon": "Sparkles",
   "pages": [
     "introduction",
     "dax-with-ai",

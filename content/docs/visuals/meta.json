@@ -1,5 +1,6 @@
 {
   "title": "Visuals",
+  "icon": "ChartColumn",
   "pages": [
     "charts",
     "tables",

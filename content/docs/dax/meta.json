@@ -1,5 +1,6 @@
 {
   "title": "DAX",
+  "icon": "Sigma",
   "pages": [
     "introduction",
     "functions",
