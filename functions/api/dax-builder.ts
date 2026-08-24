@@ -130,13 +130,16 @@ export async function onRequestPost({ request, env }: RequestContext): Promise<R
     });
 
     if (!res.ok) {
+      const bodyText = await res.text().catch(() => '');
+      console.error('dax-builder: Anthropic API error', res.status, bodyText.slice(0, 500));
       return json({ error: 'The formula builder is temporarily unavailable. Please try again shortly.' }, 502);
     }
 
     const data = (await res.json()) as { content?: { type: string; text?: string }[] };
     const text = data.content?.find((block) => block.type === 'text')?.text ?? '';
     result = JSON.parse(text) as BuilderResult;
-  } catch {
+  } catch (err) {
+    console.error('dax-builder: request failed', err instanceof Error ? err.message : String(err));
     return json({ error: 'The formula builder is temporarily unavailable. Please try again shortly.' }, 502);
   }
 
