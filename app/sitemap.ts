@@ -30,6 +30,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${baseUrl}/privacy`, lastModified: new Date() },
     { url: `${baseUrl}/blog`, lastModified: new Date() },
     { url: `${baseUrl}/tutorials`, lastModified: new Date() },
+    { url: `${baseUrl}/tools/dax-formula-builder`, lastModified: new Date() },
     ...docs,
     ...posts,
     ...tutorials,
