@@ -132,7 +132,7 @@ export async function onRequestPost({ request, env }: RequestContext): Promise<R
     if (!res.ok) {
       const bodyText = await res.text().catch(() => '');
       console.error('dax-builder: Anthropic API error', res.status, bodyText.slice(0, 500));
-      return json({ error: 'The formula builder is temporarily unavailable. Please try again shortly.' }, 502);
+      return json({ error: 'The formula builder is temporarily unavailable. Please try again shortly.' }, 500);
     }
 
     const data = (await res.json()) as { content?: { type: string; text?: string }[] };
@@ -140,7 +140,7 @@ export async function onRequestPost({ request, env }: RequestContext): Promise<R
     result = JSON.parse(text) as BuilderResult;
   } catch (err) {
     console.error('dax-builder: request failed', err instanceof Error ? err.message : String(err));
-    return json({ error: 'The formula builder is temporarily unavailable. Please try again shortly.' }, 502);
+    return json({ error: 'The formula builder is temporarily unavailable. Please try again shortly.' }, 500);
   }
 
   if (typeof result.error === 'string') {
@@ -148,7 +148,7 @@ export async function onRequestPost({ request, env }: RequestContext): Promise<R
   }
 
   if (typeof result.formula !== 'string' || typeof result.explanation !== 'string') {
-    return json({ error: 'Something went wrong generating that formula. Please try again.' }, 502);
+    return json({ error: 'Something went wrong generating that formula. Please try again.' }, 500);
   }
 
   try {
