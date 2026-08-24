@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, type FormEvent } from 'react';
-import { Check, Copy, Loader2, Sparkles } from 'lucide-react';
+import { useEffect, useMemo, useState, type FormEvent } from 'react';
+import { Check, Copy, Loader2, RotateCw, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/cn';
 
+type Mode = 'dax' | 'm';
 type Status = 'idle' | 'loading' | 'success' | 'error' | 'limited';
 
 interface FunctionUsed {
@@ -12,30 +13,148 @@ interface FunctionUsed {
 }
 
 interface BuilderResponse {
-  measureName: string;
+  title: string;
   formula: string;
   explanation: string;
   functionsUsed: FunctionUsed[];
   remaining: number;
 }
 
-const EXAMPLE_PROMPTS = [
+const DAX_EXAMPLES = [
   'Total sales for the current year',
   'Percent of total sales by category',
   'Running total of sales by date',
   'Sales year-over-year growth percentage',
+  'Rank products by total sales within their category',
+  'Average order value',
+  'Count of distinct customers who ordered this month',
+  'Days since a customer’s last order',
 ];
 
+const M_EXAMPLES = [
+  'Remove rows where the Amount column is blank or zero',
+  'Split a FullName column into First Name and Last Name',
+  'Combine all Excel files in a folder into one table',
+  'Add a column that flags orders over $1,000 as High Value',
+  'Trim whitespace and convert a Region column to uppercase',
+  'Merge two tables on CustomerID and keep only matching rows',
+  'Group sales by month and sum the Amount column',
+  'Convert a text column of dates into a proper Date type',
+];
+
+const QUOTA_STORAGE_KEY = 'dax-builder-quota';
+const FREE_LIMIT_PER_DAY = 5;
+
+function pickExamples(mode: Mode): string[] {
+  const pool = mode === 'm' ? M_EXAMPLES : DAX_EXAMPLES;
+  return [...pool].sort(() => Math.random() - 0.5).slice(0, 4);
+}
+
+function readStoredRemaining(): number | null {
+  try {
+    const raw = localStorage.getItem(QUOTA_STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as { remaining?: number; date?: string };
+    const today = new Date().toISOString().slice(0, 10);
+    if (parsed.date !== today || typeof parsed.remaining !== 'number') return null;
+    return parsed.remaining;
+  } catch {
+    return null;
+  }
+}
+
+function storeRemaining(remaining: number) {
+  try {
+    localStorage.setItem(
+      QUOTA_STORAGE_KEY,
+      JSON.stringify({ remaining, date: new Date().toISOString().slice(0, 10) }),
+    );
+  } catch {
+    // Best-effort only — the server remains the source of truth.
+  }
+}
+
+const KEYWORDS = new Set([
+  'VAR',
+  'RETURN',
+  'IF',
+  'TRUE',
+  'FALSE',
+  'BLANK',
+  'let',
+  'in',
+  'each',
+  'if',
+  'then',
+  'else',
+  'otherwise',
+  'try',
+  'catch',
+  'type',
+  'meta',
+]);
+
+const TOKEN_REGEX =
+  /(\/\/[^\n]*|--[^\n]*|\/\*[\s\S]*?\*\/|"(?:[^"\\]|\\.)*"|\b[A-Za-z_][A-Za-z0-9_.]*(?=\()|\b\d+(?:\.\d+)?\b|\b[A-Za-z_][A-Za-z0-9_]*\b)/g;
+
+function highlightFormula(code: string) {
+  const tokens: { className: string; value: string }[] = [];
+  let lastIndex = 0;
+  let match: RegExpExecArray | null;
+  TOKEN_REGEX.lastIndex = 0;
+  while ((match = TOKEN_REGEX.exec(code))) {
+    if (match.index > lastIndex) {
+      tokens.push({ className: '', value: code.slice(lastIndex, match.index) });
+    }
+    const value = match[0];
+    let className = '';
+    if (value.startsWith('//') || value.startsWith('--') || value.startsWith('/*')) {
+      className = 'italic text-fd-muted-foreground/70';
+    } else if (value.startsWith('"')) {
+      className = 'text-emerald-600 dark:text-emerald-400';
+    } else if (/^\d/.test(value)) {
+      className = 'text-amber-600 dark:text-amber-400';
+    } else if (code[match.index + value.length] === '(') {
+      className = 'font-medium text-sky-600 dark:text-sky-400';
+    } else if (KEYWORDS.has(value)) {
+      className = 'font-medium text-fd-primary';
+    }
+    tokens.push({ className, value });
+    lastIndex = match.index + value.length;
+  }
+  if (lastIndex < code.length) {
+    tokens.push({ className: '', value: code.slice(lastIndex) });
+  }
+  return tokens.map((token, i) =>
+    token.className ? (
+      <span key={i} className={token.className}>
+        {token.value}
+      </span>
+    ) : (
+      <span key={i}>{token.value}</span>
+    ),
+  );
+}
+
 export function DaxFormulaBuilder() {
+  const [mode, setMode] = useState<Mode>('dax');
   const [prompt, setPrompt] = useState('');
   const [status, setStatus] = useState<Status>('idle');
   const [error, setError] = useState('');
   const [result, setResult] = useState<BuilderResponse | null>(null);
   const [copied, setCopied] = useState(false);
+  const [knownRemaining, setKnownRemaining] = useState<number | null>(null);
+  const examples = useMemo(() => pickExamples(mode), [mode]);
 
-  async function handleSubmit(e: FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    if (!prompt.trim() || status === 'loading') return;
+  useEffect(() => {
+    // localStorage doesn't exist at static-export build time, so this can't be a lazy useState initializer.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setKnownRemaining(readStoredRemaining());
+  }, []);
+
+  async function runBuild(promptOverride?: string) {
+    const activePrompt = (promptOverride ?? prompt).trim();
+    if (!activePrompt || status === 'loading') return;
 
     setStatus('loading');
     setError('');
@@ -45,38 +164,77 @@ export function DaxFormulaBuilder() {
       const res = await fetch('/api/dax-builder', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: prompt.trim() }),
+        body: JSON.stringify({ prompt: activePrompt, mode }),
       });
       const data = (await res.json().catch(() => ({}))) as Partial<BuilderResponse> & { error?: string };
 
       if (!res.ok) {
         setStatus(res.status === 429 ? 'limited' : 'error');
         setError(data.error ?? 'Something went wrong. Please try again.');
+        if (res.status === 429) {
+          setKnownRemaining(0);
+          storeRemaining(0);
+        }
         return;
       }
 
       setResult(data as BuilderResponse);
       setStatus('success');
+      if (typeof data.remaining === 'number') {
+        setKnownRemaining(data.remaining);
+        storeRemaining(data.remaining);
+      }
     } catch {
       setStatus('error');
       setError('Something went wrong. Please try again.');
     }
   }
 
+  async function handleSubmit(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    await runBuild();
+  }
+
   async function copyFormula() {
     if (!result) return;
-    await navigator.clipboard.writeText(`${result.measureName} =\n${result.formula}`);
+    const text = mode === 'dax' ? `${result.title} =\n${result.formula}` : result.formula;
+    await navigator.clipboard.writeText(text);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   }
 
   const loading = status === 'loading';
+  const codeText = result ? (mode === 'dax' ? `${result.title} =\n${result.formula}` : result.formula) : '';
 
   return (
     <div className="flex flex-col gap-6">
+      <div className="inline-flex w-fit rounded-full border border-fd-border p-1 text-sm">
+        {(['dax', 'm'] as const).map((m) => (
+          <button
+            key={m}
+            type="button"
+            onClick={() => {
+              if (m === mode || loading) return;
+              setMode(m);
+              setResult(null);
+              setStatus('idle');
+              setError('');
+            }}
+            className={cn(
+              'rounded-full px-4 py-1.5 font-medium transition-colors',
+              mode === m
+                ? 'bg-fd-primary text-fd-primary-foreground'
+                : 'text-fd-muted-foreground hover:text-fd-foreground',
+            )}
+          >
+            {m === 'dax' ? 'DAX Measure' : 'Power Query M'}
+          </button>
+        ))}
+      </div>
+
       <form onSubmit={handleSubmit} className="flex flex-col gap-3">
         <label htmlFor="dax-prompt" className="text-sm font-medium text-fd-foreground">
-          Describe the calculation
+          {mode === 'dax' ? 'Describe the calculation' : 'Describe the transformation'}
         </label>
         <textarea
           id="dax-prompt"
@@ -85,12 +243,14 @@ export function DaxFormulaBuilder() {
           disabled={loading}
           maxLength={300}
           rows={3}
-          placeholder="e.g. Percent of total sales by category"
+          placeholder={
+            mode === 'dax' ? 'e.g. Percent of total sales by category' : 'e.g. Remove rows where Amount is blank'
+          }
           className="w-full resize-none rounded-lg border border-fd-border bg-fd-background px-4 py-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-fd-ring disabled:opacity-60"
         />
 
         <div className="flex flex-wrap gap-2">
-          {EXAMPLE_PROMPTS.map((example) => (
+          {examples.map((example) => (
             <button
               key={example}
               type="button"
@@ -103,14 +263,21 @@ export function DaxFormulaBuilder() {
           ))}
         </div>
 
-        <button
-          type="submit"
-          disabled={loading || !prompt.trim()}
-          className="flex w-full items-center justify-center gap-2 rounded-lg bg-fd-primary px-5 py-2.5 text-sm font-semibold text-fd-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-60 sm:w-fit"
-        >
-          {loading ? <Loader2 className="size-4 animate-spin" /> : <Sparkles className="size-4" />}
-          {loading ? 'Building…' : 'Build the Measure'}
-        </button>
+        <div className="flex flex-wrap items-center gap-3">
+          <button
+            type="submit"
+            disabled={loading || !prompt.trim()}
+            className="flex items-center justify-center gap-2 rounded-lg bg-fd-primary px-5 py-2.5 text-sm font-semibold text-fd-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-60"
+          >
+            {loading ? <Loader2 className="size-4 animate-spin" /> : <Sparkles className="size-4" />}
+            {loading ? 'Building…' : 'Build It'}
+          </button>
+          {knownRemaining !== null && status !== 'limited' && (
+            <p className="text-xs text-fd-muted-foreground/70">
+              {knownRemaining} of {FREE_LIMIT_PER_DAY} free requests left today
+            </p>
+          )}
+        </div>
       </form>
 
       {(status === 'error' || status === 'limited') && (
@@ -130,19 +297,30 @@ export function DaxFormulaBuilder() {
       {status === 'success' && result && (
         <div className="flex flex-col gap-4 rounded-xl border border-fd-border p-5">
           <div className="flex items-start justify-between gap-3">
-            <p className="text-sm font-semibold text-fd-foreground">{result.measureName}</p>
-            <button
-              type="button"
-              onClick={copyFormula}
-              className="flex shrink-0 items-center gap-1.5 rounded-md border border-fd-border px-2.5 py-1 text-xs text-fd-muted-foreground transition-colors hover:bg-fd-accent"
-            >
-              {copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
-              {copied ? 'Copied' : 'Copy'}
-            </button>
+            <p className="text-sm font-semibold text-fd-foreground">{result.title}</p>
+            <div className="flex shrink-0 gap-2">
+              <button
+                type="button"
+                onClick={() => runBuild()}
+                disabled={loading}
+                className="flex items-center gap-1.5 rounded-md border border-fd-border px-2.5 py-1 text-xs text-fd-muted-foreground transition-colors hover:bg-fd-accent disabled:opacity-60"
+              >
+                {loading ? <Loader2 className="size-3.5 animate-spin" /> : <RotateCw className="size-3.5" />}
+                Regenerate
+              </button>
+              <button
+                type="button"
+                onClick={copyFormula}
+                className="flex items-center gap-1.5 rounded-md border border-fd-border px-2.5 py-1 text-xs text-fd-muted-foreground transition-colors hover:bg-fd-accent"
+              >
+                {copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
+                {copied ? 'Copied' : 'Copy'}
+              </button>
+            </div>
           </div>
 
           <pre className="overflow-x-auto rounded-lg bg-fd-secondary px-4 py-3 text-sm">
-            <code>{`${result.measureName} =\n${result.formula}`}</code>
+            <code>{highlightFormula(codeText)}</code>
           </pre>
 
           <p className="text-sm leading-relaxed text-fd-muted-foreground">{result.explanation}</p>
@@ -164,7 +342,7 @@ export function DaxFormulaBuilder() {
 
           <p className="text-xs text-fd-muted-foreground/70">
             {result.remaining} free request{result.remaining === 1 ? '' : 's'} left today. Always test a
-            generated measure against your own model before shipping it.
+            generated {mode === 'dax' ? 'measure' : 'step'} against your own model before shipping it.
           </p>
         </div>
       )}
