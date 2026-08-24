@@ -38,3 +38,15 @@ LIMIT 20;
 
 -- Most recent feedback events
 SELECT page, helpful, created_at FROM page_feedback ORDER BY created_at DESC LIMIT 20;
+
+-- DAX Formula Builder: total requests per day (last 30 days)
+SELECT date(created_at) AS day, COUNT(*) AS requests
+FROM dax_builder_usage
+WHERE created_at >= datetime('now', '-30 days')
+GROUP BY day
+ORDER BY day DESC;
+
+-- DAX Formula Builder: distinct clients today
+SELECT COUNT(DISTINCT client_id) AS distinct_clients_today
+FROM dax_builder_usage
+WHERE created_at >= datetime('now', '-1 day');
