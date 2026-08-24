@@ -123,30 +123,20 @@ export async function onRequestPost({ request, env }: RequestContext): Promise<R
       body: JSON.stringify({
         model: env.ANTHROPIC_MODEL ?? DEFAULT_MODEL,
         max_tokens: 800,
-        temperature: 0.2,
         system: SYSTEM_PROMPT,
         messages: [{ role: 'user', content: trimmedPrompt }],
       }),
     });
 
     if (!res.ok) {
-      const bodyText = await res.text().catch(() => '');
-      // TEMP-DEBUG: remove `debug` field once the live 502 is diagnosed.
-      return json(
-        { error: 'The formula builder is temporarily unavailable. Please try again shortly.', debug: { status: res.status, body: bodyText.slice(0, 500) } },
-        500,
-      );
+      return json({ error: 'The formula builder is temporarily unavailable. Please try again shortly.' }, 500);
     }
 
     const data = (await res.json()) as { content?: { type: string; text?: string }[] };
     const text = data.content?.find((block) => block.type === 'text')?.text ?? '';
     result = JSON.parse(text) as BuilderResult;
-  } catch (err) {
-    // TEMP-DEBUG: remove `debug` field once the live 502 is diagnosed.
-    return json(
-      { error: 'The formula builder is temporarily unavailable. Please try again shortly.', debug: err instanceof Error ? err.message : String(err) },
-      500,
-    );
+  } catch {
+    return json({ error: 'The formula builder is temporarily unavailable. Please try again shortly.' }, 500);
   }
 
   if (typeof result.error === 'string') {
