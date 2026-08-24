@@ -23,6 +23,8 @@ interface RequestContext {
   env: Env;
 }
 
+type Mode = 'dax' | 'm';
+
 const FREE_LIMIT_PER_DAY = 5;
 const MAX_PROMPT_LENGTH = 300;
 const DEFAULT_MODEL = 'claude-sonnet-5';
@@ -33,28 +35,44 @@ interface FunctionUsed {
 }
 
 interface BuilderResult {
-  measureName?: unknown;
+  title?: unknown;
   formula?: unknown;
   explanation?: unknown;
   functionsUsed?: unknown;
   error?: unknown;
 }
 
-const SYSTEM_PROMPT = `You are a DAX formula assistant for Power BI. Given a plain-English description of a calculation, produce a single well-formed DAX measure.
+const RESPONSE_SHAPE = `{
+  "title": "A short name for the result, e.g. \\"Total Sales\\" or \\"Filtered High-Value Orders\\"",
+  "formula": "The complete expression, formatted with line breaks and indentation",
+  "explanation": "2-4 plain-English sentences on what it does and why it's written this way",
+  "functionsUsed": [{ "name": "FUNCTIONNAME", "description": "one sentence on what it does here" }]
+}`;
+
+const DAX_SYSTEM_PROMPT = `You are a DAX formula assistant for Power BI. Given a plain-English description of a calculation, produce a single well-formed DAX measure.
 
 Respond with ONLY a JSON object (no markdown fences, no text outside the JSON) in exactly this shape:
-{
-  "measureName": "A short measure name, e.g. \\"Total Sales\\"",
-  "formula": "The complete DAX expression (the part after 'MeasureName =', formatted with line breaks and indentation)",
-  "explanation": "2-4 plain-English sentences on what the formula does and why it's written this way",
-  "functionsUsed": [{ "name": "FUNCTIONNAME", "description": "one sentence on what it does here" }]
-}
+${RESPONSE_SHAPE}
+"title" is the measure name (the part before "="); "formula" is the expression after it.
 
 Rules:
 - Prefer DIVIDE() over the / operator for any division.
 - Prefer VAR/RETURN once the expression needs more than one nested function call.
 - If the request is ambiguous, make a reasonable assumption and state it briefly in the explanation — you cannot ask a follow-up question.
 - If the request has nothing to do with DAX, Power BI, or a tabular data calculation, respond instead with {"error": "a short one-sentence explanation"} and omit the other fields.
+- Never wrap the formula in markdown code fences.`;
+
+const M_SYSTEM_PROMPT = `You are a Power Query M formula assistant for Power BI. Given a plain-English description of a data transformation, produce a single well-formed M expression or query step.
+
+Respond with ONLY a JSON object (no markdown fences, no text outside the JSON) in exactly this shape:
+${RESPONSE_SHAPE}
+"title" is a short, PascalCase-with-spaces step name (e.g. "Filtered High-Value Orders"); "formula" is the M expression that step would evaluate to (a "let...in" block when multiple steps are needed, or a single expression for a simple transform).
+
+Rules:
+- Use "each" and the "_" placeholder for row-wise operations where idiomatic (e.g. Table.SelectRows, Table.AddColumn).
+- Prefer built-in M functions (Table.*, List.*, Text.*, Date.*) over manual record/list manipulation when one exists.
+- If the request is ambiguous, make a reasonable assumption and state it briefly in the explanation — you cannot ask a follow-up question.
+- If the request has nothing to do with Power Query, M, or a data transformation, respond instead with {"error": "a short one-sentence explanation"} and omit the other fields.
 - Never wrap the formula in markdown code fences.`;
 
 function json(body: unknown, status: number): Response {
@@ -74,9 +92,11 @@ async function hashClientId(ip: string): Promise<string> {
 
 export async function onRequestPost({ request, env }: RequestContext): Promise<Response> {
   let prompt: unknown;
+  let mode: unknown;
   try {
-    const body = (await request.json()) as { prompt?: unknown };
+    const body = (await request.json()) as { prompt?: unknown; mode?: unknown };
     prompt = body?.prompt;
+    mode = body?.mode;
   } catch {
     return json({ error: 'Invalid request body.' }, 400);
   }
@@ -89,6 +109,8 @@ export async function onRequestPost({ request, env }: RequestContext): Promise<R
   if (trimmedPrompt.length > MAX_PROMPT_LENGTH) {
     return json({ error: `Keep it under ${MAX_PROMPT_LENGTH} characters.` }, 400);
   }
+
+  const resolvedMode: Mode = mode === 'm' ? 'm' : 'dax';
 
   const clientId = await hashClientId(request.headers.get('CF-Connecting-IP') ?? 'unknown');
 
@@ -123,7 +145,7 @@ export async function onRequestPost({ request, env }: RequestContext): Promise<R
       body: JSON.stringify({
         model: env.ANTHROPIC_MODEL ?? DEFAULT_MODEL,
         max_tokens: 800,
-        system: SYSTEM_PROMPT,
+        system: resolvedMode === 'm' ? M_SYSTEM_PROMPT : DAX_SYSTEM_PROMPT,
         messages: [{ role: 'user', content: trimmedPrompt }],
       }),
     });
@@ -165,7 +187,7 @@ export async function onRequestPost({ request, env }: RequestContext): Promise<R
 
   return json(
     {
-      measureName: typeof result.measureName === 'string' ? result.measureName : 'Measure',
+      title: typeof result.title === 'string' ? result.title : resolvedMode === 'm' ? 'Query Step' : 'Measure',
       formula: result.formula,
       explanation: result.explanation,
       functionsUsed,

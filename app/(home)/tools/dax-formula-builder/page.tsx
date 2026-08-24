@@ -5,7 +5,7 @@ import { DaxFormulaBuilder } from '@/components/tools/dax-formula-builder';
 export const metadata: Metadata = {
   title: 'DAX Formula Builder',
   description:
-    'Describe a calculation in plain English and get back a working DAX measure, with an explanation and a breakdown of every function used.',
+    'Describe a calculation or transformation in plain English and get back a working DAX measure or Power Query M step, with an explanation and a breakdown of every function used.',
   alternates: {
     canonical: '/tools/dax-formula-builder',
   },
@@ -16,8 +16,8 @@ export default function DaxFormulaBuilderPage() {
     <div className="mx-auto max-w-2xl px-6 py-16 sm:py-24">
       <h1 className="mb-3 text-4xl font-bold tracking-tight">DAX Formula Builder</h1>
       <p className="mb-10 text-lg text-fd-muted-foreground">
-        Describe what you want to calculate. Get back a real DAX measure, a plain-English
-        explanation, and a breakdown of every function it uses.
+        Describe what you want to calculate or transform. Get back a real DAX measure or Power
+        Query M step, a plain-English explanation, and a breakdown of every function it uses.
       </p>
 
       <DaxFormulaBuilder />
