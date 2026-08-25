@@ -17,6 +17,7 @@ import { NewsletterForm } from '@/components/newsletter-form';
 import { HeroSearch } from '@/components/hero-search';
 import { SpotlightCard } from '@/components/spotlight-card';
 import { FunctionTicker } from '@/components/function-ticker';
+import { DaxBuilderTeaser } from '@/components/dax-builder-teaser';
 import { source } from '@/lib/source';
 import { getBlogPosts } from '@/lib/blog-source';
 import { getTutorials } from '@/lib/tutorial-source';
@@ -168,6 +169,33 @@ export default function HomePage() {
             </div>
           ))}
         </div>
+      </section>
+
+      {/* DAX Formula Builder CTA */}
+      <section className="mt-16 w-full max-w-5xl">
+        <SpotlightCard className="rounded-2xl border border-fd-border bg-fd-card/40">
+          <div className="grid grid-cols-1 items-center gap-8 p-8 sm:p-10 lg:grid-cols-2">
+            <div className="text-left">
+              <span className="mb-4 inline-flex items-center gap-1.5 rounded-full bg-fd-primary/10 px-3 py-1 text-xs font-semibold text-fd-primary">
+                <Sparkles className="size-3.5" />
+                New: AI-Powered
+              </span>
+              <h2 className="mb-3 text-3xl font-bold tracking-tight">Describe it. Get the DAX.</h2>
+              <p className="mb-6 text-fd-muted-foreground">
+                Type a calculation in plain English and get back a real DAX measure — or a Power
+                Query M step — with a full explanation. Free, no signup required.
+              </p>
+              <Link
+                href="/tools/dax-formula-builder"
+                className="inline-flex items-center gap-1.5 rounded-lg bg-fd-primary px-6 py-3 font-semibold text-fd-primary-foreground hover:bg-fd-primary/90"
+              >
+                Try the Formula Builder
+                <ArrowRight className="size-4" />
+              </Link>
+            </div>
+            <DaxBuilderTeaser />
+          </div>
+        </SpotlightCard>
       </section>
 
       {/* Function Ticker */}
