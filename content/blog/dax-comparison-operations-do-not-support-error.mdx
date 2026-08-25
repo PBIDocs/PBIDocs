@@ -1,0 +1,107 @@
+---
+title: 'DAX Error: Comparison Operations Do Not Support Comparing Values of Type Text With Values of Type Boolean'
+description: This DAX error means a comparison mixed two different data types on either side of an operator. The most common trigger is an Excel-style habit that doesn't translate to DAX. Here's why, and the fix.
+date: "2026-08-25"
+tags: ["DAX", "Troubleshooting"]
+faq:
+  - question: "What does \"DAX comparison operations do not support comparing values of type X with values of type Y\" mean?"
+    answer: "It means an expression compared two values of genuinely different data types — most often a number or BLANK() on one side and a text string on the other — and DAX couldn't implicitly convert between them the way it can for some other type pairs."
+  - question: "Why does comparing to an empty string cause this, but comparing to BLANK() doesn't?"
+    answer: "An empty string \"\" is text data. BLANK() is DAX's own representation of a missing value and compares safely against numbers, dates, and other types. Carrying over the Excel habit of using \"\" for \"nothing\" is the single most common cause of this error in DAX."
+  - question: "Can IF() return different data types in its two branches?"
+    answer: "It's allowed, but it's a common source of exactly this error down the line — a measure that returns a number in one branch and a text fallback like \"N/A\" in another becomes a mixed-type result that fails the moment something else tries to compare or aggregate it as a single type."
+  - question: "How do I compare a slicer or parameter value against a numeric column safely?"
+    answer: "Convert explicitly rather than relying on implicit conversion — use VALUE() to turn text into a number for the comparison, or FORMAT() to turn a number into text, so both sides of the comparison are the same declared type."
+---
+
+The full error usually reads:
+
+```text
+DAX comparison operations do not support comparing values of type
+Text with values of type Boolean.
+```
+
+or a variant naming a different pair of types — Text/Number, Number/Boolean — depending on which two mismatched types the expression tried to compare directly.
+
+## Cause 1: Comparing a Number to `""` Instead of `BLANK()`
+
+By far the most common cause, and almost always a carried-over Excel habit — in a spreadsheet, `""` is the normal way to represent "nothing." In DAX, `""` is a real, typed empty string, distinct from `BLANK()`.
+
+```dax
+Sales Status =
+IF([Total Sales] = "", "No Sales", "Has Sales")
+```
+
+`[Total Sales]` is numeric (or blank); `""` is text. Comparing them directly is a type mismatch, not just a stylistic difference.
+
+**Fix:** compare against `BLANK()`, which is designed to compare safely across types.
+
+```dax
+Sales Status =
+IF(ISBLANK([Total Sales]), "No Sales", "Has Sales")
+```
+
+`ISBLANK()` (or a direct `= BLANK()` comparison) is the correct DAX equivalent of what `= ""` was doing in a spreadsheet.
+
+## Cause 2: A Measure With Branches Returning Different Types
+
+```dax
+Sales Or Fallback =
+IF([Total Sales] > 0, [Total Sales], "N/A")
+```
+
+`IF()` allows this to be *written* — DAX doesn't reject it at definition time — but the measure's actual returned type becomes ambiguous: sometimes a number, sometimes text. The error typically doesn't surface here, but the moment something else compares or aggregates this measure's result expecting one consistent type, it does.
+
+**Fix:** keep both branches the same type. If a text fallback is genuinely needed for display, do the type-mixing at the visual/formatting layer instead of inside the measure — or return `BLANK()` instead of `"N/A"` and let the visual's formatting handle how a blank displays.
+
+```dax
+Sales Or Fallback =
+IF([Total Sales] > 0, [Total Sales], BLANK())
+```
+
+## Cause 3: Inconsistent Types Across SWITCH(TRUE(), ...) Branches
+
+```dax
+Status =
+SWITCH(
+    TRUE(),
+    [Total Sales] = BLANK(), "No Data",
+    [Total Sales] < 1000, 0,
+    [Total Sales] >= 1000, "High"
+)
+```
+
+The middle branch returns a number (`0`) while the others return text — same underlying issue as Cause 2, just spread across more branches, which makes it easier to miss one that doesn't match. See [SWITCH(TRUE(), ...) for Range Conditions](/docs/dax/switch#switchtrue--for-range-conditions) for the pattern this is usually built from.
+
+**Fix:** make every branch's return value the same type — in this example, `"0"` (text) or a consistent numeric encoding, not a mix.
+
+## Cause 4: Comparing a Text Slicer/Parameter Against a Numeric Column
+
+```dax
+Filtered Measure =
+CALCULATE([Total Sales], Table[Amount] = SelectedParameterValue)
+```
+
+If `SelectedParameterValue` comes from a disconnected table or "What-If" parameter stored as text, but `Table[Amount]` is numeric, this is the same type mismatch even though both values might display identically.
+
+**Fix:** convert explicitly so both sides are the same type — `VALUE()` to turn text into a number, or `FORMAT()` to turn a number into text, rather than relying on an implicit conversion that may not happen the way expected.
+
+```dax
+Filtered Measure =
+CALCULATE([Total Sales], Table[Amount] = VALUE(SelectedParameterValue))
+```
+
+## Common Mistakes
+
+**Fixing the exact line named in the error without checking the same pattern elsewhere.** A model that uses `= ""` as an Excel habit in one measure often uses it in several — the error surfaces on whichever measure happens to get compared first, not necessarily the only offender.
+
+**Adding a text fallback to a numeric measure for display purposes.** As in Cause 2, this is convenient short-term but creates a measure with no single consistent type — safer to return `BLANK()` and control the displayed text via visual formatting instead.
+
+**Assuming this only happens with obviously different-looking values.** A slicer value and a column can look identical when displayed ("1000" the text vs. `1000` the number) while still being genuinely different types underneath — the mismatch isn't always visually obvious.
+
+## Next Steps
+
+- [IF](/docs/dax/if)
+- [SWITCH](/docs/dax/switch)
+- [DIVIDE](/docs/dax/divide)
+- [Variables (VAR)](/docs/dax/variables)

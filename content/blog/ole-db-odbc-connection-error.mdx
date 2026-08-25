@@ -1,0 +1,85 @@
+---
+title: "Power BI Error: OLE DB or ODBC Error"
+description: "\"OLE DB or ODBC error\" is a wrapper around several unrelated causes — a login failure, a missing driver, a timeout, or a gateway credential mismatch. Here's how to tell which from the details, and the fix for each."
+date: "2026-08-25"
+tags: ["Power Query", "Troubleshooting"]
+faq:
+  - question: "What does \"OLE DB or ODBC error\" mean in Power BI?"
+    answer: "It's a generic wrapper Power BI puts around whatever the underlying database driver actually reported — the real cause (a login failure, a missing driver, a timeout, or a gateway credential mismatch) is in the text that follows it."
+  - question: "Why does a connection work in Power BI Desktop but fail in the Service?"
+    answer: "Desktop typically connects directly using the signed-in user's own credentials or drivers installed locally. The Service refreshes through a gateway, which needs its own driver installation and its own configured credentials — a mismatch between the two is the most common cause of a Desktop-works, Service-fails pattern."
+  - question: "How do I fix a 32-bit/64-bit ODBC driver mismatch?"
+    answer: "Check the bitness of both Power BI Desktop (or the gateway) and the installed ODBC driver in the Windows ODBC Data Source Administrator — both need to match. It's common to have only a 32-bit driver installed when the application connecting to it is 64-bit, or vice versa."
+  - question: "Does a timeout error mean the database is too slow?"
+    answer: "Not necessarily. It can mean the query itself is too complex or unfiltered, that the ODBC driver's own timeout setting is too low for a legitimately long-running query, or that a firewall or network path is dropping the connection before the database responds at all."
+---
+
+The full error usually reads something like:
+
+```text
+DataSource.Error: ODBC: ERROR [HYT00] [Microsoft][ODBC Driver Manager] Timeout expired.
+```
+
+or
+
+```text
+OLE DB or ODBC error: [DataSource.Error] Login failed for user 'domain\user'.
+```
+
+"OLE DB or ODBC error" itself is just the wrapper — every real cause is in the specific message that follows it, which is why two errors with the same opening line can need completely different fixes.
+
+## Cause 1: A Login or Authentication Failure
+
+```text
+Login failed for user 'domain\user'.
+```
+
+or
+
+```text
+Cannot open database "SalesDB" requested by the login.
+```
+
+This means the credentials Power BI is using don't have access — either the wrong authentication method is configured (Windows vs. Database vs. Basic), the account lacks permission on that specific database, or the password has since changed or expired.
+
+**Fix:** in Power BI Desktop, **Transform Data > Data source settings > Edit Permissions** to check or re-enter credentials for that source. In the Service, the dataset's **Settings > Data source credentials** controls this — and it's a separate credential store from whatever Desktop has cached locally.
+
+## Cause 2: A Missing or Mismatched ODBC Driver
+
+```text
+Data source name not found and no default driver specified.
+```
+
+This means the ODBC driver the connection string references either isn't installed at all, or is installed at the wrong bitness — a 32-bit driver when the connecting application is 64-bit, or vice versa.
+
+**Fix:** open the Windows **ODBC Data Source Administrator** (there are separate 32-bit and 64-bit versions of this tool, at the same file path with different names — `odbcad32.exe` for both, confusingly, but each shows only drivers matching its own bitness) and confirm the driver is installed in the bitness that matches Power BI Desktop or, for a Service refresh, the gateway machine.
+
+## Cause 3: Timeout Expired
+
+```text
+[HYT00] Timeout expired.
+```
+
+This means the query didn't complete within the driver's configured timeout window — which can mean the query is genuinely too slow (an unfiltered pull of a huge table), or that the timeout setting itself is too conservative for an otherwise legitimate long-running query, or that a network/firewall issue is silently dropping the connection.
+
+**Fix:** first, check whether the underlying query could fold and filter more at the source (see [Query Folding](/docs/power-query/query-folding)) rather than immediately raising the timeout — a slow query is often the actual problem, not just a setting to increase. If the query is genuinely expected to take a long time, the driver's connection timeout can usually be extended in its ODBC configuration or connection string.
+
+## Cause 4: Works in Desktop, Fails Only Through the Gateway
+
+The same query connects fine from Power BI Desktop but fails once scheduled refresh runs through an on-premises gateway. This almost always means the gateway machine itself is missing something Desktop has locally — the ODBC driver isn't installed on the gateway machine, or the gateway's configured credentials for that data source differ from what Desktop is using interactively.
+
+**Fix:** confirm the same ODBC driver (same bitness) is installed directly on the gateway machine, not just on the machine running Desktop, and check the credentials configured against that data source in the gateway's own management app. See [Gateway & Refresh Architecture](/docs/governance/gateway-refresh) for how gateway-level configuration is separate from any individual dataset's settings.
+
+## Common Mistakes
+
+**Increasing the timeout without checking why the query is slow.** A longer timeout can mask a query that would be fixed far more durably by filtering earlier or improving the source-side indexing — see whether the query folds and filters at the source before assuming more time is the answer.
+
+**Assuming Desktop and the Service share credentials and drivers.** They don't. Desktop working perfectly says nothing about whether the gateway machine has the same driver installed or the same credentials configured — these need to be checked independently.
+
+**Not checking driver bitness explicitly.** "Data source name not found" reads like a configuration typo, but it's frequently a bitness mismatch between the installed driver and the connecting application — worth checking directly in the ODBC Administrator rather than re-typing the connection string repeatedly.
+
+## Next Steps
+
+- [Gateway & Refresh Architecture](/docs/governance/gateway-refresh)
+- [Query Folding](/docs/power-query/query-folding)
+- [Refresh](/docs/power-bi-service/refresh)

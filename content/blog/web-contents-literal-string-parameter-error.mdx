@@ -1,0 +1,121 @@
+---
+title: "Power Query Error: Web.Contents Can Only Accept a Literal String as the First Parameter"
+description: "This Formula.Firewall error means Web.Contents' URL was built dynamically instead of being a literal string. Here's why the Power BI Service enforces this when Desktop doesn't, and how to fix it with RelativePath."
+date: "2026-08-25"
+tags: ["Power Query", "Troubleshooting"]
+faq:
+  - question: "What does \"Web.Contents can only accept a literal string as the first parameter\" mean?"
+    answer: "The URL passed to Web.Contents was built dynamically (string concatenation, a variable, another query's output) instead of being a fixed literal string. The Power BI Service needs to statically determine a query's data source without running it, and it can't do that with a dynamically built URL."
+  - question: "Why does this work fine in Power BI Desktop but fail after publishing?"
+    answer: "Desktop evaluates the query directly and doesn't need to pre-declare data sources for scheduled refresh the way the Service does, so the dynamic URL just works there. The Service performs a stricter static analysis before it will schedule a refresh, and that's where the firewall error surfaces."
+  - question: "How do I fix a dynamic Web.Contents URL?"
+    answer: "Split the URL into a fixed literal base and move the dynamic part into the RelativePath or Query record option — both of those are designed to be evaluated per-row/per-call while keeping the base URL statically analyzable."
+  - question: "Is this the same as a Formula.Firewall privacy level error?"
+    answer: "They're related but distinct. Both are Formula.Firewall errors, but this one is specifically about Web.Contents' first parameter not being a literal string — a privacy level error is about combining data from sources with incompatible privacy settings."
+---
+
+The full error usually reads:
+
+```text
+Formula.Firewall: Web.Contents can only accept a literal string as
+the first parameter in this context. To fix this error, you may
+need to rewrite your Web.Contents call and move all non-literal
+parts to the RelativePath or Query record.
+```
+
+It happens most often the moment a working query gets published to the Power BI Service — the exact same M code that refreshed fine in Desktop suddenly fails to schedule refresh at all.
+
+## Why This Only Shows Up in the Service
+
+Power BI Desktop evaluates a query directly, whatever the URL happens to resolve to. The Service works differently: before it will schedule an unattended refresh, it needs to know in advance which data sources a query touches, without actually running the query — that's how it maps credentials to data sources. A URL built by concatenating strings or referencing a variable can't be inspected that way, since its final value isn't known until the query actually runs.
+
+```text
+Web.Contents("https://api.example.com/products/" & productId)
+        |
+        | Desktop: runs it directly, works fine
+        | Service: can't determine the source without running it, blocks it
+```
+
+`RelativePath` and the `Query` record option exist specifically because the Service *can* statically parse those — it treats the first argument as the one fixed data source, and everything in `RelativePath`/`Query` as per-call detail layered on top. See [Web.Contents()](/docs/power-query/web-contents#relativepath-why-it-matters-for-the-service) for the full mechanics.
+
+## Cause 1: Building the URL With String Concatenation
+
+```powerquery lineNumbers
+Source = Json.Document(
+    Web.Contents("https://api.example.com/products/" & productId)
+)
+```
+
+**Fix:** move the dynamic segment into `RelativePath`.
+
+```powerquery lineNumbers
+Source = Json.Document(
+    Web.Contents(
+        "https://api.example.com",
+        [RelativePath = "products/" & productId]
+    )
+)
+```
+
+## Cause 2: Concatenating Query String Parameters Directly
+
+```powerquery lineNumbers
+Source = Json.Document(
+    Web.Contents(baseUrl & "?date=" & dateText & "&limit=50")
+)
+```
+
+**Fix:** use the `Query` record option instead of building the query string by hand — it also gets URL encoding right, which manual concatenation doesn't.
+
+```powerquery lineNumbers
+Source = Json.Document(
+    Web.Contents(
+        baseUrl,
+        [Query = [date = dateText, limit = "50"]]
+    )
+)
+```
+
+## Cause 3: Passing a Full URL From a Parameter or Another Query
+
+```powerquery lineNumbers
+Source = Json.Document(Web.Contents(FullUrlParameter))
+```
+
+Even when `FullUrlParameter` is a Power Query **Parameter** rather than a hardcoded string, it's still not a literal at the point `Web.Contents` sees it — the Service's static analysis needs the literal text in the formula itself, not a value that resolves to a string at runtime.
+
+**Fix:** split the parameter into a base URL parameter and a separate relative-path value, and pass them through `RelativePath` the same way as Cause 1.
+
+## Cause 4: A Per-Row Web.Contents Call Inside a Custom Column
+
+```powerquery lineNumbers
+#"Added Custom" = Table.AddColumn(
+    Source, "Details",
+    each Json.Document(Web.Contents(BaseUrl & "/items/" & [ItemID]))
+)
+```
+
+This combines the literal-string restriction with a second, related issue: calling `Web.Contents` per row like this is exactly the pattern that also triggers a privacy-level Formula.Firewall error once another data source is involved. See [Formula.Firewall and Privacy Level Errors](/blog/formula-firewall-privacy-level-error) for that side of it.
+
+**Fix:** same `RelativePath` restructuring as Cause 1, applied inside the `each` expression.
+
+```powerquery lineNumbers
+#"Added Custom" = Table.AddColumn(
+    Source, "Details",
+    each Json.Document(Web.Contents(BaseUrl, [RelativePath = "items/" & [ItemID]]))
+)
+```
+
+## Common Mistakes
+
+**Assuming the query is broken because it "used to work."** It didn't break — it was never valid for scheduled Service refresh, Desktop just never enforced the restriction. Nothing about the underlying API call needs to change, only how the URL is expressed.
+
+**Moving the dynamic part into a Power Query Parameter instead of RelativePath.** A Parameter still isn't a literal string at the point `Web.Contents` evaluates it — see Cause 3. The fix has to move the dynamic piece into `RelativePath` or `Query`, not just relocate where the dynamic value comes from.
+
+**Fixing only the first Web.Contents call found.** A query built from multiple merged or appended web sources can have this pattern in more than one place — the error names one instance, but it's worth checking every `Web.Contents` call in the query, not just the first one fixed.
+
+## Next Steps
+
+- [Web.Contents()](/docs/power-query/web-contents)
+- [Formula.Firewall and Privacy Level Errors](/blog/formula-firewall-privacy-level-error)
+- [M Language](/docs/power-query/m-language)
