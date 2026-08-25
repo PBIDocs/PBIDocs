@@ -1,0 +1,99 @@
+---
+title: "Power BI Error: There Isn't Enough Memory to Complete This Operation"
+description: "This memory error almost always means too much raw, unaggregated data is being pulled into Power BI Desktop at once. Here's how to find what's actually consuming the memory, and the fixes for each cause."
+date: "2026-08-25"
+tags: ["Power Query", "Troubleshooting"]
+faq:
+  - question: "Why does Power BI Desktop run out of memory during refresh?"
+    answer: "Almost always because a query is pulling more raw, unaggregated rows or columns into memory than the available RAM can hold at once — often due to missing filters, unnecessary columns, or a Table.Buffer call on a large table."
+  - question: "Does switching to 64-bit Power BI Desktop fix memory errors?"
+    answer: "Often, yes, if the current install is 32-bit — 32-bit processes are capped at roughly 2-4 GB of addressable memory regardless of how much RAM the machine has, while 64-bit Desktop can use far more."
+  - question: "Should I use Table.Buffer to fix a memory error?"
+    answer: "No — Table.Buffer forces a table to be fully materialized in memory, which uses more memory, not less. It solves a different problem (stabilizing a volatile source), not memory pressure."
+  - question: "Is DirectQuery a fix for memory errors during refresh?"
+    answer: "It can be, for very large fact tables, since DirectQuery doesn't import rows into memory at all — but it trades that for query-time performance depending on the source database, so it's a real architectural decision, not a quick patch."
+---
+
+The full error usually reads:
+
+```text
+There isn't enough memory to complete this operation.
+Please close some applications and try again.
+```
+
+or, from a specific data source during load:
+
+```text
+An error happened while reading data from the provider:
+"Not enough storage is available to complete this operation."
+```
+
+Closing other applications sometimes buys a little headroom, but the real cause is almost always how much raw data the query is pulling into memory at once — not what else happens to be running.
+
+## Step One: Identify Which Query Is the Problem
+
+Refresh one query at a time (right-click a query in the Queries pane and use **Refresh**) rather than refreshing everything together, to isolate which specific query triggers the error. A model with a dozen queries usually has one or two large fact-table queries responsible, not all of them equally.
+
+```text
+Refresh all queries at once -> error, but doesn't say which one
+        |
+        | Refresh one at a time instead
+        |
+The specific query that fails identifies the problem table
+```
+
+## Cause 1: Importing Raw, Unaggregated Data at Full Grain
+
+The most common cause. A fact table imported at its full transactional grain — every row, every column, no filtering — can be far larger in memory than its size on disk, especially with high-cardinality text columns.
+
+```text
+Source table: 50 million rows, 40 columns, including free-text notes
+        |
+        | imported as-is
+        |
+Memory usage far exceeds available RAM
+```
+
+**Fix:** filter rows and remove columns that aren't needed for analysis *before* loading, not after — ideally in a way that folds back to the source (see [Query Folding](/docs/power-query/query-folding)) so the filtering happens at the source, not after already pulling everything into Power Query.
+
+## Cause 2: 32-Bit Power BI Desktop
+
+32-bit processes are limited to roughly 2-4 GB of addressable memory no matter how much physical RAM the machine has — a limit that has nothing to do with the actual data volume.
+
+```text
+Machine RAM: 32 GB
+32-bit Power BI Desktop: still capped around 2-4 GB usable
+```
+
+**Fix:** check **File > Help > About Power BI Desktop** for the current bitness, and install the 64-bit version if it isn't already in use — this alone resolves a large share of memory errors on machines that otherwise have plenty of RAM.
+
+## Cause 3: Table.Buffer on a Large Table
+
+`Table.Buffer()` forces full materialization of a table into memory. It's a genuinely useful tool for stabilizing a volatile source (see [Table.Buffer](/docs/power-query/table-buffer)), but applying it to a large table does the opposite of saving memory — it guarantees the entire table is held in memory at once, rather than allowing the engine to stream it.
+
+```powerquery lineNumbers
+#"Buffered" = Table.Buffer(LargeFactTable)
+```
+
+**Fix:** remove `Table.Buffer` unless there's a specific, known reason for it (source volatility during a single refresh) — it's not a performance or memory optimization by default.
+
+## Cause 4: Multiple Large Queries Open and Previewing Simultaneously
+
+Every query open in the Power Query Editor holds a data preview in memory. Working through several large queries side by side, each with its own preview loaded, multiplies memory usage well beyond what a single refresh would use.
+
+**Fix:** close queries not actively being edited, and consider disabling background data preview refresh (**File > Options and Settings > Options > Data Load**) while doing heavy query editing work.
+
+## Common Mistakes
+
+**Assuming the machine needs more RAM before checking Desktop's bitness.** A 32-bit install caps usable memory regardless of physical RAM — check this before concluding the fix requires new hardware.
+
+**Adding Table.Buffer as a general "make it more reliable" habit.** It solves source volatility, not performance or memory, and applying it broadly on large tables actively works against the memory problem being diagnosed here.
+
+**Filtering after the type conversion step instead of before.** A filter added late in a query only reduces what's *displayed* in the editor preview at that step — everything before it has already been pulled through in full. Filtering early (and in a way that folds to the source) is what actually reduces memory pressure.
+
+## Next Steps
+
+- [Query Folding](/docs/power-query/query-folding)
+- [Table.Buffer](/docs/power-query/table-buffer)
+- [Star Schema](/docs/modeling/star-schema)
+- [Storage Modes](/docs/modeling/storage-modes)
