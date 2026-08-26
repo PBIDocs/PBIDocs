@@ -13,6 +13,7 @@ import type { Metadata } from 'next';
 import { createRelativeLink } from 'fumadocs-ui/mdx';
 import { gitConfig } from '@/lib/shared';
 import { PageFeedback } from '@/components/page-feedback';
+import { AskAi } from '@/components/ask-ai';
 import { getBreadcrumbItems } from 'fumadocs-core/breadcrumb';
 
 export default async function Page(props: PageProps<'/docs/[[...slug]]'>) {
@@ -70,6 +71,7 @@ export default async function Page(props: PageProps<'/docs/[[...slug]]'>) {
           markdownUrl={markdownUrl}
           githubUrl={`https://github.com/${gitConfig.user}/${gitConfig.repo}/blob/${gitConfig.branch}/content/docs/${page.path}`}
         />
+        <AskAi pageTitle={page.data.title} />
       </div>
       <DocsBody>
         <MDX

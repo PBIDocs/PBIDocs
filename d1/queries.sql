@@ -50,3 +50,15 @@ ORDER BY day DESC;
 SELECT COUNT(DISTINCT client_id) AS distinct_clients_today
 FROM dax_builder_usage
 WHERE created_at >= datetime('now', '-1 day');
+
+-- Ask AI (docs): total requests per day (last 30 days)
+SELECT date(created_at) AS day, COUNT(*) AS requests
+FROM ask_ai_usage
+WHERE created_at >= datetime('now', '-30 days')
+GROUP BY day
+ORDER BY day DESC;
+
+-- Ask AI (docs): distinct clients today
+SELECT COUNT(DISTINCT client_id) AS distinct_clients_today
+FROM ask_ai_usage
+WHERE created_at >= datetime('now', '-1 day');
