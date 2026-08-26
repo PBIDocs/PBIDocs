@@ -20,3 +20,13 @@ CREATE TABLE IF NOT EXISTS dax_builder_usage (
 
 CREATE INDEX IF NOT EXISTS idx_dax_builder_usage_client_created
   ON dax_builder_usage (client_id, created_at);
+
+-- client_id is a SHA-256 hash of the requester's IP, not the IP itself.
+CREATE TABLE IF NOT EXISTS ask_ai_usage (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  client_id TEXT NOT NULL,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_ask_ai_usage_client_created
+  ON ask_ai_usage (client_id, created_at);
