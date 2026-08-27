@@ -30,3 +30,13 @@ CREATE TABLE IF NOT EXISTS ask_ai_usage (
 
 CREATE INDEX IF NOT EXISTS idx_ask_ai_usage_client_created
   ON ask_ai_usage (client_id, created_at);
+
+-- One row per Stripe customer with an active or past subscription. Written by the
+-- Stripe webhook (customer.subscription.* events), read by the subscriber-check helper.
+CREATE TABLE IF NOT EXISTS stripe_subscriptions (
+  customer_id TEXT PRIMARY KEY,
+  subscription_id TEXT NOT NULL,
+  status TEXT NOT NULL,
+  current_period_end TEXT,
+  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);

@@ -4,6 +4,8 @@ import { useEffect, useRef, useState, type KeyboardEvent } from 'react';
 import { Send, Sparkles, X } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { highlightCode } from '@/lib/highlight-code';
+import { UpgradeBanner } from '@/components/upgrade-banner';
+import { ManageBillingLink } from '@/components/manage-billing-link';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -53,6 +55,7 @@ export function AskAi({ pageTitle }: { pageTitle: string }) {
   const [input, setInput] = useState('');
   const [status, setStatus] = useState<Status>('idle');
   const [error, setError] = useState('');
+  const [isSubscriber, setIsSubscriber] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -75,7 +78,11 @@ export function AskAi({ pageTitle }: { pageTitle: string }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ messages: nextMessages, pageTitle }),
       });
-      const data = (await res.json().catch(() => ({}))) as { reply?: string; error?: string };
+      const data = (await res.json().catch(() => ({}))) as {
+        reply?: string;
+        error?: string;
+        isSubscriber?: boolean;
+      };
 
       if (!res.ok) {
         setStatus(res.status === 429 ? 'limited' : 'error');
@@ -85,6 +92,7 @@ export function AskAi({ pageTitle }: { pageTitle: string }) {
 
       setMessages([...nextMessages, { role: 'assistant', content: data.reply ?? '' }]);
       setStatus('idle');
+      setIsSubscriber(Boolean(data.isSubscriber));
     } catch {
       setStatus('error');
       setError('Something went wrong. Please try again.');
@@ -121,15 +129,23 @@ export function AskAi({ pageTitle }: { pageTitle: string }) {
               <div className="flex items-center gap-2">
                 <span className="size-2 shrink-0 rounded-full bg-fd-primary" />
                 <p className="text-sm font-semibold text-fd-foreground">Ask AI about {pageTitle}</p>
+                {isSubscriber && (
+                  <span className="rounded-full bg-fd-primary/10 px-1.5 py-0.5 text-[0.65rem] font-semibold text-fd-primary">
+                    PRO
+                  </span>
+                )}
               </div>
-              <button
-                type="button"
-                onClick={() => setOpen(false)}
-                aria-label="Close"
-                className="rounded-md p-1 text-fd-muted-foreground hover:bg-fd-accent"
-              >
-                <X className="size-4" />
-              </button>
+              <div className="flex items-center gap-3 text-xs">
+                {isSubscriber && <ManageBillingLink />}
+                <button
+                  type="button"
+                  onClick={() => setOpen(false)}
+                  aria-label="Close"
+                  className="rounded-md p-1 text-fd-muted-foreground hover:bg-fd-accent"
+                >
+                  <X className="size-4" />
+                </button>
+              </div>
             </div>
 
             <div ref={scrollRef} className="flex flex-1 flex-col gap-3 overflow-y-auto px-4 py-4">
@@ -172,17 +188,20 @@ export function AskAi({ pageTitle }: { pageTitle: string }) {
               )}
 
               {(status === 'error' || status === 'limited') && (
-                <p
-                  className={cn(
-                    'rounded-lg border px-3 py-2 text-xs',
-                    status === 'limited'
-                      ? 'border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400'
-                      : 'border-red-500/30 bg-red-500/10 text-red-500',
-                  )}
-                  role="alert"
-                >
-                  {error}
-                </p>
+                <div className="flex flex-col gap-2">
+                  <p
+                    className={cn(
+                      'rounded-lg border px-3 py-2 text-xs',
+                      status === 'limited'
+                        ? 'border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400'
+                        : 'border-red-500/30 bg-red-500/10 text-red-500',
+                    )}
+                    role="alert"
+                  >
+                    {error}
+                  </p>
+                  {status === 'limited' && !isSubscriber && <UpgradeBanner />}
+                </div>
               )}
             </div>
 

@@ -1,21 +1,11 @@
-interface D1Result {
-  success: boolean;
-}
-
-interface D1PreparedStatement {
-  bind(...values: unknown[]): D1PreparedStatement;
-  run(): Promise<D1Result>;
-  first<T = unknown>(): Promise<T | null>;
-}
-
-interface D1Database {
-  prepare(query: string): D1PreparedStatement;
-}
+import type { D1Database } from '../_lib/types';
+import { checkSubscriber } from '../_lib/subscriber';
 
 interface Env {
   DB: D1Database;
   ANTHROPIC_API_KEY: string;
   ANTHROPIC_MODEL?: string;
+  COOKIE_SIGNING_SECRET?: string;
 }
 
 interface RequestContext {
@@ -24,6 +14,7 @@ interface RequestContext {
 }
 
 const FREE_LIMIT_PER_DAY = 5;
+const SUBSCRIBER_LIMIT_PER_DAY = 200;
 const MAX_MESSAGE_LENGTH = 500;
 const MAX_MESSAGES = 20;
 const DEFAULT_MODEL = 'claude-sonnet-5';
@@ -33,11 +24,12 @@ interface ChatMessage {
   content: string;
 }
 
-function json(body: unknown, status: number): Response {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: { 'Content-Type': 'application/json' },
-  });
+function json(body: unknown, status: number, extraHeaders?: HeadersInit): Response {
+  const headers = new Headers({ 'Content-Type': 'application/json' });
+  if (extraHeaders) {
+    for (const [key, value] of new Headers(extraHeaders)) headers.append(key, value);
+  }
+  return new Response(JSON.stringify(body), { status, headers });
 }
 
 async function hashClientId(ip: string): Promise<string> {
@@ -81,6 +73,12 @@ export async function onRequestPost({ request, env }: RequestContext): Promise<R
     return json({ error: 'Invalid message in conversation.' }, 400);
   }
 
+  const subscriber = await checkSubscriber(request, env);
+  const setCookieHeader = subscriber.setCookieHeader
+    ? { 'Set-Cookie': subscriber.setCookieHeader }
+    : undefined;
+  const limit = subscriber.isSubscriber ? SUBSCRIBER_LIMIT_PER_DAY : FREE_LIMIT_PER_DAY;
+
   const clientId = await hashClientId(request.headers.get('CF-Connecting-IP') ?? 'unknown');
 
   let usedToday = 0;
@@ -92,13 +90,18 @@ export async function onRequestPost({ request, env }: RequestContext): Promise<R
       .first<{ count: number }>();
     usedToday = row?.count ?? 0;
   } catch {
-    return json({ error: 'Something went wrong. Please try again.' }, 500);
+    return json({ error: 'Something went wrong. Please try again.' }, 500, setCookieHeader);
   }
 
-  if (usedToday >= FREE_LIMIT_PER_DAY) {
+  if (usedToday >= limit) {
     return json(
-      { error: `You've used all ${FREE_LIMIT_PER_DAY} free questions for today. Try again tomorrow.` },
+      {
+        error: subscriber.isSubscriber
+          ? `You've used all ${limit} questions for today. Try again tomorrow.`
+          : `You've used all ${limit} free questions for today. Upgrade for more, or try again tomorrow.`,
+      },
       429,
+      setCookieHeader,
     );
   }
 
@@ -122,17 +125,25 @@ export async function onRequestPost({ request, env }: RequestContext): Promise<R
     });
 
     if (!res.ok) {
-      return json({ error: 'Ask AI is temporarily unavailable. Please try again shortly.' }, 500);
+      return json(
+        { error: 'Ask AI is temporarily unavailable. Please try again shortly.' },
+        500,
+        setCookieHeader,
+      );
     }
 
     const data = (await res.json()) as { content?: { type: string; text?: string }[] };
     reply = data.content?.find((block) => block.type === 'text')?.text ?? '';
   } catch {
-    return json({ error: 'Ask AI is temporarily unavailable. Please try again shortly.' }, 500);
+    return json(
+      { error: 'Ask AI is temporarily unavailable. Please try again shortly.' },
+      500,
+      setCookieHeader,
+    );
   }
 
   if (!reply) {
-    return json({ error: 'Something went wrong. Please try again.' }, 500);
+    return json({ error: 'Something went wrong. Please try again.' }, 500, setCookieHeader);
   }
 
   try {
@@ -141,5 +152,13 @@ export async function onRequestPost({ request, env }: RequestContext): Promise<R
     // Non-fatal — the reply is still returned even if usage logging fails.
   }
 
-  return json({ reply, remaining: Math.max(0, FREE_LIMIT_PER_DAY - usedToday - 1) }, 200);
+  return json(
+    {
+      reply,
+      remaining: Math.max(0, limit - usedToday - 1),
+      isSubscriber: subscriber.isSubscriber,
+    },
+    200,
+    setCookieHeader,
+  );
 }
