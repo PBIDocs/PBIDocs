@@ -4,6 +4,8 @@ import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { Check, Copy, Loader2, RotateCw, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { highlightCode } from '@/lib/highlight-code';
+import { UpgradeBanner } from '@/components/upgrade-banner';
+import { ManageBillingLink } from '@/components/manage-billing-link';
 
 type Mode = 'dax' | 'm';
 type Status = 'idle' | 'loading' | 'success' | 'error' | 'limited';
@@ -19,6 +21,7 @@ interface BuilderResponse {
   explanation: string;
   functionsUsed: FunctionUsed[];
   remaining: number;
+  isSubscriber: boolean;
 }
 
 const DAX_EXAMPLES = [
@@ -220,17 +223,20 @@ export function DaxFormulaBuilder() {
       </form>
 
       {(status === 'error' || status === 'limited') && (
-        <p
-          className={cn(
-            'rounded-lg border px-4 py-3 text-sm',
-            status === 'limited'
-              ? 'border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400'
-              : 'border-red-500/30 bg-red-500/10 text-red-500',
-          )}
-          role="alert"
-        >
-          {error}
-        </p>
+        <div className="flex flex-col gap-3">
+          <p
+            className={cn(
+              'rounded-lg border px-4 py-3 text-sm',
+              status === 'limited'
+                ? 'border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400'
+                : 'border-red-500/30 bg-red-500/10 text-red-500',
+            )}
+            role="alert"
+          >
+            {error}
+          </p>
+          {status === 'limited' && !result?.isSubscriber && <UpgradeBanner />}
+        </div>
       )}
 
       {status === 'success' && result && (
@@ -279,10 +285,22 @@ export function DaxFormulaBuilder() {
             </div>
           )}
 
-          <p className="text-xs text-fd-muted-foreground/70">
-            {result.remaining} free request{result.remaining === 1 ? '' : 's'} left today. Always test a
-            generated {mode === 'dax' ? 'measure' : 'step'} against your own model before shipping it.
-          </p>
+          <div className="flex items-center justify-between gap-3 text-xs text-fd-muted-foreground/70">
+            <p>
+              {result.isSubscriber ? (
+                <>
+                  Pro — {result.remaining} request{result.remaining === 1 ? '' : 's'} left today.
+                </>
+              ) : (
+                <>
+                  {result.remaining} free request{result.remaining === 1 ? '' : 's'} left today.
+                </>
+              )}{' '}
+              Always test a generated {mode === 'dax' ? 'measure' : 'step'} against your own model before
+              shipping it.
+            </p>
+            {result.isSubscriber && <ManageBillingLink />}
+          </div>
         </div>
       )}
     </div>
