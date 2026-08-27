@@ -5,6 +5,7 @@ interface Env {
   DB: D1Database;
   STRIPE_SECRET_KEY: string;
   STRIPE_WEBHOOK_SECRET: string;
+  STRIPE_PRICE_ID: string;
 }
 
 interface RequestContext {
@@ -39,6 +40,14 @@ export async function onRequestPost({ request, env }: RequestContext): Promise<R
   }
 
   const subscription = event.data.object as Stripe.Subscription;
+
+  // The Stripe account is shared with other sites/products — only track subscriptions
+  // for pbidocs' own price, or another product's subscribers would get pbidocs access too.
+  const matchesOwnPrice = subscription.items.data.some((item) => item.price?.id === env.STRIPE_PRICE_ID);
+  if (!matchesOwnPrice) {
+    return new Response('ignored: not pbidocs price', { status: 200 });
+  }
+
   const customerId = typeof subscription.customer === 'string' ? subscription.customer : subscription.customer.id;
   const periodEndSeconds = subscription.items.data[0]?.current_period_end;
   const currentPeriodEnd = periodEndSeconds ? new Date(periodEndSeconds * 1000).toISOString() : null;
