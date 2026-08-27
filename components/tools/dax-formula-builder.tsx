@@ -48,30 +48,36 @@ const M_EXAMPLES = [
 
 const QUOTA_STORAGE_KEY = 'dax-builder-quota';
 const FREE_LIMIT_PER_DAY = 5;
+const SUBSCRIBER_LIMIT_PER_DAY = 200;
 
 function pickExamples(mode: Mode): string[] {
   const pool = mode === 'm' ? M_EXAMPLES : DAX_EXAMPLES;
   return [...pool].sort(() => Math.random() - 0.5).slice(0, 4);
 }
 
-function readStoredRemaining(): number | null {
+interface StoredQuota {
+  remaining: number;
+  isSubscriber: boolean;
+}
+
+function readStoredRemaining(): StoredQuota | null {
   try {
     const raw = localStorage.getItem(QUOTA_STORAGE_KEY);
     if (!raw) return null;
-    const parsed = JSON.parse(raw) as { remaining?: number; date?: string };
+    const parsed = JSON.parse(raw) as { remaining?: number; isSubscriber?: boolean; date?: string };
     const today = new Date().toISOString().slice(0, 10);
     if (parsed.date !== today || typeof parsed.remaining !== 'number') return null;
-    return parsed.remaining;
+    return { remaining: parsed.remaining, isSubscriber: Boolean(parsed.isSubscriber) };
   } catch {
     return null;
   }
 }
 
-function storeRemaining(remaining: number) {
+function storeRemaining(remaining: number, isSubscriber: boolean) {
   try {
     localStorage.setItem(
       QUOTA_STORAGE_KEY,
-      JSON.stringify({ remaining, date: new Date().toISOString().slice(0, 10) }),
+      JSON.stringify({ remaining, isSubscriber, date: new Date().toISOString().slice(0, 10) }),
     );
   } catch {
     // Best-effort only — the server remains the source of truth.
@@ -85,13 +91,13 @@ export function DaxFormulaBuilder() {
   const [error, setError] = useState('');
   const [result, setResult] = useState<BuilderResponse | null>(null);
   const [copied, setCopied] = useState(false);
-  const [knownRemaining, setKnownRemaining] = useState<number | null>(null);
+  const [knownQuota, setKnownQuota] = useState<StoredQuota | null>(null);
   const examples = useMemo(() => pickExamples(mode), [mode]);
 
   useEffect(() => {
     // localStorage doesn't exist at static-export build time, so this can't be a lazy useState initializer.
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setKnownRemaining(readStoredRemaining());
+    setKnownQuota(readStoredRemaining());
   }, []);
 
   async function runBuild(promptOverride?: string) {
@@ -114,8 +120,9 @@ export function DaxFormulaBuilder() {
         setStatus(res.status === 429 ? 'limited' : 'error');
         setError(data.error ?? 'Something went wrong. Please try again.');
         if (res.status === 429) {
-          setKnownRemaining(0);
-          storeRemaining(0);
+          const isSubscriber = Boolean(data.isSubscriber);
+          setKnownQuota({ remaining: 0, isSubscriber });
+          storeRemaining(0, isSubscriber);
         }
         return;
       }
@@ -123,8 +130,9 @@ export function DaxFormulaBuilder() {
       setResult(data as BuilderResponse);
       setStatus('success');
       if (typeof data.remaining === 'number') {
-        setKnownRemaining(data.remaining);
-        storeRemaining(data.remaining);
+        const isSubscriber = Boolean(data.isSubscriber);
+        setKnownQuota({ remaining: data.remaining, isSubscriber });
+        storeRemaining(data.remaining, isSubscriber);
       }
     } catch {
       setStatus('error');
@@ -214,9 +222,11 @@ export function DaxFormulaBuilder() {
             {loading ? <Loader2 className="size-4 animate-spin" /> : <Sparkles className="size-4" />}
             {loading ? 'Building…' : 'Build It'}
           </button>
-          {knownRemaining !== null && status !== 'limited' && (
+          {knownQuota !== null && status !== 'limited' && (
             <p className="text-xs text-fd-muted-foreground/70">
-              {knownRemaining} of {FREE_LIMIT_PER_DAY} free requests left today
+              {knownQuota.isSubscriber
+                ? `${knownQuota.remaining} of ${SUBSCRIBER_LIMIT_PER_DAY} requests left today (Pro)`
+                : `${knownQuota.remaining} of ${FREE_LIMIT_PER_DAY} free requests left today`}
             </p>
           )}
         </div>
