@@ -1,0 +1,109 @@
+---
+title: "Table.ReplaceValue()"
+description: Learn how Table.ReplaceValue finds and replaces values across specific columns, why it requires an explicit column list, and how ReplaceValue differs from ReplaceText.
+---
+
+# Table.ReplaceValue()
+
+`Table.ReplaceValue()` finds and replaces a value across one or more columns of a table — the function behind **Transform > Replace Values** in the Editor.
+
+```powerquery lineNumbers
+Table.ReplaceValue(
+    table as table,
+    oldValue as any,
+    newValue as any,
+    replacer as function,
+    columnsToSearch as list
+) as table
+```
+
+---
+
+## Basic Example
+
+```powerquery lineNumbers
+#"Replaced Value" = Table.ReplaceValue(
+    Source, "N/A", null, Replacer.ReplaceValue, {"Amount"}
+)
+```
+
+```text
+Amount        Amount
+1200          1200
+N/A     ->    null      <- replaced
+850           850
+```
+
+---
+
+## The Column List Is Not Optional in Practice
+
+The last argument, `columnsToSearch`, is a required list of column names — the replace only runs against the columns named there, not the whole table. This is the single most common source of confusion with this function.
+
+```powerquery lineNumbers
+#"Replaced Value" = Table.ReplaceValue(
+    Source, "N/A", null, Replacer.ReplaceValue, {"Amount"}
+)
+```
+
+If the same placeholder also appears in a `Quantity` column that wasn't listed, it's left completely untouched — no error, no warning, just a silent miss in a column nobody remembered to add to the list.
+
+**Fix:** explicitly list every column that could contain the value.
+
+```powerquery lineNumbers
+#"Replaced Value" = Table.ReplaceValue(
+    Source, "N/A", null, Replacer.ReplaceValue, {"Amount", "Quantity", "Discount"}
+)
+```
+
+---
+
+## Replacer.ReplaceValue vs. Replacer.ReplaceText
+
+The `replacer` argument controls match behavior, and the two most common options behave differently:
+
+| | Replacer.ReplaceValue | Replacer.ReplaceText |
+|---|---|---|
+| Match type | Exact, whole-value match | Substring match, text columns only |
+| `"N/A"` matches | Only a cell that is exactly `"N/A"` | Any cell **containing** `"N/A"` anywhere in it |
+| Works on | Any data type | Text only |
+
+```powerquery lineNumbers
+-- Exact match: only replaces a cell that IS "N/A"
+Table.ReplaceValue(Source, "N/A", "", Replacer.ReplaceValue, {"Notes"})
+
+-- Substring match: replaces "N/A" wherever it appears within the text
+Table.ReplaceValue(Source, "N/A", "", Replacer.ReplaceText, {"Notes"})
+```
+
+Using `Replacer.ReplaceValue` on a `Notes` column expecting it to strip `"N/A"` out of a longer sentence like `"Status: N/A for now"` won't do anything — the cell isn't *exactly* `"N/A"`, just contains it. That case needs `Replacer.ReplaceText`.
+
+---
+
+## Common Mistakes
+
+### Assuming It Searches the Whole Table
+
+As covered above — a column left off the list is silently skipped, not searched-and-found-nothing. Always double-check the column list against every place the value could actually appear.
+
+### Using ReplaceValue When ReplaceText Was Needed
+
+Expecting an exact-match replacer to catch a substring inside a longer text value — it won't, and it fails silently rather than erroring, since the operation itself is still valid, it just never matches.
+
+### Replacing Text and Non-Text Values With the Same Call
+
+`Replacer.ReplaceText` only works on columns typed as `Text` — pointing it at a numeric or date column throws a type error, since there's no "substring" concept for those types. Use `Replacer.ReplaceValue` for anything that isn't text.
+
+### Not Checking for Multiple Placeholder Variants
+
+A source with `"N/A"` in some rows often has `"n/a"`, `"-"`, or a blank string elsewhere too, from different people entering data inconsistently. One `Table.ReplaceValue()` call only catches the exact variant it was given — checking for the full set of placeholders actually present (via a quick `Table.Distinct()` on the column) avoids fixing only part of the problem.
+
+---
+
+## Next Steps
+
+- [M Language](/docs/power-query/m-language)
+- [M Function Reference](/docs/power-query/functions)
+- [Transformations](/docs/power-query/transformations)
+
+Cleaning up placeholder values as part of a broader type-conversion error? See [We Couldn't Convert to Number (or Date)](/blog/couldnt-convert-to-number-date-error) for the fuller pattern, including locale mismatches and hidden whitespace.

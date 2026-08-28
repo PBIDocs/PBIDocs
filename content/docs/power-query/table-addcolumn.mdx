@@ -1,0 +1,116 @@
+---
+title: "Table.AddColumn()"
+description: Learn how Table.AddColumn creates a new column from a per-row expression, the each shorthand behind it, and how it differs from Table.TransformColumns.
+---
+
+# Table.AddColumn()
+
+`Table.AddColumn()` adds a new column to a table, computing its value once per row from an expression you provide — it's the function behind **Add Column > Custom Column** in the Power Query Editor.
+
+```powerquery lineNumbers
+Table.AddColumn(
+    table as table,
+    newColumnName as text,
+    columnGenerator as function,
+    columnType as nullable type
+) as table
+```
+
+---
+
+## Basic Example
+
+```powerquery lineNumbers
+#"Added Custom" = Table.AddColumn(
+    Source, "Total", each [Quantity] * [UnitPrice]
+)
+```
+
+```text
+Quantity | UnitPrice | Total
+5        | 10        | 50      <- computed per row
+3        | 20        | 60
+```
+
+The `each` expression runs once for every row, with `[ColumnName]` referring to that row's value in the table the column is being added to — not any other step.
+
+---
+
+## each: A Function in Disguise
+
+`each [Quantity] * [UnitPrice]` is shorthand for a one-argument function:
+
+```powerquery lineNumbers
+(row) => row[Quantity] * row[UnitPrice]
+```
+
+`each` is the version almost everyone reaches for; the explicit function form matters mainly for understanding error messages that reference "the current row," or for writing a reusable function that takes the row as an explicit parameter. See [M Language](/docs/power-query/m-language#each-and-functions) for the equivalent explanation in the context of filtering rather than adding a column.
+
+---
+
+## The Optional Column Type
+
+```powerquery lineNumbers
+#"Added Custom" = Table.AddColumn(
+    Source, "Total", each [Quantity] * [UnitPrice], Int64.Type
+)
+```
+
+Left out, the new column's type is inferred as `Any` — which works, but means a later step relying on that column's type (a numeric comparison, a date function) may need an explicit **Changed Type** step anyway. Supplying the type here does that in one step, and is what the Editor's UI does automatically for a custom column with a detectable output type.
+
+---
+
+## Table.AddColumn vs. Table.TransformColumns
+
+Both compute a value per row, but for a genuinely different purpose:
+
+| | Table.AddColumn | Table.TransformColumns |
+|---|---|---|
+| Result | A **new** column, existing columns unchanged | An **existing** column's values replaced in place |
+| Expression sees | Any column in the row, via `each [ColumnName]` | Only the single value being transformed |
+| Typical use | Computing something new from one or more columns | Cleaning up or reformatting one column (trim, case, type) |
+
+```powerquery lineNumbers
+#"Added Custom" = Table.AddColumn(Source, "FullName", each [First] & " " & [Last]),
+#"Transformed" = Table.TransformColumns(#"Added Custom", {{"FullName", Text.Trim}})
+```
+
+Reaching for `Table.TransformColumns` to combine two columns into a new one doesn't work — it only ever sees one column's existing value, never the whole row. `Table.AddColumn` is the one with row-wide visibility.
+
+---
+
+## Common Mistakes
+
+### Referencing a Column That Doesn't Exist Yet in This Step
+
+```powerquery lineNumbers
+#"Added Custom" = Table.AddColumn(Source, "Total", each [Quantity] * [Total])
+```
+
+A column can't reference itself, and can't reference a column that a *later* step will add — only columns already present in the table passed as the first argument. This produces a "column not found" error naming the missing column.
+
+### Expecting the New Column to Update Automatically
+
+The expression runs once per row **at the time this step executes**. If an earlier step's logic changes later, this column doesn't recompute unless the query itself is re-run (which normally happens automatically on refresh, but won't reflect manual edits to the underlying data until then).
+
+### Using Table.AddColumn When Table.TransformColumns Was Meant
+
+Adding a column with the same name as an existing one doesn't replace it in place the way `Table.TransformColumns` does — it errors, since the resulting table would have a duplicate column name. If the goal is to overwrite an existing column's values, `Table.TransformColumns` (or `Table.AddColumn` followed by `Table.RemoveColumns` on the original) is the right tool.
+
+---
+
+## Best Practices
+
+- Supply the optional `columnType` when the result is a known type — it saves a separate **Changed Type** step and documents intent.
+- Keep the `each` expression to genuinely per-row logic; anything needing the whole table (a running total, a rank) belongs in a different pattern, not a single `Table.AddColumn` call.
+- Give the new column a clear, final name up front — renaming later is an extra step that's easy to forget.
+
+---
+
+## Next Steps
+
+- [M Language](/docs/power-query/m-language)
+- [Transformations](/docs/power-query/transformations)
+- [M Function Reference](/docs/power-query/functions)
+
+Adding a column via `Web.Contents` per row? That combination is exactly what triggers [Formula.Firewall and Privacy Level Errors](/blog/formula-firewall-privacy-level-error) — worth reading before writing one.
