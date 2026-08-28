@@ -1,0 +1,83 @@
+---
+title: "Merge vs. Append: When to Use Each"
+description: Merge Queries and Append Queries are two completely different operations that sound similar. Here's the actual decision — matching columns sideways versus stacking rows — and the mistakes that come from confusing them.
+---
+
+# Merge vs. Append: When to Use Each
+
+**Merge** and **Append** are two of the most commonly confused operations in Power Query — both combine two queries into one, but they solve opposite kinds of problems. Mixing them up produces a table that's either duplicated sideways or stacked incorrectly, usually with no error to flag it.
+
+```text
+MERGE (Table.NestedJoin)              APPEND (Table.Combine)
+Adds columns, matching on a key       Adds rows, stacking tables
+
+Sales          Customers              Sales_Jan       Sales_Feb
+CustID|Amt     CustID|Name            CustID|Amt      CustID|Amt
+1     |100     1     |Alice           1     |100      2     |200
+                                            |
+                                       Sales_Jan + Sales_Feb stacked
+                                       CustID|Amt
+                                       1     |100
+                                       2     |200
+```
+
+---
+
+## The Actual Decision
+
+Ask one question: **does the new data add more columns to existing rows, or more rows in the same shape?**
+
+| | Merge | Append |
+|---|---|---|
+| Adds | Columns | Rows |
+| Requires | A matching key column in both tables | Matching column names/structure across tables |
+| SQL equivalent | `JOIN` | `UNION ALL` |
+| Typical scenario | Sales table + Customer lookup table | January sales + February sales, same structure |
+
+If the two sources describe **the same kind of thing** at **different times or from different places** (this month's export and last month's, one region's file and another's), it's an Append. If one source is **context or attributes about** what's in the other (an order table and a customer lookup table), it's a Merge.
+
+---
+
+## Append: Stacking Same-Shape Tables
+
+```powerquery lineNumbers
+#"Appended" = Table.Combine({SalesJan, SalesFeb, SalesMar})
+```
+
+`Table.Combine()` is the function behind **Home > Append Queries**. It stacks tables that share the same column structure — column names don't need to be in the same order, but a column present in one table and missing from another produces `null` for that column in the rows that came from the table without it, rather than an error.
+
+See [Merge Queries](/docs/power-query/merge-queries) for the mechanics of the other operation — matching on a key column, choosing a join kind.
+
+---
+
+## Common Mistakes
+
+### Appending Tables With Slightly Different Column Names
+
+```text
+SalesJan columns: CustomerID, Amount
+SalesFeb columns: CustID, Amount        <- different name for the same thing
+```
+
+`Table.Combine()` treats `CustomerID` and `CustID` as two unrelated columns, producing a result with **both**, each half-populated with `null` for the rows from the table that didn't have that exact name. This doesn't error — it silently produces a wider, wrong table. Fix by renaming columns to match before appending.
+
+### Merging When Append Was Actually Needed
+
+Trying to merge two tables of the same shape (this month's file and last month's) on a shared ID column produces a matched-and-joined result with duplicated/renamed columns (`Amount` and `Amount.1`), not the stacked table that was actually wanted.
+
+### Appending When Merge Was Actually Needed
+
+Stacking a Sales table and a Customers table (different shapes entirely) produces a nonsensical result — `Table.Combine()` doesn't try to align them meaningfully by key, it just stacks rows, so unrelated columns collide or produce mostly-blank rows.
+
+### Not Checking Row Counts After Either Operation
+
+An Append should produce roughly the sum of the input row counts (barring genuine duplicates). A Merge with a **Left Outer** join should keep the base table's row count exactly, or grow it if the lookup table has duplicate keys — a row count that doesn't match either expectation usually means the wrong join kind or a genuinely unexpected data issue upstream.
+
+---
+
+## Next Steps
+
+- [Merge Queries](/docs/power-query/merge-queries)
+- [M Language](/docs/power-query/m-language)
+- [M Function Reference](/docs/power-query/functions)
+- [Star Schema](/docs/modeling/star-schema)

@@ -1,0 +1,126 @@
+---
+title: "Table.Pivot() & Table.Unpivot()"
+description: Learn how Table.Pivot and Table.Unpivot reshape data between wide and long formats, why "Unpivot Other Columns" matters for future-proofing a query, and the aggregation function Pivot requires.
+---
+
+# Table.Pivot() & Table.Unpivot()
+
+`Table.Pivot()` and `Table.Unpivot()` reshape a table between **wide** (one column per category) and **long** (one row per category) formats — opposite operations, and one of the more genuinely confusing pairs in Power Query for anyone new to it.
+
+```text
+Wide (Pivoted)                    Long (Unpivoted)
+Region | Jan | Feb | Mar          Region | Month | Sales
+West   | 100 | 120 | 130          West   | Jan   | 100
+East   | 90  | 95  | 105          West   | Feb   | 120
+                                   West   | Mar   | 130
+                                   East   | Jan   | 90
+                                   ...
+```
+
+---
+
+## Table.Unpivot(): Wide to Long
+
+```powerquery lineNumbers
+Table.Unpivot(
+    table as table,
+    pivotColumns as list,
+    attributeColumn as text,
+    valueColumn as text
+) as table
+```
+
+```powerquery lineNumbers
+#"Unpivoted" = Table.Unpivot(
+    Source, {"Jan", "Feb", "Mar"}, "Month", "Sales"
+)
+```
+
+This is the far more common direction in practice — most raw exports (a report with a column per month, per year, or per product) need to become long/tabular before Power BI can model them properly, since a star schema wants one row per fact, not one column per period.
+
+---
+
+## Unpivot Columns vs. Unpivot Other Columns
+
+The Editor UI offers two buttons that both call `Table.Unpivot`, but with a critical difference in what gets passed as `pivotColumns`:
+
+```text
+"Unpivot Columns" (columns you selected)
+        |
+        | generates: Table.Unpivot(Source, {"Jan", "Feb", "Mar"}, ...)
+        |
+A new column added next month ("Apr") is NOT unpivoted — silently missed
+
+"Unpivot Other Columns" (right-click, unselected columns)
+        |
+        | generates: Table.UnpivotOtherColumns(Source, {"Region"}, ...)
+        |
+A new column added next month IS unpivoted automatically
+```
+
+`Table.UnpivotOtherColumns()` takes the columns to **keep** as-is, and unpivots everything else — meaning a source that gains a new month column next quarter gets picked up automatically on refresh, with no query changes needed. `Table.Unpivot()` with a fixed list silently ignores any new column instead, since it was never named in the list.
+
+**This is the single most common mistake with unpivoting a growing source** — using "Unpivot Columns" on a report that gains a new column periodically means each new period quietly disappears until someone notices the numbers don't add up, rather than erroring visibly.
+
+---
+
+## Table.Pivot(): Long to Wide
+
+```powerquery lineNumbers
+Table.Pivot(
+    table as table,
+    pivotColumn as list,
+    attributeColumn as any,
+    valueColumn as any,
+    aggregationFunction as nullable function
+) as table
+```
+
+```powerquery lineNumbers
+#"Pivoted" = Table.Pivot(
+    Source, List.Distinct(Source[Month]), "Month", "Sales", List.Sum
+)
+```
+
+Pivoting is less common in a Power BI model (visuals handle the wide presentation themselves), but comes up when a source needs restructuring to match another system's expected format, or for a specific matrix-style export.
+
+---
+
+## Why Pivot Needs an Aggregation Function
+
+Going from long to wide only makes sense if there's exactly one value per row/category combination — if there are duplicates, `Table.Pivot()` needs to know how to combine them into the single cell that combination maps to.
+
+```text
+Region | Month | Sales
+West   | Jan   | 100
+West   | Jan   | 50      <- duplicate Region+Month combination
+
+Pivoted, West/Jan cell = List.Sum({100, 50}) = 150
+```
+
+Without an aggregation function (or with `null` passed explicitly), Power Query still requires *some* resolution for duplicates — omitting it isn't a shortcut, just an implicit "pick one arbitrarily" that produces inconsistent results depending on row order.
+
+---
+
+## Common Mistakes
+
+### Using "Unpivot Columns" Instead of "Unpivot Other Columns"
+
+As covered above — on any source where new columns can appear over time (a new month, a new year, a new category), this is the difference between a query that stays correct automatically and one that silently drops data.
+
+### Forgetting to Retype the Value Column After Unpivoting
+
+`Table.Unpivot()`'s output value column is typed `Any` by default, since it's now holding whatever mix of types the original wide columns contained. A **Changed Type** step afterward is almost always needed before that column can be used in a measure or comparison.
+
+### Pivoting Without Checking for Duplicate Keys First
+
+If duplicates aren't expected but exist due to a data quality issue upstream, `Table.Pivot()` will still run — silently aggregating them per whatever function was supplied, masking a problem that would have been obvious as an error in a stricter tool.
+
+---
+
+## Next Steps
+
+- [M Language](/docs/power-query/m-language)
+- [Transformations](/docs/power-query/transformations)
+- [M Function Reference](/docs/power-query/functions)
+- [Star Schema](/docs/modeling/star-schema)

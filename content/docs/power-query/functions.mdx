@@ -19,7 +19,7 @@ A quick-scan index of the M functions most commonly used in Power Query, grouped
 | `Table.SelectColumns` | Returns a table with only the specified columns, dropping the rest. |
 | `Table.TransformColumnTypes` | Sets the data type of one or more columns. |
 | `Table.TransformColumns` | Applies a function to every value in a column, transforming it in place. |
-| `Table.AddColumn` | Adds a new column, computed from an expression evaluated per row. |
+| [Table.AddColumn](/docs/power-query/table-addcolumn) | Adds a new column, computed from an expression evaluated per row. |
 | `Table.AddIndexColumn` | Adds a sequential index column — the standard way to generate a surrogate key. |
 | [Table.Group](/docs/power-query/table-group) | Groups rows and computes an aggregation per group, like SQL's `GROUP BY`. |
 | `Table.Sort` | Sorts a table by one or more columns. |
@@ -28,8 +28,8 @@ A quick-scan index of the M functions most commonly used in Power Query, grouped
 | `Table.FirstN` / `Table.Skip` | Returns the first N rows, or skips the first N rows. |
 | `Table.SplitColumn` | Splits one column into multiple columns, by delimiter or position. |
 | `Table.CombineColumns` | Merges multiple columns into one, with a separator. |
-| `Table.Pivot` / `Table.Unpivot` | Turns row values into columns, or columns into rows. |
-| `Table.ReplaceValue` | Replaces specific values throughout a column. |
+| [Table.Pivot / Table.Unpivot](/docs/power-query/table-pivot-unpivot) | Turns row values into columns, or columns into rows. |
+| [Table.ReplaceValue](/docs/power-query/table-replacevalue) | Replaces specific values throughout a column. |
 | [Table.Buffer](/docs/power-query/table-buffer) | Loads a table fully into memory, useful for stabilizing a source before repeated reads. |
 
 See [Transformations](/docs/power-query/transformations) for most of these applied to a real dataset, and [Power Query Editor](/docs/power-query/editor#what-the-applied-steps-pane-produces) for how Applied Steps map directly to these function calls.
@@ -42,8 +42,10 @@ See [Transformations](/docs/power-query/transformations) for most of these appli
 |---|---|
 | [Table.NestedJoin](/docs/power-query/merge-queries) | Joins two tables on matching columns, producing a column of nested tables. |
 | [Table.ExpandTableColumn](/docs/power-query/merge-queries) | Expands a nested-table column (typically from a merge) into regular columns. |
-| `Table.Combine` | Stacks multiple tables with matching columns into one — the function behind **Append Queries**. |
+| [Table.Combine](/docs/power-query/merge-vs-append) | Stacks multiple tables with matching columns into one — the function behind **Append Queries**. |
 | `Table.NestedJoin` (Left Anti) | The same merge function, with a join kind that returns only unmatched rows — see [Merge Queries](/docs/power-query/merge-queries#left-anti-finding-unmatched-rows). |
+
+Not sure whether a given problem calls for a merge or an append? See [Merge vs. Append: When to Use Each](/docs/power-query/merge-vs-append).
 
 ---
 
