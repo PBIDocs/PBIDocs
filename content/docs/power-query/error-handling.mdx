@@ -111,3 +111,5 @@ The column ends up holding a mix of dates and the text `"unknown"` — the colum
 - [M Function Reference](/docs/power-query/functions)
 
 Type conversion failing on a value that looks fine? See [We Couldn't Convert to Number (or Date)](/blog/couldnt-convert-to-number-date-error) for the usual root causes worth fixing before reaching for `try...otherwise` as a blanket catch.
+
+Getting "We cannot convert the value null to type Table" further downstream? See [that error explained](/blog/cannot-convert-null-to-type-table-error) — `try...otherwise` is one way to handle it, but finding where the null actually comes from is the real fix.

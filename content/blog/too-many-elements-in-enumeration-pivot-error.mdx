@@ -1,0 +1,89 @@
+---
+title: "Power Query Error: There Were Too Many Elements in the Enumeration to Complete the Operation"
+description: "This cryptic error almost always comes from Table.Pivot hitting duplicate row/column combinations with no aggregation function to combine them. Here's what it actually means, and the fix."
+date: "2026-08-28"
+tags: ["Power Query", "Troubleshooting"]
+faq:
+  - question: "What does \"There were too many elements in the enumeration to complete the operation\" mean in Power Query?"
+    answer: "It almost always comes from Table.Pivot finding more than one row for the same row/column combination, with no aggregation function supplied to combine them into the single cell that combination has to become."
+  - question: "How do I fix the too many elements error in Table.Pivot?"
+    answer: "Add an aggregation function as the fifth argument to Table.Pivot — for example List.Sum, List.Count, or List.Max — so duplicate combinations are combined instead of causing an error."
+  - question: "Why doesn't Power Query just pick one of the duplicate values automatically?"
+    answer: "Because silently picking an arbitrary value would produce an inconsistent result depending on row order — Power Query requires an explicit aggregation function so the combination is deterministic and intentional."
+---
+
+The full error usually reads:
+
+```text
+Expression.Error: There were too many elements in the enumeration to
+complete the operation.
+```
+
+It's one of the least self-explanatory error messages in Power Query — nothing in the wording mentions pivoting, duplicates, or aggregation, which is exactly why it takes longer to diagnose than it should.
+
+## What's Actually Happening
+
+This error comes from [Table.Pivot()](/docs/power-query/table-pivot-unpivot), almost every time. Pivoting turns long data into wide data — one row/column combination becomes one cell — but that only works cleanly if each combination maps to exactly one value.
+
+```text
+Region | Month | Sales
+West   | Jan   | 100
+West   | Jan   | 50      <- duplicate Region+Month combination
+
+Pivoted, West/Jan cell needs to become ONE value from {100, 50}
+```
+
+Without being told *how* to combine `{100, 50}` into a single cell, `Table.Pivot()` has no way to resolve it — the "too many elements" refers to that duplicate group having more than the one element a single cell can hold.
+
+## The Fix: Add an Aggregation Function
+
+```powerquery lineNumbers
+#"Pivoted" = Table.Pivot(
+    Source, List.Distinct(Source[Month]), "Month", "Sales"
+)
+```
+
+This version, missing the fifth argument, is exactly what throws the error the moment duplicates exist. Adding an aggregation function tells Power Query how to combine them:
+
+```powerquery lineNumbers
+#"Pivoted" = Table.Pivot(
+    Source, List.Distinct(Source[Month]), "Month", "Sales", List.Sum
+)
+```
+
+```text
+West/Jan cell = List.Sum({100, 50}) = 150
+```
+
+`List.Sum` is the most common choice, but `List.Max`, `List.Min`, `List.Count`, or `List.Average` are all valid depending on what the duplicate rows actually represent.
+
+## Why This Often Happens Unexpectedly
+
+The error frequently shows up on a query that worked fine for weeks, because the source data didn't *used* to have duplicate combinations — a new data entry process, a system change, or simply more data accumulating over time can introduce the first duplicate that finally triggers it. The query wasn't broken by anything in Power Query; the assumption that each combination was unique stopped being true upstream.
+
+## Checking Whether Duplicates Are Actually Expected
+
+Before just adding `List.Sum` and moving on, it's worth confirming whether duplicates *should* exist:
+
+```powerquery lineNumbers
+#"Grouped" = Table.Group(
+    Source, {"Region", "Month"}, {{"Count", each Table.RowCount(_), Int64.Type}}
+),
+#"Duplicates" = Table.SelectRows(#"Grouped", each [Count] > 1)
+```
+
+If duplicates are a genuine data quality problem (the same sale recorded twice by mistake), the real fix is upstream — deduplicating before the pivot, not just summing over an error that shouldn't have existed. If duplicates are expected (multiple transactions in the same region/month, correctly meant to be summed), then supplying the aggregation function is the actual, correct fix.
+
+## Common Mistakes
+
+**Adding List.Sum reflexively without checking why duplicates exist.** Summing silently combines legitimate duplicates and genuine data-quality duplicates identically — worth the one extra check above before assuming the aggregation function alone is the whole fix.
+
+**Assuming this only happens with numeric values.** The value column doesn't have to be numeric for this error to occur — pivoting a text or date column with duplicate combinations produces the same error; the aggregation function just needs to be one that makes sense for that type (`List.Max`, `List.First`, or similar rather than `List.Sum`).
+
+**Not noticing the query has grown a new duplicate over time.** A previously-safe pivot without an aggregation function can start failing the moment the source data changes in an unrelated way — worth treating a sudden appearance of this error as a signal to check upstream data, not just a patch to silence.
+
+## Next Steps
+
+- [Table.Pivot() & Table.Unpivot()](/docs/power-query/table-pivot-unpivot)
+- [Table.Group()](/docs/power-query/table-group)
+- [M Function Reference](/docs/power-query/functions)
