@@ -164,6 +164,9 @@ export function AskAi({ pageTitle }: { pageTitle: string }) {
                       {q}
                     </button>
                   ))}
+                  <div className="mt-2">
+                    <UpgradeBanner />
+                  </div>
                 </div>
               )}
 

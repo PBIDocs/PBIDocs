@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { DaxFormulaBuilder } from '@/components/tools/dax-formula-builder';
+import { UpgradeBanner } from '@/components/upgrade-banner';
 
 export const metadata: Metadata = {
   title: 'DAX Formula Builder',
@@ -23,10 +24,13 @@ export default function DaxFormulaBuilderPage() {
       <DaxFormulaBuilder />
 
       <div className="mt-14 space-y-3 border-t border-fd-border pt-8 text-sm text-fd-muted-foreground">
-        <p>
-          Free to use, up to 5 requests per day. Generated formulas are a starting point — always
-          verify them against your own model, since column and table names have to match exactly.
-        </p>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <p>
+            Free to use, up to 5 requests per day. Generated formulas are a starting point — always
+            verify them against your own model, since column and table names have to match exactly.
+          </p>
+          <UpgradeBanner />
+        </div>
         <p>
           Want to understand the DAX behind the results instead of just generating it? Start with{' '}
           <Link href="/docs/dax/measures" className="text-fd-primary hover:underline">
