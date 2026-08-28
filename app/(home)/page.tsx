@@ -183,7 +183,8 @@ export default function HomePage() {
               <h2 className="mb-3 text-3xl font-bold tracking-tight">Describe it. Get the DAX.</h2>
               <p className="mb-6 text-fd-muted-foreground">
                 Type a calculation in plain English and get back a real DAX measure — or a Power
-                Query M step — with a full explanation. Free, no signup required.
+                Query M step — with a full explanation. Free, no signup required — 5 a day, or go
+                Pro for more.
               </p>
               <Link
                 href="/tools/dax-formula-builder"
