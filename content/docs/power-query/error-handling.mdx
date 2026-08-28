@@ -1,0 +1,113 @@
+---
+title: "Error Handling in Power Query (try ... otherwise)"
+description: Learn how try...otherwise catches an error from an expression, when to catch it versus fix the root cause, and how to inspect an error's details with [HasError] and Error.Record.
+---
+
+# Error Handling in Power Query (try ... otherwise)
+
+`try ... otherwise` catches an error from a single expression and substitutes a fallback value instead of letting it fail the entire step — and by extension, the entire refresh.
+
+```powerquery lineNumbers
+try expression otherwise fallbackValue
+```
+
+There's no ribbon button for this — it's one of the things that only exists as a direct edit in the Advanced Editor or formula bar. See [Power Query Editor](/docs/power-query/editor#adding-error-handling-the-ui-doesnt-expose) for the UI context this fits into.
+
+---
+
+## Basic Example
+
+```powerquery lineNumbers
+#"Changed Type" = Table.TransformColumns(
+    Source,
+    {{"OrderDate", each try Date.From(_) otherwise null, type date}}
+)
+```
+
+```text
+"2026-01-15"   -> #date(2026,1,15)
+"not a date"   -> null      <- caught, refresh continues
+```
+
+Without `try...otherwise`, a single malformed value in `OrderDate` fails the whole `Table.TransformColumns()` step, and the entire query — every row, not just the bad one — errors out.
+
+---
+
+## try Without otherwise
+
+```powerquery lineNumbers
+try Date.From([OrderDate])
+```
+
+Used alone, `try` doesn't suppress the error — it converts it into a **record** describing the error, rather than letting it propagate and fail the step. This is mainly useful for inspecting what actually went wrong, not for normal use in a transformation.
+
+```text
+try Date.From("not a date")
+->
+[
+    HasError = true,
+    Error = [
+        Reason = "Expression.Error",
+        Message = "Couldn't convert to Date.",
+        ...
+    ]
+]
+```
+
+---
+
+## Checking [HasError] Explicitly
+
+```powerquery lineNumbers
+#"Added Custom" = Table.AddColumn(
+    Source, "ParsedDate", each try Date.From([OrderDate])
+),
+#"Added Flag" = Table.AddColumn(
+    #"Added Custom", "IsValid", each not [ParsedDate][HasError]
+)
+```
+
+This pattern — keeping the full `try` record instead of collapsing it with `otherwise` — is useful when the query needs to *know* which rows failed, not just silently default them. A common follow-up is filtering to just the failed rows to review them, rather than losing that information the moment `otherwise` replaces it.
+
+```powerquery lineNumbers
+#"Failed Rows" = Table.SelectRows(#"Added Custom", each [ParsedDate][HasError])
+```
+
+---
+
+## Common Mistakes
+
+### Using try...otherwise to Hide a Problem Instead of Fixing It
+
+```powerquery lineNumbers
+each try [Amount] / [Quantity] otherwise 0
+```
+
+This silently turns every divide-by-zero into `0`, which may or may not be the right business answer — a `0` sales-per-unit figure looks like a real, low number in a chart, not like "this row had no quantity recorded." If the fallback value itself needs to communicate "something was wrong here," a text flag or a separate boolean column communicates that more honestly than a plausible-looking number.
+
+### Wrapping an Entire Step Instead of Just the Risky Expression
+
+```powerquery lineNumbers
+try Table.TransformColumnTypes(Source, {{"OrderDate", type date}}) otherwise Source
+```
+
+This catches an error from **any** row failing, and on failure discards the *entire* type conversion for *every* row, falling back to the untouched source table. The narrower, per-value form — wrapping just the conversion inside `Table.TransformColumns` with an `each` — keeps every row that succeeds and only defaults the ones that actually fail.
+
+### Forgetting That otherwise's Value Needs to Match the Expected Type
+
+```powerquery lineNumbers
+each try Date.From([OrderDate]) otherwise "unknown"
+```
+
+The column ends up holding a mix of dates and the text `"unknown"` — the column's type can't be a clean `date` anymore, and anything downstream expecting a date (a date table relationship, a time-intelligence measure) breaks against those rows. `null` is almost always the more correct fallback for a typed column, keeping the column's type consistent even where a value is missing.
+
+---
+
+## Next Steps
+
+- [M Language](/docs/power-query/m-language)
+- [Power Query Editor](/docs/power-query/editor)
+- [Table.SelectRows()](/docs/power-query/table-selectrows)
+- [M Function Reference](/docs/power-query/functions)
+
+Type conversion failing on a value that looks fine? See [We Couldn't Convert to Number (or Date)](/blog/couldnt-convert-to-number-date-error) for the usual root causes worth fixing before reaching for `try...otherwise` as a blanket catch.

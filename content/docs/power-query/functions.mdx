@@ -13,12 +13,12 @@ A quick-scan index of the M functions most commonly used in Power Query, grouped
 
 | Function | Description |
 |---|---|
-| `Table.SelectRows` | Filters a table to rows matching a condition. |
+| [Table.SelectRows](/docs/power-query/table-selectrows) | Filters a table to rows matching a condition. |
 | `Table.RemoveColumns` | Drops specified columns from a table. |
 | `Table.RenameColumns` | Renames one or more columns. |
 | `Table.SelectColumns` | Returns a table with only the specified columns, dropping the rest. |
 | `Table.TransformColumnTypes` | Sets the data type of one or more columns. |
-| `Table.TransformColumns` | Applies a function to every value in a column, transforming it in place. |
+| [Table.TransformColumns](/docs/power-query/table-transformcolumns) | Applies a function to every value in a column, transforming it in place. |
 | [Table.AddColumn](/docs/power-query/table-addcolumn) | Adds a new column, computed from an expression evaluated per row. |
 | `Table.AddIndexColumn` | Adds a sequential index column — the standard way to generate a surrogate key. |
 | [Table.Group](/docs/power-query/table-group) | Groups rows and computes an aggregation per group, like SQL's `GROUP BY`. |
@@ -83,9 +83,9 @@ Not sure whether a given problem calls for a merge or an append? See [Merge vs. 
 |---|---|
 | `Date.From` | Converts a value to a date. |
 | `DateTime.LocalNow` | Returns the current local date and time. |
-| `Date.Year` / `Date.Month` / `Date.Day` | Extracts the year, month, or day from a date. |
-| `Date.AddDays` / `Date.AddMonths` / `Date.AddYears` | Shifts a date by a given number of days, months, or years. |
-| `Duration.Days` / `Duration.TotalHours` | Extracts a component from a duration value (the result of subtracting two dates/datetimes). |
+| [Date.Year / Date.Month / Date.Day](/docs/power-query/date-functions) | Extracts the year, month, or day from a date. |
+| [Date.AddDays / Date.AddMonths / Date.AddYears](/docs/power-query/date-functions#adding-and-subtracting-time) | Shifts a date by a given number of days, months, or years. |
+| [Duration.Days / Duration.TotalHours](/docs/power-query/date-functions#subtracting-two-dates-produces-a-duration-not-a-number) | Extracts a component from a duration value (the result of subtracting two dates/datetimes). |
 
 ---
 
@@ -113,7 +113,7 @@ Not sure whether a given problem calls for a merge or an append? See [Merge vs. 
 
 | Function | Description |
 |---|---|
-| [try ... otherwise](/docs/power-query/editor#adding-error-handling-the-ui-doesnt-expose) | Catches an error from an expression, substituting a fallback value instead of failing the step. |
+| [try ... otherwise](/docs/power-query/error-handling) | Catches an error from an expression, substituting a fallback value instead of failing the step. |
 | `error` | Explicitly raises a custom error from within an expression. |
 
 ---
