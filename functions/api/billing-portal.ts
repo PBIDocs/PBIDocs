@@ -4,6 +4,7 @@ import { getSubscriberCookieValue, verifySubscriberCookie } from '../_lib/cookie
 interface Env {
   STRIPE_SECRET_KEY: string;
   COOKIE_SIGNING_SECRET: string;
+  STRIPE_PORTAL_CONFIGURATION_ID?: string;
 }
 
 interface RequestContext {
@@ -33,6 +34,7 @@ export async function onRequestPost({ request, env }: RequestContext): Promise<R
     const portalSession = await stripe.billingPortal.sessions.create({
       customer: payload.cid,
       return_url: `${origin}/tools/dax-formula-builder`,
+      ...(env.STRIPE_PORTAL_CONFIGURATION_ID ? { configuration: env.STRIPE_PORTAL_CONFIGURATION_ID } : {}),
     });
     return json({ url: portalSession.url }, 200);
   } catch {
