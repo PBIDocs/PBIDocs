@@ -1,0 +1,129 @@
+---
+title: "Working with Dates in Power Query (Date & Duration Functions)"
+description: Learn the core Date.* and Duration.* functions in Power Query M — adding/subtracting time, extracting components, and the Duration vs. DateTime distinction that trips people up.
+---
+
+# Working with Dates in Power Query (Date & Duration Functions)
+
+Power Query has two related but distinct type families for time-based work: **Date/DateTime** values (a specific point in time) and **Duration** values (a span of time, the result of subtracting two dates). Most confusion around date arithmetic in M comes from mixing the two up.
+
+```text
+#date(2026, 1, 15)              <- a Date: a specific day
+#datetime(2026, 1, 15, 9, 0, 0)  <- a DateTime: a specific instant
+#duration(2, 0, 0, 0)            <- a Duration: a 2-day span, not a date
+```
+
+---
+
+## Extracting Components
+
+```powerquery lineNumbers
+Date.Year([OrderDate])
+Date.Month([OrderDate])
+Date.Day([OrderDate])
+Date.DayOfWeek([OrderDate])
+```
+
+```text
+OrderDate: 2026-03-14
+Date.Year  -> 2026
+Date.Month -> 3
+Date.Day   -> 14
+```
+
+These are the functions behind most date-table calculated columns built directly in Power Query rather than DAX — see [Date Tables](/docs/modeling/date-tables) for where that pattern fits into a model.
+
+---
+
+## Adding and Subtracting Time
+
+```powerquery lineNumbers
+Date.AddDays([OrderDate], 30)
+Date.AddMonths([OrderDate], 1)
+Date.AddYears([OrderDate], -1)
+```
+
+```text
+2026-01-15 + Date.AddDays(_, 30)   -> 2026-02-14
+2026-01-31 + Date.AddMonths(_, 1)  -> 2026-02-28   <- see month-end note below
+```
+
+---
+
+## The Month-End Edge Case
+
+`Date.AddMonths()` doesn't produce an invalid date when the starting day doesn't exist in the target month — it clamps to the last valid day instead.
+
+```text
+Date.AddMonths(#date(2026,1,31), 1)  -> #date(2026,2,28)   (Feb has no 31st)
+Date.AddMonths(#date(2026,1,31), 2)  -> #date(2026,3,31)   (back to a 31-day month)
+```
+
+This is usually the desired behavior, but worth knowing explicitly: a report period defined as "one month after the 31st" doesn't consistently land on the same day-of-month every time, which can look like a bug in a rolling-window calculation until this behavior is understood.
+
+---
+
+## Subtracting Two Dates Produces a Duration, Not a Number
+
+```powerquery lineNumbers
+#"Added Custom" = Table.AddColumn(
+    Source, "DaysOpen", each [CloseDate] - [OpenDate]
+)
+```
+
+```text
+CloseDate - OpenDate  ->  5.00:00:00   (a Duration, displayed as days.hours:minutes:seconds)
+```
+
+The result isn't a plain number of days — it's a `duration` value. Using it directly in a numeric comparison or a chart usually needs an explicit extraction:
+
+```powerquery lineNumbers
+#"Added Custom" = Table.AddColumn(
+    Source, "DaysOpen", each Duration.Days([CloseDate] - [OpenDate])
+)
+```
+
+```text
+Duration.Days      — whole days component
+Duration.Hours      — whole hours component (0-23, not total)
+Duration.TotalHours — total span expressed as hours (a decimal, not just whole)
+```
+
+`Duration.Hours` and `Duration.TotalHours` are easy to swap by mistake: `Duration.Hours` on a 2-day, 3-hour span returns `3` (just the hours component), while `Duration.TotalHours` returns `51` (the whole span in hours). The `Total*` variants are almost always the ones wanted for a single combined numeric measure.
+
+---
+
+## Common Mistakes
+
+### Treating a Duration as if It Were a Number of Days
+
+```powerquery lineNumbers
+each [CloseDate] - [OpenDate] > 5
+```
+
+Comparing a `duration` value directly against a plain number like `5` doesn't produce the comparison intended — the duration needs to be converted first (`Duration.Days(...)` or `Duration.TotalDays(...)`) before comparing against a plain number.
+
+### Using Duration.Hours Instead of Duration.TotalHours
+
+As covered above — `Duration.Hours` returns only the hours *component* of a multi-day span (0-23), not the total. A dashboard reporting suspiciously small "hours" values for what should be multi-day spans is usually this exact mix-up.
+
+### Assuming Date.AddMonths Always Lands on the Same Day-of-Month
+
+The month-end clamping behavior above means a rolling "same day next month" calculation can silently shift once it crosses a 31-day-to-shorter-month boundary — worth an explicit test against a 31st-of-the-month starting value if the calculation depends on landing on a consistent day.
+
+### Mixing Date and DateTime Types in a Comparison
+
+```powerquery lineNumbers
+each [OrderDate] = #date(2026, 1, 15)
+```
+
+If `[OrderDate]` is actually typed as `datetime` (carrying a time component, even if displayed as midnight), comparing it against a plain `#date(...)` value can fail to match rows where the time component is anything other than exactly midnight. `DateTime.Date([OrderDate]) = #date(2026, 1, 15)` strips the time component explicitly before comparing.
+
+---
+
+## Next Steps
+
+- [M Language](/docs/power-query/m-language)
+- [Date Tables](/docs/modeling/date-tables)
+- [Table.TransformColumns()](/docs/power-query/table-transformcolumns)
+- [M Function Reference](/docs/power-query/functions)

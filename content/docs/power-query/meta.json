@@ -7,7 +7,9 @@
     "editor",
     "m-language",
     "transformations",
+    "table-selectrows",
     "table-addcolumn",
+    "table-transformcolumns",
     "merge-queries",
     "merge-vs-append",
     "table-group",
@@ -16,6 +18,8 @@
     "table-buffer",
     "query-folding",
     "list-generate",
-    "web-contents"
+    "web-contents",
+    "error-handling",
+    "date-functions"
   ]
 }

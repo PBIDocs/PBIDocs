@@ -181,6 +181,8 @@ in
 
 Now a bad date becomes `null` instead of an error, and the refresh completes with the rest of the data intact. There's no equivalent checkbox for this in the ribbon — it only exists as a direct edit to the M.
 
+See [Error Handling in Power Query](/docs/power-query/error-handling) for the full pattern — including `try` without `otherwise`, checking `[HasError]`, and when catching the error is the wrong fix.
+
 ### What a UI-Built Merge Actually Generates
 
 [Merge Queries](/docs/power-query/merge-queries) walks through doing this from the ribbon. Opening Advanced Editor afterward shows what that UI step actually produced:

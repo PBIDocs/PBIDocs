@@ -1,0 +1,104 @@
+---
+title: "Table.SelectRows()"
+description: Learn how Table.SelectRows filters a table with a per-row condition, how to combine multiple conditions, and the case-sensitivity and null-comparison mistakes that trip people up.
+---
+
+# Table.SelectRows()
+
+`Table.SelectRows()` filters a table down to the rows matching a condition — the function behind every filter arrow in the Power Query Editor.
+
+```powerquery lineNumbers
+Table.SelectRows(
+    table as table,
+    condition as function
+) as table
+```
+
+---
+
+## Basic Example
+
+```powerquery lineNumbers
+#"Filtered Rows" = Table.SelectRows(
+    Source, each [Status] = "Active"
+)
+```
+
+```text
+Status              Status
+Active     ->       Active     <- kept
+Inactive            Active     <- kept
+Active
+```
+
+`each [Status] = "Active"` runs once per row, keeping only the rows where it evaluates to `true`.
+
+---
+
+## Combining Multiple Conditions
+
+```powerquery lineNumbers
+#"Filtered Rows" = Table.SelectRows(
+    Source, each [Status] = "Active" and [Amount] > 100
+)
+```
+
+`and` requires both conditions true; `or` requires at least one. Parentheses control evaluation order exactly like any other logical expression:
+
+```powerquery lineNumbers
+#"Filtered Rows" = Table.SelectRows(
+    Source,
+    each [Status] = "Active" and ([Region] = "West" or [Region] = "East")
+)
+```
+
+Without the parentheses, `and` binds tighter than a bare sequence of `or`s might suggest — being explicit with parentheses once a condition has more than two parts avoids relying on precedence rules that aren't always obvious at a glance.
+
+---
+
+## Common Mistakes
+
+### Assuming Text Comparison Is Case-Insensitive
+
+```powerquery lineNumbers
+each [Status] = "active"
+```
+
+M's `=` comparison on text is case-sensitive — `"Active"` and `"active"` are not equal. A source with inconsistent casing silently drops rows that look like they should match.
+
+**Fix:** normalize case explicitly when it can't be trusted.
+
+```powerquery lineNumbers
+each Text.Lower([Status]) = "active"
+```
+
+### Confusing null With an Empty String
+
+```powerquery lineNumbers
+each [Notes] = null
+```
+
+Unlike SQL, M's `=` comparison works intuitively against `null` — this correctly returns `true` for a genuinely blank cell. The real mistake is assuming every blank-looking cell *is* `null`: a source like a CSV export can produce an empty string `""` instead of a true null for what looks identical in the preview grid. `[Notes] = null` won't match a cell that's actually `""`, and vice versa.
+
+**Fix:** check which one is actually present — click a blank-looking cell's value, or add a quick `Table.AddColumn(Source, "Check", each Value.Is([Notes], type null))` — before assuming which comparison applies.
+
+### Filtering After an Expensive Step Instead of Before
+
+```text
+Source -> Added Custom (slow, row-by-row) -> Filtered Rows
+```
+
+Placing `Table.SelectRows()` after a slow custom column means the expensive computation runs for rows that get filtered out immediately afterward. Filtering as early as possible — ideally as the very next step after `Source` — reduces the row count before any later step has to process it, and keeps the query eligible for [query folding](/docs/power-query/query-folding) if the filter itself can fold.
+
+### Referencing a Column Before It's Renamed or Created
+
+A filter step referencing `[Status]` fails if it's placed *before* the step that creates or renames that column — M evaluates the table shape as of the step immediately before the filter, not the query's eventual final shape.
+
+---
+
+## Next Steps
+
+- [M Language](/docs/power-query/m-language)
+- [Transformations](/docs/power-query/transformations)
+- [Query Folding](/docs/power-query/query-folding)
+- [M Function Reference](/docs/power-query/functions)

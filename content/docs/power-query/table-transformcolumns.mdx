@@ -1,0 +1,121 @@
+---
+title: "Table.TransformColumns()"
+description: Learn how Table.TransformColumns applies a function to every value in a column in place, how to transform multiple columns at once, and why it differs from Table.AddColumn.
+---
+
+# Table.TransformColumns()
+
+`Table.TransformColumns()` applies a function to every value in one or more existing columns, replacing each value in place — the workhorse function behind most data-cleaning steps: trimming text, changing case, rounding numbers.
+
+```powerquery lineNumbers
+Table.TransformColumns(
+    table as table,
+    transformOperations as list,
+    defaultTransformation as nullable function,
+    missingField as nullable number
+) as table
+```
+
+---
+
+## Basic Example
+
+```powerquery lineNumbers
+#"Transformed Column" = Table.TransformColumns(
+    Source, {{"Name", Text.Trim}}
+)
+```
+
+```text
+Name              Name
+"  Alice  "  ->   "Alice"
+" Bob"       ->   "Bob"
+```
+
+The second argument is a list of `{"ColumnName", function}` pairs — `Text.Trim` here is passed as a function reference (no parentheses), since `Table.TransformColumns` calls it once per value itself.
+
+---
+
+## Transforming Multiple Columns at Once
+
+```powerquery lineNumbers
+#"Transformed Columns" = Table.TransformColumns(
+    Source,
+    {
+        {"Name", Text.Trim},
+        {"Email", Text.Lower},
+        {"Amount", each Number.Round(_, 2)}
+    }
+)
+```
+
+Each column in the list gets its own transformation, applied independently — `Amount` uses an `each _` expression here specifically because `Number.Round` needs a second argument (decimal places), which a bare function reference can't supply.
+
+---
+
+## Bare Function Reference vs. each _
+
+```text
+{"Name", Text.Trim}                    <- bare reference: Text.Trim takes exactly one argument
+{"Amount", each Number.Round(_, 2)}    <- each _: needed when extra arguments are required
+```
+
+A function that takes exactly one argument (the value being transformed) can be passed directly by name. Anything needing additional fixed arguments needs the `each _` form, where `_` stands for the current value.
+
+---
+
+## Table.TransformColumns vs. Table.AddColumn
+
+Both run a function per row/value, but for different purposes — covered in more depth in [Table.AddColumn()](/docs/power-query/table-addcolumn#tableaddcolumn-vs-tabletransformcolumns):
+
+```text
+Table.TransformColumns  — replaces an EXISTING column's values, sees only that one value
+Table.AddColumn         — creates a NEW column, sees the whole row via [ColumnName]
+```
+
+Trying to combine two columns into a new one with `Table.TransformColumns` doesn't work — the function it calls only ever receives the single value from the column being transformed, never the rest of the row.
+
+---
+
+## Common Mistakes
+
+### Calling the Function Instead of Referencing It
+
+```powerquery lineNumbers
+{"Name", Text.Trim()}
+```
+
+This is a syntax error — `Text.Trim()` calls the function immediately with no arguments, rather than passing the function itself for `Table.TransformColumns` to call later, once per value. The bare name `Text.Trim` (no parentheses) is what's needed.
+
+### Using the Wrong Column Name
+
+```powerquery lineNumbers
+Table.TransformColumns(Source, {{"name", Text.Trim}})
+```
+
+Column names are case-sensitive — `"name"` and `"Name"` are different references. This produces a "column not found" error naming the exact (wrong) string used.
+
+### Expecting It to Change the Column's Type Automatically
+
+```powerquery lineNumbers
+{"Amount", Number.From}
+```
+
+Converting text to a number doesn't automatically make Power Query treat the column's declared type as numeric afterward — a **Changed Type** step (or the optional fourth argument in some cases) is usually still needed, since `Table.TransformColumns` transforms values, not the column's type metadata.
+
+### Passing a Function That Doesn't Handle Every Existing Value
+
+```powerquery lineNumbers
+{"Amount", each Number.Round(_, 2)}
+```
+
+If any value in `Amount` is currently `null` or text instead of a number, `Number.Round` errors on that row. Combining with [try...otherwise](/docs/power-query/error-handling) handles this without failing the whole step: `each try Number.Round(_, 2) otherwise null`.
+
+---
+
+## Next Steps
+
+- [M Language](/docs/power-query/m-language)
+- [Table.AddColumn()](/docs/power-query/table-addcolumn)
+- [Transformations](/docs/power-query/transformations)
+- [M Function Reference](/docs/power-query/functions)
