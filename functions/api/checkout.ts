@@ -47,7 +47,11 @@ export async function onRequestPost({ request, env }: RequestContext): Promise<R
     }
 
     return json({ url: session.url }, 200);
-  } catch {
-    return json({ error: 'Something went wrong. Please try again.' }, 500);
+  } catch (err) {
+    // TEMP-DEBUG: remove `debug` field once the live checkout failure is diagnosed.
+    return json(
+      { error: 'Something went wrong. Please try again.', debug: err instanceof Error ? err.message : String(err) },
+      500,
+    );
   }
 }
