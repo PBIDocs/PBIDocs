@@ -27,6 +27,9 @@
     "list-transform",
     "list-accumulate",
     "web-contents",
+    "sql-database",
+    "excel-workbook",
+    "json-document",
     "error-handling",
     "date-functions"
   ]

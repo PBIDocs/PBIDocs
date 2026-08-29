@@ -1,0 +1,108 @@
+---
+title: "Sql.Database()"
+description: Learn how Sql.Database connects to SQL Server, why pasting a native SQL query breaks query folding, the auth issues that only surface once a report moves to a gateway, and Import vs. DirectQuery for SQL sources.
+---
+
+# Sql.Database()
+
+`Sql.Database()` connects to a SQL Server database — the function behind **Get Data > SQL Server**, and one of the most common enterprise data sources in Power BI.
+
+```powerquery lineNumbers
+Sql.Database(
+    server as text,
+    database as text,
+    optional options as nullable record
+) as table
+```
+
+---
+
+## Basic Example
+
+```powerquery lineNumbers
+Source = Sql.Database("sqlserver01", "SalesDB")
+```
+
+This returns a **navigation table** — every table and view in the database, browsable in the Editor's preview pane before picking which one to actually load.
+
+---
+
+## Named Instances and Non-Default Ports
+
+```powerquery lineNumbers
+Sql.Database("sqlserver01\SALESDB01", "SalesDB")
+```
+
+A named instance uses the backslash form (`server\instance`), not a colon — mixing this up with the port-number syntax used elsewhere (`server:1433`) is a common typo, especially copying a connection string from a tool that formats it differently.
+
+```powerquery lineNumbers
+Sql.Database("sqlserver01,1433", "SalesDB")
+```
+
+A non-default port uses a comma, not a colon — `server:1433` is not valid syntax here and produces a connection error rather than a clear "wrong syntax" message.
+
+---
+
+## Native SQL Query Breaks Folding by Design
+
+```powerquery lineNumbers
+Source = Sql.Database(
+    "sqlserver01", "SalesDB",
+    [Query = "SELECT CustomerID, SUM(Amount) AS Total FROM Sales GROUP BY CustomerID"]
+)
+```
+
+Passing a hand-written `Query` through the **Advanced Options** dialog runs exactly that SQL — but it also becomes the entire query as far as [query folding](/docs/power-query/query-folding) is concerned. Every M step added *after* this point runs locally against the query's result set, since Power Query has no way to fold additional M transformations back into a SQL string it didn't generate itself.
+
+```text
+Sql.Database with native query
+        |
+        | any Table.SelectRows / Table.Group added after this
+        |
+runs locally, does NOT get pushed back into SQL Server
+```
+
+This is the opposite tradeoff of connecting through the standard navigator and building up M steps normally — that path keeps folding all the way through, as long as each individual step is foldable. A native query is the right call when the SQL itself needs to do something M's folding can't express (a specific execution hint, a stored procedure call) — not a shortcut to avoid learning the M side.
+
+---
+
+## Import vs. DirectQuery for SQL Sources
+
+| | Import | DirectQuery |
+|---|---|---|
+| Data freshness | As of last scheduled refresh | Live, every query hits the database |
+| Performance | Fast in-report (data is local) | Depends entirely on source query speed |
+| Row count | Practical limit in the millions, not billions | Effectively unlimited — source does the work |
+| Refresh load | One heavy pull per scheduled refresh | Continuous, per-visual query load on the source |
+
+A reasonable rule of thumb: Import unless there's a specific reason not to — near-real-time freshness requirements, a source too large to reasonably import, or a compliance reason data can't leave the source system. DirectQuery trades import's simplicity and report-time speed for freshness, and shifts performance risk onto the source database being queried repeatedly, often by many concurrent report viewers.
+
+---
+
+## Common Mistakes
+
+### Confusing Named Instance and Port Syntax
+
+As covered above — `server\instance` (backslash) for a named instance, `server,port` (comma) for a non-default port on the default instance. These aren't interchangeable, and using the wrong separator produces a connection failure that doesn't clearly say which syntax was expected.
+
+### A Report That Works From Desktop but Fails Through the Gateway
+
+The most common real-world SQL Server headache: a query connects fine from Power BI Desktop (using the developer's own Windows credentials, or cached SQL Auth credentials) but fails once scheduled refresh runs through an on-premises gateway. See [Gateway & Refresh Architecture](/docs/governance/gateway-refresh) and [OLE DB or ODBC Error](/blog/ole-db-odbc-connection-error) — the gateway machine needs its own configured credentials against that SQL Server, entirely separate from whatever Desktop is using interactively, and a mismatch here is the single most common cause of "it worked yesterday" refresh failures on a SQL source.
+
+### Pasting a Native Query "Just to Be Safe"
+
+Reaching for a hand-written `Query` option out of habit, even for a simple table pull that the standard navigator would handle just as well, gives up folding for every subsequent step with nothing gained in return. Reserve it for cases the navigator genuinely can't express.
+
+### Choosing DirectQuery by Default for "Big" Tables
+
+A table with tens of millions of rows is often still a better fit for Import (with appropriate filtering, aggregation, or incremental refresh) than DirectQuery, which shifts *every single visual's query* onto the source database, potentially concurrently across many report viewers. DirectQuery is a deliberate architectural choice for freshness or scale reasons, not a default fallback for "the table felt too big."
+
+---
+
+## Next Steps
+
+- [Query Folding](/docs/power-query/query-folding)
+- [Gateway & Refresh Architecture](/docs/governance/gateway-refresh)
+- [Storage Modes](/docs/modeling/storage-modes)
+
+Refresh failing with an "OLE DB or ODBC error"? See [OLE DB or ODBC Error](/blog/ole-db-odbc-connection-error) for the four usual causes, including the gateway credential mismatch above.

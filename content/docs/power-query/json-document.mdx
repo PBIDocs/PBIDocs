@@ -1,0 +1,119 @@
+---
+title: "Json.Document()"
+description: Learn how Json.Document parses JSON into M records and lists, how to turn a JSON array into a proper table, and why an API response with inconsistent fields across records causes silent, not obvious, problems.
+---
+
+# Json.Document()
+
+`Json.Document()` parses raw JSON content into M's native record and list structures — almost always paired with [Web.Contents()](/docs/power-query/web-contents) to turn an API response into something Power Query can transform.
+
+```powerquery lineNumbers
+Json.Document(
+    jsonText as any,
+    optional encoding as nullable number
+) as any
+```
+
+---
+
+## Basic Example
+
+```powerquery lineNumbers
+Source = Json.Document(Web.Contents("https://api.example.com/products"))
+```
+
+```text
+JSON: [{"id": 1, "name": "Widget"}, {"id": 2, "name": "Gadget"}]
+        |
+        | Json.Document
+        |
+M: {[id=1, name="Widget"], [id=2, name="Gadget"]}   <- a list of records
+```
+
+A JSON array becomes an M `list`; a JSON object becomes an M `record`. Which one comes back from `Json.Document()` depends entirely on whether the response's top level is `[...]` or `{...}`.
+
+---
+
+## Turning a List of Records Into a Table
+
+```powerquery lineNumbers
+#"Converted to Table" = Table.FromRecords(Source)
+```
+
+```text
+{[id=1, name="Widget"], [id=2, name="Gadget"]}
+        |
+        | Table.FromRecords
+        |
+id | name
+1  | Widget
+2  | Gadget
+```
+
+`Table.FromRecords()` is the standard next step after `Json.Document()` returns a list of records — it's the function that actually produces the tabular shape Power Query's other transformations expect.
+
+---
+
+## When the Real Data Is Nested Inside a Wrapper Object
+
+```text
+{"status": "ok", "results": [{"id": 1, "name": "Widget"}, ...]}
+```
+
+Many APIs wrap the actual array inside a top-level object alongside metadata — the response's top level here is a `record`, not the list directly.
+
+```powerquery lineNumbers
+Source = Json.Document(Web.Contents("https://api.example.com/products")),
+Results = Source[results],
+#"Converted to Table" = Table.FromRecords(Results)
+```
+
+`Source[results]` pulls the nested list out of the wrapper record by field name before converting it to a table — skipping this step and calling `Table.FromRecords()` directly on `Source` fails, since `Source` itself is a record, not the list `Table.FromRecords()` expects.
+
+---
+
+## Inconsistent Fields Across Records
+
+JSON doesn't require every object in an array to have the same fields — a real API response often has some records missing a field that others include (an optional field, a null omitted entirely rather than sent as `null`).
+
+```text
+{"id": 1, "name": "Widget", "color": "blue"}
+{"id": 2, "name": "Gadget"}                    <- no "color" field at all
+```
+
+`Table.FromRecords()` handles this without erroring — missing fields become `null` in the resulting column — but a stricter fixed-column-list call (`Table.FromRecords(Source, {"id", "name", "color"})`) is worth using explicitly when the exact expected shape matters, rather than letting the table's columns be whatever happened to appear across all records.
+
+---
+
+## Common Mistakes
+
+### Calling Table.FromRecords on the Wrong Level
+
+As covered above — the most common error here is a type mismatch from calling `Table.FromRecords()` on a wrapper record instead of the nested list it actually contains. The fix is always the same: navigate to the actual array field first (`Source[fieldName]`), then convert.
+
+### Assuming Every Record Has the Same Schema
+
+An API that's evolved over time, or that omits null/empty fields entirely rather than sending them explicitly, produces inconsistent records — `Table.FromRecords()` without an explicit column list can end up with a different column set than expected if the sample used while building the query happened to have every field present.
+
+### Not Handling a JSON Response That's Sometimes an Error Object Instead
+
+```text
+Success: [{"id": 1, "name": "Widget"}]
+Failure: {"error": "Rate limit exceeded"}
+```
+
+An API that returns a genuinely different top-level shape on error (an object instead of an array) breaks `Table.FromRecords()` if the query doesn't account for it — see [Error Handling in Power Query](/docs/power-query/error-handling) for wrapping this case explicitly rather than letting the whole refresh fail on a transient rate limit or error response.
+
+### Forgetting the Encoding Argument for Non-UTF8 Sources
+
+The optional second argument to `Json.Document()` specifies text encoding — almost always unnecessary for a standard API returning UTF-8 JSON, but worth knowing about if a source returns garbled text for non-ASCII characters (accented names, non-English content).
+
+---
+
+## Next Steps
+
+- [Web.Contents()](/docs/power-query/web-contents)
+- [Error Handling in Power Query](/docs/power-query/error-handling)
+- [Table.TransformColumnTypes()](/docs/power-query/table-transformcolumntypes)
+
+Getting "We cannot convert the value null to type Table" from a JSON-based query? See [that error explained](/blog/cannot-convert-null-to-type-table-error) — an API that returned an unexpected shape is a common cause beyond the ones covered there.
