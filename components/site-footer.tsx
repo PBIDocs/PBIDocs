@@ -15,6 +15,9 @@ export function SiteFooter() {
           <Link href="/tools/dax-formula-builder" className="transition-colors hover:text-fd-foreground">
             DAX Formula Builder
           </Link>
+          <Link href="/pricing" className="transition-colors hover:text-fd-foreground">
+            Pricing
+          </Link>
           <Link href="/blog" className="transition-colors hover:text-fd-foreground">
             Blog
           </Link>

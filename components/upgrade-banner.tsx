@@ -2,9 +2,10 @@
 
 import { useState } from 'react';
 import { Loader2, Sparkles } from 'lucide-react';
+import { cn } from '@/lib/cn';
 import { ManageBillingLink } from '@/components/manage-billing-link';
 
-export function UpgradeBanner() {
+export function UpgradeBanner({ variant = 'compact' }: { variant?: 'compact' | 'prominent' }) {
   const [loading, setLoading] = useState(false);
   const [alreadySubscribed, setAlreadySubscribed] = useState(false);
 
@@ -39,10 +40,19 @@ export function UpgradeBanner() {
       type="button"
       onClick={upgrade}
       disabled={loading}
-      className="flex items-center justify-center gap-1.5 rounded-lg border border-fd-primary/30 bg-fd-primary/10 px-3 py-2 text-xs font-semibold text-fd-primary transition-colors hover:bg-fd-primary/20 disabled:opacity-60"
+      className={cn(
+        'flex items-center justify-center gap-1.5 font-semibold transition-colors disabled:opacity-60',
+        variant === 'prominent'
+          ? 'w-full rounded-lg bg-fd-primary px-5 py-2.5 text-sm text-fd-primary-foreground hover:opacity-90'
+          : 'rounded-lg border border-fd-primary/30 bg-fd-primary/10 px-3 py-2 text-xs text-fd-primary hover:bg-fd-primary/20',
+      )}
     >
-      {loading ? <Loader2 className="size-3.5 animate-spin" /> : <Sparkles className="size-3.5" />}
-      Upgrade — $5/mo for more →
+      {loading ? (
+        <Loader2 className={cn('animate-spin', variant === 'prominent' ? 'size-4' : 'size-3.5')} />
+      ) : (
+        <Sparkles className={cn(variant === 'prominent' ? 'size-4' : 'size-3.5')} />
+      )}
+      {variant === 'prominent' ? 'Upgrade to Pro' : 'Upgrade — $5/mo for more →'}
     </button>
   );
 }

@@ -22,7 +22,12 @@ export default function DaxFormulaBuilderPage() {
       </p>
 
       <div className="mb-10 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-fd-border bg-fd-secondary/40 px-4 py-3 text-sm text-fd-muted-foreground">
-        <p>Free: 5 requests a day. Need more?</p>
+        <p>
+          Free: 5 requests a day. Need more?{' '}
+          <Link href="/pricing" className="underline decoration-dotted hover:text-fd-foreground">
+            See pricing
+          </Link>
+        </p>
         <UpgradeBanner />
       </div>
 
