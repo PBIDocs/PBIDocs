@@ -12,6 +12,106 @@ export const metadata: Metadata = {
 
 const changelog: { date: string; entries: ReactNode[] }[] = [
   {
+    date: '2026-08-29',
+    entries: [
+      <>
+        Closed a major documentation gap between DAX and Power Query: added 19 full Power Query M
+        pages covering table, list, text, and custom functions, error handling, date/duration
+        functions, and source connectors — including{' '}
+        <Link href="/docs/power-query/custom-functions">Custom Functions</Link>,{' '}
+        <Link href="/docs/power-query/table-transformcolumntypes">Table.TransformColumnTypes()</Link>,{' '}
+        <Link href="/docs/power-query/list-accumulate">List.Accumulate()</Link>,{' '}
+        <Link href="/docs/power-query/error-handling">Error Handling (try...otherwise)</Link>, and{' '}
+        <Link href="/docs/power-query/sql-database">Sql.Database()</Link>. Each linked from the{' '}
+        <Link href="/docs/power-query/functions">M Function Reference</Link>.
+      </>,
+      <>
+        Added two more error-message posts:{' '}
+        <Link href="/blog/too-many-elements-in-enumeration-pivot-error">
+          There Were Too Many Elements in the Enumeration
+        </Link>{' '}
+        (a Table.Pivot duplicate-key error) and{' '}
+        <Link href="/blog/cannot-convert-null-to-type-table-error">
+          We Cannot Convert the Value Null to Type Table
+        </Link>
+        .
+      </>,
+      <>
+        Added a dedicated <Link href="/pricing">Pricing</Link> page for the DAX Formula Builder and
+        Ask AI Pro tier, linked from the main navigation.
+      </>,
+    ],
+  },
+  {
+    date: '2026-08-27 – 2026-08-28',
+    entries: [
+      <>
+        Added four more Power Query pages closing the biggest remaining gaps:{' '}
+        <Link href="/docs/power-query/table-selectrows">Table.SelectRows()</Link>,{' '}
+        <Link href="/docs/power-query/table-addcolumn">Table.AddColumn()</Link>,{' '}
+        <Link href="/docs/power-query/table-pivot-unpivot">
+          Table.Pivot() &amp; Table.Unpivot()
+        </Link>
+        , and <Link href="/docs/power-query/merge-vs-append">Merge vs. Append</Link>.
+      </>,
+      <>
+        Added six more error-message blog posts, continuing the pattern of titling posts after the
+        literal error text:{' '}
+        <Link href="/blog/web-contents-literal-string-parameter-error">
+          Web.Contents Can Only Accept a Literal String
+        </Link>
+        ,{' '}
+        <Link href="/blog/not-enough-memory-power-bi-desktop">
+          There Isn&apos;t Enough Memory to Complete This Operation
+        </Link>
+        , <Link href="/blog/ole-db-odbc-connection-error">OLE DB or ODBC Error</Link>, and{' '}
+        <Link href="/blog/dax-comparison-operations-do-not-support-error">
+          DAX Comparison Operations Do Not Support...
+        </Link>
+        .
+      </>,
+    ],
+  },
+  {
+    date: '2026-08-26',
+    entries: [
+      <>
+        Launched <strong>Ask AI</strong> — a page-scoped AI chat panel on every documentation page,
+        free up to 5 questions a day.
+      </>,
+    ],
+  },
+  {
+    date: '2026-08-24 – 2026-08-25',
+    entries: [
+      <>
+        Launched the{' '}
+        <Link href="/tools/dax-formula-builder">DAX Formula Builder</Link> — describe a
+        calculation or transformation in plain English and get back a real DAX measure or Power
+        Query M step, free up to 5 requests a day.
+      </>,
+      <>
+        Added <Link href="/docs/dax/user-defined-functions">DAX User-Defined Functions (UDFs)</Link>,{' '}
+        <Link href="/docs/dax/divide">DIVIDE</Link>, <Link href="/docs/dax/if">IF</Link>,{' '}
+        <Link href="/docs/dax/sumx">SUMX</Link>,{' '}
+        <Link href="/docs/dax/countrows">COUNTROWS</Link>,{' '}
+        <Link href="/docs/dax/distinctcount">DISTINCTCOUNT</Link>, and{' '}
+        <Link href="/docs/dax/earlier">EARLIER</Link>.
+      </>,
+      <>
+        Added two new tutorials:{' '}
+        <Link href="/tutorials/build-a-risk-register-dashboard">
+          Build a Risk Register Dashboard
+        </Link>{' '}
+        and{' '}
+        <Link href="/tutorials/build-a-reliability-mtbf-mttr-dashboard">
+          Build a Reliability (MTBF/MTTR) Dashboard
+        </Link>
+        .
+      </>,
+    ],
+  },
+  {
     date: '2026-08-11',
     entries: [
       <>
