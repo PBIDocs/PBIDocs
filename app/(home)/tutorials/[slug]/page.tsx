@@ -5,7 +5,7 @@ import { notFound } from 'next/navigation';
 import { DocsBody, DocsDescription, DocsTitle } from 'fumadocs-ui/layouts/docs/page';
 import { getMDXComponents } from '@/components/mdx';
 import { getTutorial, getTutorialImageUrl, getTutorials } from '@/lib/tutorial-source';
-import { BlogToc } from '@/components/blog-toc';
+import { PageToc } from '@/components/page-toc';
 import { Faq } from '@/components/faq';
 
 function extractText(node: ReactNode): string {
@@ -118,7 +118,7 @@ export default async function TutorialPage(props: { params: Promise<{ slug: stri
         {tutorial.toc.length > 0 && (
           <aside className="hidden w-64 shrink-0 lg:block">
             <div className="sticky top-24">
-              <BlogToc toc={tutorial.toc} />
+              <PageToc toc={tutorial.toc} />
             </div>
           </aside>
         )}
