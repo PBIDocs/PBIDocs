@@ -1,0 +1,110 @@
+---
+title: "Table.TransformColumnTypes()"
+description: Learn how Table.TransformColumnTypes sets column data types, the optional locale argument behind most "couldn't convert" errors, and how it differs from Table.TransformColumns despite the near-identical name.
+---
+
+# Table.TransformColumnTypes()
+
+`Table.TransformColumnTypes()` sets the data type of one or more columns — the function behind the **Changed Type** step that appears in nearly every query, usually generated automatically the moment a new source is connected.
+
+```powerquery lineNumbers
+Table.TransformColumnTypes(
+    table as table,
+    typeTransformations as list,
+    culture as nullable text
+) as table
+```
+
+---
+
+## Basic Example
+
+```powerquery lineNumbers
+#"Changed Type" = Table.TransformColumnTypes(
+    Source, {{"OrderDate", type date}, {"Amount", type number}, {"CustomerID", Int64.Type}}
+)
+```
+
+```text
+OrderDate       Amount    CustomerID
+"2026-01-15"    "150.5"   "1001"
+     |             |          |
+   date          number     whole number
+```
+
+Each entry in the list is a `{"ColumnName", type}` pair — every column not mentioned keeps its existing type.
+
+---
+
+## The Third Argument: culture
+
+```powerquery lineNumbers
+#"Changed Type with Locale" = Table.TransformColumnTypes(
+    Source, {{"Amount", type number}}, "de-DE"
+)
+```
+
+This is the fix behind [We Couldn't Convert to Number (or Date)](/blog/couldnt-convert-to-number-date-error) — without an explicit `culture`, Power Query parses text using its own default locale, which can silently misread a number like `"1.234,56"` (valid in most of continental Europe) or parse an ambiguous date like `"03/04/2026"` into the wrong day, with no error at all for the date case.
+
+```text
+No culture argument -> uses Power Query's default locale
+Explicit culture     -> parses using that locale's actual number/date format
+```
+
+Supplying `culture` explicitly is the difference between a conversion that happens to work because the source's format matches the default, and one that's correct regardless of what locale the machine running the refresh is set to.
+
+---
+
+## Table.TransformColumnTypes vs. Table.TransformColumns
+
+These two names differ by exactly one word, and are the single most commonly confused pair of function names in Power Query.
+
+| | Table.TransformColumnTypes | Table.TransformColumns |
+|---|---|---|
+| Changes | The column's declared **type** | The column's **values**, via a function |
+| Second argument | `{{"Column", type}}` — a type literal | `{{"Column", function}}` — a function reference |
+| Typical use | Setting/fixing a column's data type | Cleaning up values (trim, case, rounding) |
+
+```powerquery lineNumbers
+-- Sets the TYPE to number; doesn't change the underlying text formatting
+Table.TransformColumnTypes(Source, {{"Amount", type number}})
+
+-- Applies a FUNCTION to every value; doesn't touch the column's declared type
+Table.TransformColumns(Source, {{"Amount", each Number.Round(_, 2)}})
+```
+
+Passing a function where a type is expected (or vice versa) produces an error naming the mismatch — the two functions aren't interchangeable despite the similar signatures. See [Table.TransformColumns()](/docs/power-query/table-transformcolumns) for the value-transforming half of this pair.
+
+---
+
+## Common Mistakes
+
+### Assuming the Default Locale Always Matches the Source
+
+As covered above — this is the root cause behind most silent or loud "couldn't convert" errors. If the source data's number or date format doesn't match Power Query's current default locale, converting without an explicit `culture` argument is the actual bug, not the data itself.
+
+### Confusing This With Table.TransformColumns by Name
+
+Reaching for `Table.TransformColumnTypes` when the goal is actually to clean up values (not change type), or vice versa, produces confusing errors about type mismatches rather than the intended transformation.
+
+### Referencing a Column That's Been Renamed or Removed Upstream
+
+```powerquery lineNumbers
+Table.TransformColumnTypes(Source, {{"CustAmount", type number}})
+```
+
+If an earlier step renamed `CustAmount` to `Amount`, this fails with a column-not-found error — the type list has to match the table's actual column names as of the step immediately before this one.
+
+### Setting a Type That Doesn't Match What's Actually There
+
+Declaring a column `type date` when the source occasionally contains genuinely non-date text (not just a formatting mismatch) still errors on those specific rows — `Table.TransformColumnTypes()` doesn't silently coerce unparseable values, it fails on them, same as any other type conversion. See [We Couldn't Convert to Number (or Date)](/blog/couldnt-convert-to-number-date-error) for the other three causes beyond locale.
+
+---
+
+## Next Steps
+
+- [M Language](/docs/power-query/m-language)
+- [Table.TransformColumns()](/docs/power-query/table-transformcolumns)
+- [M Function Reference](/docs/power-query/functions)
+
+Getting "We couldn't convert to Number" or a date that's off by a few days? See [We Couldn't Convert to Number (or Date)](/blog/couldnt-convert-to-number-date-error) for the full set of causes, including the locale mismatch above.

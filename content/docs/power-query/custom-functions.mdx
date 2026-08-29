@@ -1,0 +1,152 @@
+---
+title: "Custom Functions in Power Query M"
+description: Learn how to write, type, and reuse custom functions in Power Query M — the concept behind every each expression, and what unlocks List.Transform, List.Accumulate, and reusable transformation logic.
+---
+
+# Custom Functions in Power Query M
+
+Every `each` expression in Power Query is already a function in disguise — a custom function is just the same idea, given a name and (optionally) explicit parameter types, so it can be written once and reused anywhere a function is expected.
+
+```powerquery lineNumbers
+(parameters) => expression
+```
+
+This single concept is what makes [List.Transform()](/docs/power-query/list-transform), [List.Accumulate()](/docs/power-query/list-accumulate), and [Table.AddColumn()](/docs/power-query/table-addcolumn) work — each one takes a function as an argument, and a custom function is exactly what can be passed.
+
+---
+
+## From each to a Named Function
+
+```powerquery lineNumbers
+each [Amount] > 100
+```
+
+is shorthand for:
+
+```powerquery lineNumbers
+(row) => row[Amount] > 100
+```
+
+Giving that function a name in a `let` step turns it into something reusable, rather than something written inline every time it's needed:
+
+```powerquery lineNumbers
+let
+    IsLargeOrder = (row) => row[Amount] > 100,
+    #"Filtered Rows" = Table.SelectRows(Source, IsLargeOrder)
+in
+    #"Filtered Rows"
+```
+
+---
+
+## Typed Parameters and Return Types
+
+```powerquery lineNumbers
+AddTax = (amount as number) as number => amount * 1.08
+```
+
+`as number` after a parameter name declares its expected type; `as number` after the parameter list declares the function's return type. Neither is required — an untyped function still works — but typing catches a wrong-type call immediately with a clear error, instead of letting a type mismatch surface confusingly several steps later.
+
+```powerquery lineNumbers
+AddTax(100)        -- 108
+AddTax("100")      -- error: "100" is not a number
+```
+
+---
+
+## Optional Parameters
+
+```powerquery lineNumbers
+FormatAmount = (amount as number, optional currency as text) as text =>
+    Number.ToText(amount) & " " & (currency ?? "USD")
+```
+
+`optional` marks a parameter that doesn't have to be supplied; an omitted optional parameter is `null` inside the function, which the `??` (null-coalescing) operator can supply a default for, as shown above. Optional parameters must come after all required ones.
+
+---
+
+## Multiple Parameters
+
+```powerquery lineNumbers
+CalculateDiscount = (price as number, discountPercent as number) as number =>
+    price * (1 - discountPercent / 100)
+```
+
+```powerquery lineNumbers
+#"Added Custom" = Table.AddColumn(
+    Source, "FinalPrice", each CalculateDiscount([Price], [DiscountPct])
+)
+```
+
+A custom function taking multiple arguments is invoked the same way as any built-in M function — the definition doesn't change based on how many parameters it needs.
+
+---
+
+## Passing a Function as a Value
+
+Because a function is just another kind of value in M, it can be passed directly wherever a function is expected — this is exactly how `List.Transform()`, `List.Accumulate()`, and `Table.AddColumn()` accept custom logic.
+
+```powerquery lineNumbers
+let
+    Square = (x as number) as number => x * x,
+    Squared = List.Transform({1, 2, 3, 4}, Square)
+in
+    Squared
+```
+
+```text
+Squared = {1, 4, 9, 16}
+```
+
+`Square` here is passed by name (no parentheses, no call) — passing `Square(x)` instead would call it immediately with an undefined `x` and error, rather than handing the function itself to `List.Transform`.
+
+---
+
+## Recursive Functions
+
+A function can't normally reference its own name from inside its own definition — the `@` prefix is M's way of allowing exactly that.
+
+```powerquery lineNumbers
+Factorial = (n as number) as number =>
+    if n <= 1 then 1 else n * @Factorial(n - 1)
+```
+
+```text
+Factorial(5) -> 5 * 4 * 3 * 2 * 1 = 120
+```
+
+Recursion in M is uncommon in typical Power BI work — most repeated-application patterns are better served by [List.Accumulate()](/docs/power-query/list-accumulate) or [List.Generate()](/docs/power-query/list-generate) — but it's occasionally the clearest way to express a genuinely recursive problem (walking a variable-depth hierarchy, for instance).
+
+---
+
+## Common Mistakes
+
+### Calling the Function Instead of Passing It
+
+```powerquery lineNumbers
+List.Transform({1, 2, 3}, Square(_))
+```
+
+`Square(_)` calls `Square` immediately with `_` as a literal argument name (which isn't defined at this point) rather than passing the function itself. The correct form passes the bare function name, or wraps it in `each` if extra logic beyond a single call is needed: `each Square(_)`.
+
+### Forgetting a Function Value Can't Be Displayed Directly
+
+Returning a function itself as a query's result (rather than calling it) shows as `[Function]` in the preview grid, not an error — a common source of "why is my query blank" confusion when a step accidentally produces a function instead of invoking it.
+
+### Not Typing Parameters, Then Debugging a Confusing Downstream Error
+
+An untyped function that receives the wrong data type doesn't fail at the function call — it fails wherever the resulting wrong-typed value is eventually used, which can be several steps later and much harder to trace back. Typing parameters up front turns that into an immediate, clearly-worded error at the actual call site.
+
+### Overcomplicating Something a Built-In Function Already Does
+
+Writing a custom function to trim whitespace, change case, or sum a list duplicates what `Text.Trim`, `Text.Upper`, or `List.Sum` already do — worth checking the [M Function Reference](/docs/power-query/functions) before writing custom logic for something common.
+
+---
+
+## Next Steps
+
+- [M Language](/docs/power-query/m-language)
+- [List.Transform()](/docs/power-query/list-transform)
+- [List.Accumulate()](/docs/power-query/list-accumulate)
+- [Table.AddColumn()](/docs/power-query/table-addcolumn)
+- [M Function Reference](/docs/power-query/functions)
