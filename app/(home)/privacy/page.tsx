@@ -22,7 +22,7 @@ const summary = [
   },
   {
     icon: ShieldCheck,
-    text: 'No ads, no ad trackers, no cookies of any kind, anywhere on this site.',
+    text: 'No ads or ad trackers, anywhere on this site — the only cookie is one that remembers an active Pro subscription.',
   },
   {
     icon: Database,
@@ -37,7 +37,7 @@ export default function PrivacyPage() {
       <p className="text-lg text-fd-muted-foreground mb-2">
         A plain description of what this site actually collects, stores, and does with it.
       </p>
-      <p className="text-sm text-fd-muted-foreground/70 mb-10">Last updated: August 21, 2026</p>
+      <p className="text-sm text-fd-muted-foreground/70 mb-10">Last updated: August 29, 2026</p>
 
       <div
         className="mb-14 grid grid-cols-1 gap-4 rounded-xl border border-transparent p-6 sm:grid-cols-2"
@@ -80,7 +80,6 @@ export default function PrivacyPage() {
         <section>
           <h2>What We Don&apos;t Do</h2>
           <ul>
-            <li>No cookies of any kind, on any page.</li>
             <li>No Google Analytics, Facebook Pixel, or similar third-party ad trackers.</li>
             <li>No selling, renting, or sharing your data with anyone.</li>
             <li>No cross-site tracking or ad profiles built from your visit.</li>
@@ -98,10 +97,25 @@ export default function PrivacyPage() {
         </section>
 
         <section>
+          <h2>The Subscriber Cookie</h2>
+          <p>
+            Subscribing to Pro sets one cookie that lets the site recognize you as a subscriber
+            without asking you to sign in on every visit. It holds a signed reference back to
+            your Stripe customer record — not your email, name, or payment details — and is
+            used only to unlock the higher daily limit on the DAX Formula Builder and Ask AI.
+            Nothing else on the site sets a cookie.
+          </p>
+        </section>
+
+        <section>
           <h2>Removing Your Data</h2>
           <p>
-            There isn&apos;t a self-service unsubscribe link yet. To have an email address
-            removed, open an issue on{' '}
+            There isn&apos;t a self-service unsubscribe link for the newsletter yet. To have an
+            email address removed, email{' '}
+            <a href="mailto:contact@pbidocs.com" className="text-fd-primary hover:underline">
+              contact@pbidocs.com
+            </a>{' '}
+            or open an issue on{' '}
             <a
               href={`https://github.com/${gitConfig.user}/${gitConfig.repo}`}
               target="_blank"
@@ -117,10 +131,13 @@ export default function PrivacyPage() {
         <section>
           <h2>Third-Party Services</h2>
           <p>
-            PBIDocs runs entirely on Cloudflare — Pages for hosting, D1 for the newsletter and
-            feedback data, and Web Analytics for traffic counts. Cloudflare&apos;s own privacy
-            practices apply at the infrastructure layer; see Cloudflare&apos;s privacy policy for
-            how they handle data as the hosting provider.
+            PBIDocs runs on Cloudflare — Pages for hosting, D1 for the newsletter, feedback, and
+            subscription data, and Web Analytics for traffic counts. Pro subscriptions are
+            billed through Stripe, which handles and stores all payment details directly —
+            PBIDocs never sees or stores your card information. AI tool prompts (DAX Formula
+            Builder and Ask AI) are sent to Anthropic&apos;s API to generate a response. Each
+            provider&apos;s own privacy practices apply to the data it processes on
+            PBIDocs&apos; behalf.
           </p>
         </section>
 
@@ -135,7 +152,11 @@ export default function PrivacyPage() {
         <section>
           <h2>Questions</h2>
           <p>
-            Open an issue on{' '}
+            Email{' '}
+            <a href="mailto:contact@pbidocs.com" className="text-fd-primary hover:underline">
+              contact@pbidocs.com
+            </a>
+            , open an issue on{' '}
             <a
               href={`https://github.com/${gitConfig.user}/${gitConfig.repo}`}
               target="_blank"
@@ -148,7 +169,11 @@ export default function PrivacyPage() {
             <Link href="/faq" className="text-fd-primary hover:underline">
               FAQ
             </Link>{' '}
-            for common questions about the site itself.
+            for common questions about the site itself. Billing questions are also covered in{' '}
+            <Link href="/terms" className="text-fd-primary hover:underline">
+              Terms of Service
+            </Link>
+            .
           </p>
         </section>
       </div>
