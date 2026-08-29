@@ -1,0 +1,101 @@
+---
+title: "Excel.Workbook()"
+description: Learn how Excel.Workbook reads sheets and named tables from an Excel file, the difference between accessing a Sheet vs a Table, and why a renamed sheet breaks a query with no obvious error at the point of the actual change.
+---
+
+# Excel.Workbook()
+
+`Excel.Workbook()` reads the contents of an Excel file — every sheet, named range, and defined table — into a navigable structure, the function behind **Get Data > Excel Workbook**.
+
+```powerquery lineNumbers
+Excel.Workbook(
+    workbook as binary,
+    optional useHeaders as any,
+    optional delayTypes as nullable logical
+) as table
+```
+
+---
+
+## Basic Example
+
+```powerquery lineNumbers
+Source = Excel.Workbook(File.Contents("Sales.xlsx")),
+SalesTable = Source{[Item="SalesData", Kind="Table"]}[Data]
+```
+
+`Excel.Workbook()` returns a navigation table listing every sheet and named object in the workbook; the record-access step (`{[Item=..., Kind=...]}`) picks out one specific item, and `[Data]` extracts its contents as a table.
+
+---
+
+## Kind="Sheet" vs. Kind="Table"
+
+The `Kind` field distinguishes a plain worksheet from a defined Excel Table (created via **Insert > Table**, or Format as Table):
+
+```text
+Kind="Sheet" -> the entire sheet's used range, headers not guaranteed
+Kind="Table" -> a defined Excel Table object, with real column headers and a stable range
+```
+
+A defined Table is generally the more reliable source — its range is self-contained and doesn't depend on guessing where data starts and ends on a sheet, and its column headers come from the Table's own header row rather than being inferred.
+
+```powerquery lineNumbers
+Source{[Item="Sheet1", Kind="Sheet"]}[Data]      -- whole sheet, less structured
+Source{[Item="SalesData", Kind="Table"]}[Data]   -- defined Table, more reliable
+```
+
+---
+
+## The Renamed-Sheet Problem
+
+```powerquery lineNumbers
+Source{[Name="Sheet1"]}[Data]
+```
+
+If "Sheet1" is later renamed, deleted, or the workbook is replaced with a differently-structured version, this record-access step doesn't error where the mistake actually is — it returns `null`, which then fails at whatever step tries to use `[Data]` as a table. See [We Cannot Convert the Value Null to Type Table](/blog/cannot-convert-null-to-type-table-error) for exactly this failure mode and the fix.
+
+This is the single most common source of a "worked for months, then broke" Excel-based query: nothing in the M code changed, but the source workbook's sheet name did.
+
+---
+
+## useHeaders: Column Names vs. Column1, Column2...
+
+```powerquery lineNumbers
+Excel.Workbook(File.Contents("Sales.xlsx"), true)
+```
+
+Passing `true` for the second argument promotes the first row of each sheet to column headers automatically, avoiding a separate **Use First Row as Headers** step later. This only affects `Kind="Sheet"` results — a defined Table already has real headers regardless of this argument.
+
+---
+
+## Common Mistakes
+
+### Assuming a Sheet Name or Table Name Will Never Change
+
+As covered above — this is the recurring root cause of Excel-source queries breaking without any visible M change. If the workbook is maintained by someone other than the person who built the query, confirming the sheet/table naming convention is stable (or building resilience via `try...otherwise`, see [Error Handling in Power Query](/docs/power-query/error-handling)) is worth doing up front.
+
+### Referencing a Sheet by Kind="Sheet" When a Table Exists
+
+Using the whole-sheet access when a defined Table already exists on that sheet gives up the Table's more reliable structure for no benefit — worth checking the navigator for a `Kind="Table"` option before defaulting to the raw sheet.
+
+### Not Accounting for Merged Cells or Multi-Row Headers
+
+A sheet with merged header cells or a title row above the actual data doesn't produce clean column headers automatically — `Excel.Workbook()` reads exactly what's in the used range, including any messiness above the real header row, which usually needs manual cleanup steps (removing top rows, promoting headers) before the data is usable.
+
+### Loading Every Sheet When Only One Is Needed
+
+```powerquery lineNumbers
+Source = Excel.Workbook(File.Contents("Sales.xlsx"))
+```
+
+`Excel.Workbook()` itself is lightweight — it just reads the workbook's structure, not every sheet's full contents — but a query left at this step without navigating to a specific sheet leaves the whole navigation table as the query's output, which is rarely what's actually wanted as a final result.
+
+---
+
+## Next Steps
+
+- [M Language](/docs/power-query/m-language)
+- [Error Handling in Power Query](/docs/power-query/error-handling)
+- [Table.TransformColumnTypes()](/docs/power-query/table-transformcolumntypes)
+
+Getting "We cannot convert the value null to type Table" after a workbook change? See [that error explained](/blog/cannot-convert-null-to-type-table-error) — a renamed or missing sheet is the most common cause.
