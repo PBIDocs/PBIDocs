@@ -17,6 +17,7 @@ export function baseOptions(): BaseLayoutProps {
       { text: 'Docs', url: '/docs' },
       { text: 'Tutorials', url: '/tutorials' },
       { text: 'DAX Formula Builder', url: '/tools/dax-formula-builder' },
+      { text: 'Pricing', url: '/pricing' },
       { text: 'Blog', url: '/blog' },
       { text: 'Changelog', url: '/changelog' },
       { text: 'FAQ', url: '/faq' },
