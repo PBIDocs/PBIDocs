@@ -1,0 +1,112 @@
+---
+title: "Text.Split() & Text.Combine()"
+description: Learn how Text.Split breaks a text value into a list by delimiter, how Text.Combine joins one back together, and the mistakes that come from consecutive delimiters and mismatched null handling.
+---
+
+# Text.Split() & Text.Combine()
+
+`Text.Split()` and `Text.Combine()` are opposites: one breaks a single text value into a list of pieces, the other joins a list of text values back into one.
+
+```powerquery lineNumbers
+Text.Split(text as text, separator as text) as list
+Text.Combine(list as list, optional separator as nullable text) as text
+```
+
+---
+
+## Text.Split(): One Value Into Many
+
+```powerquery lineNumbers
+Text.Split("2026-01-15", "-")
+```
+
+```text
+"2026-01-15" -> {"2026", "01", "15"}
+```
+
+This is the function behind **Split Column > By Delimiter** in the Editor UI, when splitting into a list rather than directly into table columns.
+
+---
+
+## Text.Combine(): Many Values Into One
+
+```powerquery lineNumbers
+Text.Combine({"2026", "01", "15"}, "-")
+```
+
+```text
+{"2026", "01", "15"} -> "2026-01-15"
+```
+
+The separator argument is optional — omitting it concatenates with no separator at all, which is rarely what's actually wanted.
+
+---
+
+## Splitting Into Table Columns vs. a List
+
+`Text.Split()` on its own produces a list, not new table columns. Splitting a table column directly uses [Table.SplitColumn()](/docs/power-query/functions), which wraps the same splitting logic but reshapes the result back into the table:
+
+```powerquery lineNumbers
+#"Split Column" = Table.SplitColumn(
+    Source, "FullDate", Splitter.SplitTextByDelimiter("-"), {"Year", "Month", "Day"}
+)
+```
+
+`Splitter.SplitTextByDelimiter()` here is doing conceptually the same job as `Text.Split()`, just packaged for `Table.SplitColumn()`'s specific interface rather than called directly.
+
+---
+
+## Common Mistakes
+
+### Assuming a Fixed Number of Parts
+
+```powerquery lineNumbers
+Text.Split("A-B-C-D", "-")
+```
+
+```text
+"A-B" -> {"A", "B"}              (2 parts)
+"A-B-C-D" -> {"A", "B", "C", "D"}  (4 parts)
+```
+
+`Text.Split()` returns however many parts the delimiter actually produces — a downstream step assuming exactly 2 or 3 elements breaks silently or errors the moment a row has a different number of delimiters than expected. `Table.SplitColumn()` with a fixed column-name list has the same issue: extra parts get dropped, and missing parts leave `null` in the unfilled columns.
+
+### Consecutive Delimiters Producing Empty Strings
+
+```powerquery lineNumbers
+Text.Split("A,,B", ",")
+```
+
+```text
+"A,,B" -> {"A", "", "B"}
+```
+
+A double delimiter (from a source with genuinely missing values in a delimited field) produces an empty string element, not a skipped one — worth accounting for explicitly if blank entries shouldn't just become `""` downstream.
+
+### Combining a List That Contains null
+
+```powerquery lineNumbers
+Text.Combine({"A", null, "B"}, ", ")
+```
+
+This errors — `Text.Combine()` requires every list element to be text, and `null` isn't text. A list built from a column that can contain blanks needs those `null` values converted to `""` first, typically via `List.Transform(theList, each if _ = null then "" else _)`.
+
+### Forgetting the Separator Is Optional, Not Automatic
+
+```powerquery lineNumbers
+Text.Combine({"John", "Doe"})
+```
+
+```text
+Result: "JohnDoe"    <- no space, no separator at all
+```
+
+Omitting the second argument doesn't insert a sensible default like a space — it concatenates with nothing between elements.
+
+---
+
+## Next Steps
+
+- [M Language](/docs/power-query/m-language)
+- [Table.ReplaceValue()](/docs/power-query/table-replacevalue)
+- [M Function Reference](/docs/power-query/functions)

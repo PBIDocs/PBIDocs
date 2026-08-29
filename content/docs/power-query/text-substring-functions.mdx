@@ -1,0 +1,97 @@
+---
+title: "Text.Start(), Text.End(), Text.Middle() & Text.Length()"
+description: Learn how Text.Start, Text.End, and Text.Middle extract a substring by position, why they're zero-indexed, and how Text.Length combines with them for a variable-length extraction.
+---
+
+# Text.Start(), Text.End(), Text.Middle() & Text.Length()
+
+These four functions extract a portion of a text value based on position and length — the basic toolkit for pulling a fixed-format code, a prefix, or a suffix out of a larger text field.
+
+```powerquery lineNumbers
+Text.Start(text as text, count as number) as text
+Text.End(text as text, count as number) as text
+Text.Middle(text as text, start as number, optional count as nullable number) as text
+Text.Length(text as text) as number
+```
+
+---
+
+## Text.Start() and Text.End()
+
+```powerquery lineNumbers
+Text.Start("INV-2026-0042", 3)
+Text.End("INV-2026-0042", 4)
+```
+
+```text
+Text.Start(..., 3) -> "INV"
+Text.End(..., 4)   -> "0042"
+```
+
+Both count from the respective end of the string — `Text.Start` from the beginning, `Text.End` from the end — and simply return fewer characters than requested if the text is shorter than `count`, rather than erroring.
+
+---
+
+## Text.Middle(): Zero-Indexed Starting Position
+
+```powerquery lineNumbers
+Text.Middle("INV-2026-0042", 4, 4)
+```
+
+```text
+Position:  0123456789...
+Text:      INV-2026-0042
+                ^^^^
+Text.Middle(..., 4, 4) -> "2026"
+```
+
+The `start` argument is **zero-indexed** — position `4` is the 5th character, not the 4th. This is the single most common off-by-one mistake with this function: counting positions starting from 1 (as most people naturally do) produces a result shifted by one character from what was intended.
+
+The `count` argument is optional — omitting it returns everything from `start` to the end of the string, equivalent to a variable-length `Text.End()`.
+
+---
+
+## Text.Length(): Combining With a Variable End Position
+
+```powerquery lineNumbers
+Text.Middle([Code], 4, Text.Length([Code]) - 4)
+```
+
+This extracts everything from position 4 onward, computing the length dynamically rather than hardcoding it — useful when the meaningful part of a text value has a fixed *start* but a variable total length across rows.
+
+---
+
+## Common Mistakes
+
+### Off-by-One From Treating Position as 1-Indexed
+
+```powerquery lineNumbers
+Text.Middle("INV-2026-0042", 5, 4)  -- meant to start at the 5th character
+```
+
+```text
+Expected: "2026" (starting at the 5th character, position 4 zero-indexed)
+Actually got: "026-"  (started one character too late)
+```
+
+Counting the 5th character as `start = 5` instead of `start = 4` is the recurring error here — the fix is remembering position `0` is the first character, the same convention `List` and `Table` row/column indexing uses elsewhere in M.
+
+### Assuming a Fixed Length That Doesn't Hold for Every Row
+
+`Text.Start([Code], 3)` assumes every value in `[Code]` has at least a 3-character meaningful prefix — a shorter value doesn't error, it just returns less than expected, which can silently produce wrong-looking results rather than an obvious failure.
+
+### Using Text.Middle When Text.End Would Be Simpler
+
+```powerquery lineNumbers
+Text.Middle([Code], Text.Length([Code]) - 4, 4)
+```
+
+This correctly extracts the last 4 characters, but `Text.End([Code], 4)` does the identical thing more directly — worth reaching for the simpler function when the extraction is genuinely anchored to one end of the string, saving the `Text.Length` arithmetic for cases that actually need a computed middle position.
+
+---
+
+## Next Steps
+
+- [M Language](/docs/power-query/m-language)
+- [Text.Split() & Text.Combine()](/docs/power-query/text-split-combine)
+- [M Function Reference](/docs/power-query/functions)

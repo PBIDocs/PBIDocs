@@ -1,0 +1,100 @@
+---
+title: "Text.Trim(), Text.Upper() & Text.Lower()"
+description: Learn how Text.Trim, Text.Upper, and Text.Lower clean up text values, why Text.Trim doesn't always catch what looks like whitespace, and when case-insensitive comparison is the better fix than converting case at all.
+---
+
+# Text.Trim(), Text.Upper() & Text.Lower()
+
+These three are the most-used text cleanup functions in Power Query — removing stray whitespace and normalizing case before a value is compared, grouped, or joined against another source.
+
+```powerquery lineNumbers
+Text.Trim(text as text, optional trimChars as any) as text
+Text.Upper(text as text) as text
+Text.Lower(text as text) as text
+```
+
+---
+
+## Basic Example
+
+```powerquery lineNumbers
+#"Trimmed" = Table.TransformColumns(Source, {{"Name", Text.Trim}})
+```
+
+```text
+"  Alice  " -> "Alice"
+```
+
+Passed as a bare function reference to [Table.TransformColumns()](/docs/power-query/table-transformcolumns), `Text.Trim` runs once per value with no extra arguments needed — the default behavior trims standard spaces, tabs, and line breaks from both ends.
+
+---
+
+## Text.Trim Doesn't Catch Everything That Looks Like Whitespace
+
+A non-breaking space (Unicode `00A0`) — common in data copy-pasted from a web page or exported from certain legacy systems — looks identical to a normal space but isn't one, and plain `Text.Trim()` leaves it in place.
+
+```text
+"1234 "     <- trailing normal space, Text.Trim removes it
+"1234 " <- trailing non-breaking space, Text.Trim does NOT remove it
+```
+
+**Fix:** replace the non-breaking space explicitly before trimming.
+
+```powerquery lineNumbers
+each Text.Trim(Text.Replace(_, "#(00A0)", " "))
+```
+
+See [We Couldn't Convert to Number (or Date)](/blog/couldnt-convert-to-number-date-error#cause-4-hidden-whitespace-or-non-breaking-spaces) for this exact pattern in the context of a type-conversion error it silently causes.
+
+---
+
+## Text.Upper / Text.Lower for Comparison, Not Just Display
+
+```powerquery lineNumbers
+each Text.Lower([Status]) = "active"
+```
+
+Comparisons in M are case-sensitive by default — `"Active"` and `"active"` don't match. Converting both sides of a comparison to a consistent case is the standard fix, covered in more depth in [Table.SelectRows()](/docs/power-query/table-selectrows#assuming-text-comparison-is-case-insensitive).
+
+---
+
+## The Optional trimChars Argument
+
+```powerquery lineNumbers
+Text.Trim("**Featured**", {"*"})
+```
+
+```text
+"**Featured**" -> "Featured"
+```
+
+Supplying a list of characters trims those specific characters from both ends instead of whitespace — useful for stripping a consistent wrapping character (asterisks, quotes) that a source system adds around certain values.
+
+---
+
+## Common Mistakes
+
+### Assuming Text.Trim Handles Every Whitespace-Like Character
+
+As covered above — non-breaking spaces are the most common exception, but any Unicode character that merely *looks* like whitespace in a preview grid needs its own explicit `Text.Replace()` before `Text.Trim()` will catch it.
+
+### Overwriting the Original Case When Only Comparison Needed It
+
+```powerquery lineNumbers
+#"Changed Case" = Table.TransformColumns(Source, {{"CustomerName", Text.Upper}})
+```
+
+Doing this to enable a case-insensitive match elsewhere permanently destroys the original casing in the output — if the value still needs to display in its original form, convert case only inside the comparison expression itself (`Text.Lower([Status]) = "active"`), not as a standing transformation of the column.
+
+### Using Text.Upper/Text.Lower for Proper Case
+
+Neither function produces "Title Case" or "Proper Case" (capitalizing just the first letter of each word) — that needs `Text.Proper()`, a related but different function, not a combination of `Text.Upper` and `Text.Lower`.
+
+---
+
+## Next Steps
+
+- [M Language](/docs/power-query/m-language)
+- [Table.SelectRows()](/docs/power-query/table-selectrows)
+- [Table.TransformColumns()](/docs/power-query/table-transformcolumns)
+- [M Function Reference](/docs/power-query/functions)

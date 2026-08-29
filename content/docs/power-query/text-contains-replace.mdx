@@ -1,0 +1,102 @@
+---
+title: "Text.Contains() & Text.Replace()"
+description: Learn how Text.Contains checks for a substring and Text.Replace swaps every occurrence of one, why both are case-sensitive by default, and the comparer option that makes them case-insensitive.
+---
+
+# Text.Contains() & Text.Replace()
+
+`Text.Contains()` checks whether a text value holds a given substring; `Text.Replace()` swaps every occurrence of one substring for another. Both are case-sensitive by default, which is the single most common surprise with either.
+
+```powerquery lineNumbers
+Text.Contains(text as text, substring as text, optional comparer as nullable function) as logical
+Text.Replace(text as text, oldText as text, newText as text) as text
+```
+
+---
+
+## Text.Contains(): Substring Check
+
+```powerquery lineNumbers
+Text.Contains("Invoice #12345", "12345")
+```
+
+```text
+Result: true
+```
+
+```powerquery lineNumbers
+#"Filtered Rows" = Table.SelectRows(Source, each Text.Contains([Notes], "urgent"))
+```
+
+A common use inside [Table.SelectRows()](/docs/power-query/table-selectrows) — flagging or filtering rows based on a keyword appearing anywhere within a longer text field.
+
+---
+
+## Text.Replace(): Substring Swap
+
+```powerquery lineNumbers
+Text.Replace("2026-01-15", "-", "/")
+```
+
+```text
+"2026-01-15" -> "2026/01/15"
+```
+
+Every occurrence of `oldText` gets replaced — there's no built-in "replace only the first occurrence" option; a specific occurrence needs to be isolated first (via `Text.PositionOf` and substring extraction) if only one instance should change.
+
+---
+
+## Both Are Case-Sensitive by Default
+
+```powerquery lineNumbers
+Text.Contains("URGENT REVIEW", "urgent")
+```
+
+```text
+Result: false    <- exact case doesn't match
+```
+
+**Fix:** normalize case on both sides before comparing, or pass an explicit comparer.
+
+```powerquery lineNumbers
+Text.Contains("URGENT REVIEW", "urgent", Comparer.OrdinalIgnoreCase)
+```
+
+`Comparer.OrdinalIgnoreCase` is the argument most people don't know exists — it does the case-insensitive comparison directly, without needing a separate `Text.Lower()` call on both sides first.
+
+---
+
+## Common Mistakes
+
+### Assuming Text.Contains Is Case-Insensitive
+
+As covered above — this is the most common false negative in a filter step: rows that clearly contain the keyword in a different case get silently excluded, with no error to flag it.
+
+### Using Text.Replace When the Match Needs to Be Exact-Whole-Value
+
+```powerquery lineNumbers
+Text.Replace([Status], "N/A", "")
+```
+
+If `[Status]` is genuinely just `"N/A"` and the goal is to blank it out entirely, this works — but if `[Status]` could be a longer string that merely *contains* `"N/A"` somewhere (`"Status: N/A pending review"`), this replaces just that substring, leaving the rest of the text intact, which may or may not be the intended behavior. For a whole-value replacement instead of substring, [Table.ReplaceValue()](/docs/power-query/table-replacevalue) with `Replacer.ReplaceValue` is the more precise tool.
+
+### Forgetting Text.Contains Returns a Logical, Not the Match Itself
+
+`Text.Contains()` answers "does it contain this," as `true`/`false` — it doesn't return *what* matched or *where*. Extracting the actual matching portion needs `Text.PositionOf()` combined with `Text.Middle()`, not `Text.Contains()` alone.
+
+### Chaining Multiple Text.Replace Calls Instead of a Single Pass
+
+```powerquery lineNumbers
+Text.Replace(Text.Replace(Text.Replace([Notes], "N/A", ""), "TBD", ""), "-", "")
+```
+
+Each nested call scans the full string again — fine for a handful of replacements, but worth being aware this isn't a single combined pass; a longer chain of replacements on a large text column is doing that many full string scans per row.
+
+---
+
+## Next Steps
+
+- [M Language](/docs/power-query/m-language)
+- [Table.ReplaceValue()](/docs/power-query/table-replacevalue)
+- [Table.SelectRows()](/docs/power-query/table-selectrows)
+- [M Function Reference](/docs/power-query/functions)
