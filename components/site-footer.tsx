@@ -27,6 +27,9 @@ export function SiteFooter() {
           <Link href="/faq" className="transition-colors hover:text-fd-foreground">
             FAQ
           </Link>
+          <Link href="/about" className="transition-colors hover:text-fd-foreground">
+            About
+          </Link>
           <a href="/rss.xml" className="transition-colors hover:text-fd-foreground">
             RSS
           </a>
@@ -41,6 +44,12 @@ export function SiteFooter() {
           >
             GitHub
           </a>
+          <Link href="/contact" className="transition-colors hover:text-fd-foreground">
+            Contact
+          </Link>
+          <Link href="/terms" className="transition-colors hover:text-fd-foreground">
+            Terms
+          </Link>
           <Link href="/privacy" className="transition-colors hover:text-fd-foreground">
             Privacy
           </Link>

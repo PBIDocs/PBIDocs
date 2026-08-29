@@ -123,6 +123,13 @@ export default function PricingPage() {
           <div className="mt-8">
             <UpgradeBanner variant="prominent" />
           </div>
+          <p className="mt-3 text-center text-xs text-fd-muted-foreground">
+            By subscribing you agree to the{' '}
+            <Link href="/terms" className="hover:underline">
+              Terms of Service
+            </Link>
+            .
+          </p>
         </div>
       </div>
 
