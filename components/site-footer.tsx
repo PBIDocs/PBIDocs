@@ -27,15 +27,12 @@ export function SiteFooter() {
           <Link href="/faq" className="transition-colors hover:text-fd-foreground">
             FAQ
           </Link>
-          <Link href="/about" className="transition-colors hover:text-fd-foreground">
-            About
-          </Link>
           <a href="/rss.xml" className="transition-colors hover:text-fd-foreground">
             RSS
           </a>
         </nav>
 
-        <div className="flex items-center gap-6">
+        <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
           <a
             href={`https://github.com/${gitConfig.user}/${gitConfig.repo}`}
             target="_blank"
@@ -44,6 +41,9 @@ export function SiteFooter() {
           >
             GitHub
           </a>
+          <Link href="/about" className="transition-colors hover:text-fd-foreground">
+            About
+          </Link>
           <Link href="/contact" className="transition-colors hover:text-fd-foreground">
             Contact
           </Link>
