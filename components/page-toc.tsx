@@ -5,7 +5,7 @@ import { TOCProvider, TOCScrollArea, useTOCItems } from 'fumadocs-ui/components/
 import { TOCItem, TOCItems } from 'fumadocs-ui/components/toc/default';
 import { Text } from 'lucide-react';
 
-function BlogTocList() {
+function PageTocList() {
   const items = useTOCItems();
 
   return (
@@ -17,7 +17,7 @@ function BlogTocList() {
   );
 }
 
-export function BlogToc({ toc }: { toc: TOCItemType[] }) {
+export function PageToc({ toc }: { toc: TOCItemType[] }) {
   if (toc.length === 0) return null;
 
   return (
@@ -27,7 +27,7 @@ export function BlogToc({ toc }: { toc: TOCItemType[] }) {
         On this page
       </h3>
       <TOCScrollArea>
-        <BlogTocList />
+        <PageTocList />
       </TOCScrollArea>
     </TOCProvider>
   );

@@ -4,7 +4,7 @@ import { notFound } from 'next/navigation';
 import { DocsBody, DocsDescription, DocsTitle } from 'fumadocs-ui/layouts/docs/page';
 import { getMDXComponents } from '@/components/mdx';
 import { getBlogPost, getBlogPostImageUrl, getBlogPosts } from '@/lib/blog-source';
-import { BlogToc } from '@/components/blog-toc';
+import { PageToc } from '@/components/page-toc';
 import { Faq } from '@/components/faq';
 
 function formatDate(date: string): string {
@@ -99,7 +99,7 @@ export default async function BlogPostPage(props: { params: Promise<{ slug: stri
         {post.toc.length > 0 && (
           <aside className="hidden w-64 shrink-0 lg:block">
             <div className="sticky top-24">
-              <BlogToc toc={post.toc} />
+              <PageToc toc={post.toc} />
             </div>
           </aside>
         )}
