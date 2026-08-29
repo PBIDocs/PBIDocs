@@ -1,0 +1,106 @@
+---
+title: "List.Transform()"
+description: Learn how List.Transform applies a function to every value in a list, how it differs from Table.TransformColumns, and when to reach for it versus Table.AddColumn.
+---
+
+# List.Transform()
+
+`List.Transform()` applies a function to every value in a list, returning a new list of the results — the list equivalent of [Table.TransformColumns()](/docs/power-query/table-transformcolumns), but operating outside the context of a table entirely.
+
+```powerquery lineNumbers
+List.Transform(
+    list as list,
+    transform as function
+) as list
+```
+
+---
+
+## Basic Example
+
+```powerquery lineNumbers
+List.Transform({1, 2, 3, 4}, each _ * 2)
+```
+
+```text
+{1, 2, 3, 4} -> {2, 4, 6, 8}
+```
+
+`each _` refers to the current list item being processed — `_` is the placeholder for "this value," the list equivalent of `[ColumnName]` for a row in a table.
+
+---
+
+## Using a Named Function Instead of each
+
+```powerquery lineNumbers
+let
+    Double = (x as number) as number => x * 2,
+    Doubled = List.Transform({1, 2, 3, 4}, Double)
+in
+    Doubled
+```
+
+Passing `Double` by name works identically to `each _ * 2` — `each _ * 2` is really just inline shorthand for `(_) => _ * 2`. See [Custom Functions in Power Query M](/docs/power-query/custom-functions) for when naming a function separately is worth it over an inline `each`.
+
+---
+
+## Where List.Transform Actually Comes Up
+
+Most everyday Power Query work stays inside tables, so `List.Transform()` shows up less often directly — but it appears constantly *inside* other functions, whenever a list needs processing on its way to becoming something else:
+
+```powerquery lineNumbers
+#"Column Names Upper" = Table.RenameColumns(
+    Source,
+    List.Zip({Table.ColumnNames(Source), List.Transform(Table.ColumnNames(Source), Text.Upper)})
+)
+```
+
+```text
+Table.ColumnNames(Source) -> {"name", "amount"}
+List.Transform(..., Text.Upper) -> {"NAME", "AMOUNT"}
+```
+
+This pattern — uppercasing every column name at once, regardless of how many columns exist — is something no single `Table.*` function does directly; it needs `List.Transform()` operating on the list of column names first.
+
+---
+
+## List.Transform vs. Table.AddColumn
+
+Both apply a function per element, but at a different level:
+
+| | List.Transform | Table.AddColumn |
+|---|---|---|
+| Operates on | A plain list | A table |
+| Function receives | One list value at a time | An entire row, via `[ColumnName]` |
+| Result | A new list | The same table, with one more column |
+
+Reaching for `List.Transform()` on a table column directly (`List.Transform(Source[Amount], ...)`) works — a column reference like `Source[Amount]` returns a list — but it produces a **standalone list**, disconnected from the rest of the table, not a new column. `Table.AddColumn()` is the one that keeps the result attached to its row.
+
+---
+
+## Common Mistakes
+
+### Expecting It to Return a Table
+
+`List.Transform()` always returns a list, never a table — a common surprise for anyone expecting a `Source[Amount]` transform to stay attached to the original rows. If the result needs to go back into a table, it needs a separate step (`Table.AddColumn` for a new column, or `Table.FromList` to build a fresh table from the list).
+
+### Using each _ When the Function Needs Extra Arguments
+
+```powerquery lineNumbers
+List.Transform({1.234, 5.678}, each Number.Round(_, 2))
+```
+
+This is the correct form — `Number.Round` needs a second argument (decimal places), so a bare function reference (`Number.Round` alone) wouldn't work; wrapping it in `each _` supplies the current value as the first argument while fixing the second.
+
+### Forgetting the Transform Function Needs to Handle Every Value's Type
+
+If the list contains a mix of types (a genuinely messy source, or `null` values mixed with real numbers), a transform function assuming one consistent type errors on whichever value doesn't match — see [Error Handling in Power Query](/docs/power-query/error-handling) for wrapping the transform in `try...otherwise` when that's a real possibility.
+
+---
+
+## Next Steps
+
+- [Custom Functions in Power Query M](/docs/power-query/custom-functions)
+- [List.Accumulate()](/docs/power-query/list-accumulate)
+- [Table.TransformColumns()](/docs/power-query/table-transformcolumns)
+- [M Function Reference](/docs/power-query/functions)

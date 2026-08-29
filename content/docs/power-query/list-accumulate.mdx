@@ -1,0 +1,130 @@
+---
+title: "List.Accumulate()"
+description: Learn how List.Accumulate reduces a list to a single value by carrying state across every item — the general-purpose function behind running totals and custom aggregations that no built-in function covers.
+---
+
+# List.Accumulate()
+
+`List.Accumulate()` walks through a list one value at a time, carrying a running "state" forward from each step to the next — M's general-purpose reduce function, for building a single result out of a list when no built-in aggregation (`List.Sum`, `List.Max`, and so on) already does it.
+
+```powerquery lineNumbers
+List.Accumulate(
+    list as list,
+    seed as any,
+    accumulator as function
+) as any
+```
+
+- **`seed`** — the starting value, before any list items have been processed.
+- **`accumulator`** — a two-argument function: `(state, current) => newState`, called once per list item.
+
+---
+
+## Basic Example: Reimplementing List.Sum
+
+```powerquery lineNumbers
+List.Accumulate({1, 2, 3, 4}, 0, (state, current) => state + current)
+```
+
+```text
+seed = 0
+state=0, current=1 -> newState=1
+state=1, current=2 -> newState=3
+state=3, current=3 -> newState=6
+state=6, current=4 -> newState=10
+
+Result: 10
+```
+
+`List.Sum({1,2,3,4})` already does exactly this — `List.Accumulate()` is worth reaching for once the logic needed is more than a single built-in function already covers.
+
+---
+
+## A Real Use Case: String Concatenation With Custom Formatting
+
+```powerquery lineNumbers
+List.Accumulate(
+    {"Alice", "Bob", "Carol"}, "",
+    (state, current) => if state = "" then current else state & ", " & current
+)
+```
+
+```text
+Result: "Alice, Bob, Carol"
+```
+
+`Text.Combine({"Alice","Bob","Carol"}, ", ")` already does this simpler case too — `List.Accumulate()` earns its place once the joining logic needs to be conditional (skip blanks, format differently for the first item, stop early under some condition), not just a fixed separator.
+
+---
+
+## Building Up a Table or Record
+
+The state carried between steps doesn't have to be a number or text — it can be a table, a record, or any other structure, which is where `List.Accumulate()` handles cases nothing else does directly.
+
+```powerquery lineNumbers
+List.Accumulate(
+    {1, 2, 3},
+    #table({"Step", "Value"}, {}),
+    (state, current) => Table.InsertRows(state, Table.RowCount(state), {[Step = current, Value = current * current]})
+)
+```
+
+```text
+Step | Value
+1    | 1
+2    | 4
+3    | 9
+```
+
+Each pass appends one more row to the table being carried forward as `state`.
+
+---
+
+## List.Accumulate vs. List.Generate
+
+Both build something up across repeated steps, but for different purposes:
+
+| | List.Accumulate | List.Generate |
+|---|---|---|
+| Input | An existing list, one pass per item | No input list — generates values from a condition |
+| Output | A single final value | A list of every intermediate value produced |
+| Typical use | Reducing a known list to one result | Producing a new sequence that doesn't exist yet |
+
+See [List.Generate()](/docs/power-query/list-generate) for the sequence-building side of this pair.
+
+---
+
+## Common Mistakes
+
+### Getting the Accumulator's Argument Order Backwards
+
+```powerquery lineNumbers
+(current, state) => state + current
+```
+
+The first argument is always the running **state**, the second is the **current list item** — swapping them silently produces wrong results rather than an error, since both are usually the same type and the expression can still evaluate without complaint.
+
+### Reaching for List.Accumulate When a Built-In Already Exists
+
+Rebuilding `List.Sum`, `List.Max`, or `List.Count` from scratch with `List.Accumulate()` works, but is harder to read and slower to write than the built-in — worth checking the [M Function Reference](/docs/power-query/functions) first for anything that looks like a standard aggregation.
+
+### Forgetting the Seed's Type Has to Match What the Accumulator Eventually Returns
+
+```powerquery lineNumbers
+List.Accumulate({1, 2, 3}, 0, (state, current) => state & Text.From(current))
+```
+
+Starting with a numeric seed (`0`) while the accumulator concatenates text produces a type error on the first iteration, since `0 & "1"` mixes a number and text in a context expecting one consistent type. The seed needs to match the type the accumulator function actually produces — here, an empty string `""` rather than `0`.
+
+### Not Handling an Empty Input List
+
+`List.Accumulate({}, seed, accumulator)` simply returns `seed` unchanged, without ever calling the accumulator — usually the right behavior, but worth confirming explicitly if the seed value isn't a sensible "nothing to accumulate" result on its own.
+
+---
+
+## Next Steps
+
+- [Custom Functions in Power Query M](/docs/power-query/custom-functions)
+- [List.Transform()](/docs/power-query/list-transform)
+- [List.Generate()](/docs/power-query/list-generate)
+- [M Function Reference](/docs/power-query/functions)
