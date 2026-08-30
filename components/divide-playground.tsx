@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { FlaskConical } from 'lucide-react';
 import { highlightCode } from '@/lib/highlight-code';
+import { PlaygroundRow, PlaygroundTable } from '@/components/playground-table';
 
 function formatNumber(n: number): string {
   // Round to 4 decimal places, then let toString() drop trailing zeros
@@ -41,42 +42,42 @@ export function DividePlayground() {
         Try it live
       </p>
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-        <label className="flex flex-col gap-1 text-sm">
-          <span className="text-fd-muted-foreground">Numerator</span>
+      <PlaygroundTable>
+        <PlaygroundRow label="Numerator">
           <input
             type="text"
             inputMode="decimal"
+            aria-label="Numerator"
             value={numerator}
             onChange={(e) => setNumerator(e.target.value)}
-            className="rounded-md border border-fd-border bg-fd-background px-2.5 py-1.5 font-mono text-sm outline-none focus:border-fd-primary"
+            className="w-full min-w-0 rounded-md border border-fd-border bg-fd-background px-2.5 py-1.5 font-mono text-sm outline-none focus:border-fd-primary"
             aria-invalid={!numIsValid}
           />
-        </label>
-        <label className="flex flex-col gap-1 text-sm">
-          <span className="text-fd-muted-foreground">Denominator</span>
+        </PlaygroundRow>
+        <PlaygroundRow label="Denominator">
           <input
             type="text"
             inputMode="decimal"
+            aria-label="Denominator"
             value={denominator}
             onChange={(e) => setDenominator(e.target.value)}
             placeholder="0 or blank"
-            className="rounded-md border border-fd-border bg-fd-background px-2.5 py-1.5 font-mono text-sm outline-none focus:border-fd-primary"
+            className="w-full min-w-0 rounded-md border border-fd-border bg-fd-background px-2.5 py-1.5 font-mono text-sm outline-none focus:border-fd-primary"
             aria-invalid={!denomIsValid}
           />
-        </label>
-        <label className="flex flex-col gap-1 text-sm">
-          <span className="text-fd-muted-foreground">Alternate result (optional)</span>
+        </PlaygroundRow>
+        <PlaygroundRow label="Alternate result (optional)">
           <input
             type="text"
             inputMode="decimal"
+            aria-label="Alternate result"
             value={alternateResult}
             onChange={(e) => setAlternateResult(e.target.value)}
             placeholder="BLANK()"
-            className="rounded-md border border-fd-border bg-fd-background px-2.5 py-1.5 font-mono text-sm outline-none focus:border-fd-primary"
+            className="w-full min-w-0 rounded-md border border-fd-border bg-fd-background px-2.5 py-1.5 font-mono text-sm outline-none focus:border-fd-primary"
           />
-        </label>
-      </div>
+        </PlaygroundRow>
+      </PlaygroundTable>
 
       <div className="mt-4 rounded-lg border border-fd-border bg-fd-background p-3 font-mono text-sm">
         {highlightCode(formula)}
