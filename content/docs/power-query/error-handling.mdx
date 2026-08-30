@@ -31,6 +31,10 @@ There's no ribbon button for this — it's one of the things that only exists as
 
 Without `try...otherwise`, a single malformed value in `OrderDate` fails the whole `Table.TransformColumns()` step, and the entire query — every row, not just the bad one — errors out.
 
+<TryOtherwisePlayground />
+
+Try typing something that isn't a date — the default `2026-01-15` works, but "not a date" (or anything else that doesn't parse) falls back to the `otherwise` value instead of erroring.
+
 ---
 
 ## try Without otherwise
