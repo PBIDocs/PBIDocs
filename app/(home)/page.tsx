@@ -13,6 +13,7 @@ import {
   Sparkles,
   Shield,
   FlaskConical,
+  Terminal,
 } from 'lucide-react';
 import { NewsletterForm } from '@/components/newsletter-form';
 import { HeroSearch } from '@/components/hero-search';
@@ -328,6 +329,69 @@ export default function HomePage() {
           >
             View all tutorials →
           </Link>
+        </div>
+      </section>
+
+      {/* AI Agents / llms.txt */}
+      <section className="mt-24 w-full max-w-5xl text-left">
+        <div className="grid grid-cols-1 items-center gap-8 rounded-2xl border border-fd-border bg-fd-card/40 p-8 sm:p-10 lg:grid-cols-2">
+          <div>
+            <span className="mb-4 inline-flex items-center gap-1.5 rounded-full bg-fd-primary/10 px-3 py-1 text-xs font-semibold text-fd-primary">
+              <Terminal className="size-3.5" />
+              For AI Agents
+            </span>
+            <h2 className="mb-3 text-3xl font-bold tracking-tight">
+              This site talks to AI agents directly.
+            </h2>
+            <p className="mb-6 text-fd-muted-foreground">
+              Every doc page is also available as a plain-text index, purpose-built for LLMs and
+              coding assistants to read directly instead of scraping rendered HTML —{' '}
+              <code className="rounded bg-fd-secondary px-1.5 py-0.5 text-sm">llms.txt</code> is
+              an emerging convention several sites (including this one) already support.
+            </p>
+            <div className="flex flex-wrap gap-3">
+              <Link
+                href="/llms.txt"
+                className="inline-flex items-center gap-1.5 rounded-lg bg-fd-primary px-5 py-2.5 text-sm font-semibold text-fd-primary-foreground hover:bg-fd-primary/90"
+              >
+                View /llms.txt
+                <ArrowRight className="size-4" />
+              </Link>
+              <Link
+                href="/llms-full.txt"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-fd-border px-5 py-2.5 text-sm font-semibold hover:bg-fd-muted"
+              >
+                View /llms-full.txt
+                <ArrowRight className="size-4" />
+              </Link>
+            </div>
+          </div>
+
+          <div className="overflow-hidden rounded-lg border border-fd-border bg-fd-secondary/50 font-mono text-xs sm:text-sm">
+            <div className="flex items-center gap-1.5 border-b border-fd-border px-3 py-2">
+              <span className="size-2.5 rounded-full bg-fd-muted-foreground/30" />
+              <span className="size-2.5 rounded-full bg-fd-muted-foreground/30" />
+              <span className="size-2.5 rounded-full bg-fd-muted-foreground/30" />
+              <span className="ml-2 text-fd-muted-foreground">llms.txt</span>
+            </div>
+            <pre className="overflow-x-auto p-4 leading-relaxed whitespace-pre">
+              <span className="text-fd-primary">$ curl https://pbidocs.com/llms.txt</span>
+              {'\n\n'}
+              <span className="text-fd-muted-foreground"># Docs</span>
+              {'\n\n'}
+              {'- Getting Started\n'}
+              {'  - [Getting Started]\n'}
+              {'    (/docs/getting-started):\n'}
+              {'    Start here to install Power BI\n'}
+              {'    Desktop and learn the basics.\n'}
+              {'- AI-Assisted Power BI\n'}
+              {'  - [DAX with AI]\n'}
+              {'    (/docs/ai-power-bi/dax-with-ai):\n'}
+              {'    Use AI to write, explain, and\n'}
+              {'    debug DAX calculations faster.\n'}
+              <span className="text-fd-muted-foreground">{'\n...\n'}</span>
+            </pre>
+          </div>
         </div>
       </section>
 
