@@ -12,6 +12,7 @@ import {
   TrendingUp,
   Sparkles,
   Shield,
+  FlaskConical,
 } from 'lucide-react';
 import { NewsletterForm } from '@/components/newsletter-form';
 import { HeroSearch } from '@/components/hero-search';
@@ -202,6 +203,45 @@ export default function HomePage() {
       {/* Function Ticker */}
       <section className="mt-16 w-full max-w-5xl">
         <FunctionTicker />
+      </section>
+
+      {/* Live Playground CTA */}
+      <section className="mt-16 w-full max-w-5xl">
+        <SpotlightCard className="rounded-2xl border border-fd-border bg-fd-card/40">
+          <div className="p-8 text-left sm:p-10">
+            <span className="mb-4 inline-flex items-center gap-1.5 rounded-full bg-fd-primary/10 px-3 py-1 text-xs font-semibold text-fd-primary">
+              <FlaskConical className="size-3.5" />
+              New: Interactive Examples
+            </span>
+            <h2 className="mb-3 text-3xl font-bold tracking-tight">
+              Stop reading examples. Try them.
+            </h2>
+            <p className="mb-6 max-w-2xl text-fd-muted-foreground">
+              Most Power BI references show you a formula and a result and leave it at that. On
+              select function pages, you can edit the numbers yourself and watch the actual
+              result recalculate — right on the page, no Excel, no upload. Live on{' '}
+              <code className="rounded bg-fd-secondary px-1.5 py-0.5 text-sm">DIVIDE()</code> and{' '}
+              <code className="rounded bg-fd-secondary px-1.5 py-0.5 text-sm">IF()</code> so far,
+              with more on the way.
+            </p>
+            <div className="flex flex-wrap gap-3">
+              <Link
+                href="/docs/dax/divide"
+                className="inline-flex items-center gap-1.5 rounded-lg bg-fd-primary px-5 py-2.5 text-sm font-semibold text-fd-primary-foreground hover:bg-fd-primary/90"
+              >
+                Try DIVIDE() live
+                <ArrowRight className="size-4" />
+              </Link>
+              <Link
+                href="/docs/dax/if"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-fd-border px-5 py-2.5 text-sm font-semibold hover:bg-fd-muted"
+              >
+                Try IF() live
+                <ArrowRight className="size-4" />
+              </Link>
+            </div>
+          </div>
+        </SpotlightCard>
       </section>
 
       {/* Topics */}
