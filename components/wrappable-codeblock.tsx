@@ -1,12 +1,30 @@
 'use client';
 
-import { useState, type ComponentProps } from 'react';
+import { useState, type ComponentProps, type MouseEvent } from 'react';
 import { CodeBlock, Pre } from 'fumadocs-ui/components/codeblock';
-import { WrapText } from 'lucide-react';
+import { Sparkles, WrapText } from 'lucide-react';
 import { cn } from '@/lib/cn';
+import { ASK_AI_PREFILL_EVENT } from '@/lib/ask-ai-events';
 
-export function WrappableCodeBlock(props: ComponentProps<typeof CodeBlock>) {
+function CodeBlockImpl({
+  showAskAi,
+  ...props
+}: ComponentProps<typeof CodeBlock> & { showAskAi: boolean }) {
   const [wrap, setWrap] = useState(false);
+
+  // Reads from the live DOM (.innerText, not .textContent) rather than
+  // walking the JSX children tree: Shiki's line-numbered output wraps each
+  // line in its own block-level <span>, with layout (not literal "\n"
+  // characters) producing the line breaks -- .innerText is CSS-aware and
+  // reconstructs them correctly; a text-tree walk silently squashes every
+  // line onto one, which was verified against a real multi-line example
+  // before landing on this approach.
+  function askAiAboutThis(e: MouseEvent<HTMLButtonElement>) {
+    const pre = e.currentTarget.closest('figure')?.querySelector('pre');
+    const code = (pre?.innerText ?? '').replace(/\n+$/, '');
+    const prompt = `Explain this code:\n\n\`\`\`\n${code}\n\`\`\``;
+    window.dispatchEvent(new CustomEvent(ASK_AI_PREFILL_EVENT, { detail: prompt }));
+  }
 
   return (
     <CodeBlock
@@ -24,6 +42,16 @@ export function WrappableCodeBlock(props: ComponentProps<typeof CodeBlock>) {
           >
             <WrapText className="size-3.5" />
           </button>
+          {showAskAi && (
+            <button
+              type="button"
+              aria-label="Ask AI about this code"
+              onClick={askAiAboutThis}
+              className="inline-flex items-center justify-center rounded-md p-1 text-fd-muted-foreground transition-colors hover:text-fd-primary"
+            >
+              <Sparkles className="size-3.5" />
+            </button>
+          )}
           {children}
         </div>
       )}
@@ -31,4 +59,17 @@ export function WrappableCodeBlock(props: ComponentProps<typeof CodeBlock>) {
       <Pre>{props.children}</Pre>
     </CodeBlock>
   );
+}
+
+export function WrappableCodeBlock(props: ComponentProps<typeof CodeBlock>) {
+  return <CodeBlockImpl {...props} showAskAi={false} />;
+}
+
+// Docs-page-only variant: Ask AI is currently mounted only on
+// app/docs/[[...slug]]/page.tsx, not on blog or tutorial pages -- rendering
+// this icon anywhere else would be a dead button with nothing listening for
+// its event, so it's opted into per-route via getMDXComponents({ pre }),
+// not registered as the default.
+export function DocsCodeBlock(props: ComponentProps<typeof CodeBlock>) {
+  return <CodeBlockImpl {...props} showAskAi={true} />;
 }

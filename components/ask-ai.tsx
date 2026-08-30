@@ -6,6 +6,7 @@ import { cn } from '@/lib/cn';
 import { highlightCode } from '@/lib/highlight-code';
 import { UpgradeBanner } from '@/components/upgrade-banner';
 import { ManageBillingLink } from '@/components/manage-billing-link';
+import { ASK_AI_PREFILL_EVENT } from '@/lib/ask-ai-events';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -57,10 +58,41 @@ export function AskAi({ pageTitle }: { pageTitle: string }) {
   const [error, setError] = useState('');
   const [isSubscriber, setIsSubscriber] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const sendRef = useRef<((text: string) => Promise<void>) | null>(null);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
   }, [messages, status]);
+
+  // Kept current every render so the mount-only listener below always calls
+  // today's `send` (closing over the latest `messages`), not the one from
+  // whatever render happened to be current when the listener was attached --
+  // otherwise a code-block click after an existing conversation would send
+  // only the new prompt and silently drop the prior messages.
+  useEffect(() => {
+    sendRef.current = send;
+  });
+
+  // Lets a code block's "Ask AI" button hand off a question without any
+  // prop-drilling through the MDX-rendered page content -- see
+  // lib/ask-ai-events.ts for why a plain window event is enough here.
+  // Sends immediately rather than dropping the (often multi-line) prompt
+  // into the single-line input box for review first: a plain <input> can't
+  // visually hold newlines at all (a real DOM limitation -- the value still
+  // posts correctly under the hood, but it *displays* squashed onto one
+  // line, which looks broken even though it isn't), while the chat bubble
+  // it becomes renders fenced code properly once sent.
+  useEffect(() => {
+    function handlePrefill(e: Event) {
+      const prompt = (e as CustomEvent<string>).detail;
+      if (typeof prompt !== 'string') return;
+      setOpen(true);
+      sendRef.current?.(prompt);
+    }
+    window.addEventListener(ASK_AI_PREFILL_EVENT, handlePrefill);
+    return () => window.removeEventListener(ASK_AI_PREFILL_EVENT, handlePrefill);
+  }, []);
 
   async function send(text: string) {
     const trimmed = text.trim();
@@ -210,6 +242,7 @@ export function AskAi({ pageTitle }: { pageTitle: string }) {
 
             <div className="flex items-center gap-2 border-t border-fd-border p-3">
               <input
+                ref={inputRef}
                 type="text"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
