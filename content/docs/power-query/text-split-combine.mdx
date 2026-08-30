@@ -83,6 +83,10 @@ Text.Split("A,,B", ",")
 
 A double delimiter (from a source with genuinely missing values in a delimited field) produces an empty string element, not a skipped one — worth accounting for explicitly if blank entries shouldn't just become `""` downstream.
 
+<TextSplitPlayground />
+
+Try typing two separators back to back, or changing how many appear — the item count and the empty-string chips update live instead of just being described.
+
 ### Combining a List That Contains null
 
 ```powerquery lineNumbers

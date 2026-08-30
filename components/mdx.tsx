@@ -5,6 +5,8 @@ import { DividePlayground } from './divide-playground';
 import { IfPlayground } from './if-playground';
 import { SwitchPlayground } from './switch-playground';
 import { TextMiddlePlayground } from './text-middle-playground';
+import { TextSplitPlayground } from './text-split-playground';
+import { DateAddMonthsPlayground } from './date-addmonths-playground';
 
 export function getMDXComponents(components?: MDXComponents) {
   return {
@@ -14,6 +16,8 @@ export function getMDXComponents(components?: MDXComponents) {
     IfPlayground,
     SwitchPlayground,
     TextMiddlePlayground,
+    TextSplitPlayground,
+    DateAddMonthsPlayground,
     ...components,
   } satisfies MDXComponents;
 }

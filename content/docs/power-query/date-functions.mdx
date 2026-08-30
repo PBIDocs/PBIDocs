@@ -61,6 +61,10 @@ Date.AddMonths(#date(2026,1,31), 2)  -> #date(2026,3,31)   (back to a 31-day mon
 
 This is usually the desired behavior, but worth knowing explicitly: a report period defined as "one month after the 31st" doesn't consistently land on the same day-of-month every time, which can look like a bug in a rolling-window calculation until this behavior is understood.
 
+<DateAddMonthsPlayground />
+
+Start on January 31 and add 1 month — it clamps to February 28 instead of erroring or rolling into March. Add 2 months instead and it lands back on the 31st, since March has one.
+
 ---
 
 ## Subtracting Two Dates Produces a Duration, Not a Number
