@@ -350,20 +350,20 @@ export default function HomePage() {
               an emerging convention several sites (including this one) already support.
             </p>
             <div className="flex flex-wrap gap-3">
-              <Link
+              <a
                 href="/llms.txt"
                 className="inline-flex items-center gap-1.5 rounded-lg bg-fd-primary px-5 py-2.5 text-sm font-semibold text-fd-primary-foreground hover:bg-fd-primary/90"
               >
                 View /llms.txt
                 <ArrowRight className="size-4" />
-              </Link>
-              <Link
+              </a>
+              <a
                 href="/llms-full.txt"
                 className="inline-flex items-center gap-1.5 rounded-lg border border-fd-border px-5 py-2.5 text-sm font-semibold hover:bg-fd-muted"
               >
                 View /llms-full.txt
                 <ArrowRight className="size-4" />
-              </Link>
+              </a>
             </div>
           </div>
 
