@@ -56,6 +56,8 @@ Text.Contains("URGENT REVIEW", "urgent")
 Result: false    <- exact case doesn't match
 ```
 
+<TextContainsPlayground />
+
 **Fix:** normalize case on both sides before comparing, or pass an explicit comparer.
 
 ```powerquery lineNumbers

@@ -7,6 +7,8 @@ import { SwitchPlayground } from './switch-playground';
 import { TextMiddlePlayground } from './text-middle-playground';
 import { TextSplitPlayground } from './text-split-playground';
 import { DateAddMonthsPlayground } from './date-addmonths-playground';
+import { TextContainsPlayground } from './text-contains-playground';
+import { TextTrimPlayground } from './text-trim-playground';
 
 export function getMDXComponents(components?: MDXComponents) {
   return {
@@ -18,6 +20,8 @@ export function getMDXComponents(components?: MDXComponents) {
     TextMiddlePlayground,
     TextSplitPlayground,
     DateAddMonthsPlayground,
+    TextContainsPlayground,
+    TextTrimPlayground,
     ...components,
   } satisfies MDXComponents;
 }
