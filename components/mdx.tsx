@@ -3,6 +3,7 @@ import type { MDXComponents } from 'mdx/types';
 import { WrappableCodeBlock } from './wrappable-codeblock';
 import { DividePlayground } from './divide-playground';
 import { IfPlayground } from './if-playground';
+import { SwitchPlayground } from './switch-playground';
 
 export function getMDXComponents(components?: MDXComponents) {
   return {
@@ -10,6 +11,7 @@ export function getMDXComponents(components?: MDXComponents) {
     pre: WrappableCodeBlock,
     DividePlayground,
     IfPlayground,
+    SwitchPlayground,
     ...components,
   } satisfies MDXComponents;
 }
