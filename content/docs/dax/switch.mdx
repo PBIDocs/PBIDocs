@@ -100,6 +100,10 @@ Total Sales = 0        -> "No Sales"
 
 Conditions are checked top to bottom, and the first one that evaluates to `TRUE()` wins — order matters here, since a broader condition placed first would shadow the more specific ones below it.
 
+<SwitchPlayground />
+
+Try setting the Gold row's threshold to `0` — that's the shadowing bug from the next section, and you'll see it happen instead of just reading about it.
+
 ---
 
 ## Order Matters in SWITCH(TRUE(), ...)
