@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { FlaskConical } from 'lucide-react';
 import { highlightCode } from '@/lib/highlight-code';
+import { PlaygroundRow, PlaygroundTable } from '@/components/playground-table';
 
 const OPERATORS = ['>', '>=', '<', '<=', '=', '<>'] as const;
 type Operator = (typeof OPERATORS)[number];
@@ -55,62 +56,61 @@ export function IfPlayground() {
         Try it live
       </p>
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <label className="flex flex-col gap-1 text-sm">
-          <span className="text-fd-muted-foreground">[Total Sales]</span>
+      <PlaygroundTable>
+        <PlaygroundRow label="[Total Sales]">
           <input
             type="text"
             inputMode="decimal"
+            aria-label="Total Sales"
             value={testValue}
             onChange={(e) => setTestValue(e.target.value)}
-            className="rounded-md border border-fd-border bg-fd-background px-2.5 py-1.5 font-mono text-sm outline-none focus:border-fd-primary"
+            className="w-full min-w-0 rounded-md border border-fd-border bg-fd-background px-2.5 py-1.5 font-mono text-sm outline-none focus:border-fd-primary"
             aria-invalid={Number.isNaN(value)}
           />
-        </label>
-        <label className="flex flex-col gap-1 text-sm">
-          <span className="text-fd-muted-foreground">Condition</span>
-          <div className="flex gap-1.5">
-            <select
-              value={operator}
-              onChange={(e) => setOperator(e.target.value as Operator)}
-              className="rounded-md border border-fd-border bg-fd-background px-2 py-1.5 font-mono text-sm outline-none focus:border-fd-primary"
-            >
-              {OPERATORS.map((op) => (
-                <option key={op} value={op}>
-                  {op}
-                </option>
-              ))}
-            </select>
-            <input
-              type="text"
-              inputMode="decimal"
-              value={threshold}
-              onChange={(e) => setThreshold(e.target.value)}
-              className="w-full min-w-0 rounded-md border border-fd-border bg-fd-background px-2.5 py-1.5 font-mono text-sm outline-none focus:border-fd-primary"
-              aria-invalid={Number.isNaN(thresholdValue)}
-            />
-          </div>
-        </label>
-        <label className="flex flex-col gap-1 text-sm">
-          <span className="text-fd-muted-foreground">Result if true</span>
+        </PlaygroundRow>
+        <PlaygroundRow label="Condition">
+          <select
+            value={operator}
+            aria-label="Comparison operator"
+            onChange={(e) => setOperator(e.target.value as Operator)}
+            className="rounded-md border border-fd-border bg-fd-background px-2 py-1.5 font-mono text-sm outline-none focus:border-fd-primary"
+          >
+            {OPERATORS.map((op) => (
+              <option key={op} value={op}>
+                {op}
+              </option>
+            ))}
+          </select>
           <input
             type="text"
+            inputMode="decimal"
+            aria-label="Threshold"
+            value={threshold}
+            onChange={(e) => setThreshold(e.target.value)}
+            className="w-24 min-w-0 rounded-md border border-fd-border bg-fd-background px-2.5 py-1.5 font-mono text-sm outline-none focus:border-fd-primary"
+            aria-invalid={Number.isNaN(thresholdValue)}
+          />
+        </PlaygroundRow>
+        <PlaygroundRow label="Result if true">
+          <input
+            type="text"
+            aria-label="Result if true"
             value={resultIfTrue}
             onChange={(e) => setResultIfTrue(e.target.value)}
-            className="rounded-md border border-fd-border bg-fd-background px-2.5 py-1.5 font-mono text-sm outline-none focus:border-fd-primary"
+            className="w-full min-w-0 rounded-md border border-fd-border bg-fd-background px-2.5 py-1.5 font-mono text-sm outline-none focus:border-fd-primary"
           />
-        </label>
-        <label className="flex flex-col gap-1 text-sm">
-          <span className="text-fd-muted-foreground">Result if false (optional)</span>
+        </PlaygroundRow>
+        <PlaygroundRow label="Result if false (optional)">
           <input
             type="text"
+            aria-label="Result if false"
             value={resultIfFalse}
             onChange={(e) => setResultIfFalse(e.target.value)}
             placeholder="leave blank for BLANK()"
-            className="rounded-md border border-fd-border bg-fd-background px-2.5 py-1.5 font-mono text-sm outline-none focus:border-fd-primary"
+            className="w-full min-w-0 rounded-md border border-fd-border bg-fd-background px-2.5 py-1.5 font-mono text-sm outline-none focus:border-fd-primary"
           />
-        </label>
-      </div>
+        </PlaygroundRow>
+      </PlaygroundTable>
 
       <div className="mt-4 rounded-lg border border-fd-border bg-fd-background p-3 font-mono text-sm">
         {highlightCode(formula)}

@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { FlaskConical } from 'lucide-react';
 import { highlightCode } from '@/lib/highlight-code';
+import { PlaygroundRow, PlaygroundTable } from '@/components/playground-table';
 
 interface Tier {
   threshold: string;
@@ -60,74 +61,49 @@ export function SwitchPlayground() {
         Try it live
       </p>
 
-      <label className="mb-4 flex flex-col gap-1 text-sm sm:max-w-xs">
-        <span className="text-fd-muted-foreground">[Total Sales]</span>
-        <input
-          type="text"
-          inputMode="decimal"
-          value={testValue}
-          onChange={(e) => setTestValue(e.target.value)}
-          className="rounded-md border border-fd-border bg-fd-background px-2.5 py-1.5 font-mono text-sm outline-none focus:border-fd-primary"
-          aria-invalid={!valueIsValid}
-        />
-      </label>
-
-      <div className="flex flex-col gap-2">
+      <PlaygroundTable>
+        <PlaygroundRow label="[Total Sales]">
+          <input
+            type="text"
+            inputMode="decimal"
+            aria-label="Total Sales"
+            value={testValue}
+            onChange={(e) => setTestValue(e.target.value)}
+            className="w-full min-w-0 rounded-md border border-fd-border bg-fd-background px-2.5 py-1.5 font-mono text-sm outline-none focus:border-fd-primary"
+            aria-invalid={!valueIsValid}
+          />
+        </PlaygroundRow>
         {tiers.map((tier, i) => (
-          <div key={i} className="flex flex-wrap items-center gap-2 text-sm">
-            <span
-              className={
-                matchedIndex === i
-                  ? 'font-mono font-semibold text-fd-primary'
-                  : 'font-mono text-fd-muted-foreground'
-              }
-            >
-              [Total Sales] &gt;
-            </span>
+          <PlaygroundRow key={i} label={`Condition ${i + 1}`} highlight={matchedIndex === i}>
+            <span className="font-mono text-sm text-fd-muted-foreground">[Total Sales] &gt;</span>
             <input
               type="text"
               inputMode="decimal"
+              aria-label={`Condition ${i + 1} threshold`}
               value={tier.threshold}
               onChange={(e) => updateTier(i, 'threshold', e.target.value)}
-              className="w-24 rounded-md border border-fd-border bg-fd-background px-2.5 py-1.5 font-mono text-sm outline-none focus:border-fd-primary"
+              className="w-20 min-w-0 rounded-md border border-fd-border bg-fd-background px-2.5 py-1.5 font-mono text-sm outline-none focus:border-fd-primary"
             />
             <span className="text-fd-muted-foreground">&rarr;</span>
             <input
               type="text"
+              aria-label={`Condition ${i + 1} result`}
               value={tier.label}
               onChange={(e) => updateTier(i, 'label', e.target.value)}
-              className={
-                'rounded-md border px-2.5 py-1.5 font-mono text-sm outline-none focus:border-fd-primary ' +
-                (matchedIndex === i
-                  ? 'border-fd-primary bg-fd-background'
-                  : 'border-fd-border bg-fd-background')
-              }
+              className="min-w-0 flex-1 rounded-md border border-fd-border bg-fd-background px-2.5 py-1.5 font-mono text-sm outline-none focus:border-fd-primary"
             />
-          </div>
+          </PlaygroundRow>
         ))}
-        <div className="flex flex-wrap items-center gap-2 text-sm">
-          <span
-            className={
-              matchedIndex === -1
-                ? 'font-mono font-semibold text-fd-primary'
-                : 'font-mono text-fd-muted-foreground'
-            }
-          >
-            else &rarr;
-          </span>
+        <PlaygroundRow label="Else" highlight={matchedIndex === -1}>
           <input
             type="text"
+            aria-label="Else result"
             value={elseLabel}
             onChange={(e) => setElseLabel(e.target.value)}
-            className={
-              'rounded-md border px-2.5 py-1.5 font-mono text-sm outline-none focus:border-fd-primary ' +
-              (matchedIndex === -1
-                ? 'border-fd-primary bg-fd-background'
-                : 'border-fd-border bg-fd-background')
-            }
+            className="w-full min-w-0 rounded-md border border-fd-border bg-fd-background px-2.5 py-1.5 font-mono text-sm outline-none focus:border-fd-primary"
           />
-        </div>
-      </div>
+        </PlaygroundRow>
+      </PlaygroundTable>
 
       <pre className="mt-4 overflow-x-auto rounded-lg border border-fd-border bg-fd-background p-3 font-mono text-sm whitespace-pre">
         {highlightCode(formula)}
