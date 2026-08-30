@@ -49,6 +49,10 @@ The `start` argument is **zero-indexed** — position `4` is the 5th character, 
 
 The `count` argument is optional — omitting it returns everything from `start` to the end of the string, equivalent to a variable-length `Text.End()`.
 
+<TextMiddlePlayground />
+
+Try changing Start to `5` instead of `4` — the highlighted range shifts one character late, which is exactly the off-by-one mistake described below.
+
 ---
 
 ## Text.Length(): Combining With a Variable End Position
