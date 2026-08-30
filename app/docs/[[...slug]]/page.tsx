@@ -14,6 +14,7 @@ import { createRelativeLink } from 'fumadocs-ui/mdx';
 import { gitConfig } from '@/lib/shared';
 import { PageFeedback } from '@/components/page-feedback';
 import { AskAi } from '@/components/ask-ai';
+import { DocsCodeBlock } from '@/components/wrappable-codeblock';
 import { getBreadcrumbItems } from 'fumadocs-core/breadcrumb';
 
 export default async function Page(props: PageProps<'/docs/[[...slug]]'>) {
@@ -78,6 +79,9 @@ export default async function Page(props: PageProps<'/docs/[[...slug]]'>) {
           components={getMDXComponents({
             // this allows you to link to other pages with relative file paths
             a: createRelativeLink(source, page),
+            // adds an "Ask AI" icon to every code block -- only safe here,
+            // since AskAi (the listener) is only mounted on docs pages
+            pre: DocsCodeBlock,
           })}
         />
       </DocsBody>

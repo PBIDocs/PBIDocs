@@ -1,23 +1,12 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
-import type { ReactNode } from 'react';
 import { notFound } from 'next/navigation';
 import { DocsBody, DocsDescription, DocsTitle } from 'fumadocs-ui/layouts/docs/page';
 import { getMDXComponents } from '@/components/mdx';
 import { getTutorial, getTutorialImageUrl, getTutorials } from '@/lib/tutorial-source';
 import { PageToc } from '@/components/page-toc';
 import { Faq } from '@/components/faq';
-
-function extractText(node: ReactNode): string {
-  if (typeof node === 'string') return node;
-  if (typeof node === 'number') return String(node);
-  if (Array.isArray(node)) return node.map(extractText).join('');
-  if (node && typeof node === 'object' && 'props' in node) {
-    const props = (node as { props?: { children?: ReactNode } }).props;
-    return extractText(props?.children);
-  }
-  return '';
-}
+import { extractText } from '@/lib/extract-text';
 
 function formatDate(date: string): string {
   return new Date(`${date}T00:00:00Z`).toLocaleDateString('en-US', {
