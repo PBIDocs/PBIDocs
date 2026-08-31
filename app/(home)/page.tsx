@@ -218,34 +218,23 @@ export default function HomePage() {
               Stop reading examples. Try them.
             </h2>
             <p className="mb-6 max-w-2xl text-fd-muted-foreground">
-              Most Power BI references show you a formula and a result and leave it at that. On
-              select function pages, you can edit the numbers yourself and watch the actual
-              result recalculate — right on the page, no Excel, no upload. Live on{' '}
-              <code className="rounded bg-fd-secondary px-1.5 py-0.5 text-sm">DIVIDE()</code>,{' '}
-              <code className="rounded bg-fd-secondary px-1.5 py-0.5 text-sm">IF()</code>, and{' '}
-              <code className="rounded bg-fd-secondary px-1.5 py-0.5 text-sm">SWITCH()</code> so
-              far, with more on the way.
+              Most Power BI references show you a formula and a result and leave it at that. On 9
+              function pages so far — DAX and Power Query M — you can edit the numbers yourself
+              and watch the actual result recalculate, right on the page, no Excel, no upload.
             </p>
             <div className="flex flex-wrap gap-3">
               <Link
-                href="/docs/dax/divide"
+                href="/playground"
                 className="inline-flex items-center gap-1.5 rounded-lg bg-fd-primary px-5 py-2.5 text-sm font-semibold text-fd-primary-foreground hover:bg-fd-primary/90"
               >
+                Browse all 9 live examples
+                <ArrowRight className="size-4" />
+              </Link>
+              <Link
+                href="/docs/dax/divide"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-fd-border px-5 py-2.5 text-sm font-semibold hover:bg-fd-muted"
+              >
                 Try DIVIDE() live
-                <ArrowRight className="size-4" />
-              </Link>
-              <Link
-                href="/docs/dax/if"
-                className="inline-flex items-center gap-1.5 rounded-lg border border-fd-border px-5 py-2.5 text-sm font-semibold hover:bg-fd-muted"
-              >
-                Try IF() live
-                <ArrowRight className="size-4" />
-              </Link>
-              <Link
-                href="/docs/dax/switch"
-                className="inline-flex items-center gap-1.5 rounded-lg border border-fd-border px-5 py-2.5 text-sm font-semibold hover:bg-fd-muted"
-              >
-                Try SWITCH() live
                 <ArrowRight className="size-4" />
               </Link>
             </div>
