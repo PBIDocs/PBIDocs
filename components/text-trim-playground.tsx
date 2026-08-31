@@ -4,6 +4,8 @@ import { useState } from 'react';
 import { FlaskConical } from 'lucide-react';
 import { highlightCode } from '@/lib/highlight-code';
 import { cn } from '@/lib/cn';
+import { AskAiInlineButton } from '@/components/ask-ai-inline-button';
+import { buildAskAiPrompt } from '@/lib/ask-ai-events';
 
 const NBSP = ' ';
 
@@ -88,6 +90,13 @@ export function TextTrimPlayground() {
         <span className="text-xs text-fd-muted-foreground">
           — {text.length} characters in, {trimmed.length} characters out
         </span>
+        <AskAiInlineButton
+          prompt={buildAskAiPrompt(
+            'Explain why this Power Query M code returns the result shown:\n\n```\n',
+            formula,
+            `\n\`\`\`\nResult: "${trimmed.replace(NBSP, '\\u00A0')}" (${trimmed.length} characters)`,
+          )}
+        />
       </div>
       {trimmed.includes(NBSP) && (
         <p className="mt-1 text-xs text-fd-muted-foreground">

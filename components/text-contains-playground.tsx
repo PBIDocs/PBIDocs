@@ -4,6 +4,8 @@ import { useState } from 'react';
 import { FlaskConical } from 'lucide-react';
 import { highlightCode } from '@/lib/highlight-code';
 import { PlaygroundRow, PlaygroundTable } from '@/components/playground-table';
+import { AskAiInlineButton } from '@/components/ask-ai-inline-button';
+import { buildAskAiPrompt } from '@/lib/ask-ai-events';
 
 export function TextContainsPlayground() {
   const [text, setText] = useState('URGENT REVIEW');
@@ -75,6 +77,13 @@ export function TextContainsPlayground() {
             — it&apos;s in there, just in a different case; check the comparer box above
           </span>
         )}
+        <AskAiInlineButton
+          prompt={buildAskAiPrompt(
+            'Explain why this Power Query M code returns the result shown:\n\n```\n',
+            formula,
+            `\n\`\`\`\nResult: ${result}`,
+          )}
+        />
       </div>
     </div>
   );

@@ -5,6 +5,8 @@ import { FlaskConical } from 'lucide-react';
 import { highlightCode } from '@/lib/highlight-code';
 import { PlaygroundRow, PlaygroundTable } from '@/components/playground-table';
 import { cn } from '@/lib/cn';
+import { AskAiInlineButton } from '@/components/ask-ai-inline-button';
+import { buildAskAiPrompt } from '@/lib/ask-ai-events';
 
 export function TextMiddlePlayground() {
   const [text, setText] = useState('INV-2026-0042');
@@ -101,6 +103,13 @@ export function TextMiddlePlayground() {
             — Start and Count need to be non-negative whole numbers
           </span>
         )}
+        <AskAiInlineButton
+          prompt={buildAskAiPrompt(
+            'Explain why this Power Query M code returns the result shown:\n\n```\n',
+            formula,
+            `\n\`\`\`\nResult: "${result}"`,
+          )}
+        />
       </div>
     </div>
   );

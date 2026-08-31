@@ -4,6 +4,8 @@ import { useState } from 'react';
 import { FlaskConical } from 'lucide-react';
 import { highlightCode } from '@/lib/highlight-code';
 import { PlaygroundRow, PlaygroundTable } from '@/components/playground-table';
+import { AskAiInlineButton } from '@/components/ask-ai-inline-button';
+import { buildAskAiPrompt } from '@/lib/ask-ai-events';
 
 function formatNumber(n: number): string {
   // Round to 4 decimal places, then let toString() drop trailing zeros
@@ -83,7 +85,7 @@ export function DividePlayground() {
         {highlightCode(formula)}
       </div>
 
-      <div className="mt-3 flex items-center gap-2 text-sm">
+      <div className="mt-3 flex flex-wrap items-center gap-2 text-sm">
         <span className="text-fd-muted-foreground">Result:</span>
         <span
           className={
@@ -100,6 +102,13 @@ export function DividePlayground() {
             of dividing
           </span>
         )}
+        <AskAiInlineButton
+          prompt={buildAskAiPrompt(
+            'Explain why this DAX returns the result shown:\n\n```\n',
+            formula,
+            `\n\`\`\`\nResult: ${resultDisplay}`,
+          )}
+        />
       </div>
     </div>
   );
