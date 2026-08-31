@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
-import { Check, Copy, Loader2, RotateCw, Sparkles } from 'lucide-react';
+import { Check, Clock, Copy, Loader2, RotateCw, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { highlightCode } from '@/lib/highlight-code';
 import { UpgradeBanner } from '@/components/upgrade-banner';
@@ -86,6 +86,39 @@ function storeRemaining(remaining: number, isSubscriber: boolean) {
   }
 }
 
+const HISTORY_STORAGE_KEY = 'dax-builder-history';
+const MAX_HISTORY = 5;
+
+interface HistoryEntry {
+  prompt: string;
+  mode: Mode;
+  result: BuilderResponse;
+}
+
+function readHistory(): HistoryEntry[] {
+  try {
+    const raw = localStorage.getItem(HISTORY_STORAGE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw) as unknown;
+    return Array.isArray(parsed) ? (parsed as HistoryEntry[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+function pushHistory(entry: HistoryEntry): HistoryEntry[] {
+  const next = [entry, ...readHistory().filter((h) => h.prompt !== entry.prompt || h.mode !== entry.mode)].slice(
+    0,
+    MAX_HISTORY,
+  );
+  try {
+    localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(next));
+  } catch {
+    // Best-effort only — losing history isn't harmful, just a missed convenience.
+  }
+  return next;
+}
+
 export function DaxFormulaBuilder() {
   const [mode, setMode] = useState<Mode>('dax');
   const [prompt, setPrompt] = useState('');
@@ -94,13 +127,25 @@ export function DaxFormulaBuilder() {
   const [result, setResult] = useState<BuilderResponse | null>(null);
   const [copied, setCopied] = useState(false);
   const [knownQuota, setKnownQuota] = useState<StoredQuota | null>(null);
+  const [history, setHistory] = useState<HistoryEntry[]>([]);
   const examples = useMemo(() => pickExamples(mode), [mode]);
 
   useEffect(() => {
     // localStorage doesn't exist at static-export build time, so this can't be a lazy useState initializer.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setKnownQuota(readStoredRemaining());
+    setHistory(readHistory());
   }, []);
+
+  function restoreFromHistory(entry: HistoryEntry) {
+    if (loading) return;
+    setMode(entry.mode);
+    setPrompt(entry.prompt);
+    setResult(entry.result);
+    setStatus('success');
+    setError('');
+    setCopied(false);
+  }
 
   async function runBuild(promptOverride?: string) {
     const activePrompt = (promptOverride ?? prompt).trim();
@@ -129,13 +174,15 @@ export function DaxFormulaBuilder() {
         return;
       }
 
-      setResult(data as BuilderResponse);
+      const builderResult = data as BuilderResponse;
+      setResult(builderResult);
       setStatus('success');
       if (typeof data.remaining === 'number') {
         const isSubscriber = Boolean(data.isSubscriber);
         setKnownQuota({ remaining: data.remaining, isSubscriber });
         storeRemaining(data.remaining, isSubscriber);
       }
+      setHistory(pushHistory({ prompt: activePrompt, mode, result: builderResult }));
     } catch {
       setStatus('error');
       setError('Something went wrong. Please try again.');
@@ -157,6 +204,11 @@ export function DaxFormulaBuilder() {
 
   const loading = status === 'loading';
   const codeText = result ? (mode === 'dax' ? `${result.title} =\n${result.formula}` : result.formula) : '';
+  // Prefer the live quota over result.remaining/isSubscriber: a result restored
+  // from history can be several requests old by the time it's shown again, and
+  // knownQuota is always kept current with the server's latest response.
+  const displayIsSubscriber = knownQuota?.isSubscriber ?? result?.isSubscriber ?? false;
+  const displayRemaining = knownQuota?.remaining ?? result?.remaining ?? 0;
 
   return (
     <div className="flex flex-col gap-6">
@@ -183,6 +235,32 @@ export function DaxFormulaBuilder() {
           </button>
         ))}
       </div>
+
+      {history.length > 0 && (
+        <div className="flex flex-col gap-2">
+          <p className="inline-flex items-center gap-1.5 text-xs font-medium tracking-wide text-fd-muted-foreground uppercase">
+            <Clock className="size-3.5" />
+            Recent
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {history.map((entry) => (
+              <button
+                key={`${entry.mode}:${entry.prompt}`}
+                type="button"
+                onClick={() => restoreFromHistory(entry)}
+                disabled={loading}
+                title={entry.prompt}
+                className="flex items-center gap-1.5 rounded-full border border-fd-border px-3 py-1 text-xs text-fd-muted-foreground transition-colors hover:bg-fd-accent hover:text-fd-accent-foreground disabled:opacity-60"
+              >
+                <span className="rounded-full bg-fd-secondary px-1.5 py-0.5 text-[0.65rem] font-semibold uppercase">
+                  {entry.mode === 'dax' ? 'DAX' : 'M'}
+                </span>
+                {entry.prompt.length > 40 ? `${entry.prompt.slice(0, 40)}…` : entry.prompt}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-3">
         <label htmlFor="dax-prompt" className="text-sm font-medium text-fd-foreground">
@@ -247,7 +325,7 @@ export function DaxFormulaBuilder() {
           >
             {error}
           </p>
-          {status === 'limited' && !result?.isSubscriber && <UpgradeBanner />}
+          {status === 'limited' && !displayIsSubscriber && <UpgradeBanner />}
         </div>
       )}
 
@@ -299,13 +377,13 @@ export function DaxFormulaBuilder() {
 
           <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-fd-muted-foreground/70">
             <p>
-              {result.isSubscriber ? (
+              {displayIsSubscriber ? (
                 <>
-                  Pro — {result.remaining} request{result.remaining === 1 ? '' : 's'} left today.
+                  Pro — {displayRemaining} request{displayRemaining === 1 ? '' : 's'} left today.
                 </>
               ) : (
                 <>
-                  {result.remaining} free request{result.remaining === 1 ? '' : 's'} left today.
+                  {displayRemaining} free request{displayRemaining === 1 ? '' : 's'} left today.
                 </>
               )}{' '}
               Always test a generated {mode === 'dax' ? 'measure' : 'step'} against your own model before
@@ -319,7 +397,7 @@ export function DaxFormulaBuilder() {
                   '\n```',
                 )}
               />
-              {result.isSubscriber && <ManageBillingLink />}
+              {displayIsSubscriber && <ManageBillingLink />}
             </div>
           </div>
         </div>
