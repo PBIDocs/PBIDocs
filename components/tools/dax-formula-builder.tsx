@@ -6,6 +6,8 @@ import { cn } from '@/lib/cn';
 import { highlightCode } from '@/lib/highlight-code';
 import { UpgradeBanner } from '@/components/upgrade-banner';
 import { ManageBillingLink } from '@/components/manage-billing-link';
+import { AskAiInlineButton } from '@/components/ask-ai-inline-button';
+import { buildAskAiPrompt } from '@/lib/ask-ai-events';
 
 type Mode = 'dax' | 'm';
 type Status = 'idle' | 'loading' | 'success' | 'error' | 'limited';
@@ -295,7 +297,7 @@ export function DaxFormulaBuilder() {
             </div>
           )}
 
-          <div className="flex items-center justify-between gap-3 text-xs text-fd-muted-foreground/70">
+          <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-fd-muted-foreground/70">
             <p>
               {result.isSubscriber ? (
                 <>
@@ -309,7 +311,16 @@ export function DaxFormulaBuilder() {
               Always test a generated {mode === 'dax' ? 'measure' : 'step'} against your own model before
               shipping it.
             </p>
-            {result.isSubscriber && <ManageBillingLink />}
+            <div className="flex items-center gap-3">
+              <AskAiInlineButton
+                prompt={buildAskAiPrompt(
+                  `Explain this generated ${mode === 'dax' ? 'DAX measure' : 'Power Query M step'} in more depth, or suggest how to adapt it:\n\n\`\`\`\n`,
+                  codeText,
+                  '\n```',
+                )}
+              />
+              {result.isSubscriber && <ManageBillingLink />}
+            </div>
           </div>
         </div>
       )}

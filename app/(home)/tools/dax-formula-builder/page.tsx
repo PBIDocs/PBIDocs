@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { DaxFormulaBuilder } from '@/components/tools/dax-formula-builder';
 import { UpgradeBanner } from '@/components/upgrade-banner';
+import { AskAi } from '@/components/ask-ai';
 
 export const metadata: Metadata = {
   title: 'DAX Formula Builder',
@@ -28,7 +29,10 @@ export default function DaxFormulaBuilderPage() {
             See pricing
           </Link>
         </p>
-        <UpgradeBanner />
+        <div className="flex items-center gap-3">
+          <AskAi pageTitle="DAX Formula Builder" />
+          <UpgradeBanner />
+        </div>
       </div>
 
       <DaxFormulaBuilder />
