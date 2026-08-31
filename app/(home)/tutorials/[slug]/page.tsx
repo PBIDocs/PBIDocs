@@ -7,6 +7,8 @@ import { getTutorial, getTutorialImageUrl, getTutorials } from '@/lib/tutorial-s
 import { PageToc } from '@/components/page-toc';
 import { Faq } from '@/components/faq';
 import { extractText } from '@/lib/extract-text';
+import { AskAi } from '@/components/ask-ai';
+import { DocsCodeBlock } from '@/components/wrappable-codeblock';
 
 function formatDate(date: string): string {
   return new Date(`${date}T00:00:00Z`).toLocaleDateString('en-US', {
@@ -95,10 +97,13 @@ export default async function TutorialPage(props: { params: Promise<{ slug: stri
                 </span>
               ))}
             </div>
+            <div className="mt-4">
+              <AskAi pageTitle={tutorial.title} />
+            </div>
           </div>
 
           <DocsBody>
-            <MDX components={getMDXComponents()} />
+            <MDX components={getMDXComponents({ pre: DocsCodeBlock })} />
           </DocsBody>
 
           {tutorial.faq && tutorial.faq.length > 0 && <Faq items={tutorial.faq} />}

@@ -65,11 +65,12 @@ export function WrappableCodeBlock(props: ComponentProps<typeof CodeBlock>) {
   return <CodeBlockImpl {...props} showAskAi={false} />;
 }
 
-// Docs-page-only variant: Ask AI is currently mounted only on
-// app/docs/[[...slug]]/page.tsx, not on blog or tutorial pages -- rendering
-// this icon anywhere else would be a dead button with nothing listening for
-// its event, so it's opted into per-route via getMDXComponents({ pre }),
-// not registered as the default.
+// Opt-in variant, used on docs, blog, and tutorial pages -- everywhere an
+// AskAi instance is actually mounted to listen for the event this dispatches.
+// Not the default: rendering this icon on a page with no AskAi mounted would
+// be a dead button with nothing listening, so each route passes it in
+// explicitly via getMDXComponents({ pre: DocsCodeBlock }) rather than it
+// being registered as the sitewide default.
 export function DocsCodeBlock(props: ComponentProps<typeof CodeBlock>) {
   return <CodeBlockImpl {...props} showAskAi={true} />;
 }

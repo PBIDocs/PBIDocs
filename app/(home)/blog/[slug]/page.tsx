@@ -6,6 +6,8 @@ import { getMDXComponents } from '@/components/mdx';
 import { getBlogPost, getBlogPostImageUrl, getBlogPosts } from '@/lib/blog-source';
 import { PageToc } from '@/components/page-toc';
 import { Faq } from '@/components/faq';
+import { AskAi } from '@/components/ask-ai';
+import { DocsCodeBlock } from '@/components/wrappable-codeblock';
 
 function formatDate(date: string): string {
   return new Date(`${date}T00:00:00Z`).toLocaleDateString('en-US', {
@@ -87,10 +89,13 @@ export default async function BlogPostPage(props: { params: Promise<{ slug: stri
                 </span>
               ))}
             </div>
+            <div className="mt-4">
+              <AskAi pageTitle={post.title} />
+            </div>
           </div>
 
           <DocsBody>
-            <MDX components={getMDXComponents()} />
+            <MDX components={getMDXComponents({ pre: DocsCodeBlock })} />
           </DocsBody>
 
           {post.faq && post.faq.length > 0 && <Faq items={post.faq} />}
