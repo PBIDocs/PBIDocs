@@ -4,6 +4,8 @@ import { useState } from 'react';
 import { FlaskConical } from 'lucide-react';
 import { highlightCode } from '@/lib/highlight-code';
 import { PlaygroundRow, PlaygroundTable } from '@/components/playground-table';
+import { AskAiInlineButton } from '@/components/ask-ai-inline-button';
+import { buildAskAiPrompt } from '@/lib/ask-ai-events';
 
 const MONTH_NAMES = [
   'January', 'February', 'March', 'April', 'May', 'June',
@@ -53,6 +55,9 @@ export function DateAddMonthsPlayground() {
   const result = inputsAreValid ? addMonths(yearNum, monthNum, dayNum, deltaNum) : null;
 
   const formula = `Date.AddMonths(#date(${year}, ${month}, ${day}), ${delta})`;
+  const resultText = result
+    ? `#date(${result.year}, ${result.month}, ${result.day})`
+    : 'invalid input';
 
   return (
     <div className="not-prose my-6 rounded-xl border border-fd-border bg-fd-secondary/30 p-5">
@@ -132,6 +137,13 @@ export function DateAddMonthsPlayground() {
             clamped to the last valid day instead of erroring
           </span>
         )}
+        <AskAiInlineButton
+          prompt={buildAskAiPrompt(
+            'Explain why this Power Query M code returns the result shown:\n\n```\n',
+            formula,
+            `\n\`\`\`\nResult: ${resultText}`,
+          )}
+        />
       </div>
     </div>
   );

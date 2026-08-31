@@ -4,24 +4,7 @@ import { useState, type ComponentProps, type MouseEvent } from 'react';
 import { CodeBlock, Pre } from 'fumadocs-ui/components/codeblock';
 import { Sparkles, WrapText } from 'lucide-react';
 import { cn } from '@/lib/cn';
-import { ASK_AI_PREFILL_EVENT } from '@/lib/ask-ai-events';
-
-// Must match MAX_MESSAGE_LENGTH in functions/api/ask-ai.ts -- that limit is
-// sized for a typed chat question, not a full multi-step code block, so a
-// longer real example wrapped in the prompt below can exceed it and get
-// rejected outright ("Invalid message in conversation."). Truncating here
-// keeps every prompt this button builds within what the server will accept.
-const MAX_MESSAGE_LENGTH = 500;
-const PROMPT_PREFIX = 'Explain this code:\n\n```\n';
-const PROMPT_SUFFIX = '\n```';
-const TRUNCATION_NOTICE = '\n… (truncated)';
-
-function buildAskAiPrompt(code: string): string {
-  const budget = MAX_MESSAGE_LENGTH - PROMPT_PREFIX.length - PROMPT_SUFFIX.length;
-  const body =
-    code.length <= budget ? code : code.slice(0, budget - TRUNCATION_NOTICE.length) + TRUNCATION_NOTICE;
-  return `${PROMPT_PREFIX}${body}${PROMPT_SUFFIX}`;
-}
+import { askAi, buildAskAiPrompt } from '@/lib/ask-ai-events';
 
 function CodeBlockImpl({
   showAskAi,
@@ -39,7 +22,7 @@ function CodeBlockImpl({
   function askAiAboutThis(e: MouseEvent<HTMLButtonElement>) {
     const pre = e.currentTarget.closest('figure')?.querySelector('pre');
     const code = (pre?.innerText ?? '').replace(/\n+$/, '');
-    window.dispatchEvent(new CustomEvent(ASK_AI_PREFILL_EVENT, { detail: buildAskAiPrompt(code) }));
+    askAi(buildAskAiPrompt('Explain this code:\n\n```\n', code, '\n```'));
   }
 
   return (

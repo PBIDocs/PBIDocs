@@ -4,6 +4,8 @@ import { useState } from 'react';
 import { FlaskConical } from 'lucide-react';
 import { highlightCode } from '@/lib/highlight-code';
 import { PlaygroundRow, PlaygroundTable } from '@/components/playground-table';
+import { AskAiInlineButton } from '@/components/ask-ai-inline-button';
+import { buildAskAiPrompt } from '@/lib/ask-ai-events';
 
 // Deliberately narrow: this parses only strict YYYY-MM-DD text, not the
 // full breadth of formats Date.From() actually accepts. That's enough to
@@ -82,6 +84,13 @@ export function TryOtherwisePlayground() {
             erroring the whole step
           </span>
         )}
+        <AskAiInlineButton
+          prompt={buildAskAiPrompt(
+            'Explain why this Power Query M code returns the result shown:\n\n```\n',
+            formula,
+            `\n\`\`\`\nResult: ${resultDisplay}`,
+          )}
+        />
       </div>
       <p className="mt-2 text-xs text-fd-muted-foreground/70">
         This playground parses strict YYYY-MM-DD text, not the full range of formats Date.From()

@@ -5,6 +5,8 @@ import { FlaskConical } from 'lucide-react';
 import { highlightCode } from '@/lib/highlight-code';
 import { PlaygroundRow, PlaygroundTable } from '@/components/playground-table';
 import { cn } from '@/lib/cn';
+import { AskAiInlineButton } from '@/components/ask-ai-inline-button';
+import { buildAskAiPrompt } from '@/lib/ask-ai-events';
 
 export function TextSplitPlayground() {
   const [text, setText] = useState('A,,B');
@@ -80,6 +82,13 @@ export function TextSplitPlayground() {
             {parts.some((p) => p === '') ? ', including at least one empty string' : ''}
           </span>
         )}
+        <AskAiInlineButton
+          prompt={buildAskAiPrompt(
+            'Explain why this Power Query M code returns the result shown:\n\n```\n',
+            formula,
+            `\n\`\`\`\nResult: ${resultLiteral}`,
+          )}
+        />
       </div>
     </div>
   );

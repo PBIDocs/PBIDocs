@@ -4,6 +4,8 @@ import { useState } from 'react';
 import { FlaskConical } from 'lucide-react';
 import { highlightCode } from '@/lib/highlight-code';
 import { PlaygroundRow, PlaygroundTable } from '@/components/playground-table';
+import { AskAiInlineButton } from '@/components/ask-ai-inline-button';
+import { buildAskAiPrompt } from '@/lib/ask-ai-events';
 
 const OPERATORS = ['>', '>=', '<', '<=', '=', '<>'] as const;
 type Operator = (typeof OPERATORS)[number];
@@ -137,6 +139,13 @@ export function IfPlayground() {
             — the third argument was left out, so the false case returns BLANK()
           </span>
         )}
+        <AskAiInlineButton
+          prompt={buildAskAiPrompt(
+            'Explain why this DAX returns the result shown:\n\n```\n',
+            formula,
+            `\n\`\`\`\nResult: ${resultDisplay}`,
+          )}
+        />
       </div>
     </div>
   );
