@@ -10,6 +10,7 @@ const columns: { title: string; links: { label: string; href: string; external?:
       { label: 'Docs', href: '/docs' },
       { label: 'Tutorials', href: '/tutorials' },
       { label: 'DAX Formula Builder', href: '/tools/dax-formula-builder' },
+      { label: 'Interactive Examples', href: '/playground' },
       { label: 'Pricing', href: '/pricing' },
     ],
   },

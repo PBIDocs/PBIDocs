@@ -57,7 +57,7 @@ export function SwitchPlayground() {
   const formula = formulaLines.join('\n');
 
   return (
-    <div className="not-prose my-6 rounded-xl border border-fd-border bg-fd-secondary/30 p-5">
+    <div id="try-it-live" className="not-prose my-6 rounded-xl border border-fd-border bg-fd-secondary/30 p-5">
       <p className="mb-4 inline-flex items-center gap-1.5 text-xs font-semibold tracking-wider text-fd-muted-foreground/70 uppercase">
         <FlaskConical className="size-3.5" />
         Try it live
