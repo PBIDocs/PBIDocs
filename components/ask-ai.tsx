@@ -60,6 +60,13 @@ export function AskAi({ pageTitle }: { pageTitle: string }) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const sendRef = useRef<((text: string) => Promise<void>) | null>(null);
+  // Synchronous, unlike `status`: two sends triggered in quick succession
+  // (e.g. clicking two different code blocks' "Ask AI" buttons before the
+  // first reply comes back) can both read `status === 'idle'` from their own
+  // closures, since React batches the setStatus('loading') update from the
+  // first call rather than applying it before the second call's guard check
+  // runs. A ref updates immediately, so it actually blocks the second call.
+  const isSendingRef = useRef(false);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
@@ -96,7 +103,8 @@ export function AskAi({ pageTitle }: { pageTitle: string }) {
 
   async function send(text: string) {
     const trimmed = text.trim();
-    if (!trimmed || status === 'loading') return;
+    if (!trimmed || isSendingRef.current) return;
+    isSendingRef.current = true;
 
     const nextMessages: Message[] = [...messages, { role: 'user', content: trimmed }];
     setMessages(nextMessages);
@@ -128,6 +136,8 @@ export function AskAi({ pageTitle }: { pageTitle: string }) {
     } catch {
       setStatus('error');
       setError('Something went wrong. Please try again.');
+    } finally {
+      isSendingRef.current = false;
     }
   }
 
