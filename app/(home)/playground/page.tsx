@@ -86,6 +86,11 @@ const powerQueryPlaygrounds: PlaygroundEntry[] = [
     href: '/docs/power-query/table-splitcolumn-combinecolumns#try-it-live',
     pitch: 'Add a one-word name and watch the missing column fill with null, not an error.',
   },
+  {
+    fn: 'Table.Sort()',
+    href: '/docs/power-query/table-sort#try-it-live',
+    pitch: 'Sort 10, 9, 2, 1 as text and watch "10" land right after "1" instead of after "9".',
+  },
 ];
 
 function PlaygroundGroup({ title, items }: { title: string; items: PlaygroundEntry[] }) {
