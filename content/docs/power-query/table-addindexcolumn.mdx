@@ -1,0 +1,87 @@
+---
+title: "Table.AddIndexColumn()"
+description: Learn how Table.AddIndexColumn generates a sequential index column, why it starts at 0 by default instead of 1, and how the increment argument can count by anything, including backward.
+---
+
+# Table.AddIndexColumn()
+
+`Table.AddIndexColumn()` adds a new column with a sequential number per row — the standard way to generate a surrogate key or a stable row number, and the function behind **Add Column > Index Column** in the Editor UI.
+
+```powerquery lineNumbers
+Table.AddIndexColumn(
+    table as table,
+    newColumnName as text,
+    optional initialValue as nullable number,
+    optional increment as nullable number,
+    optional columnType as nullable type
+) as table
+```
+
+---
+
+## Basic Example
+
+```powerquery lineNumbers
+#"Added Index" = Table.AddIndexColumn(Source, "RowNumber")
+```
+
+<TableAddIndexColumnPlayground />
+
+---
+
+## The Index Starts at 0 by Default, Not 1
+
+Omitting `initialValue` doesn't mean "start numbering from 1" — it means start from `0`. The Editor UI's **Add Column > Index Column > From 1** menu item exists specifically because the plain default doesn't do that; it's passing `initialValue = 1` explicitly on your behalf.
+
+```text
+Table.AddIndexColumn(Source, "RowNumber")          -> 0, 1, 2, 3, ...
+Table.AddIndexColumn(Source, "RowNumber", 1)       -> 1, 2, 3, 4, ...
+```
+
+This matters most when the index is meant to line up with something 1-based outside the query — a row number shown to a user, or a key expected to start at 1 in a downstream system.
+
+---
+
+## The Increment Can Be Anything, Including Negative
+
+```powerquery lineNumbers
+Table.AddIndexColumn(Source, "Countdown", 10, -1)
+```
+
+```text
+10, 9, 8, 7, ...
+```
+
+`increment` isn't limited to `1` — a larger step, a fractional step, or a negative step (counting down instead of up) are all valid, since it's really just "start here, then add this amount each row."
+
+---
+
+## Common Mistakes
+
+### Assuming the Default Index Starts at 1
+
+As covered above — this is the single most common surprise. A join or lookup built against an assumed 1-based index silently misaligns by one position if the query actually produced a 0-based one.
+
+### Adding the Index Before a Step That Reorders Rows
+
+`Table.AddIndexColumn()` numbers rows in whatever order they're in *at that step* in the query. Adding it early and then sorting or filtering afterward means the index no longer reflects the final row order — add it as the last step if the goal is a number matching the final row position.
+
+### Using the Index as a Stable Identifier Across Refreshes
+
+An index column reflects row order at the time the query ran — it isn't tied to the underlying data the way a real key from the source is. The same row can get a different index value on the next refresh if the source data or its order changed at all.
+
+---
+
+## Best Practices
+
+- Add the index column as the last step if the number needs to reflect final row order.
+- Use `initialValue = 1` explicitly (or the UI's **From 1** option) whenever the index needs to be 1-based.
+- Don't rely on an index column as a durable identifier across refreshes — it reflects row order at query time, not a stable source-level key.
+
+---
+
+## Next Steps
+
+- [Table.Sort()](/docs/power-query/table-sort)
+- [Table.Distinct()](/docs/power-query/table-distinct)
+- [M Function Reference](/docs/power-query/functions)
