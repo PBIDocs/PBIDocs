@@ -1,0 +1,133 @@
+---
+title: "Number.Round(), Number.RoundUp() & Number.RoundDown()"
+description: Learn how Number.Round, Number.RoundUp, and Number.RoundDown differ, why "round up" doesn't mean what it sounds like for negative numbers, and how negative digits round to the left of the decimal point.
+---
+
+# Number.Round(), Number.RoundUp() & Number.RoundDown()
+
+These three round a number, but not the same way — `Number.Round()` rounds to the nearest value, while `Number.RoundUp()` and `Number.RoundDown()` always move a fractional value away from or toward zero, regardless of how close it already is.
+
+```powerquery lineNumbers
+Number.Round(number as number, optional digits as nullable number, optional roundingMode as nullable number) as number
+Number.RoundUp(number as number, optional digits as nullable number) as number
+Number.RoundDown(number as number, optional digits as nullable number) as number
+```
+
+---
+
+## Basic Example
+
+```powerquery lineNumbers
+Number.Round(3.14159, 2)
+```
+
+```text
+3.14159 -> 3.14
+```
+
+`digits` defaults to `0` if omitted, rounding to the nearest whole number.
+
+---
+
+## "Up" Means Away From Zero, Not Toward Positive Infinity
+
+```powerquery lineNumbers
+Number.RoundUp(2.1, 0)
+Number.RoundUp(-2.1, 0)
+```
+
+```text
+Number.RoundUp(2.1, 0)  -> 3
+Number.RoundUp(-2.1, 0) -> -3    <- not -2
+```
+
+This is the single most common surprise with these functions. `RoundUp` doesn't mean "toward positive infinity" (that would make `-2.1` round to `-2`) — it means "away from zero," so a negative value gets *more* negative. `RoundDown` is the mirror image: it always moves toward zero.
+
+```powerquery lineNumbers
+Number.RoundDown(2.9, 0)
+Number.RoundDown(-2.9, 0)
+```
+
+```text
+Number.RoundDown(2.9, 0)  -> 2
+Number.RoundDown(-2.9, 0) -> -2   <- not -3
+```
+
+<NumberRoundPlayground />
+
+Try a negative number with both functions — the direction each one moves is fixed (always away from zero for RoundUp, always toward zero for RoundDown), not dependent on which integer is numerically closer.
+
+---
+
+## Number.Round Rounds Half Away From Zero
+
+Without a `roundingMode`, `Number.Round()` breaks an exact halfway tie by rounding away from zero — the same convention Excel's `ROUND()` uses.
+
+```powerquery lineNumbers
+Number.Round(2.5, 0)
+Number.Round(-2.5, 0)
+```
+
+```text
+Number.Round(2.5, 0)  -> 3
+Number.Round(-2.5, 0) -> -3
+```
+
+---
+
+## Negative Digits Round to the Left of the Decimal Point
+
+The `digits` argument isn't limited to positive values — a negative digit count rounds to the nearest ten, hundred, thousand, and so on, instead of to a decimal place.
+
+```powerquery lineNumbers
+Number.Round(1234, -2)
+```
+
+```text
+1234 -> 1200   (rounded to the nearest hundred)
+```
+
+```text
+digits =  2  -> nearest 0.01
+digits =  0  -> nearest whole number
+digits = -2  -> nearest 100
+digits = -3  -> nearest 1000
+```
+
+This is the feature most people don't know exists — reaching for a manual `divide, round, multiply back` pattern to round to the nearest hundred works, but `Number.Round(value, -2)` does the identical thing directly.
+
+---
+
+## Common Mistakes
+
+### Assuming RoundUp Means "Toward Positive Infinity"
+
+As covered above — `Number.RoundUp(-2.1, 0)` returns `-3`, not `-2`. If the goal is genuinely "always round toward positive infinity" (a true ceiling, regardless of sign), `RoundUp`/`RoundDown` aren't the right tool; that behavior needs an explicit sign check.
+
+### Manually Rounding to Hundreds or Thousands
+
+```powerquery lineNumbers
+Number.Round(value / 100, 0) * 100
+```
+
+This works, but `Number.Round(value, -2)` does the same rounding in one call, without the intermediate division and multiplication.
+
+### Forgetting digits Defaults to Whole Numbers
+
+`Number.Round(3.14159)` with no second argument returns `3`, not `3.14159` unrounded — omitting `digits` doesn't mean "don't round," it means "round to 0 decimal places."
+
+---
+
+## Best Practices
+
+- Reach for `Number.Round()` for normal nearest-value rounding; reserve `RoundUp`/`RoundDown` for when the direction genuinely needs to be fixed regardless of the value's sign.
+- Use a negative `digits` value to round to tens, hundreds, or thousands directly, instead of a manual divide/round/multiply pattern.
+- Don't assume `RoundUp` behaves like a mathematical ceiling function on negative numbers — it doesn't.
+
+---
+
+## Next Steps
+
+- [M Language](/docs/power-query/m-language)
+- [Table.TransformColumnTypes()](/docs/power-query/table-transformcolumntypes)
+- [M Function Reference](/docs/power-query/functions)
