@@ -91,6 +91,11 @@ const powerQueryPlaygrounds: PlaygroundEntry[] = [
     href: '/docs/power-query/table-sort#try-it-live',
     pitch: 'Sort 10, 9, 2, 1 as text and watch "10" land right after "1" instead of after "9".',
   },
+  {
+    fn: 'Table.Distinct()',
+    href: '/docs/power-query/table-distinct#try-it-live',
+    pitch: 'Dedupe by CustomerID and watch a second email get silently discarded, not merged.',
+  },
 ];
 
 function PlaygroundGroup({ title, items }: { title: string; items: PlaygroundEntry[] }) {
