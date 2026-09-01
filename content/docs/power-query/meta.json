@@ -32,6 +32,7 @@
     "json-document",
     "error-handling",
     "date-functions",
-    "number-functions"
+    "number-functions",
+    "csv-document"
   ]
 }
