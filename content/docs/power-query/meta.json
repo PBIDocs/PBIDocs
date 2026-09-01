@@ -34,6 +34,7 @@
     "date-functions",
     "number-functions",
     "csv-document",
-    "table-splitcolumn-combinecolumns"
+    "table-splitcolumn-combinecolumns",
+    "table-sort"
   ]
 }

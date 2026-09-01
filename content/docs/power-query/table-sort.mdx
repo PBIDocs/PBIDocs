@@ -1,0 +1,85 @@
+---
+title: "Table.Sort()"
+description: Learn how Table.Sort orders rows by one or more columns, and why a numeric-looking column still typed as text sorts "10" before "2" — lexicographically, not numerically.
+---
+
+# Table.Sort()
+
+`Table.Sort()` orders a table's rows by one or more columns. The most common surprise isn't the function itself — it's that sorting depends entirely on the column's actual type, not on what the values look like.
+
+```powerquery lineNumbers
+Table.Sort(table as table, comparisonCriteria as any) as table
+```
+
+---
+
+## Basic Example
+
+```powerquery lineNumbers
+#"Sorted Rows" = Table.Sort(Source, {{"Sales", Order.Descending}})
+```
+
+`comparisonCriteria` is a list of `{"ColumnName", Order.Ascending}` or `{"ColumnName", Order.Descending}` pairs — the function behind the **Sort Ascending** / **Sort Descending** column-header buttons in the Editor UI.
+
+---
+
+## Sorting Text-Typed Numbers Sorts Lexicographically, Not Numerically
+
+A column of numbers stored as `text` sorts character by character, not by numeric value. `"10"` sorts *before* `"2"`, because the character `"1"` comes before `"2"` — the fact that `"10"` is the larger number never enters into it.
+
+<TableSortPlayground />
+
+Try `10, 9, 2, 1` as text — notice `"10"` lands right after `"1"`, not after `"9"`. Then compare it against the same values sorted as actual numbers.
+
+---
+
+## The Fix Is the Column's Type, Not the Sort Step
+
+```powerquery lineNumbers
+#"Changed Type" = Table.TransformColumnTypes(Source, {{"OrderID", Int64.Type}}),
+#"Sorted Rows" = Table.Sort(#"Changed Type", {{"OrderID", Order.Ascending}})
+```
+
+`Table.Sort()` itself has no "numeric mode" switch — it sorts however the column's declared type compares. The fix is converting the column to a real numeric type first with [Table.TransformColumnTypes()](/docs/power-query/table-transformcolumntypes), not adjusting the sort step.
+
+---
+
+## Sorting by Multiple Columns
+
+```powerquery lineNumbers
+#"Sorted Rows" = Table.Sort(Source, {{"Region", Order.Ascending}, {"Sales", Order.Descending}})
+```
+
+Criteria are applied in list order — this sorts by `Region` first, and only uses `Sales` to break ties within each region, not as an independent second sort.
+
+---
+
+## Common Mistakes
+
+### Sorting a Numeric-Looking Column Before Checking Its Type
+
+If a sorted column looks obviously wrong (`10` appearing before `2`), the type of that column — not the sort logic — is almost always the actual cause. Check the column header's type icon before assuming `Table.Sort()` is broken.
+
+### Assuming the Sort Step Can Force Numeric Order on Text
+
+There's no option on `Table.Sort()` itself to compare text values numerically — the comparison always follows the column's declared type. Converting the type is the only fix.
+
+### Sorting Before a Type Conversion Step That Comes Later in the Query
+
+If a later step converts the column to a number, but the sort happens before that step in the query's step order, the sort still ran against the text values. Move the sort step to after the type conversion.
+
+---
+
+## Best Practices
+
+- Confirm a column's actual type before assuming a sort result is wrong.
+- Convert a numeric-looking text column with `Table.TransformColumnTypes()` before sorting it, not after.
+- Order multi-column sort criteria from the most significant column to the least — later criteria only break ties.
+
+---
+
+## Next Steps
+
+- [Table.TransformColumnTypes()](/docs/power-query/table-transformcolumntypes)
+- [Table.SelectRows()](/docs/power-query/table-selectrows)
+- [M Function Reference](/docs/power-query/functions)
