@@ -107,18 +107,18 @@ function PlaygroundGroup({ title, items }: { title: string; items: PlaygroundEnt
   return (
     <section>
       <h2 className="mb-4 text-xl font-semibold">{title}</h2>
-      <div className="flex flex-col gap-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         {items.map((item) => (
           <Link
             key={item.href}
             href={item.href}
-            className="group flex items-center justify-between gap-4 rounded-xl border border-fd-border p-5 transition-all duration-300 hover:-translate-y-0.5 hover:border-fd-primary/50 hover:bg-fd-accent/50 hover:shadow-md"
+            className="group flex items-start justify-between gap-4 rounded-xl border border-fd-border p-5 transition-all duration-300 hover:-translate-y-0.5 hover:border-fd-primary/50 hover:bg-fd-accent/50 hover:shadow-md"
           >
             <div>
               <p className="font-mono text-sm font-semibold text-fd-foreground">{item.fn}</p>
               <p className="mt-1 text-sm text-fd-muted-foreground">{item.pitch}</p>
             </div>
-            <ArrowRight className="size-4 shrink-0 text-fd-muted-foreground transition-transform group-hover:translate-x-1 group-hover:text-fd-primary" />
+            <ArrowRight className="mt-0.5 size-4 shrink-0 text-fd-muted-foreground transition-transform group-hover:translate-x-1 group-hover:text-fd-primary" />
           </Link>
         ))}
       </div>
