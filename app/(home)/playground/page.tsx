@@ -77,6 +77,11 @@ const powerQueryPlaygrounds: PlaygroundEntry[] = [
     pitch: 'Watch the same date text silently parse into two different days depending on locale.',
   },
   {
+    fn: 'Number.From() locale ambiguity',
+    href: '/blog/couldnt-convert-to-number-date-error#try-it-live-number',
+    pitch: 'Watch "1.234,56" parse into two different numbers depending on the decimal separator.',
+  },
+  {
     fn: 'Csv.Document()',
     href: '/docs/power-query/csv-document#try-it-live',
     pitch: 'See the raw Column1/Column2 output before Table.PromoteHeaders ever runs.',
