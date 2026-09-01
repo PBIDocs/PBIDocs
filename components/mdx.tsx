@@ -11,6 +11,7 @@ import { TextContainsPlayground } from './text-contains-playground';
 import { TextTrimPlayground } from './text-trim-playground';
 import { TryOtherwisePlayground } from './try-otherwise-playground';
 import { NumberRoundPlayground } from './number-round-playground';
+import { DateLocalePlayground } from './date-locale-playground';
 
 export function getMDXComponents(components?: MDXComponents) {
   return {
@@ -26,6 +27,7 @@ export function getMDXComponents(components?: MDXComponents) {
     TextTrimPlayground,
     TryOtherwisePlayground,
     NumberRoundPlayground,
+    DateLocalePlayground,
     ...components,
   } satisfies MDXComponents;
 }

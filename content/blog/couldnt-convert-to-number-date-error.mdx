@@ -7,7 +7,7 @@ faq:
   - question: "Why does \"We couldn't convert to Number\" happen in Power Query?"
     answer: "A value in the column doesn't match the expected numeric format — often stray text, a locale mismatch between decimal comma and decimal period, or hidden whitespace that isn't visible when just looking at the cell."
   - question: "Why do some bad dates fail loudly while others just parse wrong with no error?"
-    answer: "A date like 13/04/2026 has no valid month-13 interpretation, so it fails outright. A date like 03/04/2026 is valid as either March 4th or April 3rd, so a locale mismatch parses it \"successfully\" into the wrong date with no error at all."
+    answer: "A date like 13/04/2026 only makes sense one way (day 13, month 4) — a month-first locale like en-US rejects it outright since there's no 13th month, while a day-first locale like en-GB parses it fine as April 13th. A date like 03/04/2026 is valid as either March 4th or April 3rd under either locale, so a locale mismatch parses it \"successfully\" into the wrong date with no error at all."
   - question: "How do I fix a locale mismatch in Power Query?"
     answer: "Right-click the column, choose Transform > Using Locale (or use Table.TransformColumnTypes with an explicit locale argument), and specify the locale the source data was actually formatted in — not Power Query's default."
   - question: "How do I find exactly which values are causing the conversion error?"
@@ -62,7 +62,7 @@ Parsed with the correct locale: 1234.56
 
 ## Cause 2: An Ambiguous Date Format — and the Silent Version Is Worse
 
-`13/04/2026` fails loudly, because no locale reads month 13 as valid — that's the easy case. The genuinely dangerous version is a date like `03/04/2026`, which is valid in *both* `DD/MM/YYYY` and `MM/DD/YYYY` — one means March 4th, the other April 3rd. If the locale assumption is wrong, this parses **successfully into the wrong date**, with no error at all.
+`13/04/2026` is actually the easier case: no month goes past 12, so a month-first locale like `en-US` rejects it outright — 13 isn't a valid month, and the conversion errors loudly instead of guessing. A day-first locale like `en-GB` parses the same text fine, as April 13th. Either way, there's a clear signal something needs checking. The genuinely dangerous version is a date like `03/04/2026`, which is valid in *both* `DD/MM/YYYY` and `MM/DD/YYYY` — one means March 4th, the other April 3rd. If the locale assumption is wrong, this parses **successfully into the wrong date**, with no error at all.
 
 ```text
 "03/04/2026" with DD/MM locale -> April 3rd
@@ -70,6 +70,10 @@ Parsed with the correct locale: 1234.56
 
 Both "succeed." Only one is correct. Nothing flags the other.
 ```
+
+<DateLocalePlayground />
+
+Try `13/04/2026` — only one locale can parse it, and the other fails loudly instead of guessing. Then try `03/04/2026` again to see the silent, both-succeed case.
 
 **Fix:** the same locale-aware conversion as Cause 1 — but critically, this cause won't show up in a **Keep Errors** check, since nothing errors. If dates look off by a matter of days or months in a way that smells like this, check the locale explicitly rather than trusting the absence of an error.
 

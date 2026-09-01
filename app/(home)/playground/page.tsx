@@ -71,6 +71,11 @@ const powerQueryPlaygrounds: PlaygroundEntry[] = [
     href: '/docs/power-query/number-functions#try-it-live',
     pitch: 'Round a negative number and see "up" mean away from zero, not toward positive infinity.',
   },
+  {
+    fn: 'Date.From() locale ambiguity',
+    href: '/blog/couldnt-convert-to-number-date-error#try-it-live',
+    pitch: 'Watch the same date text silently parse into two different days depending on locale.',
+  },
 ];
 
 function PlaygroundGroup({ title, items }: { title: string; items: PlaygroundEntry[] }) {
