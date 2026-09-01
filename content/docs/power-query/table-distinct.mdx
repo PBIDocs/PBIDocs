@@ -1,0 +1,81 @@
+---
+title: "Table.Distinct()"
+description: Learn how Table.Distinct removes duplicate rows, and why scoping it to specific columns silently keeps only the first row's values for every other column — discarding the rest without a warning.
+---
+
+# Table.Distinct()
+
+`Table.Distinct()` removes duplicate rows from a table. Used with no arguments, it only removes rows that are *exact* duplicates across every column — the surprising behavior shows up once it's scoped to specific columns.
+
+```powerquery lineNumbers
+Table.Distinct(table as table, optional equationCriteria as any) as table
+```
+
+---
+
+## Basic Example
+
+```powerquery lineNumbers
+#"Removed Duplicates" = Table.Distinct(Source)
+```
+
+With no second argument, two rows only count as duplicates if every single column matches. A row that differs in even one column — including one that looks irrelevant — is kept as a separate row.
+
+---
+
+## Scoping to Specific Columns Keeps the First Row's Other Values
+
+```powerquery lineNumbers
+#"Removed Duplicates" = Table.Distinct(Source, {"CustomerID"})
+```
+
+<TableDistinctPlayground />
+
+Notice that the second email didn't just get filtered out on its own — the row for that email disappeared entirely, taking whatever else was in that row down with it.
+
+This is the part that catches people: `Table.Distinct()` scoped to `{"CustomerID"}` only *decides which rows count as duplicates* using `CustomerID` — it doesn't merge or reconcile the other columns across the "duplicate" rows. It keeps the **first row's** values for every other column and discards the rest of that group entirely, including any other column values that actually differed.
+
+---
+
+## Column Order Matters — the First Match Wins
+
+Because the row that's kept is whichever occurs first in the table, the result of a column-scoped `Table.Distinct()` depends on the table's current row order. Sorting the table (with [Table.Sort()](/docs/power-query/table-sort)) before deduping is the way to control *which* row's values get kept, rather than leaving it to whatever order the data happened to arrive in.
+
+```powerquery lineNumbers
+#"Sorted Rows" = Table.Sort(Source, {{"LastUpdated", Order.Descending}}),
+#"Removed Duplicates" = Table.Distinct(#"Sorted Rows", {"CustomerID"})
+```
+
+Sorting by a "most recent" column first, then deduping, is the usual fix when the goal is "keep the latest record per customer" rather than "keep whichever record happened to load first."
+
+---
+
+## Common Mistakes
+
+### Assuming Column-Scoped Distinct Merges the Other Columns
+
+It doesn't reconcile, combine, or flag a conflict — it silently keeps the first row's values and drops the rest. If two "duplicate" rows (by the scoped columns) actually have different values elsewhere, that difference is lost with no error and no indication anything was discarded.
+
+### Not Controlling Row Order Before Deduping
+
+Since the kept row is whichever comes first, a column-scoped `Table.Distinct()` without a preceding sort produces a result that depends on the current, possibly arbitrary, row order — sort first if which specific row survives actually matters.
+
+### Using Table.Distinct() When the Real Goal Is Aggregation
+
+If the actual goal is combining information across the "duplicate" rows (the most recent value, the sum of some column, and so on), [Table.Group()](/docs/power-query/table-group) is usually the right tool — `Table.Distinct()` can only keep one whole row, never merge values from several.
+
+---
+
+## Best Practices
+
+- Sort by whatever determines "which row wins" before a column-scoped `Table.Distinct()`, don't rely on incoming row order.
+- Reach for `Table.Group()` instead when the real goal is combining values across rows, not just picking one.
+- Double-check whether any non-key columns actually vary across what a scoped `Table.Distinct()` treats as duplicates — if they do, confirm the data loss is intentional.
+
+---
+
+## Next Steps
+
+- [Table.Sort()](/docs/power-query/table-sort)
+- [Table.Group()](/docs/power-query/table-group)
+- [M Function Reference](/docs/power-query/functions)
