@@ -16,6 +16,7 @@ import { CsvPromoteHeadersPlayground } from './csv-promote-headers-playground';
 import { TableSplitColumnPlayground } from './table-splitcolumn-playground';
 import { TableSortPlayground } from './table-sort-playground';
 import { TableDistinctPlayground } from './table-distinct-playground';
+import { TableAddIndexColumnPlayground } from './table-addindexcolumn-playground';
 
 export function getMDXComponents(components?: MDXComponents) {
   return {
@@ -36,6 +37,7 @@ export function getMDXComponents(components?: MDXComponents) {
     TableSplitColumnPlayground,
     TableSortPlayground,
     TableDistinctPlayground,
+    TableAddIndexColumnPlayground,
     ...components,
   } satisfies MDXComponents;
 }

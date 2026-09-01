@@ -96,6 +96,11 @@ const powerQueryPlaygrounds: PlaygroundEntry[] = [
     href: '/docs/power-query/table-distinct#try-it-live',
     pitch: 'Dedupe by CustomerID and watch a second email get silently discarded, not merged.',
   },
+  {
+    fn: 'Table.AddIndexColumn()',
+    href: '/docs/power-query/table-addindexcolumn#try-it-live',
+    pitch: 'See the default index start at 0, then set initialValue to 1 to fix it.',
+  },
 ];
 
 function PlaygroundGroup({ title, items }: { title: string; items: PlaygroundEntry[] }) {

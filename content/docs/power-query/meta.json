@@ -36,6 +36,7 @@
     "csv-document",
     "table-splitcolumn-combinecolumns",
     "table-sort",
-    "table-distinct"
+    "table-distinct",
+    "table-addindexcolumn"
   ]
 }
