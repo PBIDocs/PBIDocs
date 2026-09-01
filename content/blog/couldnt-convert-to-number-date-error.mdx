@@ -52,6 +52,10 @@ Parsed with US locale (period = decimal): fails or misreads entirely
 Parsed with the correct locale: 1234.56
 ```
 
+<NumberLocalePlayground />
+
+Try a plain integer like `1234` — no separators at all means no ambiguity, so both locales agree. Then try `1,234` on its own — even a single comma is ambiguous between "one thousand two hundred thirty-four" and "one point two three four" depending on locale.
+
 **Fix:** convert with an explicit locale rather than the default. Right-click the column, **Transform > Using Locale**, and pick the locale the source data actually uses.
 
 ```powerquery lineNumbers

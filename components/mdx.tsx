@@ -17,6 +17,7 @@ import { TableSplitColumnPlayground } from './table-splitcolumn-playground';
 import { TableSortPlayground } from './table-sort-playground';
 import { TableDistinctPlayground } from './table-distinct-playground';
 import { TableAddIndexColumnPlayground } from './table-addindexcolumn-playground';
+import { NumberLocalePlayground } from './number-locale-playground';
 
 export function getMDXComponents(components?: MDXComponents) {
   return {
@@ -38,6 +39,7 @@ export function getMDXComponents(components?: MDXComponents) {
     TableSortPlayground,
     TableDistinctPlayground,
     TableAddIndexColumnPlayground,
+    NumberLocalePlayground,
     ...components,
   } satisfies MDXComponents;
 }
