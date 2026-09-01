@@ -13,6 +13,7 @@ import { TryOtherwisePlayground } from './try-otherwise-playground';
 import { NumberRoundPlayground } from './number-round-playground';
 import { DateLocalePlayground } from './date-locale-playground';
 import { CsvPromoteHeadersPlayground } from './csv-promote-headers-playground';
+import { TableSplitColumnPlayground } from './table-splitcolumn-playground';
 
 export function getMDXComponents(components?: MDXComponents) {
   return {
@@ -30,6 +31,7 @@ export function getMDXComponents(components?: MDXComponents) {
     NumberRoundPlayground,
     DateLocalePlayground,
     CsvPromoteHeadersPlayground,
+    TableSplitColumnPlayground,
     ...components,
   } satisfies MDXComponents;
 }

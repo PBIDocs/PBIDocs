@@ -1,0 +1,103 @@
+---
+title: "Table.SplitColumn() & Table.CombineColumns()"
+description: Learn how Table.SplitColumn breaks one column into several across every row of a table, why a row with fewer parts than expected fills the extra columns with null instead of erroring, and how Table.CombineColumns merges columns back with a separator.
+---
+
+# Table.SplitColumn() & Table.CombineColumns()
+
+`Table.SplitColumn()` and `Table.CombineColumns()` are opposites at the table level — one breaks a single column into several new ones across every row, the other merges several columns back into one.
+
+```powerquery lineNumbers
+Table.SplitColumn(table as table, sourceColumn as text, splitter as function, optional columnNames as any) as table
+Table.CombineColumns(table as table, sourceColumns as list, combiner as function, newColumnName as text) as table
+```
+
+---
+
+## Basic Example
+
+```powerquery lineNumbers
+#"Split Name" = Table.SplitColumn(
+    Source, "Full Name", Splitter.SplitTextByDelimiter(" "), {"First Name", "Last Name"}
+)
+```
+
+```text
+"Full Name" -> "First Name", "Last Name"
+"Alice Chen"  ->  "Alice", "Chen"
+```
+
+This is the function behind **Split Column > By Delimiter** in the Editor UI when the result is new columns rather than a list — [Text.Split()](/docs/power-query/text-split-combine) does the same splitting on a single value; this applies it across an entire column.
+
+<TableSplitColumnPlayground />
+
+Try a row with only one word — the second declared column doesn't disappear or shift the other rows around, it fills with `null` for that row specifically. Try a row with three or more words too — see the section below on why that case is flagged differently.
+
+---
+
+## Fewer Parts Than Declared Columns Fills With null
+
+When `columnNames` declares more output columns than a particular row's split actually produces, the missing columns for that row become `null` rather than causing an error or shifting later rows out of alignment.
+
+```text
+"Full Name"     -> "First Name", "Last Name"
+"Alice Chen"    -> "Alice", "Chen"
+"Madonna"       -> "Madonna", null      <- only one word, second column is null
+```
+
+This is easy to miss in a preview that only shows the first several rows — a column that looks fully populated in the preview can still be silently sparse further down.
+
+---
+
+## More Parts Than Declared Columns Depends on the Splitter
+
+Unlike the missing-parts case, what happens with *extra* parts isn't a single fixed rule — it depends on which splitter function was used and how the delimiter count was configured (unlimited, or capped to a specific number of pieces). Test this scenario directly against a real example with more delimiters than expected, rather than assuming a universal behavior.
+
+---
+
+## Table.CombineColumns(): The Reverse, With No Ambiguity
+
+```powerquery lineNumbers
+#"Combined Name" = Table.CombineColumns(
+    Source, {"First Name", "Last Name"}, Combiner.CombineTextByDelimiter(" "), "Full Name"
+)
+```
+
+```text
+"First Name", "Last Name" -> "Full Name"
+"Alice", "Chen"           -> "Alice Chen"
+```
+
+Unlike splitting, combining is always deterministic — every row produces exactly one merged value, regardless of what the source columns contain. A `null` value in one of the source columns becomes an empty string in the merged result rather than propagating as `null` or causing an error.
+
+---
+
+## Common Mistakes
+
+### Assuming Every Row Splits Into the Same Number of Parts
+
+As covered above — a shorter-than-expected value doesn't shift columns or error, it silently leaves `null` in place. Downstream logic that assumes every row's split columns are all populated should check for `null` explicitly rather than assuming the preview's first few rows represent every row.
+
+### Not Testing the More-Parts-Than-Expected Case
+
+Since this behavior depends on the splitter configuration rather than a single fixed rule, it's worth testing directly against a row with more delimiters than expected before trusting the result across a full dataset.
+
+### Forgetting Table.CombineColumns Turns null Into an Empty String
+
+A `null` in one of the source columns doesn't make the combined result `null` — it contributes nothing (an empty string) to that position, which can look like a legitimate value was combined when one was actually missing.
+
+---
+
+## Best Practices
+
+- After `Table.SplitColumn()`, check for unexpected `null` values in the new columns rather than trusting the preview's visible rows.
+- Test the more-parts-than-expected case directly against your own data before assuming a specific outcome.
+- Remember `Table.CombineColumns()` always succeeds per row — it can't be used to detect which rows had a missing value in one of the source columns.
+
+---
+
+## Next Steps
+
+- [Text.Split() & Text.Combine()](/docs/power-query/text-split-combine)
+- [Table.TransformColumns()](/docs/power-query/table-transformcolumns)
+- [M Function Reference](/docs/power-query/functions)
