@@ -33,6 +33,7 @@
     "error-handling",
     "date-functions",
     "number-functions",
-    "csv-document"
+    "csv-document",
+    "table-splitcolumn-combinecolumns"
   ]
 }

@@ -81,6 +81,11 @@ const powerQueryPlaygrounds: PlaygroundEntry[] = [
     href: '/docs/power-query/csv-document#try-it-live',
     pitch: 'See the raw Column1/Column2 output before Table.PromoteHeaders ever runs.',
   },
+  {
+    fn: 'Table.SplitColumn()',
+    href: '/docs/power-query/table-splitcolumn-combinecolumns#try-it-live',
+    pitch: 'Add a one-word name and watch the missing column fill with null, not an error.',
+  },
 ];
 
 function PlaygroundGroup({ title, items }: { title: string; items: PlaygroundEntry[] }) {
