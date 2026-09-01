@@ -10,6 +10,7 @@ import { DateAddMonthsPlayground } from './date-addmonths-playground';
 import { TextContainsPlayground } from './text-contains-playground';
 import { TextTrimPlayground } from './text-trim-playground';
 import { TryOtherwisePlayground } from './try-otherwise-playground';
+import { NumberRoundPlayground } from './number-round-playground';
 
 export function getMDXComponents(components?: MDXComponents) {
   return {
@@ -24,6 +25,7 @@ export function getMDXComponents(components?: MDXComponents) {
     TextContainsPlayground,
     TextTrimPlayground,
     TryOtherwisePlayground,
+    NumberRoundPlayground,
     ...components,
   } satisfies MDXComponents;
 }

@@ -66,6 +66,11 @@ const powerQueryPlaygrounds: PlaygroundEntry[] = [
     href: '/docs/power-query/error-handling#try-it-live',
     pitch: "Type anything that isn't a date and watch the fallback catch it instead of erroring.",
   },
+  {
+    fn: 'Number.RoundUp() / RoundDown()',
+    href: '/docs/power-query/number-functions#try-it-live',
+    pitch: 'Round a negative number and see "up" mean away from zero, not toward positive infinity.',
+  },
 ];
 
 function PlaygroundGroup({ title, items }: { title: string; items: PlaygroundEntry[] }) {
