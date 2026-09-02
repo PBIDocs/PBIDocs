@@ -38,6 +38,7 @@
     "table-sort",
     "table-distinct",
     "table-addindexcolumn",
-    "number-totext"
+    "number-totext",
+    "value-type-null"
   ]
 }

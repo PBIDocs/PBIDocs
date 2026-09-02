@@ -20,6 +20,7 @@ import { TableAddIndexColumnPlayground } from './table-addindexcolumn-playground
 import { NumberLocalePlayground } from './number-locale-playground';
 import { CustomErrorPlayground } from './custom-error-playground';
 import { NumberToTextPlayground } from './number-totext-playground';
+import { NullEqualityPlayground } from './null-equality-playground';
 
 export function getMDXComponents(components?: MDXComponents) {
   return {
@@ -44,6 +45,7 @@ export function getMDXComponents(components?: MDXComponents) {
     NumberLocalePlayground,
     CustomErrorPlayground,
     NumberToTextPlayground,
+    NullEqualityPlayground,
     ...components,
   } satisfies MDXComponents;
 }
