@@ -1,0 +1,96 @@
+---
+title: "LEFT(), RIGHT() & MID()"
+description: Learn how DAX's LEFT, RIGHT, and MID extract a substring by position, why MID counts starting positions from 1 (not 0), and why that's the opposite of Power Query's Text.Middle.
+---
+
+# LEFT(), RIGHT() & MID()
+
+These three functions extract a portion of a text value based on position and length — the DAX equivalents of Power Query's [Text.Start(), Text.End() & Text.Middle()](/docs/power-query/text-substring-functions), with one important difference in how positions are counted.
+
+```powerquery lineNumbers
+LEFT(text, [num_chars])
+RIGHT(text, [num_chars])
+MID(text, start_num, num_chars)
+```
+
+---
+
+## LEFT() and RIGHT()
+
+```powerquery lineNumbers
+LEFT("INV-2026-0042", 3)
+RIGHT("INV-2026-0042", 4)
+```
+
+```text
+LEFT(..., 3)  -> "INV"
+RIGHT(..., 4) -> "0042"
+```
+
+Both count from the respective end of the string — `LEFT` from the beginning, `RIGHT` from the end — and, like their Power Query counterparts, simply return fewer characters than requested if the text is shorter than `num_chars`, rather than erroring.
+
+---
+
+## MID(): One-Indexed Starting Position
+
+```powerquery lineNumbers
+MID("INV-2026-0042", 5, 4)
+```
+
+```text
+Position:  123456789...
+Text:      INV-2026-0042
+               ^^^^
+MID(..., 5, 4) -> "2026"
+```
+
+The `start_num` argument is **1-indexed** — position `5` is the 5th character, matching how Excel's `MID()` works and how most people naturally count. This is the opposite convention from Power Query's `Text.Middle()`, which is zero-indexed.
+
+<DaxMidPlayground />
+
+Try the same extraction in both functions: `MID(text, 5, 4)` in DAX and `Text.Middle(text, 4, 4)` in Power Query return the identical substring — the start number just needs to shift by one to account for the different counting convention.
+
+---
+
+## The Real Trap: Moving Between DAX and Power Query
+
+A Power BI report almost always uses both languages — Power Query for the load/transform layer, DAX for measures and calculated columns. Someone comfortable with one language's substring function can carry the wrong indexing assumption straight into the other:
+
+```text
+Power Query: Text.Middle([Code], 4, 4)   <- start counts from 0
+DAX:         MID([Code], 4, 4)           <- would start one character too early
+```
+
+The same `start` value of `4` extracts a different substring in each language — `Text.Middle` treats it as the 5th character, `MID` treats it as the 4th. Neither function errors when this happens; it just silently returns a substring shifted by one character from what was intended.
+
+---
+
+## Common Mistakes
+
+### Assuming MID() Is Zero-Indexed Like Text.Middle()
+
+Porting a `Text.Middle([Code], 4, 4)` expression into a DAX calculated column as `MID([Code], 4, 4)` produces a result shifted one character early — `MID([Code], 5, 4)` is the actual equivalent.
+
+### Assuming Text.Middle() Is One-Indexed Like MID()
+
+The same mistake in the opposite direction: writing `Text.Middle([Code], 5, 4)` while thinking in DAX/Excel terms starts one character too late in Power Query.
+
+### Assuming a Fixed Length That Doesn't Hold for Every Row
+
+`LEFT([Code], 3)` assumes every value in `[Code]` has at least a 3-character meaningful prefix — a shorter value doesn't error, it just returns less than expected, which can silently produce wrong-looking results rather than an obvious failure.
+
+---
+
+## Best Practices
+
+- When porting a substring expression between Power Query and DAX, explicitly adjust the start number by one rather than copying it directly — don't assume either language's convention.
+- Use `LEN([Code])` (DAX) or `Text.Length([Code])` (Power Query) to compute a variable start or length instead of hardcoding a position that only holds for some rows.
+- Prefer doing substring extraction in whichever layer the value is first available in, rather than duplicating the same extraction logic in both languages.
+
+---
+
+## Next Steps
+
+- [Text.Start(), Text.End(), Text.Middle() & Text.Length()](/docs/power-query/text-substring-functions)
+- [DAX Function Reference](/docs/dax/functions)
+- [Basics](/docs/dax/basics)
