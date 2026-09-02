@@ -88,7 +88,7 @@ Not sure whether a given problem calls for a merge or an append? See [Merge vs. 
 
 | Function | Description |
 |---|---|
-| `Date.From` | Converts a value to a date. |
+| [Date.From](/blog/couldnt-convert-to-number-date-error#cause-2-an-ambiguous-date-format--and-the-silent-version-is-worse) | Converts a value to a date — locale-ambiguous text like "03/04/2026" can silently parse into the wrong day. |
 | `DateTime.LocalNow` | Returns the current local date and time. |
 | [Date.Year / Date.Month / Date.Day](/docs/power-query/date-functions) | Extracts the year, month, or day from a date. |
 | [Date.AddDays / Date.AddMonths / Date.AddYears](/docs/power-query/date-functions#adding-and-subtracting-time) | Shifts a date by a given number of days, months, or years. |
@@ -101,7 +101,7 @@ Not sure whether a given problem calls for a merge or an append? See [Merge vs. 
 | Function | Description |
 |---|---|
 | [Number.Round / Number.RoundUp / Number.RoundDown](/docs/power-query/number-functions) | Rounds a number to a specified number of decimal places — nearest, always up, or always down. |
-| `Number.From` | Converts a value (often text) to a number. |
+| [Number.From](/blog/couldnt-convert-to-number-date-error#cause-1-a-locale-mismatch-on-the-decimal-separator) | Converts a value (often text) to a number — a locale mismatch on the decimal separator can misread or fail the conversion. |
 | `Number.ToText` | Converts a number to text, optionally with a format string. |
 
 ---
@@ -121,7 +121,7 @@ Not sure whether a given problem calls for a merge or an append? See [Merge vs. 
 | Function | Description |
 |---|---|
 | [try ... otherwise](/docs/power-query/error-handling) | Catches an error from an expression, substituting a fallback value instead of failing the step. |
-| `error` | Explicitly raises a custom error from within an expression. |
+| [error](/docs/power-query/error-handling#raising-your-own-error-with-error) | Explicitly raises a custom error from within an expression. |
 
 ---
 

@@ -60,6 +60,22 @@ try Date.From("not a date")
 
 ---
 
+## Raising Your Own Error with error
+
+`try` and `otherwise` only handle errors something else raises — `error` is how a query raises one deliberately, when a value technically converts fine but is still invalid by the query's own rules.
+
+```powerquery lineNumbers
+if [Quantity] >= 0 then [Quantity] else error "Quantity cannot be negative"
+```
+
+A custom `error` is a real, catchable error — the exact same `[HasError]` / `[Error][Message]` shape shown above works on it too, message and all.
+
+<CustomErrorPlayground />
+
+Try a negative test value — the message you typed comes back exactly as `[Error][Message]`, the same field `try` populates for a built-in error like a failed `Date.From()`.
+
+---
+
 ## Checking [HasError] Explicitly
 
 ```powerquery lineNumbers

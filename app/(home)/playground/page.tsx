@@ -82,6 +82,11 @@ const powerQueryPlaygrounds: PlaygroundEntry[] = [
     pitch: 'Watch "1.234,56" parse into two different numbers depending on the decimal separator.',
   },
   {
+    fn: 'error / try',
+    href: '/docs/power-query/error-handling#try-it-live-error',
+    pitch: 'Raise your own error and watch your exact message come back in [Error][Message].',
+  },
+  {
     fn: 'Csv.Document()',
     href: '/docs/power-query/csv-document#try-it-live',
     pitch: 'See the raw Column1/Column2 output before Table.PromoteHeaders ever runs.',
