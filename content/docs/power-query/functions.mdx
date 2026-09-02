@@ -76,8 +76,8 @@ Not sure whether a given problem calls for a merge or an append? See [Merge vs. 
 |---|---|
 | [List.Select](/docs/power-query/m-language) | Filters a list to values matching a condition. |
 | `List.Sum` / `List.Average` / `List.Count` | Aggregates the values in a list. |
-| `List.Distinct` | Removes duplicate values from a list. |
-| `List.Contains` | Returns true if a list contains a given value. |
+| [List.Distinct](/docs/power-query/list-distinct-contains) | Removes duplicate values from a list — case-sensitive by default, like Text.Contains. |
+| [List.Contains](/docs/power-query/list-distinct-contains#the-fix-comparerordinalignorecase) | Returns true if a list contains a given value — also case-sensitive by default. |
 | [List.Transform](/docs/power-query/list-transform) | Applies a function to every value in a list. |
 | [List.Accumulate](/docs/power-query/list-accumulate) | Reduces a list to a single value by carrying state across every item — M's general-purpose "reduce." |
 | [List.Generate](/docs/power-query/list-generate) | Builds a list by repeatedly applying a function, useful for custom sequences. |

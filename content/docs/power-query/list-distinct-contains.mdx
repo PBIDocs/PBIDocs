@@ -1,0 +1,87 @@
+---
+title: "List.Distinct() & List.Contains()"
+description: Learn why List.Distinct and List.Contains are both case-sensitive by default in Power Query M, and how Comparer.OrdinalIgnoreCase fixes both at once.
+---
+
+# List.Distinct() & List.Contains()
+
+`List.Distinct()` removes duplicate values from a list; `List.Contains()` checks whether a list holds a given value. Both compare values using an *exact* match by default — for text, that means case-sensitive, the same trap that shows up with [Text.Contains()](/docs/power-query/text-contains-replace#both-are-case-sensitive-by-default).
+
+```powerquery lineNumbers
+List.Distinct(list as list, optional equationCriteria as any) as list
+List.Contains(list as list, value as any, optional equationCriteria as any) as logical
+```
+
+---
+
+## List.Distinct() Keeps Different-Case Values as Separate
+
+```powerquery lineNumbers
+List.Distinct({"Apple", "apple", "Banana", "BANANA", "Cherry"})
+```
+
+```text
+Result: {"Apple", "apple", "Banana", "BANANA", "Cherry"}   <- nothing removed
+```
+
+<ListDistinctContainsPlayground />
+
+With no second argument, `"Apple"` and `"apple"` are two different values as far as `List.Distinct()` is concerned — it only removes values that match *exactly*, character for character. A source list built from inconsistent manual entry or free-text input can carry what looks like the same value several times over, surviving a plain `List.Distinct()` untouched.
+
+---
+
+## The Fix: Comparer.OrdinalIgnoreCase
+
+```powerquery lineNumbers
+List.Distinct({"Apple", "apple", "Banana", "BANANA", "Cherry"}, Comparer.OrdinalIgnoreCase)
+```
+
+```text
+Result: {"Apple", "Banana", "Cherry"}   <- first-seen casing wins, the rest are dropped
+```
+
+The same `Comparer.OrdinalIgnoreCase` argument that fixes `Text.Contains()` works here too, and on `List.Contains()`:
+
+```powerquery lineNumbers
+List.Contains({"Apple", "apple"}, "APPLE")                          // false
+List.Contains({"Apple", "apple"}, "APPLE", Comparer.OrdinalIgnoreCase) // true
+```
+
+When a value is kept under `Comparer.OrdinalIgnoreCase`, it's whichever casing appeared **first** in the list — the same first-occurrence-wins rule that shows up in [Table.Distinct()](/docs/power-query/table-distinct#column-order-matters--the-first-match-wins) when it's scoped to specific columns.
+
+---
+
+## Common Mistakes
+
+### Assuming List.Distinct Normalizes Case
+
+A source list mixing `"USA"`, `"usa"`, and `"U.S.A"` doesn't collapse to one value with a plain `List.Distinct()` — only exact character-for-character duplicates are removed. `"U.S.A"` wouldn't be caught even with `Comparer.OrdinalIgnoreCase`, since that only ignores case, not punctuation or spacing — a genuinely inconsistent source needs an explicit cleanup step (`Text.Upper`, `Text.Replace`, or a manual mapping) before `List.Distinct()` can treat the variants as one.
+
+### Expecting List.Contains to Catch a Different-Case Match
+
+```powerquery lineNumbers
+List.Contains(List.Distinct(Source[Category]), "electronics")
+```
+
+If `Source[Category]` actually contains `"Electronics"`, this returns `false` by default — silently, with no error — because the case doesn't match exactly. This is easy to miss in an `if` condition or a filter built on `List.Contains()`, since a false negative doesn't look any different from a genuine "not present" result.
+
+### Not Realizing Which Casing Survives Under the Comparer
+
+Since the first-seen casing is the one kept, sorting or reordering the source list before a case-insensitive `List.Distinct()` changes *which* casing shows up in the result — worth being deliberate about source order (or normalizing case explicitly first) if a specific casing needs to survive.
+
+---
+
+## Best Practices
+
+- Default to assuming both functions are case-sensitive unless `Comparer.OrdinalIgnoreCase` is explicitly passed.
+- Remember `Comparer.OrdinalIgnoreCase` only ignores case — punctuation, spacing, and other formatting differences still count as different values.
+- If a specific casing needs to survive a case-insensitive `List.Distinct()`, control the list's order first rather than relying on whichever casing happened to appear first.
+
+---
+
+## Next Steps
+
+- [Text.Contains() & Text.Replace()](/docs/power-query/text-contains-replace)
+- [Table.Distinct()](/docs/power-query/table-distinct)
+- [List.Transform()](/docs/power-query/list-transform)
+- [M Function Reference](/docs/power-query/functions)

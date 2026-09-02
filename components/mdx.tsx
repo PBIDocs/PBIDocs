@@ -24,6 +24,7 @@ import { NullEqualityPlayground } from './null-equality-playground';
 import { TableSelectColumnsPlayground } from './table-selectcolumns-playground';
 import { TableFirstNPlayground } from './table-firstn-playground';
 import { LocalVsUtcPlayground } from './local-vs-utc-playground';
+import { ListDistinctContainsPlayground } from './list-distinct-contains-playground';
 
 export function getMDXComponents(components?: MDXComponents) {
   return {
@@ -52,6 +53,7 @@ export function getMDXComponents(components?: MDXComponents) {
     TableSelectColumnsPlayground,
     TableFirstNPlayground,
     LocalVsUtcPlayground,
+    ListDistinctContainsPlayground,
     ...components,
   } satisfies MDXComponents;
 }
