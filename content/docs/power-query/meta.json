@@ -42,6 +42,7 @@
     "value-type-null",
     "table-selectcolumns",
     "table-firstn-skip",
-    "datetime-localnow"
+    "datetime-localnow",
+    "list-distinct-contains"
   ]
 }

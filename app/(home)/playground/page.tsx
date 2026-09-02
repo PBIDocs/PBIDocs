@@ -136,6 +136,11 @@ const powerQueryPlaygrounds: PlaygroundEntry[] = [
     href: '/docs/power-query/table-addindexcolumn#try-it-live',
     pitch: 'See the default index start at 0, then set initialValue to 1 to fix it.',
   },
+  {
+    fn: 'List.Distinct() & List.Contains()',
+    href: '/docs/power-query/list-distinct-contains#try-it-live',
+    pitch: 'Watch "Apple" and "apple" both survive List.Distinct() until you check the comparer box.',
+  },
 ];
 
 function PlaygroundGroup({ title, items }: { title: string; items: PlaygroundEntry[] }) {
