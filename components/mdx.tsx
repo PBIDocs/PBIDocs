@@ -19,6 +19,7 @@ import { TableDistinctPlayground } from './table-distinct-playground';
 import { TableAddIndexColumnPlayground } from './table-addindexcolumn-playground';
 import { NumberLocalePlayground } from './number-locale-playground';
 import { CustomErrorPlayground } from './custom-error-playground';
+import { NumberToTextPlayground } from './number-totext-playground';
 
 export function getMDXComponents(components?: MDXComponents) {
   return {
@@ -42,6 +43,7 @@ export function getMDXComponents(components?: MDXComponents) {
     TableAddIndexColumnPlayground,
     NumberLocalePlayground,
     CustomErrorPlayground,
+    NumberToTextPlayground,
     ...components,
   } satisfies MDXComponents;
 }
