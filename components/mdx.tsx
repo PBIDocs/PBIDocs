@@ -23,6 +23,7 @@ import { NumberToTextPlayground } from './number-totext-playground';
 import { NullEqualityPlayground } from './null-equality-playground';
 import { TableSelectColumnsPlayground } from './table-selectcolumns-playground';
 import { TableFirstNPlayground } from './table-firstn-playground';
+import { LocalVsUtcPlayground } from './local-vs-utc-playground';
 
 export function getMDXComponents(components?: MDXComponents) {
   return {
@@ -50,6 +51,7 @@ export function getMDXComponents(components?: MDXComponents) {
     NullEqualityPlayground,
     TableSelectColumnsPlayground,
     TableFirstNPlayground,
+    LocalVsUtcPlayground,
     ...components,
   } satisfies MDXComponents;
 }

@@ -1,0 +1,69 @@
+---
+title: "DateTime.LocalNow() and the Desktop-vs-Service Trap"
+description: Learn why DateTime.LocalNow returns a different value in Power BI Desktop than it does during a scheduled refresh in the Service, and why DateTimeZone.UtcNow (or a fixed local time) is usually the more reliable choice.
+---
+
+# DateTime.LocalNow() and the Desktop-vs-Service Trap
+
+`DateTime.LocalNow()` returns the current date and time — but "current" and "local" both mean *whatever machine is actually running the query*, not the report author's own machine or timezone.
+
+```powerquery lineNumbers
+DateTime.LocalNow() as datetime
+```
+
+---
+
+## Same Query, Different Machine, Different Answer
+
+<LocalVsUtcPlayground />
+
+In Power BI Desktop, that machine is whatever computer you're authoring on — your own local time and timezone. Once a report is published and refreshes on a schedule in the Power BI Service, the query runs on a completely different machine — a gateway, or a cloud-hosted process — which is very often in a different timezone, commonly UTC.
+
+```text
+Authored in Desktop, timezone UTC-5: DateTime.LocalNow() -> 2026-01-15 09:00
+Same query, scheduled refresh in the Service (UTC):        DateTime.LocalNow() -> 2026-01-15 14:00
+```
+
+A calculation built around "before noon" or "yesterday" using `DateTime.LocalNow()` can genuinely produce a different result depending on *where* it happens to run — not because anything about the data changed.
+
+---
+
+## The Fix: DateTimeZone.UtcNow(), or a Fixed Reference
+
+```powerquery lineNumbers
+DateTimeZone.UtcNow()
+```
+
+`DateTimeZone.UtcNow()` always returns the same instant regardless of which machine's local clock is running the query — the same answer in Desktop and in the Service. If a calculation genuinely needs to be relative to a specific timezone (a business's local "today," for instance), converting explicitly with a fixed offset is more reliable than depending on whatever timezone the refreshing machine happens to be in.
+
+---
+
+## Common Mistakes
+
+### Assuming Desktop's Behavior Is What Will Run in Production
+
+A "yesterday" or "this month" filter built and tested in Desktop reflects the author's own timezone at the moment of testing — it's easy to not notice the dependency until the scheduled refresh in the Service produces a subtly different result.
+
+### Using DateTime.LocalNow() for a Timestamp That Needs to Be Comparable Across Refreshes
+
+If a column records "when was this refreshed" and gets compared across multiple refreshes (some run from Desktop, some scheduled in the Service), a local-time timestamp can be inconsistent for reasons that have nothing to do with when the refresh actually happened — `DateTimeZone.UtcNow()` avoids that entirely.
+
+### Not Checking Which Timezone a Gateway Machine Actually Runs In
+
+For an on-premises gateway refresh specifically, the "local" time is the gateway machine's own timezone setting — which may or may not match either the report author's timezone or the Service's. Worth confirming explicitly rather than assuming.
+
+---
+
+## Best Practices
+
+- Default to `DateTimeZone.UtcNow()` for anything that needs to be consistent regardless of which machine refreshes the report.
+- Reserve `DateTime.LocalNow()` for cases where "whatever timezone this machine happens to be in" is genuinely the intended behavior.
+- Test date-relative logic with an awareness that Desktop's result reflects your own machine, not necessarily what a scheduled Service refresh will produce.
+
+---
+
+## Next Steps
+
+- [Working with Dates in Power Query (Date & Duration Functions)](/docs/power-query/date-functions)
+- [Gateway & Refresh Architecture](/docs/governance/gateway-refresh)
+- [M Function Reference](/docs/power-query/functions)

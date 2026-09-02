@@ -107,6 +107,11 @@ const powerQueryPlaygrounds: PlaygroundEntry[] = [
     pitch: 'Watch FirstN stop at the first non-match and miss a later matching row entirely.',
   },
   {
+    fn: 'DateTime.LocalNow()',
+    href: '/docs/power-query/datetime-localnow#try-it-live',
+    pitch: 'See your own browser’s local time vs UTC, right now — the exact gap a scheduled refresh hits.',
+  },
+  {
     fn: 'Csv.Document()',
     href: '/docs/power-query/csv-document#try-it-live',
     pitch: 'See the raw Column1/Column2 output before Table.PromoteHeaders ever runs.',

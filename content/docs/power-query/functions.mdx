@@ -89,7 +89,7 @@ Not sure whether a given problem calls for a merge or an append? See [Merge vs. 
 | Function | Description |
 |---|---|
 | [Date.From](/blog/couldnt-convert-to-number-date-error#cause-2-an-ambiguous-date-format--and-the-silent-version-is-worse) | Converts a value to a date — locale-ambiguous text like "03/04/2026" can silently parse into the wrong day. |
-| `DateTime.LocalNow` | Returns the current local date and time. |
+| [DateTime.LocalNow](/docs/power-query/datetime-localnow) | Returns the current local date and time — the *refreshing machine's* local time, not necessarily the author's. |
 | [Date.Year / Date.Month / Date.Day](/docs/power-query/date-functions) | Extracts the year, month, or day from a date. |
 | [Date.AddDays / Date.AddMonths / Date.AddYears](/docs/power-query/date-functions#adding-and-subtracting-time) | Shifts a date by a given number of days, months, or years. |
 | [Duration.Days / Duration.TotalHours](/docs/power-query/date-functions#subtracting-two-dates-produces-a-duration-not-a-number) | Extracts a component from a duration value (the result of subtracting two dates/datetimes). |

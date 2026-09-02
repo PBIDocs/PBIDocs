@@ -41,6 +41,7 @@
     "number-totext",
     "value-type-null",
     "table-selectcolumns",
-    "table-firstn-skip"
+    "table-firstn-skip",
+    "datetime-localnow"
   ]
 }
