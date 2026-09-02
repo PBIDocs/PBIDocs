@@ -37,6 +37,7 @@
     "table-splitcolumn-combinecolumns",
     "table-sort",
     "table-distinct",
-    "table-addindexcolumn"
+    "table-addindexcolumn",
+    "number-totext"
   ]
 }

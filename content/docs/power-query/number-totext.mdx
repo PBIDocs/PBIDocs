@@ -1,0 +1,80 @@
+---
+title: "Number.ToText()"
+description: Learn how Number.ToText's optional format argument works, and why the "P" (percent) format multiplies the value by 100 instead of just appending a percent sign — the same convention Excel's percentage format uses.
+---
+
+# Number.ToText()
+
+`Number.ToText()` converts a number to text, optionally formatted with a standard format code — the same codes .NET number formatting uses.
+
+```powerquery lineNumbers
+Number.ToText(number as number, optional format as nullable text, optional culture as nullable text) as text
+```
+
+---
+
+## Basic Example
+
+```powerquery lineNumbers
+Number.ToText(1234.5)
+```
+
+```text
+1234.5 -> "1234.5"
+```
+
+With no `format` argument, the number becomes text with no formatting applied at all — no thousands separators, no fixed decimal places.
+
+---
+
+## "P" (Percent) Multiplies by 100
+
+<NumberToTextPlayground />
+
+```powerquery lineNumbers
+Number.ToText(0.5, "P")
+```
+
+```text
+0.5 -> "50.00%"    <- not "0.50%"
+```
+
+This catches people who store a percentage internally as its decimal form (`0.5` meaning 50%) and expect `"P"` to just format that value with a `%` sign appended. It doesn't — `"P"` assumes the number is already a *ratio* (0 to 1 representing 0% to 100%) and multiplies by 100 as part of formatting, the same convention Excel's own Percentage cell format uses.
+
+Try switching between formats above — a value like `50` under `"P"` becomes `"5000.00%"`, which is the same mistake in the other direction: a number already meant to read as "50%" gets multiplied again.
+
+---
+
+## Common Format Codes
+
+| Code | Meaning | `Number.ToText(1234.5, code)` |
+|---|---|---|
+| *(none)* | Plain text, no formatting | `"1234.5"` |
+| `"N2"` | Number, thousands-grouped, 2 decimal places | `"1,234.50"` |
+| `"F2"` | Fixed, 2 decimal places, no grouping | `"1234.50"` |
+| `"P"` | Percent — multiplies by 100, appends `%` | `"123450.00%"` |
+| `"D"` | Decimal (whole numbers only, pads with zeros) | errors on a non-integer |
+
+---
+
+## Common Mistakes
+
+### Assuming "P" Just Appends a % Sign
+
+As covered above — `"P"` multiplies the value by 100 first. A value already meant to display as a percentage (rather than a 0–1 ratio) needs to be divided by 100 before applying `"P"`, or formatted with a plain `"N2"` plus a literal `"%"` concatenated on afterward instead.
+
+### Using "D" on a Value That Isn't a Whole Number
+
+`"D"` formats an integer, optionally zero-padded — passing a value with a fractional part produces an error rather than rounding it. Round or truncate first if the source value might not already be a whole number.
+
+### Forgetting Number.ToText Doesn't Change the Underlying Value
+
+`Number.ToText()` produces a `text` value for display — it doesn't round or otherwise change the original number. Sorting, filtering, or calculating with the formatted result requires the original numeric column, not the text version.
+
+---
+
+## Next Steps
+
+- [Number.Round(), Number.RoundUp() & Number.RoundDown()](/docs/power-query/number-functions)
+- [Table.TransformColumnTypes()](/docs/power-query/table-transformcolumntypes)
+- [M Function Reference](/docs/power-query/functions)

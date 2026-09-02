@@ -87,6 +87,11 @@ const powerQueryPlaygrounds: PlaygroundEntry[] = [
     pitch: 'Raise your own error and watch your exact message come back in [Error][Message].',
   },
   {
+    fn: 'Number.ToText()',
+    href: '/docs/power-query/number-totext#try-it-live',
+    pitch: 'Format 0.5 as "P" and watch it become "50.00%", not "0.50%".',
+  },
+  {
     fn: 'Csv.Document()',
     href: '/docs/power-query/csv-document#try-it-live',
     pitch: 'See the raw Column1/Column2 output before Table.PromoteHeaders ever runs.',
