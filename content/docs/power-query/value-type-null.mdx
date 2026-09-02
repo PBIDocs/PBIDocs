@@ -1,0 +1,79 @@
+---
+title: "Value.Type(), Value.Is() & Comparing to null"
+description: Learn how Value.Type helps debug unexpected-type errors, why Value.Is is the idiomatic way to check a value's type, and why null = null evaluates to true in Power Query M — unlike SQL's three-valued NULL logic.
+---
+
+# Value.Type(), Value.Is() & Comparing to null
+
+`Value.Type()` and `Value.Is()` are the two functions for inspecting and checking a value's type at runtime — mainly useful for debugging an unexpected-type error rather than everyday transformation logic.
+
+```powerquery lineNumbers
+Value.Type(value as any) as type
+Value.Is(value as any, type as type) as logical
+```
+
+---
+
+## Value.Type() for Debugging
+
+```powerquery lineNumbers
+Value.Type([OrderDate])
+```
+
+```text
+[OrderDate] is a date column -> type date
+[OrderDate] is actually text  -> type text
+```
+
+Dropping this into a custom column temporarily is a quick way to confirm what a value's *actual* type is when a downstream step is failing in a way that suggests it isn't what the column header claims.
+
+---
+
+## Value.Is() for Checking a Type
+
+```powerquery lineNumbers
+Value.Is([OrderDate], type date)
+```
+
+`Value.Is()` is the idiomatic way to check whether a value matches a given type — more direct than trying to compare `Value.Type()`'s result against a type literal.
+
+---
+
+## null = null Is true — Unlike SQL
+
+<NullEqualityPlayground />
+
+In SQL, comparing `NULL = NULL` produces `UNKNOWN`, not `TRUE` — SQL's three-valued logic treats an unknown value as never equal to another unknown value, even itself. Power Query M doesn't work this way: `null` is a genuine, comparable value, and `null = null` evaluates to `true`.
+
+```text
+null = null   -> true     <- different from SQL
+null = 5      -> false
+5 = 5         -> true
+```
+
+This matters most when filtering or checking for blanks: `each [Column] = null` in a `Table.SelectRows()` call works as most people intuitively expect in M, without needing a SQL-style `IS NULL` construct.
+
+---
+
+## Common Mistakes
+
+### Assuming null Behaves Like SQL's NULL
+
+Bringing SQL's "NULL is never equal to anything, including itself" assumption into M leads to overcomplicating a null check — a plain `= null` comparison already does the right thing here.
+
+### Using = to Compare Value.Type() Results Instead of Value.Is()
+
+Comparing `Value.Type()`'s output directly against a type literal with `=` is less idiomatic and less reliable across more complex or nested types than just calling `Value.Is()`, which is built specifically for this check.
+
+### Treating Value.Type() as Something to Use in Normal Transformation Logic
+
+`Value.Type()` and `Value.Is()` are debugging and validation tools, not typically something a production query's main transformation logic depends on — reaching for them repeatedly in a query's core steps is usually a sign the underlying column types need fixing upstream instead.
+
+---
+
+## Next Steps
+
+- [Table.SelectRows()](/docs/power-query/table-selectrows)
+- [Table.TransformColumnTypes()](/docs/power-query/table-transformcolumntypes)
+- [Error Handling in Power Query (try ... otherwise)](/docs/power-query/error-handling)
+- [M Function Reference](/docs/power-query/functions)
