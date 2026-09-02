@@ -1,0 +1,72 @@
+---
+title: "Table.FirstN() & Table.Skip()"
+description: Learn how Table.FirstN and Table.Skip work with a row count, and why passing a condition function instead makes them stop at the first row that fails it — a "take while," not a filter over the whole table.
+---
+
+# Table.FirstN() & Table.Skip()
+
+`Table.FirstN()` returns the first N rows of a table; `Table.Skip()` returns everything after skipping the first N. Both also accept a condition function instead of a number — and that form works differently than it looks.
+
+```powerquery lineNumbers
+Table.FirstN(table as table, countOrCondition as any) as table
+Table.Skip(table as table, countOrCondition as any) as table
+```
+
+---
+
+## Basic Example
+
+```powerquery lineNumbers
+Table.FirstN(Source, 3)
+```
+
+```text
+Returns the first 3 rows, in whatever order the table currently has — see Table.Sort() first if the order matters.
+```
+
+---
+
+## A Condition Function Is "Take While," Not a Filter
+
+<TableFirstNPlayground />
+
+Passing a function instead of a number doesn't filter the whole table down to matching rows — it takes rows from the top **only until the condition first fails**, then stops immediately, even if a later row would satisfy it again. That's a fundamentally different operation from `Table.SelectRows()`, which examines every row regardless of position.
+
+```text
+Table.FirstN(Source, each [Amount] > 100)   -- stops at the first non-matching row
+Table.SelectRows(Source, each [Amount] > 100) -- keeps every matching row, in any position
+```
+
+`Table.Skip()` with a condition mirrors this: it skips rows from the top while the condition holds, then returns everything from the first failure onward — including any later row where the condition happens to hold again.
+
+---
+
+## Common Mistakes
+
+### Expecting Table.FirstN's Condition Form to Filter the Whole Table
+
+As covered above — this is the single most common mix-up. If the goal is genuinely "every row matching this condition," [Table.SelectRows()](/docs/power-query/table-selectrows) is the right function; `Table.FirstN()`'s condition form is for "the leading run of rows matching this," which silently misses any matching row that comes after the first non-match.
+
+### Assuming Row Order Doesn't Matter for the Condition Form
+
+Since `Table.FirstN()`'s condition form stops at the first failure, its result depends entirely on the table's current row order — sorting first with [Table.Sort()](/docs/power-query/table-sort) changes which rows the "take while" actually captures.
+
+### Using the Condition Form When a Plain Count Was Intended
+
+`Table.FirstN(Source, 3)` and `Table.FirstN(Source, each [SomeCondition])` look similar but do genuinely different things — double-check which form is actually being used, especially when the second argument was copied from elsewhere in the query.
+
+---
+
+## Best Practices
+
+- Reach for `Table.SelectRows()` when the goal is every matching row; reserve `Table.FirstN()`'s condition form for a genuine "leading run" scenario.
+- Sort explicitly before using the condition form of `Table.FirstN()` or `Table.Skip()`, since the result depends on row order.
+- Prefer the plain numeric form when a fixed row count is really what's needed — it's less ambiguous to read later than a condition that happens to behave like a count.
+
+---
+
+## Next Steps
+
+- [Table.SelectRows()](/docs/power-query/table-selectrows)
+- [Table.Sort()](/docs/power-query/table-sort)
+- [M Function Reference](/docs/power-query/functions)

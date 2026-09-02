@@ -102,6 +102,11 @@ const powerQueryPlaygrounds: PlaygroundEntry[] = [
     pitch: 'Request a column that doesn’t exist and watch it error — then fix it with MissingField.',
   },
   {
+    fn: 'Table.FirstN() vs SelectRows()',
+    href: '/docs/power-query/table-firstn-skip#try-it-live',
+    pitch: 'Watch FirstN stop at the first non-match and miss a later matching row entirely.',
+  },
+  {
     fn: 'Csv.Document()',
     href: '/docs/power-query/csv-document#try-it-live',
     pitch: 'See the raw Column1/Column2 output before Table.PromoteHeaders ever runs.',
