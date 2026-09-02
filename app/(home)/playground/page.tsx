@@ -97,6 +97,11 @@ const powerQueryPlaygrounds: PlaygroundEntry[] = [
     pitch: 'See null = null return true in M — unlike SQL, where NULL = NULL is UNKNOWN.',
   },
   {
+    fn: 'Table.SelectColumns()',
+    href: '/docs/power-query/table-selectcolumns#try-it-live',
+    pitch: 'Request a column that doesn’t exist and watch it error — then fix it with MissingField.',
+  },
+  {
     fn: 'Csv.Document()',
     href: '/docs/power-query/csv-document#try-it-live',
     pitch: 'See the raw Column1/Column2 output before Table.PromoteHeaders ever runs.',

@@ -1,0 +1,85 @@
+---
+title: "Table.SelectColumns() and MissingField"
+description: Learn how Table.SelectColumns keeps only the specified columns, why requesting a column that doesn't exist errors by default, and how the MissingField option (Ignore or UseNull) changes that instead of the query breaking on the next refresh.
+---
+
+# Table.SelectColumns() and MissingField
+
+`Table.SelectColumns()` returns a table with only the specified columns, dropping the rest — the function behind **Choose Columns** in the Editor UI. What most people don't discover until a refresh breaks is what happens when one of the requested columns doesn't actually exist.
+
+```powerquery lineNumbers
+Table.SelectColumns(
+    table as table,
+    columns as any,
+    optional missingField as nullable number
+) as table
+```
+
+`Table.RemoveColumns()` and `Table.RenameColumns()` accept the same optional `missingField` argument, with the same three behaviors described below.
+
+---
+
+## Basic Example
+
+```powerquery lineNumbers
+Table.SelectColumns(Source, {"OrderID", "CustomerID", "Amount"})
+```
+
+If every named column exists in `Source`, this just returns a table with those three columns, in that order.
+
+---
+
+## Requesting a Missing Column Errors by Default
+
+<TableSelectColumnsPlayground />
+
+If `Source` doesn't actually have a column named `"Region"`, requesting it errors the entire step — not just that one column. This is exactly the failure mode when an upstream source quietly drops or renames a column: the query worked yesterday and errors today, with nothing in the query itself having changed.
+
+---
+
+## MissingField.Ignore and MissingField.UseNull
+
+```powerquery lineNumbers
+Table.SelectColumns(Source, {"OrderID", "CustomerID", "Region"}, MissingField.Ignore)
+```
+
+```powerquery lineNumbers
+Table.SelectColumns(Source, {"OrderID", "CustomerID", "Region"}, MissingField.UseNull)
+```
+
+These are two different fixes for two different intentions:
+
+- `MissingField.Ignore` silently drops any requested column that doesn't exist — the result simply has fewer columns than asked for.
+- `MissingField.UseNull` keeps every requested column, filling a missing one entirely with `null` — the result always has the same column count and names, useful when downstream steps expect a specific, stable column list regardless of what the source actually has.
+
+---
+
+## Common Mistakes
+
+### Reaching for MissingField.Ignore When the Column Is Actually Required
+
+Silencing the error is easy, but if the query's later steps genuinely depend on that column existing, `MissingField.Ignore` just moves the failure further downstream, to whatever step tries to use a column that's no longer there — usually with a much less obvious error message pointing back to the real cause.
+
+### Not Choosing Between Ignore and UseNull Deliberately
+
+The two options serve different needs — `Ignore` for "this column is genuinely optional," `UseNull` for "this column must exist in the output, even if it's empty." Picking one without considering which guarantee the rest of the query actually needs can just trade one kind of surprise for another.
+
+### Assuming This Also Protects Table.AddColumn or Custom Column References
+
+The `missingField` option only applies to `Table.SelectColumns()`, `Table.RemoveColumns()`, and `Table.RenameColumns()` — a custom column expression that references `[Region]` directly still errors immediately if that column doesn't exist, regardless of how the columns were selected earlier in the query.
+
+---
+
+## Best Practices
+
+- Use `MissingField.UseNull` when downstream steps expect a fixed, stable set of columns regardless of what the source provides.
+- Use `MissingField.Ignore` only when a column being genuinely optional is the correct behavior for the query, not just to silence an error.
+- Leave the default (erroring) behavior in place when a missing column should be caught immediately rather than discovered several steps later.
+
+---
+
+## Next Steps
+
+- [Table.TransformColumns()](/docs/power-query/table-transformcolumns)
+- [Error Handling in Power Query (try ... otherwise)](/docs/power-query/error-handling)
+- [M Function Reference](/docs/power-query/functions)

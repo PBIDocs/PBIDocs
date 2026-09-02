@@ -39,6 +39,7 @@
     "table-distinct",
     "table-addindexcolumn",
     "number-totext",
-    "value-type-null"
+    "value-type-null",
+    "table-selectcolumns"
   ]
 }

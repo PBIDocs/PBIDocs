@@ -21,6 +21,7 @@ import { NumberLocalePlayground } from './number-locale-playground';
 import { CustomErrorPlayground } from './custom-error-playground';
 import { NumberToTextPlayground } from './number-totext-playground';
 import { NullEqualityPlayground } from './null-equality-playground';
+import { TableSelectColumnsPlayground } from './table-selectcolumns-playground';
 
 export function getMDXComponents(components?: MDXComponents) {
   return {
@@ -46,6 +47,7 @@ export function getMDXComponents(components?: MDXComponents) {
     CustomErrorPlayground,
     NumberToTextPlayground,
     NullEqualityPlayground,
+    TableSelectColumnsPlayground,
     ...components,
   } satisfies MDXComponents;
 }
