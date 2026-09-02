@@ -40,6 +40,7 @@
     "table-addindexcolumn",
     "number-totext",
     "value-type-null",
-    "table-selectcolumns"
+    "table-selectcolumns",
+    "table-firstn-skip"
   ]
 }
