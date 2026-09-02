@@ -33,6 +33,11 @@ const daxPlaygrounds: PlaygroundEntry[] = [
     href: '/docs/dax/switch#try-it-live',
     pitch: "Reorder a condition and reproduce the exact shadowing bug the page warns about, yourself.",
   },
+  {
+    fn: 'MID()',
+    href: '/docs/dax/mid-left-right#try-it-live',
+    pitch: 'See the same substring need a different start number than Power Query’s Text.Middle().',
+  },
 ];
 
 const powerQueryPlaygrounds: PlaygroundEntry[] = [

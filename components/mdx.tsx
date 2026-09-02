@@ -25,6 +25,7 @@ import { TableSelectColumnsPlayground } from './table-selectcolumns-playground';
 import { TableFirstNPlayground } from './table-firstn-playground';
 import { LocalVsUtcPlayground } from './local-vs-utc-playground';
 import { ListDistinctContainsPlayground } from './list-distinct-contains-playground';
+import { DaxMidPlayground } from './dax-mid-playground';
 
 export function getMDXComponents(components?: MDXComponents) {
   return {
@@ -54,6 +55,7 @@ export function getMDXComponents(components?: MDXComponents) {
     TableFirstNPlayground,
     LocalVsUtcPlayground,
     ListDistinctContainsPlayground,
+    DaxMidPlayground,
     ...components,
   } satisfies MDXComponents;
 }
