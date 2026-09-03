@@ -1,0 +1,93 @@
+---
+title: "BLANK() vs 0: ISBLANK() and the Comparison Trap"
+description: Learn why DAX measures return BLANK() instead of 0 for missing data, why BLANK() = 0 evaluates to TRUE, and why ISBLANK() is the only reliable way to test for an actual blank.
+---
+
+# BLANK() vs 0: ISBLANK() and the Comparison Trap
+
+`BLANK()` and `0` look the same in a lot of visuals, but they're genuinely different values in DAX — and the two obvious ways to test for "no value," a direct comparison and `ISBLANK()`, don't always agree with each other.
+
+```dax lineNumbers
+ISBLANK(value)
+```
+
+---
+
+## Aggregations Return BLANK(), Not 0
+
+```dax lineNumbers
+Total Sales = SUM(Sales[Amount])
+```
+
+```text
+Filter context has zero matching rows -> Total Sales = BLANK()   <- not 0
+```
+
+`SUM()` and most other aggregation functions return `BLANK()`, not `0`, when there's nothing to aggregate — a category with no sales in the current filter context shows an empty cell in a matrix, not a `0`, unless something explicitly forces it.
+
+---
+
+## The Comparison Trap: BLANK() = 0 Is TRUE
+
+```dax lineNumbers
+ISBLANK([Total Sales])         // TRUE only when Total Sales is genuinely blank
+[Total Sales] = 0              // TRUE when Total Sales is blank OR an actual zero
+```
+
+<BlankEqualityPlayground />
+
+DAX's comparison operators (`=`, `<`, `>`, and the rest) automatically convert `BLANK()` to `0` for a numeric comparison before comparing — so `BLANK() = 0` evaluates to `TRUE`. `ISBLANK()` doesn't do this conversion; it specifically tests whether the value is `BLANK()`, and returns `FALSE` for a real, actual `0`.
+
+These two checks answer different questions, and it's easy to reach for the wrong one:
+
+```text
+ISBLANK(value)   -> "is this genuinely missing?"
+value = 0        -> "is this missing, OR an actual zero?" (can't tell which)
+```
+
+---
+
+## Where This Actually Bites
+
+```dax lineNumbers
+Status = IF([Total Sales] = 0, "No Activity", "Active")
+```
+
+If a customer genuinely had `0` in sales recorded (a real, legitimate zero-dollar transaction, say) and a different customer simply has no rows at all in the current filter context, both show `"No Activity"` here — the `= 0` comparison can't distinguish "recorded a real zero" from "no data exists." Switching to `ISBLANK([Total Sales])` for the "no data" branch specifically, with a separate check for an actual zero, is the fix when that distinction matters.
+
+```dax lineNumbers
+Status = IF(ISBLANK([Total Sales]), "No Data", IF([Total Sales] = 0, "Zero Sales", "Active"))
+```
+
+---
+
+## Common Mistakes
+
+### Using = 0 to Test for Missing Data
+
+As covered above — a plain `= 0` comparison silently also matches a real zero, which is fine when the two cases genuinely don't need distinguishing, but wrong when they do.
+
+### Assuming ISBLANK(0) Is TRUE
+
+`ISBLANK()` never treats a real `0` as blank — only an actual `BLANK()` value passes. A calculated column or measure that legitimately produces `0` isn't "blank" just because it looks empty-ish in some report contexts.
+
+### Forgetting Comparisons Convert BLANK() Automatically
+
+Any numeric comparison against a measure that can return `BLANK()` — not just `= 0`, but `< 0`, `> 100`, and so on — treats that blank as `0` first. A filter like `[Margin] < 0` also catches every row where `[Margin]` is blank, which may or may not be the intended set of rows.
+
+---
+
+## Best Practices
+
+- Use `ISBLANK()` specifically when the question is "did this genuinely have no data," not "is this zero or less."
+- Remember every comparison operator converts `BLANK()` to `0` (or `""` for text) automatically — factor that in before trusting a `< `/`>`/`=` comparison against a measure that can be blank.
+- See [DIVIDE()](/docs/dax/divide#common-mistakes) for the related, redundant pattern of wrapping `DIVIDE()` in an unnecessary `ISBLANK()` check — `DIVIDE()` already returns `BLANK()` on its own.
+
+---
+
+## Next Steps
+
+- [DIVIDE()](/docs/dax/divide)
+- [Filter Context](/docs/dax/filter-context)
+- [Measures](/docs/dax/measures)
+- [DAX Function Reference](/docs/dax/functions)
