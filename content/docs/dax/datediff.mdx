@@ -1,0 +1,85 @@
+---
+title: "DATEDIFF()"
+description: Learn why DAX's DATEDIFF counts calendar boundaries crossed between two dates, not full elapsed periods -- so a 1-day gap across a month-end can return 1 for MONTH, and how that differs from a simple day-count division.
+---
+
+# DATEDIFF()
+
+`DATEDIFF()` returns the number of calendar-unit boundaries between two dates — and "boundaries crossed" is a genuinely different thing from "full periods elapsed," which is where the surprises start.
+
+```dax lineNumbers
+DATEDIFF(Date1, Date2, Interval)
+```
+
+`Interval` can be `SECOND`, `MINUTE`, `HOUR`, `DAY`, `WEEK`, `MONTH`, `QUARTER`, or `YEAR`.
+
+---
+
+## It Counts Boundaries Crossed, Not Full Periods
+
+```dax lineNumbers
+DATEDIFF(DATE(2026, 1, 31), DATE(2026, 2, 1), MONTH)
+```
+
+```text
+DATE(2026,1,31) to DATE(2026,2,1)  -> 1 calendar day apart
+DATEDIFF(..., MONTH)               -> 1
+```
+
+<DateDiffPlayground />
+
+Only a single day separates these two dates, but `DATEDIFF(..., MONTH)` returns `1` — because the calendar month changed from January to February between them. `DATEDIFF()` for `MONTH` is really just `(Year2 * 12 + Month2) - (Year1 * 12 + Month1)`; the day-of-month on either end doesn't factor in at all.
+
+```text
+DATE(2026, 1, 1) to DATE(2026, 1, 31)   -> 30 days apart,  DATEDIFF(..., MONTH) -> 0  (same month)
+DATE(2026, 1, 31) to DATE(2026, 2, 1)   -> 1 day apart,    DATEDIFF(..., MONTH) -> 1  (crossed a boundary)
+```
+
+A 30-day span that stays inside one calendar month returns `0`; a 1-day span that happens to cross midnight into the next month returns `1`. The same asymmetry applies to `QUARTER` and `YEAR` — each just counts how many times that specific boundary was crossed, independent of how many actual days that took.
+
+---
+
+## This Is Different From a Simple Day-Count Division
+
+A rough mental model of "months apart" as "days apart ÷ 30" doesn't match `DATEDIFF()` at all — there's no division by an average period length happening here, just a count of calendar labels changing.
+
+```text
+DATE(2025, 12, 31) to DATE(2026, 1, 1)  -> 1 day apart
+DATEDIFF(..., MONTH)  -> 1   (Dec -> Jan)
+DATEDIFF(..., QUARTER) -> 1  (Q4 -> Q1)
+DATEDIFF(..., YEAR)    -> 1  (2025 -> 2026)
+```
+
+A single day, right at year-end, registers as crossing a month boundary, a quarter boundary, *and* a year boundary simultaneously — all three return `1` for a 1-day gap, while a 90-day gap that stays entirely within one quarter returns `0` for all three.
+
+---
+
+## Common Mistakes
+
+### Expecting DATEDIFF(..., MONTH) to Reflect Elapsed 30-Day Periods
+
+As covered above — it's a calendar-label count, not a days-divided-by-30 calculation. A tenure or age calculation genuinely needing "how many full months has this been" (accounting for day-of-month) needs custom logic layered on top, not `DATEDIFF()` alone.
+
+### Assuming a Small DATEDIFF Result Means a Small Elapsed Time
+
+A `DATEDIFF(..., YEAR)` of `0` can still span up to 364 days (any two dates within the same calendar year), while a result of `1` can span as little as a single day (December 31st to January 1st). The unit result alone doesn't say how much time actually elapsed.
+
+### Using DATEDIFF for a Precise Age or Duration in Days
+
+For an exact elapsed span in days, `DATEDIFF(..., DAY)` (or subtracting the dates directly) is the right tool — reaching for `MONTH` or `YEAR` when the real need is a precise duration produces a boundary-count, not a duration.
+
+---
+
+## Best Practices
+
+- Use `DATEDIFF(..., DAY)` (or direct date subtraction) when the actual elapsed time matters, not just how many calendar boundaries were crossed.
+- Remember that `MONTH`, `QUARTER`, and `YEAR` results can be `1` for a gap as small as a single day, right at a boundary — don't treat the unit result as a proxy for elapsed duration.
+- For a genuine "full months completed" calculation (accounting for day-of-month, like an age-in-years calculation), combine `DATEDIFF()` with an explicit day-of-month comparison rather than trusting the boundary count alone.
+
+---
+
+## Next Steps
+
+- [Time Intelligence](/docs/dax/time-intelligence)
+- [Date.AddMonths() and the Month-End Edge Case](/docs/power-query/date-functions#the-month-end-edge-case)
+- [DAX Function Reference](/docs/dax/functions)
