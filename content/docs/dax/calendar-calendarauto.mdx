@@ -1,0 +1,78 @@
+---
+title: "CALENDAR() vs CALENDARAUTO()"
+description: Learn why CALENDARAUTO() scans every date and datetime column in the entire model to determine its range -- not just your fact table -- and why an unrelated column with an outlier date can silently produce a much wider date table than intended.
+---
+
+# CALENDAR() vs CALENDARAUTO()
+
+Both functions build a continuous table of dates for a date table's `Date` column — the difference is entirely in how the start and end dates get decided.
+
+```dax lineNumbers
+CALENDAR(StartDate, EndDate)
+CALENDARAUTO([FiscalYearEndMonth])
+```
+
+---
+
+## CALENDAR(): You Choose the Range
+
+```dax lineNumbers
+DimDate = CALENDAR(DATE(2024, 1, 1), DATE(2026, 12, 31))
+```
+
+Explicit start and end dates — the range is exactly what's written, nothing more.
+
+---
+
+## CALENDARAUTO(): Scans Every Date Column in the Model
+
+`CALENDARAUTO()` takes no date arguments at all — instead, it scans **every column of type date or datetime in every table in the entire model**, and returns a range spanning the earliest date and the latest date found *anywhere*, not just in the fact table the date table is meant to support.
+
+<CalendarAutoPlayground />
+
+A table that has nothing to do with sales reporting — an audit log with a `CreatedDate` defaulted to `1900-01-01` for legacy rows, or a system table with a placeholder date far in the future — silently widens the entire date table the moment it's added to the model, with no error or warning.
+
+```text
+Sales[OrderDate]:      2024-01-01 to 2026-06-30   <- what the report actually needs
+AuditLog[CreatedDate]: 1900-01-01 to 2026-08-01   <- unrelated table, has a legacy default date
+
+CALENDARAUTO() -> 1900-01-01 to 2026-08-01   <- the whole model's range, not just Sales
+```
+
+---
+
+## Why This Matters in Practice
+
+A date table stretching back to 1900 isn't just cosmetic — every year/quarter/month in that unused range still gets iterated over by time-intelligence calculations, filter dropdowns show over a century of mostly-empty years, and `FIRSTDATE()`/`LASTDATE()`-based measures can pick up an unintended boundary from a column that was never meant to define the reporting window.
+
+---
+
+## Common Mistakes
+
+### Assuming CALENDARAUTO() Only Looks at the Fact Table
+
+It doesn't scope to any particular table — it scans the entire model, including tables added later, staging tables, audit columns, or anything else with a date/datetime type. A date table built with `CALENDARAUTO()` can silently change range every time an unrelated table is added to the model.
+
+### Not Noticing a Default/Placeholder Date in a Source Column
+
+A source system's `NULL`-turned-into-`1900-01-01` (or `9999-12-31`) convention for "not yet set" is a common cause — that placeholder value is a completely legitimate date value as far as `CALENDARAUTO()` is concerned, and it happily includes it in the range.
+
+### Reaching for CALENDARAUTO() by Default
+
+`CALENDARAUTO()` exists mainly for a quick prototype where scanning the model is genuinely convenient. For anything production-facing, `CALENDAR()` with an explicit range tied to the actual reporting need is the safer default — it can't be silently widened by a table added six months later.
+
+---
+
+## Best Practices
+
+- Default to `CALENDAR()` with an explicit range for any date table meant to ship, not `CALENDARAUTO()`.
+- If `CALENDARAUTO()` is used, audit every date/datetime column in the model afterward — not just the fact table — for outlier values.
+- Base the explicit range on `MIN()`/`MAX()` of the specific column(s) the date table actually needs to support, e.g. `CALENDAR(MIN(Sales[OrderDate]), MAX(Sales[OrderDate]))`.
+
+---
+
+## Next Steps
+
+- [Date Tables](/docs/modeling/date-tables)
+- [DATEDIFF()](/docs/dax/datediff)
+- [DAX Function Reference](/docs/dax/functions)
