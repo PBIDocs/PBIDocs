@@ -53,6 +53,11 @@ const daxPlaygrounds: PlaygroundEntry[] = [
     href: '/docs/dax/datediff#try-it-live',
     pitch: 'Watch a 1-day gap across January 31st return 1 for MONTH — it counts boundaries, not periods.',
   },
+  {
+    fn: 'CALENDARAUTO()',
+    href: '/docs/dax/calendar-calendarauto#try-it-live',
+    pitch: 'Add an unrelated audit-log date column and watch it silently widen your whole date table.',
+  },
 ];
 
 const powerQueryPlaygrounds: PlaygroundEntry[] = [

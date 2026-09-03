@@ -35,6 +35,7 @@
     "mid-left-right",
     "blank-vs-zero",
     "trim-upper-lower",
-    "datediff"
+    "datediff",
+    "calendar-calendarauto"
   ]
 }
