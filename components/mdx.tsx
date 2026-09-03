@@ -28,6 +28,7 @@ import { ListDistinctContainsPlayground } from './list-distinct-contains-playgro
 import { DaxMidPlayground } from './dax-mid-playground';
 import { BlankEqualityPlayground } from './blank-equality-playground';
 import { DaxTrimPlayground } from './dax-trim-playground';
+import { DateDiffPlayground } from './datediff-playground';
 
 export function getMDXComponents(components?: MDXComponents) {
   return {
@@ -60,6 +61,7 @@ export function getMDXComponents(components?: MDXComponents) {
     DaxMidPlayground,
     BlankEqualityPlayground,
     DaxTrimPlayground,
+    DateDiffPlayground,
     ...components,
   } satisfies MDXComponents;
 }

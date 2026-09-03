@@ -34,6 +34,7 @@
     "earlier",
     "mid-left-right",
     "blank-vs-zero",
-    "trim-upper-lower"
+    "trim-upper-lower",
+    "datediff"
   ]
 }

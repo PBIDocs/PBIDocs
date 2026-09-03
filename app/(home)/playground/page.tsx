@@ -48,6 +48,11 @@ const daxPlaygrounds: PlaygroundEntry[] = [
     href: '/docs/dax/trim-upper-lower#try-it-live',
     pitch: 'Watch DAX collapse a double space between words while Power Query leaves it untouched.',
   },
+  {
+    fn: 'DATEDIFF()',
+    href: '/docs/dax/datediff#try-it-live',
+    pitch: 'Watch a 1-day gap across January 31st return 1 for MONTH — it counts boundaries, not periods.',
+  },
 ];
 
 const powerQueryPlaygrounds: PlaygroundEntry[] = [
