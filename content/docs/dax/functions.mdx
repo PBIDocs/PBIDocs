@@ -113,9 +113,9 @@ See [Time Intelligence](/docs/dax/time-intelligence) for the full explanation, o
 | Function | Description |
 |---|---|
 | `CONCATENATE` | Joins two text values. (The `&` operator does the same thing, and is more common in practice.) |
-| `UPPER` / `LOWER` | Converts text to all uppercase or lowercase. |
+| [UPPER / LOWER](/docs/dax/trim-upper-lower) | Converts text to all uppercase or lowercase. |
 | [LEFT / RIGHT / MID](/docs/dax/mid-left-right) | Extracts a substring from the start, end, or middle of a text value — MID counts positions from 1, unlike Power Query's Text.Middle. |
-| `TRIM` | Removes leading and trailing spaces. |
+| [TRIM](/docs/dax/trim-upper-lower#trim-also-collapses-internal-spaces) | Removes leading and trailing spaces — and collapses internal double spaces too, unlike Power Query's Text.Trim. |
 | `LEN` | Returns the number of characters in a text value. |
 | `FORMAT` | Converts a number or date to text, using a specified format. |
 

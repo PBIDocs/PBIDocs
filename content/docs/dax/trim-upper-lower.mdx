@@ -1,0 +1,96 @@
+---
+title: "TRIM(), UPPER() & LOWER()"
+description: Learn how DAX's TRIM, UPPER, and LOWER clean up text, and why TRIM does more than Power Query's Text.Trim -- it also collapses internal runs of spaces down to one, not just the leading and trailing ones.
+---
+
+# TRIM(), UPPER() & LOWER()
+
+These are the DAX equivalents of Power Query's [Text.Trim(), Text.Upper() & Text.Lower()](/docs/power-query/text-trim-upper-lower) — with one real difference in what `TRIM()` actually removes.
+
+```dax lineNumbers
+TRIM(text)
+UPPER(text)
+LOWER(text)
+```
+
+---
+
+## UPPER() and LOWER()
+
+```dax lineNumbers
+UPPER("active")
+LOWER("ACTIVE")
+```
+
+```text
+UPPER("active") -> "ACTIVE"
+LOWER("ACTIVE") -> "active"
+```
+
+These behave exactly as expected, and exactly like their Power Query counterparts — the only real subtlety with case conversion is using it for comparison rather than display, covered below.
+
+---
+
+## TRIM() Also Collapses Internal Spaces
+
+```dax lineNumbers
+TRIM("  Widget   Sales  ")
+```
+
+```text
+"  Widget   Sales  " -> "Widget Sales"
+```
+
+DAX's `TRIM()` mirrors Excel's `TRIM()`: it removes leading and trailing spaces, **and** collapses every internal run of multiple spaces down to a single space. This is different from Power Query's `Text.Trim()`, which only touches the leading and trailing ends — internal spaces, however many there are, pass through completely unchanged.
+
+<DaxTrimPlayground />
+
+The same messy source text produces two different-length results depending on which layer cleans it: `TRIM()` in DAX quietly fixes a double space typed between two words; `Text.Trim()` in Power Query leaves it exactly as it was.
+
+```text
+"  Widget   Sales  "
+TRIM(...)       -> "Widget Sales"     (11 chars, one space between words)
+Text.Trim(...)  -> "Widget   Sales"   (14 chars, all 3 internal spaces survive)
+```
+
+---
+
+## UPPER() / LOWER() for Comparison, Not Just Display
+
+```dax lineNumbers
+Status Match = LOWER([Status]) = "active"
+```
+
+DAX text comparisons are case-sensitive by default, same as Power Query — converting both sides to a consistent case before comparing is the standard fix.
+
+---
+
+## Common Mistakes
+
+### Assuming TRIM() Only Touches the Ends, Like Text.Trim()
+
+Porting a value cleaned with `Text.Trim()` in Power Query into a DAX calculated column and re-cleaning it with `TRIM()` can produce a shorter result than expected — any internal double space that survived `Text.Trim()` gets collapsed by `TRIM()`, which may or may not be desired depending on whether that internal spacing was meaningful.
+
+### Expecting Text.Trim() to Catch an Internal Double Space
+
+The reverse mistake: assuming Power Query already normalized internal spacing because a value "went through Text.Trim()" — it didn't touch anything except the two ends.
+
+### Overwriting Original Case When Only Comparison Needed It
+
+Applying `UPPER()` or `LOWER()` directly to a calculated column meant for display permanently destroys the original casing — convert case only inside the comparison expression itself if the original value still needs to display normally.
+
+---
+
+## Best Practices
+
+- Use `TRIM()` when internal double-spacing genuinely needs cleaning up, not just leading/trailing whitespace.
+- Don't assume a value is already fully cleaned just because it passed through the other language's trim function — the two aren't equivalent.
+- Convert case only inside a comparison expression (`LOWER([Status]) = "active"`), not as a standing transformation, when the original casing still needs to display.
+
+---
+
+## Next Steps
+
+- [Text.Trim(), Text.Upper() & Text.Lower()](/docs/power-query/text-trim-upper-lower)
+- [LEFT(), RIGHT() & MID()](/docs/dax/mid-left-right)
+- [DAX Function Reference](/docs/dax/functions)
