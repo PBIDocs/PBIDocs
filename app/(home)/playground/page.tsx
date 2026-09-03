@@ -38,6 +38,11 @@ const daxPlaygrounds: PlaygroundEntry[] = [
     href: '/docs/dax/mid-left-right#try-it-live',
     pitch: 'See the same substring need a different start number than Power Query’s Text.Middle().',
   },
+  {
+    fn: 'ISBLANK() vs = 0',
+    href: '/docs/dax/blank-vs-zero#try-it-live',
+    pitch: 'Watch BLANK() = 0 come back TRUE while ISBLANK() on that same 0 comes back FALSE.',
+  },
 ];
 
 const powerQueryPlaygrounds: PlaygroundEntry[] = [

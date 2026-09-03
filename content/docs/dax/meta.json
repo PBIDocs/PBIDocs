@@ -32,6 +32,7 @@
     "countrows",
     "distinctcount",
     "earlier",
-    "mid-left-right"
+    "mid-left-right",
+    "blank-vs-zero"
   ]
 }
