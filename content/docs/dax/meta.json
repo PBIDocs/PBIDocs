@@ -33,6 +33,7 @@
     "distinctcount",
     "earlier",
     "mid-left-right",
-    "blank-vs-zero"
+    "blank-vs-zero",
+    "trim-upper-lower"
   ]
 }

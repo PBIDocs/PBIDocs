@@ -43,6 +43,11 @@ const daxPlaygrounds: PlaygroundEntry[] = [
     href: '/docs/dax/blank-vs-zero#try-it-live',
     pitch: 'Watch BLANK() = 0 come back TRUE while ISBLANK() on that same 0 comes back FALSE.',
   },
+  {
+    fn: 'TRIM()',
+    href: '/docs/dax/trim-upper-lower#try-it-live',
+    pitch: 'Watch DAX collapse a double space between words while Power Query leaves it untouched.',
+  },
 ];
 
 const powerQueryPlaygrounds: PlaygroundEntry[] = [

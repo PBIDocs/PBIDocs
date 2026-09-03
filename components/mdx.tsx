@@ -27,6 +27,7 @@ import { LocalVsUtcPlayground } from './local-vs-utc-playground';
 import { ListDistinctContainsPlayground } from './list-distinct-contains-playground';
 import { DaxMidPlayground } from './dax-mid-playground';
 import { BlankEqualityPlayground } from './blank-equality-playground';
+import { DaxTrimPlayground } from './dax-trim-playground';
 
 export function getMDXComponents(components?: MDXComponents) {
   return {
@@ -58,6 +59,7 @@ export function getMDXComponents(components?: MDXComponents) {
     ListDistinctContainsPlayground,
     DaxMidPlayground,
     BlankEqualityPlayground,
+    DaxTrimPlayground,
     ...components,
   } satisfies MDXComponents;
 }
