@@ -32,6 +32,7 @@ import { DateDiffPlayground } from './datediff-playground';
 import { CalendarAutoPlayground } from './calendarauto-playground';
 import { DateAddParallelPeriodPlayground } from './dateadd-parallelperiod-playground';
 import { UnionPlayground } from './union-playground';
+import { TodayNowPlayground } from './today-now-playground';
 
 export function getMDXComponents(components?: MDXComponents) {
   return {
@@ -68,6 +69,7 @@ export function getMDXComponents(components?: MDXComponents) {
     CalendarAutoPlayground,
     DateAddParallelPeriodPlayground,
     UnionPlayground,
+    TodayNowPlayground,
     ...components,
   } satisfies MDXComponents;
 }

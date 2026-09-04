@@ -38,6 +38,7 @@
     "datediff",
     "calendar-calendarauto",
     "dateadd-parallelperiod",
-    "union"
+    "union",
+    "today-now"
   ]
 }
