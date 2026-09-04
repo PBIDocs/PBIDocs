@@ -18,9 +18,15 @@ export function baseOptions(): BaseLayoutProps {
       { text: 'Tutorials', url: '/tutorials' },
       { text: 'DAX Formula Builder', url: '/tools/dax-formula-builder' },
       { text: 'Pricing', url: '/pricing' },
-      { text: 'Blog', url: '/blog' },
-      { text: 'Changelog', url: '/changelog' },
-      { text: 'FAQ', url: '/faq' },
+      {
+        type: 'menu',
+        text: 'More',
+        items: [
+          { text: 'Blog', url: '/blog' },
+          { text: 'Changelog', url: '/changelog' },
+          { text: 'FAQ', url: '/faq' },
+        ],
+      },
       {
         type: 'icon',
         label: 'GitHub',
