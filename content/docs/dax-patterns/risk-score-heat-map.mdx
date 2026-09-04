@@ -1,0 +1,168 @@
+---
+title: "Risk Score & Heat Map"
+description: Ready-made DAX patterns for finding each item's latest assessment, computing a likelihood x impact risk score with threshold bands, and turning a disconnected-axis matrix into an actual heat map.
+---
+
+# Risk Score & Heat Map
+
+A risk register's core question — *what's currently the worst thing on this list?* — depends on three patterns working together: pulling each risk's **latest** assessment (not a blend of every historical one), scoring it, and laying scores out as a matrix that reads like a heat map at a glance.
+
+```text
+FactRiskAssessment  — one row per risk, per assessment date
+       |
+       | latest row per risk
+       |
+Current Likelihood, Current Impact
+       |
+       | Likelihood x Impact
+       |
+Risk Score  ->  Risk Level (Critical / High / Medium / Low)
+       |
+       | plotted on a disconnected 5x5 axis
+       |
+Risk Matrix (heat map)
+```
+
+---
+
+## Finding Each Item's Latest Value
+
+The core problem: a naive `SUM` or `AVERAGE` over a repeatedly-reassessed value blends every historical row together, which isn't what "current" means. The fix is finding the single most recent row per item.
+
+```dax lineNumbers
+Current Likelihood =
+VAR LatestDate =
+    CALCULATE(MAX(FactRiskAssessment[AssessmentDate]))
+RETURN
+    CALCULATE(
+        SELECTEDVALUE(FactRiskAssessment[Likelihood]),
+        FactRiskAssessment[AssessmentDate] = LatestDate
+    )
+
+Current Impact =
+VAR LatestDate =
+    CALCULATE(MAX(FactRiskAssessment[AssessmentDate]))
+RETURN
+    CALCULATE(
+        SELECTEDVALUE(FactRiskAssessment[Impact]),
+        FactRiskAssessment[AssessmentDate] = LatestDate
+    )
+```
+
+With `DimRisk[RiskID]` in the current filter context (a table visual's rows, or a `FILTER` iterating `DimRisk`), `LatestDate` finds the most recent assessment date *within that one risk's rows*, and the outer `CALCULATE` pulls the value from that specific row. This "latest value per entity" shape isn't specific to risk registers — the same pattern applies to any repeatedly-reassessed value: a sensor's latest reading, a project's latest status, an inspection's latest result.
+
+---
+
+## Risk Score and Threshold Bands
+
+```dax lineNumbers
+Risk Score =
+[Current Likelihood] * [Current Impact]
+
+Risk Level =
+SWITCH(
+    TRUE(),
+    [Risk Score] >= 15, "Critical",
+    [Risk Score] >= 9, "High",
+    [Risk Score] >= 4, "Medium",
+    [Risk Score] > 0, "Low",
+    BLANK()
+)
+```
+
+`SWITCH(TRUE(), ...)` checks each threshold in order and returns the first match — see [SWITCH](/docs/dax/switch#switchtrue--for-range-conditions) for why this beats nested `IF()` once there are more than two or three bands, and for a real shadowing bug that shows up if the thresholds aren't ordered highest-to-lowest.
+
+---
+
+## Counting Items by Band
+
+```dax lineNumbers
+Critical Risks =
+CALCULATE(
+    DISTINCTCOUNT(DimRisk[RiskID]),
+    FILTER(DimRisk, [Risk Level] = "Critical")
+)
+
+High Risks =
+CALCULATE(
+    DISTINCTCOUNT(DimRisk[RiskID]),
+    FILTER(DimRisk, [Risk Level] = "High")
+)
+```
+
+`FILTER(DimRisk, ...)` iterates every risk, evaluating `[Risk Level]` once per risk (each risk's own row context resolves `Current Likelihood`/`Current Impact` correctly), then keeps only the ones matching — the standard way to count rows by a measure-derived category rather than a stored column.
+
+---
+
+## The Disconnected-Axis Heat Map
+
+A matrix needs a fixed axis for both likelihood and impact — but that 1-5 scale doesn't exist as a real table in the source data. Build two small calculated tables instead:
+
+```dax lineNumbers
+DimLikelihood =
+SELECTCOLUMNS(GENERATESERIES(1, 5, 1), "Likelihood", [Value])
+
+DimImpact =
+SELECTCOLUMNS(GENERATESERIES(1, 5, 1), "Impact", [Value])
+```
+
+Leave both **disconnected** — no relationship to `DimRisk` or `FactRiskAssessment`. The matrix's measure reads whatever likelihood/impact value is currently in context (one matrix cell) directly, instead of through a relationship:
+
+```dax lineNumbers
+Risks in Cell =
+VAR SelectedLikelihood = SELECTEDVALUE(DimLikelihood[Likelihood])
+VAR SelectedImpact = SELECTEDVALUE(DimImpact[Impact])
+RETURN
+CALCULATE(
+    DISTINCTCOUNT(DimRisk[RiskID]),
+    FILTER(
+        DimRisk,
+        [Current Likelihood] = SelectedLikelihood && [Current Impact] = SelectedImpact
+    )
+)
+```
+
+Put `DimLikelihood[Likelihood]` on a matrix visual's rows, `DimImpact[Impact]` on its columns, and `[Risks in Cell]` as the value — then add conditional formatting (background color, red for high combinations, green for low) to turn the grid of numbers into an actual heat map.
+
+---
+
+## Common Mistakes
+
+### Averaging or Summing Every Historical Assessment
+
+Blending two assessments (likelihood 3, then 4) into an average of 3.5 hides the fact that the item has gotten worse — the current status is 4, not an average of everything ever recorded.
+
+### Relating the Axis Tables to the Fact Table
+
+`DimLikelihood` and `DimImpact` need to stay disconnected. Relating them would filter the matrix down to only combinations that already exist in the data, breaking its ability to show empty cells — a 1×1 combination with zero risks is still meaningful; it means nothing is currently that low-severity, and a heat map that can't show that is missing the point.
+
+### Treating the Score as Precise Instead of a Sorting Tool
+
+A score of 15 isn't meaningfully more "exact" than 14 — the score exists to bucket and rank items for review priority, not to imply false precision. The threshold bands matter more than the raw number for actually deciding what gets attention first.
+
+---
+
+## Best Practices
+
+- Always resolve a repeatedly-reassessed value to its single latest row before scoring it — never average or sum across history.
+- Keep the matrix's axis tables disconnected from the fact table so empty cells still render.
+- Order `SWITCH(TRUE(), ...)` threshold conditions from highest to lowest — checking the lowest threshold first would match everything above it too, before the intended band is ever reached.
+- Treat the numeric score as a ranking aid, and communicate severity primarily through the named bands (Critical/High/Medium/Low), not the raw number.
+
+---
+
+## Risk Score & Heat Map Checklist
+
+- Each item's current likelihood/impact comes from its single most recent assessment, not a blend of history.
+- `Risk Level` uses `SWITCH(TRUE(), ...)` with thresholds ordered highest-to-lowest.
+- The likelihood/impact axis tables are disconnected from the rest of the model.
+- The heat map's conditional formatting is checked against a few known cells to confirm severity colors line up with the actual threshold bands.
+
+---
+
+## Next Steps
+
+- [Build a Risk Register and Risk Matrix Dashboard in Power BI](/tutorials/build-a-risk-register-dashboard) — the full walkthrough this pattern is drawn from, with a real dataset and report layout
+- [SWITCH](/docs/dax/switch)
+- [Earned Value Management (EVM) Metrics](/docs/dax-patterns/evm-metrics)
+- [Star Schema](/docs/modeling/star-schema)
