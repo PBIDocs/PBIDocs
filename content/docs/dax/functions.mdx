@@ -60,8 +60,8 @@ All of these evaluate their expression once per row of the given table — see [
 |---|---|
 | `TOTALYTD` / `TOTALQTD` / `TOTALMTD` | Running total from the start of the year, quarter, or month. |
 | `SAMEPERIODLASTYEAR` | The same date range, shifted back exactly one year. |
-| `DATEADD` | Shifts a date range by a given number of years, quarters, months, or days. |
-| `PARALLELPERIOD` | Like `DATEADD`, but returns the entire shifted period rather than a day-aligned range. |
+| [DATEADD](/docs/dax/dateadd-parallelperiod) | Shifts a date range by a given number of years, quarters, months, or days — preserving the exact shape of the current selection. |
+| [PARALLELPERIOD](/docs/dax/dateadd-parallelperiod) | Like `DATEADD`, but always snaps the result out to the entire shifted period, regardless of the current selection's shape. |
 | `FIRSTDATE` / `LASTDATE` | The earliest or latest date in the current filter context. |
 | `STARTOFMONTH` / `ENDOFMONTH` | The first or last date of the month containing the current context. |
 | `STARTOFYEAR` / `ENDOFYEAR` | The first or last date of the year containing the current context. |

@@ -58,6 +58,11 @@ const daxPlaygrounds: PlaygroundEntry[] = [
     href: '/docs/dax/calendar-calendarauto#try-it-live',
     pitch: 'Add an unrelated audit-log date column and watch it silently widen your whole date table.',
   },
+  {
+    fn: 'DATEADD() vs PARALLELPERIOD()',
+    href: '/docs/dax/dateadd-parallelperiod#try-it-live',
+    pitch: 'Filter to just half a month and watch PARALLELPERIOD grab the whole prior month anyway.',
+  },
 ];
 
 const powerQueryPlaygrounds: PlaygroundEntry[] = [
