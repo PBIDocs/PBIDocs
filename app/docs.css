@@ -1,3 +1,12 @@
+/* Let the docs layout (sidebar + content + TOC) use the full viewport width
+   on large screens, instead of Fumadocs' default ~1552px cap that leaves
+   large empty gutters on wide monitors. The prose column itself still caps
+   at max-w-[900px] (set by fumadocs-ui), so paragraph readability is
+   unaffected -- this only removes the wasted outer margin. */
+#nd-notebook-layout {
+  --fd-layout-width: 9999px;
+}
+
 /* Documentation dash lists */
 .prose ul {
   list-style: none;
