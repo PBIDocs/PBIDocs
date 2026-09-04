@@ -1,0 +1,159 @@
+---
+title: "Earned Value Management (EVM) Metrics"
+description: Ready-made DAX patterns for Planned Value, Earned Value, Actual Cost, CPI, SPI, and the standard EAC/VAC/TCPI forecasting measures used in program and systems engineering status reporting.
+---
+
+# Earned Value Management (EVM) Metrics
+
+Earned Value Management compares three numbers, all expressed in the same cost unit, to answer one question honestly: is this program on budget and on schedule, and if not, by how much?
+
+```text
+Planned Value (PV)  — what should have been spent by now
+Earned Value  (EV)  — what the completed work is actually worth, at budget
+Actual Cost   (AC)  — what was actually spent
+```
+
+Every other EVM metric — CPI, SPI, EAC, VAC, TCPI — is derived from these three.
+
+---
+
+## The Three Base Measures
+
+```dax lineNumbers
+PV (Planned Value) =
+SUMX(Tasks, Tasks[BAC] * Tasks[PlannedPercentComplete])
+
+EV (Earned Value) =
+SUMX(Tasks, Tasks[BAC] * Tasks[PercentComplete])
+
+AC (Actual Cost) =
+SUM(Tasks[ActualCost])
+```
+
+`BAC` (Budget at Completion) is each task's total planned cost. This version assumes `PlannedPercentComplete` is already known per task as of the current reporting date — the simplest, most common setup for a periodic status report. When PV needs to be computed live from each task's own baseline schedule (so a chart can show the planned curve continuously over time, not just as of today), a disconnected date table is the standard technique — see [Build an EVM Dashboard](/tutorials/build-an-evm-dashboard) for that full walkthrough.
+
+---
+
+## CPI and SPI: The Two Headline Ratios
+
+```dax lineNumbers
+CPI (Cost Performance Index) =
+DIVIDE([EV (Earned Value)], [AC (Actual Cost)])
+
+SPI (Schedule Performance Index) =
+DIVIDE([EV (Earned Value)], [PV (Planned Value)])
+```
+
+```text
+CPI < 1  -> over budget for the work performed
+CPI = 1  -> exactly on budget
+CPI > 1  -> under budget for the work performed
+
+SPI < 1  -> behind schedule
+SPI = 1  -> exactly on schedule
+SPI > 1  -> ahead of schedule
+```
+
+Both are ratios, so 1.0 is always the neutral point — above is good, below is a problem.
+
+---
+
+## CV and SV: The Variance Form
+
+```dax lineNumbers
+CV (Cost Variance) =
+[EV (Earned Value)] - [AC (Actual Cost)]
+
+SV (Schedule Variance) =
+[EV (Earned Value)] - [PV (Planned Value)]
+```
+
+The same comparison, expressed as a dollar amount instead of a ratio — useful for a KPI card showing "$42K over budget" rather than a bare index number. Here 0 is neutral: positive is good, negative is a problem — the **opposite-feeling** direction from a ratio, where the neutral point is 1, not 0. Moving between the two forms is the easiest place to misread a program's status, covered below.
+
+---
+
+## EAC, ETC, VAC, and TCPI: Forecasting to Completion
+
+```dax lineNumbers
+BAC (Budget at Completion) =
+SUM(Tasks[BAC])
+
+EAC (Estimate at Completion) =
+DIVIDE([BAC (Budget at Completion)], [CPI (Cost Performance Index)])
+
+ETC (Estimate to Complete) =
+[EAC (Estimate at Completion)] - [AC (Actual Cost)]
+
+VAC (Variance at Completion) =
+[BAC (Budget at Completion)] - [EAC (Estimate at Completion)]
+
+TCPI (To-Complete Performance Index) =
+DIVIDE(
+    [BAC (Budget at Completion)] - [EV (Earned Value)],
+    [BAC (Budget at Completion)] - [AC (Actual Cost)]
+)
+```
+
+`TCPI` answers a different question from the others: given what's actually been spent, how efficiently does the *remaining* work need to be performed to still hit the original `BAC`? A `TCPI` well above 1 signals the original budget is no longer realistic, even before `EAC` makes that explicit.
+
+### EAC Has More Than One Standard Formula
+
+`EAC = BAC / CPI` (shown above) is the simplest of several standard EAC formulas, and it makes a specific assumption: that the cost efficiency observed so far continues unchanged for the remaining work.
+
+```text
+EAC = AC + (BAC - EV)                    -- assumes the variance so far was atypical, won't recur
+EAC = BAC / CPI                          -- assumes current cost performance continues as-is
+EAC = AC + (BAC - EV) / (CPI * SPI)      -- assumes both cost AND schedule performance affect the remaining work
+```
+
+Which formula fits depends on *why* the program is over or under — a one-time cost overrun on a single task points toward the first; a systemic efficiency problem likely to persist points toward the second or third.
+
+---
+
+## Common Mistakes
+
+### Mixing Up the Ratio and Variance Sign Conventions
+
+`CPI`/`SPI` are ratios where **1.0** is neutral and higher is better; `CV`/`SV` are dollar variances where **0** is neutral and higher is better. A dashboard mixing both forms without clear labeling makes it easy to misread "0.90" as a small, tolerable number when it actually means the program is running 10% over budget for the work performed.
+
+### Computing EV as a Single Program-Wide Percentage
+
+`EV` needs to be earned per task (or per work package) and then summed — `Tasks[BAC] * Tasks[PercentComplete]`, aggregated with `SUMX`. Multiplying the *total* `BAC` by one blended, program-wide percent-complete produces a materially different (and usually more optimistic) number than summing each task's own earned value.
+
+### Treating a Single EAC Formula as Definitive
+
+`EAC = BAC / CPI` is a starting point for a conversation, not a certainty — see the formula variants above. Reporting it without stating which assumption it makes can overstate how precise the forecast actually is.
+
+### Confusing SPI With Percent of the Calendar Elapsed
+
+`SPI` measures work completed against work planned, not time elapsed against total duration. A program can be exactly on schedule by the calendar and still show a poor `SPI` if the wrong tasks were prioritized first.
+
+---
+
+## Best Practices
+
+- Compute `PV`, `EV`, and `AC` as their own base measures first, then build every ratio and variance from those three — never recompute the underlying aggregation inside each derived measure.
+- Use `DIVIDE()`, never the raw `/` operator — `AC` and `PV` can both legitimately be `0` early in a program, before any cost has been incurred or any task has reached its planned start.
+- Label ratio-form and variance-form metrics clearly and separately; don't rely on a viewer to remember which form a given card is showing.
+- Pick one `EAC` formula deliberately, based on whether the observed variance looks likely to persist, and document that choice next to the measure.
+
+---
+
+## EVM Metrics Checklist
+
+Before publishing an EVM dashboard:
+
+- `PV`, `EV`, and `AC` are each computed per task and summed with `SUMX`, not derived from one blended program-wide percentage.
+- Every ratio and variance measure uses `DIVIDE()`, not `/`.
+- `CPI`/`SPI` (ratio) and `CV`/`SV` (variance) are labeled clearly enough that their opposite neutral points (1.0 vs. 0) can't be confused.
+- The `EAC` formula in use is a deliberate choice, not just whichever one was easiest to write first.
+
+---
+
+## Next Steps
+
+- [Build an Earned Value Management (EVM) Dashboard in Power BI](/tutorials/build-an-evm-dashboard) — a full walkthrough with a real task-list dataset and a disconnected date table for time-phased PV
+- [Totals](/docs/dax-patterns/totals)
+- [Percent of Total](/docs/dax-patterns/percent-of-total)
+- [DIVIDE()](/docs/dax/divide)
+- [CALCULATE](/docs/dax/calculate)
