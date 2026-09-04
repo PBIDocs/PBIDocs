@@ -1,0 +1,81 @@
+---
+title: "TODAY() & NOW(): Calculated Column vs Measure Timing"
+description: Learn why TODAY() and NOW() in a DAX calculated column get frozen at the moment of the last data refresh, while the same functions in a measure re-evaluate live every time the report is viewed -- and why that difference explains a stale-looking calculated column.
+---
+
+# TODAY() & NOW(): Calculated Column vs Measure Timing
+
+`TODAY()` and `NOW()` return the current date (or date and time) — but *when* "current" actually gets evaluated depends entirely on whether the function is used in a calculated column or a measure.
+
+```dax lineNumbers
+TODAY()
+NOW()
+```
+
+---
+
+## Calculated Columns: Frozen at Refresh Time
+
+```dax lineNumbers
+DaysSinceOrder = TODAY() - [OrderDate]
+```
+
+A calculated column is computed once, during data refresh, and the result is physically stored in the model — same as any other column. `TODAY()` inside it gets evaluated exactly once, at that refresh, and the stored result doesn't change again until the next refresh actually runs.
+
+<TodayNowPlayground />
+
+Five days after a refresh with no new refresh run, a `DaysSinceOrder` calculated column still reports the day count as of the refresh — not the actual current day count. The column isn't wrong, exactly; it's just showing a value that was correct *when it was computed*, not a live one.
+
+---
+
+## Measures: Re-Evaluated Every Time the Report Is Viewed
+
+```dax lineNumbers
+Days Since Order := TODAY() - MIN(Sales[OrderDate])
+```
+
+A measure isn't stored — it's calculated at query time, every time a visual renders or a user interacts with the report. `TODAY()` inside a measure reflects the actual current date at that exact moment, regardless of when the underlying data was last refreshed.
+
+```text
+Data last refreshed: September 1
+5 days pass, no new refresh runs
+Calculated column "DaysSinceOrder": still based on September 1        (frozen)
+Measure "[Days Since Order]":       based on today's actual date      (live)
+```
+
+---
+
+## Common Mistakes
+
+### Expecting a Calculated Column With TODAY() to Update Daily
+
+It only updates on the next data refresh — a scheduled refresh running once a week means a `TODAY()`-based calculated column is only ever as fresh as that week's most recent refresh, not the literal current day.
+
+### Using a Calculated Column When a Measure Was Needed
+
+If the actual goal is "always reflect today's real date, live, whenever the report is opened," that's a measure's job — a calculated column using `TODAY()` can't do this regardless of how often it's refreshed, since it only recalculates on refresh, not on view.
+
+### Assuming NOW()'s Time Component Behaves the Same Way
+
+The same refresh-time-vs-query-time split applies to `NOW()` — a calculated column using `NOW()` freezes not just the date but the exact time of the last refresh, which can look like a strange, arbitrary timestamp far removed from whenever someone actually looks at the report.
+
+### Not Considering Which Machine's Clock TODAY()/NOW() Reflects
+
+Beyond *when* it's evaluated, `TODAY()`/`NOW()` also reflect whichever machine actually runs the refresh or the query — see [DateTime.LocalNow() and the Desktop-vs-Service Trap](/docs/power-query/datetime-localnow) for the same underlying issue on the Power Query side.
+
+---
+
+## Best Practices
+
+- Use a measure, not a calculated column, whenever a value genuinely needs to reflect the literal current date every time the report is viewed.
+- If a `TODAY()`-based calculated column is required (for query-folding or performance reasons in a very large model, for instance), treat its value as "as of the last refresh," and refresh often enough that staleness doesn't matter for the use case.
+- Document which refresh schedule a `TODAY()`-based calculated column depends on, since its apparent "bugginess" is usually just an unrefreshed model, not a formula error.
+
+---
+
+## Next Steps
+
+- [Measures](/docs/dax/measures)
+- [Calculated Columns](/docs/dax/calculated-columns)
+- [DateTime.LocalNow() and the Desktop-vs-Service Trap](/docs/power-query/datetime-localnow)
+- [DAX Function Reference](/docs/dax/functions)

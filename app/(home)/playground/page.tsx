@@ -68,6 +68,11 @@ const daxPlaygrounds: PlaygroundEntry[] = [
     href: '/docs/dax/union#try-it-live',
     pitch: 'Swap a table’s column order and watch UNION() silently mix Amount values into the Region column.',
   },
+  {
+    fn: 'TODAY() / NOW()',
+    href: '/docs/dax/today-now#try-it-live',
+    pitch: 'Watch a calculated column freeze at last refresh while a measure keeps counting the real days.',
+  },
 ];
 
 const powerQueryPlaygrounds: PlaygroundEntry[] = [
