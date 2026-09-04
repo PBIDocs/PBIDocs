@@ -7,6 +7,21 @@
   --fd-layout-width: 9999px;
 }
 
+/* #nd-page (the article) is a flex column whose children are each capped at
+   max-w-[900px] by fumadocs-ui, stretched (the flex default) to exactly that
+   width -- left-aligned in the now-wide article from the override above,
+   leaving the gap on the right in front of the TOC instead of split evenly.
+   `margin-inline: auto` centers each already-900px-wide child within the
+   wider article, while `width: 100%` keeps them shrinking to fit on
+   narrower viewports exactly as before (this isn't `align-items: center`,
+   which would size each child to its own content instead of the full
+   900px, misaligning short elements like the breadcrumb from the
+   paragraphs). */
+#nd-page > * {
+  width: 100%;
+  margin-inline: auto;
+}
+
 /* Documentation dash lists */
 .prose ul {
   list-style: none;
