@@ -6,6 +6,7 @@
     "ranking",
     "percent-of-total",
     "running-total",
-    "evm-metrics"
+    "evm-metrics",
+    "risk-score-heat-map"
   ]
 }
