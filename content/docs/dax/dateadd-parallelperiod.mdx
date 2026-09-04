@@ -1,0 +1,90 @@
+---
+title: "DATEADD() vs PARALLELPERIOD()"
+description: Learn why DATEADD shifts a date range while preserving its exact shape, while PARALLELPERIOD always snaps the result out to the full calendar period -- and why that only matters when the current filter context isn't already a complete month, quarter, or year.
+---
+
+# DATEADD() vs PARALLELPERIOD()
+
+Both functions shift the current date range back or forward by a calendar interval — the difference is entirely in what shape the *result* takes when the original range isn't already a complete period.
+
+```dax lineNumbers
+DATEADD(Dates[Date], NumberOfIntervals, Interval)
+PARALLELPERIOD(Dates[Date], NumberOfIntervals, Interval)
+```
+
+---
+
+## DATEADD(): Preserves the Exact Shape, Just Shifted
+
+```dax lineNumbers
+DATEADD(Dates[Date], -1, MONTH)
+```
+
+If the current filter context is January 1–15 (a month-to-date selection, say), `DATEADD(..., -1, MONTH)` returns December 1–15 — the same 15-day shape, shifted back exactly one month.
+
+---
+
+## PARALLELPERIOD(): Always the Full Period
+
+```dax lineNumbers
+PARALLELPERIOD(Dates[Date], -1, MONTH)
+```
+
+The same January 1–15 context, shifted with `PARALLELPERIOD()` instead, returns **all of December** — December 1–31, not just the 1st through the 15th. `PARALLELPERIOD()` shifts by the interval and then rounds the result out to the entire calendar period(s) it touches, regardless of how much of the *current* period was actually selected.
+
+<DateAddParallelPeriodPlayground />
+
+---
+
+## Why This Only Shows Up With a Partial Period
+
+If the current filter context already happens to be a complete month (January 1–31, the whole month), both functions return the same thing — all of December, either way. The divergence only appears when the current selection is a **partial** period: a month-to-date range, a single day, a custom date-range slicer selection that doesn't align to calendar boundaries.
+
+```text
+Current context: January 1-31 (a full month)
+DATEADD(..., -1, MONTH)       -> December 1-31   (same as PARALLELPERIOD here)
+PARALLELPERIOD(..., -1, MONTH) -> December 1-31
+
+Current context: January 1-15 (a partial month, e.g. month-to-date)
+DATEADD(..., -1, MONTH)       -> December 1-15   (same shape, shifted)
+PARALLELPERIOD(..., -1, MONTH) -> December 1-31   (the whole month, regardless)
+```
+
+This is exactly why a "previous month" comparison measure can look correct in a full-month report and then look wrong the moment someone applies a mid-month, month-to-date filter — the two functions were never doing the same thing, it just wasn't visible until the current period stopped being a complete one.
+
+---
+
+## Common Mistakes
+
+### Assuming DATEADD and PARALLELPERIOD Are Interchangeable
+
+They agree whenever the current context is already a complete period, which is common enough in testing to hide the difference until a partial-period filter (a live month-to-date report, most obviously) exposes it in production.
+
+### Using PARALLELPERIOD for a True Month-to-Date Comparison
+
+If the goal is "the same day-range last month" (a genuine month-to-date-vs-month-to-date comparison), `PARALLELPERIOD()`'s full-month result isn't what's needed — `DATEADD()` is the one that preserves the current partial range's shape.
+
+### Using DATEADD When the Goal Is a Full Prior-Period Total
+
+Conversely, a "total sales for all of last month" measure evaluated during a mid-month, month-to-date filtered view needs `PARALLELPERIOD()` (or an explicit `STARTOFMONTH`/`ENDOFMONTH` pair) — `DATEADD()` would only return the equivalent partial slice of last month, not the full period.
+
+### Running DATEADD Against a Non-Contiguous or Unmarked Date Column
+
+`DATEADD()` (and most other time-intelligence functions) expect a contiguous date column, ideally from a table marked as a date table — running it against a transaction table's date column directly, which typically has gaps, can produce incomplete or unexpected results.
+
+---
+
+## Best Practices
+
+- Use `DATEADD()` when the comparison should mirror whatever partial or full range is currently selected.
+- Use `PARALLELPERIOD()` (or explicit `STARTOFMONTH`/`ENDOFMONTH`, `STARTOFQUARTER`/`ENDOFQUARTER`) when the comparison specifically needs the entire prior period, regardless of what's currently selected.
+- Test time-intelligence measures against both a full-period selection and a partial one (month-to-date, a single day) before shipping — the two functions' difference only shows up in the partial case.
+
+---
+
+## Next Steps
+
+- [Time Intelligence](/docs/dax/time-intelligence)
+- [DATEDIFF()](/docs/dax/datediff)
+- [CALENDAR() vs CALENDARAUTO()](/docs/dax/calendar-calendarauto)
+- [DAX Function Reference](/docs/dax/functions)

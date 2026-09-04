@@ -36,6 +36,7 @@
     "blank-vs-zero",
     "trim-upper-lower",
     "datediff",
-    "calendar-calendarauto"
+    "calendar-calendarauto",
+    "dateadd-parallelperiod"
   ]
 }
