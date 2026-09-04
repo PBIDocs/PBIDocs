@@ -91,8 +91,8 @@ See [Time Intelligence](/docs/dax/time-intelligence) for the full explanation, o
 | `VALUES` | Returns the distinct values of a column, including a blank row if one exists in the data. |
 | `DISTINCT` | Returns the distinct values of a column, without the blank row. |
 | [TOPN](/docs/dax/topn) | Returns the top (or bottom) N rows of a table by a given expression. |
-| `UNION` | Stacks two or more tables with matching columns into one. |
-| `EXCEPT` / `INTERSECT` | Returns rows in one table but not another, or rows common to both. |
+| [UNION](/docs/dax/union) | Stacks two or more tables into one — matches columns by position, not by name. |
+| [EXCEPT / INTERSECT](/docs/dax/union#except-and-intersect-share-the-same-rule) | Returns rows in one table but not another, or rows common to both — same positional column matching as UNION. |
 
 ---
 

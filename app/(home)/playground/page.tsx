@@ -63,6 +63,11 @@ const daxPlaygrounds: PlaygroundEntry[] = [
     href: '/docs/dax/dateadd-parallelperiod#try-it-live',
     pitch: 'Filter to just half a month and watch PARALLELPERIOD grab the whole prior month anyway.',
   },
+  {
+    fn: 'UNION()',
+    href: '/docs/dax/union#try-it-live',
+    pitch: 'Swap a table’s column order and watch UNION() silently mix Amount values into the Region column.',
+  },
 ];
 
 const powerQueryPlaygrounds: PlaygroundEntry[] = [
