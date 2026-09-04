@@ -37,6 +37,7 @@
     "trim-upper-lower",
     "datediff",
     "calendar-calendarauto",
-    "dateadd-parallelperiod"
+    "dateadd-parallelperiod",
+    "union"
   ]
 }

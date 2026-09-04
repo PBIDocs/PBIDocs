@@ -1,0 +1,83 @@
+---
+title: "UNION(), EXCEPT() & INTERSECT()"
+description: Learn why DAX's UNION, EXCEPT, and INTERSECT match columns between tables by position, not by name -- so two tables with identical column names built in a different order combine silently wrong, with no error.
+---
+
+# UNION(), EXCEPT() & INTERSECT()
+
+These three table set-operations combine or compare two or more tables — and all three share the same easy-to-miss rule: columns are matched by **position**, not by name.
+
+```dax lineNumbers
+UNION(Table1, Table2, ...)
+EXCEPT(Table1, Table2)
+INTERSECT(Table1, Table2)
+```
+
+---
+
+## UNION() Stacks Tables — Matched by Position
+
+```dax lineNumbers
+UNION(Table1, Table2)
+```
+
+The tables need the same *number* of columns, but their names don't need to match at all — and even if the names do match, `UNION()` doesn't check them. Every table's 1st column lands in the result's 1st column, the 2nd in the 2nd, and so on, regardless of what any table calls that position.
+
+<UnionPlayground />
+
+If `Table2` happens to have been built with its columns in the opposite order from `Table1` — an entirely reasonable thing to do while writing a separate query — `UNION()` still combines them positionally. The result silently places `Table2`'s `Amount` values under the `Region` header and its `Region` values under `Amount`, with no error, no warning, and column headers in the output that quietly mean the wrong thing for half the rows.
+
+```text
+Table1: Region, Amount    ->  East, 100 / West, 200
+Table2: Amount, Region    ->  50, North / 75, South     (built in the opposite order)
+
+UNION(Table1, Table2) column headers come from Table1: Region, Amount
+Result:
+  East, 100
+  West, 200
+  50,   North   <- wrong: this is Amount-then-Region data under Region-then-Amount headers
+  75,   South
+```
+
+---
+
+## EXCEPT() and INTERSECT() Share the Same Rule
+
+```dax lineNumbers
+EXCEPT(Table1, Table2)      // rows in Table1 not present in Table2
+INTERSECT(Table1, Table2)   // rows present in both
+```
+
+Both compare rows across the two tables using the same positional column matching as `UNION()` — a row is compared value-by-value in column order, not by matching column names. Two tables with the same data but columns built in a different order will report rows as different (or matching) based on position, not on what the columns are actually called.
+
+---
+
+## Common Mistakes
+
+### Assuming UNION() Matches Columns by Name
+
+As demonstrated above — building a second table with the same column names in a different order produces a silent, wrong-looking result with no error to flag it. Always verify column order matches before combining, not just column names.
+
+### Combining Tables With a Different Number of Columns
+
+`UNION()` (and `EXCEPT()`/`INTERSECT()`) require every table to have the same number of columns — this does raise an error, unlike the positional-name mismatch above, so it's the safer of the two failure modes to accidentally trigger.
+
+### Not Reordering Columns Explicitly Before a UNION
+
+If two source tables genuinely have their columns in a different order, `SELECTCOLUMNS()` can rebuild one of them with columns in the matching order before the `UNION()` — safer than assuming the order already lines up.
+
+---
+
+## Best Practices
+
+- Before using `UNION()`, `EXCEPT()`, or `INTERSECT()`, explicitly verify — don't assume — that every table's columns are in the same order, not just named the same.
+- Use `SELECTCOLUMNS()` to rebuild a table with columns in an explicit, known order immediately before combining it with another table.
+- When in doubt, add a column to each table identifying its source before a `UNION()`, then spot-check a few rows in the result to confirm nothing landed under the wrong header.
+
+---
+
+## Next Steps
+
+- [DAX Function Reference](/docs/dax/functions)
+- [Table.Combine() and Merge vs. Append](/docs/power-query/merge-vs-append)
+- [SUMMARIZE()](/docs/dax/summarize)

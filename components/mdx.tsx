@@ -31,6 +31,7 @@ import { DaxTrimPlayground } from './dax-trim-playground';
 import { DateDiffPlayground } from './datediff-playground';
 import { CalendarAutoPlayground } from './calendarauto-playground';
 import { DateAddParallelPeriodPlayground } from './dateadd-parallelperiod-playground';
+import { UnionPlayground } from './union-playground';
 
 export function getMDXComponents(components?: MDXComponents) {
   return {
@@ -66,6 +67,7 @@ export function getMDXComponents(components?: MDXComponents) {
     DateDiffPlayground,
     CalendarAutoPlayground,
     DateAddParallelPeriodPlayground,
+    UnionPlayground,
     ...components,
   } satisfies MDXComponents;
 }
