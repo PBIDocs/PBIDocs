@@ -5,6 +5,7 @@
     "totals",
     "ranking",
     "percent-of-total",
-    "running-total"
+    "running-total",
+    "evm-metrics"
   ]
 }
