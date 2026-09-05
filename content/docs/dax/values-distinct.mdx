@@ -1,0 +1,76 @@
+---
+title: "VALUES() vs DISTINCT()"
+description: Learn why VALUES() can return one more row than DISTINCT() on the exact same column -- an extra blank row that accounts for fact-table rows with no matching dimension value, a referential integrity gap DISTINCT() never surfaces.
+---
+
+# VALUES() vs DISTINCT()
+
+`VALUES()` and `DISTINCT()` both return a one-column table of the distinct values in a column — and in a clean, fully-matched model, they're interchangeable. They diverge in exactly one well-documented case: a broken relationship.
+
+```dax lineNumbers
+VALUES(<column>) as table
+DISTINCT(<column>) as table
+```
+
+---
+
+## Identical, Until a Relationship Is Involved
+
+```dax lineNumbers
+COUNTROWS(VALUES(DimProduct[Category]))
+COUNTROWS(DISTINCT(DimProduct[Category]))
+```
+
+With no relationship issues, both return the same count — every distinct value physically present in the column, nothing more.
+
+---
+
+## The Referential Integrity Blank Row
+
+If `DimProduct[Category]` sits on the "one" side of a relationship, and the fact table on the "many" side has a row whose foreign key doesn't match any row in `DimProduct` (a referential integrity violation — a `Category` value in `FactSales` that simply doesn't exist in `DimProduct`), `VALUES()` adds an **extra blank row** to its result to account for that unmatched fact data. `DISTINCT()` never does this.
+
+<ValuesDistinctPlayground />
+
+```text
+DimProduct[Category]: Electronics, Furniture, Apparel
+FactSales has a row with Category = "Gadgets"   <- not in DimProduct at all
+
+COUNTROWS(VALUES(DimProduct[Category]))    -> 4   (3 real categories + 1 blank row)
+COUNTROWS(DISTINCT(DimProduct[Category]))  -> 3   (3 real categories, no blank row)
+```
+
+This is exactly why a matrix visual with a dimension column on rows can show an unexpected `(Blank)` row: it's not a blank cell hiding somewhere in the data, it's `VALUES()` (which is what most visuals use internally to populate rows) flagging fact rows that don't have anywhere real to belong.
+
+---
+
+## Common Mistakes
+
+### Assuming a (Blank) Row Means There's a Null in the Data
+
+The blank row from a referential integrity gap isn't the same thing as an actual `BLANK()`/`NULL` value stored in the dimension column — it can appear even when every value in `DimProduct[Category]` is fully populated, purely because a fact row's foreign key doesn't match anything.
+
+### Using COUNTROWS(VALUES(...)) as a Row Count Without Checking for This
+
+A measure like `COUNTROWS(VALUES(DimProduct[Category]))` meant to report "how many categories exist" can silently return one more than expected the moment a single orphaned fact row exists — `DISTINCT()` is the safer choice when the actual dimension count, not a relationship-aware count, is what's needed.
+
+### Not Investigating an Unexpected Blank Row in a Visual
+
+A `(Blank)` row appearing in a matrix or table is a genuine signal worth investigating — it usually means a fact table has rows referencing a dimension value that was deleted, renamed, or never loaded, not a display quirk to filter away without understanding why it's there.
+
+---
+
+## Best Practices
+
+- Treat an unexpected `(Blank)` row in a VALUES()-driven visual as a referential integrity check, not noise to hide.
+- Use `DISTINCT()` when the goal is genuinely "the values in this column," independent of any relationship's data quality.
+- Use `VALUES()` deliberately when the blank row's signal — "some fact data doesn't match this dimension" — is actually useful information for the report.
+- Fix the underlying data gap (a missing dimension row, an unmapped fact key) rather than only filtering the blank row out of the visual.
+
+---
+
+## Next Steps
+
+- [DISTINCTCOUNT](/docs/dax/distinctcount)
+- [Table.Distinct()](/docs/power-query/table-distinct)
+- [List.Distinct() & List.Contains()](/docs/power-query/list-distinct-contains)
+- [DAX Function Reference](/docs/dax/functions)
