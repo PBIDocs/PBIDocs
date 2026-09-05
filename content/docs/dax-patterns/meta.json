@@ -8,6 +8,7 @@
     "running-total",
     "evm-metrics",
     "risk-score-heat-map",
-    "coverage-verification"
+    "coverage-verification",
+    "reliability-mtbf-mttr"
   ]
 }
