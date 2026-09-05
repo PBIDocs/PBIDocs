@@ -1,0 +1,157 @@
+---
+title: "Coverage & Verification (Requirements Traceability)"
+description: Ready-made DAX patterns for the covered-vs-verified distinction behind a requirements traceability matrix -- counting through a many-to-many bridge table without double-counting, and finding the exact gap list.
+---
+
+# Coverage & Verification (Requirements Traceability)
+
+A traceability matrix answers a sharper question than "is this done" — it separates *covered* (a test exists) from *verified* (a test actually passed), and it has to do both through a many-to-many bridge table without double-counting.
+
+```text
+DimRequirement  <---  BridgeRequirementTest  --->  DimTestCase  <---  FactTestResults
+     |                                                                      |
+     | "does this requirement                              | "did the linked
+     |  have a test mapped at all?"                          test actually pass?"
+     |                                                                      |
+Requirements Covered                                          Requirements Verified
+```
+
+Covered and verified are always different numbers, and the gap between them is the point of building the dashboard in the first place.
+
+---
+
+## Total, Covered, and the Gap
+
+```dax lineNumbers
+Total Requirements =
+COUNTROWS(DimRequirement)
+
+Requirements Covered =
+DISTINCTCOUNT(BridgeRequirementTest[RequirementID])
+
+Requirements With No Test Mapped =
+[Total Requirements] - [Requirements Covered]
+
+Coverage % =
+DIVIDE([Requirements Covered], [Total Requirements])
+```
+
+`Requirements Covered` counts distinct requirements that appear *anywhere* in the bridge table — regardless of whether their linked test has passed, failed, or hasn't run yet. It only means "at least one test case exists for this requirement." A requirement with zero bridge rows never gets counted here, which is exactly how the gap surfaces.
+
+---
+
+## Verified: A Harder Question Than Covered
+
+Coverage only asks whether a test exists. Verification asks whether a test **passed** — a genuinely different filter path through the bridge table, worth writing out explicitly rather than relying on relationship propagation alone:
+
+```dax lineNumbers
+Requirements Verified =
+VAR PassingTestCaseIDs =
+    CALCULATETABLE(
+        VALUES(FactTestResults[TestCaseID]),
+        FactTestResults[Status] = "Pass"
+    )
+VAR VerifiedRequirementIDs =
+    CALCULATETABLE(
+        VALUES(BridgeRequirementTest[RequirementID]),
+        FILTER(
+            BridgeRequirementTest,
+            BridgeRequirementTest[TestCaseID] IN PassingTestCaseIDs
+        )
+    )
+RETURN
+    COUNTROWS(VerifiedRequirementIDs)
+
+Verified % =
+DIVIDE([Requirements Verified], [Total Requirements])
+```
+
+`PassingTestCaseIDs` is the set of test cases with at least one passing result. `VerifiedRequirementIDs` then filters the bridge table down to only the rows whose test case is in that passing set, and pulls the distinct requirement IDs out of what's left — a filter path that reads almost exactly like the English description of the question, which matters when someone needs to verify the logic by hand.
+
+```text
+Coverage %  -> a test exists for this requirement
+Verified %  -> that test actually passed
+
+Verified % is always <= Coverage %, and the gap between them
+is requirements that have a test, but not a passing one yet.
+```
+
+---
+
+## Test Execution and Pass Rate
+
+```dax lineNumbers
+Tests Executed =
+COUNTROWS(FactTestResults)
+
+Tests Passed =
+CALCULATE([Tests Executed], FactTestResults[Status] = "Pass")
+
+Pass Rate =
+DIVIDE([Tests Passed], [Tests Executed])
+```
+
+`Pass Rate` is a test-level metric (how many *executions* passed), separate from `Verified %` (how many *requirements* have at least one passing execution) — the two numbers are related but answer different questions, and a report showing only one can be read as answering the other by mistake.
+
+---
+
+## The Gap List: Checked Directly, Not Inferred
+
+A percentage alone doesn't say *which* requirements are the problem. Filter `DimRequirement` down to rows with zero matching bridge rows:
+
+```text
+Table visual:
+  Columns: DimRequirement[RequirementID], DimRequirement[RequirementText], DimRequirement[Category]
+  Filter: [Requirements Covered] for this requirement = BLANK()
+  (equivalently: this requirement has no row in BridgeRequirementTest at all)
+```
+
+Checking the gap list directly — not just trusting that `Coverage %` looks high enough — is what catches a specific requirement that was never mapped to any test case, something an aggregate percentage alone can hide.
+
+---
+
+## Common Mistakes
+
+### Treating Covered and Verified as the Same Thing
+
+A requirement with a test case mapped to it isn't verified until that test has actually passed. Reporting `Coverage %` alone as if it answers "is this done" overstates progress — a requirement can be 100% covered and 0% verified if every mapped test has failed or hasn't run.
+
+### Double-Counting Through the Bridge Table
+
+Summing a value across the bridge table directly — instead of `DISTINCTCOUNT` on the ID column — counts a requirement once per test case it's linked to. A requirement linked to two test cases gets counted twice, silently inflating any total built this way. See [Bridge Tables and Double-Counting](/docs/modeling/bridge-tables#bridge-tables-and-double-counting).
+
+### Assuming No Result Means Failed
+
+A test case with zero rows in the results fact table hasn't failed — it simply hasn't run yet, a different state that needs its own handling. Collapsing "not yet run" into "failed" (or into "passed," in the other direction) misreports a requirement's real status either way.
+
+### Reporting Pass Rate as if It Were Verified %
+
+`Pass Rate` counts test executions; `Verified %` counts requirements with at least one passing execution. A single flaky requirement re-tested many times can pull `Pass Rate` down while `Verified %` stays high (one eventual pass is enough) — or the reverse, if most requirements only have one attempt each.
+
+---
+
+## Best Practices
+
+- Keep `Requirements Covered` and `Requirements Verified` as two separate measures — never conflate "a test exists" with "a test passed."
+- Use `DISTINCTCOUNT()` (or an explicit `VALUES()`/`FILTER()` path) on bridge-table ID columns, never a plain `SUM` or `COUNTROWS` across the bridge table itself.
+- Give "not yet run" its own explicit state, distinct from both "passed" and "failed."
+- Surface the actual gap list as a filtered table, not just a coverage percentage — a percentage alone can't say which specific item is the problem.
+
+---
+
+## Coverage & Verification Checklist
+
+- `Requirements Covered` and `Requirements Verified` are computed as distinct measures.
+- Any total crossing the bridge table uses `DISTINCTCOUNT()` on an ID column, not a raw sum across bridge rows.
+- "Not yet run" is a real, separate state from "Failed" everywhere it matters.
+- A gap-list table (or equivalent) is checked directly, not inferred from `Coverage %` alone.
+
+---
+
+## Next Steps
+
+- [Build a Requirements Traceability Matrix (RTM) Dashboard in Power BI](/tutorials/build-a-requirements-traceability-matrix) — the full walkthrough this pattern is drawn from, with a real dataset and report layout
+- [Bridge Tables](/docs/modeling/bridge-tables)
+- [Many-to-Many Relationships](/docs/modeling/many-to-many)
+- [Earned Value Management (EVM) Metrics](/docs/dax-patterns/evm-metrics)
+- [Risk Score & Heat Map](/docs/dax-patterns/risk-score-heat-map)
