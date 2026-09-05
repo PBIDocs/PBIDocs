@@ -78,6 +78,11 @@ const daxPlaygrounds: PlaygroundEntry[] = [
     href: '/docs/dax/keepfilters#try-it-live',
     pitch: 'Watch CALCULATE silently replace your visual filter, then fix it by ANDing instead of overwriting.',
   },
+  {
+    fn: 'VALUES() vs DISTINCT()',
+    href: '/docs/dax/values-distinct#try-it-live',
+    pitch: 'Add an orphaned fact row and watch VALUES() grow an extra blank row that DISTINCT() never gets.',
+  },
 ];
 
 const powerQueryPlaygrounds: PlaygroundEntry[] = [

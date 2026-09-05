@@ -88,8 +88,8 @@ See [Time Intelligence](/docs/dax/time-intelligence) for the full explanation, o
 | [SUMMARIZE](/docs/dax/summarize) | Groups a table by columns, optionally computing an aggregation per group. |
 | `ADDCOLUMNS` | Adds computed columns to a table, evaluated per row. |
 | `SELECTCOLUMNS` | Returns a table with only specific columns, optionally renamed. |
-| `VALUES` | Returns the distinct values of a column, including a blank row if one exists in the data. |
-| `DISTINCT` | Returns the distinct values of a column, without the blank row. |
+| [VALUES](/docs/dax/values-distinct) | Returns the distinct values of a column — adds an extra blank row for unmatched fact rows if a relationship's referential integrity is violated. |
+| [DISTINCT](/docs/dax/values-distinct#the-referential-integrity-blank-row) | Returns the distinct values of a column, without VALUES' referential-integrity blank row. |
 | [TOPN](/docs/dax/topn) | Returns the top (or bottom) N rows of a table by a given expression. |
 | [UNION](/docs/dax/union) | Stacks two or more tables into one — matches columns by position, not by name. |
 | [EXCEPT / INTERSECT](/docs/dax/union#except-and-intersect-share-the-same-rule) | Returns rows in one table but not another, or rows common to both — same positional column matching as UNION. |
