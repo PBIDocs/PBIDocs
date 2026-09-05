@@ -11,7 +11,8 @@ import { baseOptions } from '@/lib/layout.shared';
 // requiring any change to the underlying folder/URL structure.
 const TAB_GROUPS: { title: string; folders: string[]; landing: string }[] = [
   { title: 'Get Started', folders: ['getting-started', 'ai-power-bi'], landing: '/docs/getting-started/introduction' },
-  { title: 'DAX', folders: ['dax', 'dax-patterns'], landing: '/docs/dax/introduction' },
+  { title: 'DAX', folders: ['dax'], landing: '/docs/dax/introduction' },
+  { title: 'DAX Patterns', folders: ['dax-patterns'], landing: '/docs/dax-patterns' },
   { title: 'Power Query', folders: ['power-query'], landing: '/docs/power-query/introduction' },
   { title: 'Modeling & Visuals', folders: ['modeling', 'visuals'], landing: '/docs/modeling/introduction' },
   { title: 'Service & Governance', folders: ['power-bi-service', 'fabric', 'governance'], landing: '/docs/power-bi-service/workspaces' },
