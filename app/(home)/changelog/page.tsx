@@ -12,6 +12,59 @@ export const metadata: Metadata = {
 
 const changelog: { date: string; entries: ReactNode[] }[] = [
   {
+    date: '2026-09-04 – 2026-09-05',
+    entries: [
+      <>
+        Added four new <Link href="/docs/dax-patterns">DAX Patterns</Link> pages built around real
+        systems and program engineering scenarios, each paired with its full tutorial walkthrough:{' '}
+        <Link href="/docs/dax-patterns/evm-metrics">Earned Value Management (EVM) Metrics</Link>,{' '}
+        <Link href="/docs/dax-patterns/risk-score-heat-map">Risk Score &amp; Heat Map</Link>,{' '}
+        <Link href="/docs/dax-patterns/coverage-verification">
+          Coverage &amp; Verification (Requirements Traceability)
+        </Link>
+        , and{' '}
+        <Link href="/docs/dax-patterns/reliability-mtbf-mttr">
+          Reliability Metrics (MTBF, MTTR &amp; Availability)
+        </Link>
+        .
+      </>,
+      <>
+        Switched the documentation section to a new layout with a tabbed navbar (Get Started, DAX,
+        Power Query, Modeling &amp; Visuals, Service &amp; Governance) for faster jumping between
+        topics, and made better use of the screen on wide monitors.
+      </>,
+    ],
+  },
+  {
+    date: '2026-09-02 – 2026-09-04',
+    entries: [
+      <>
+        Added 10 more interactive &quot;Try it live&quot; playgrounds to the Power Query and DAX
+        references, bringing the total to 32 live examples across the site:{' '}
+        <Link href="/docs/power-query/datetime-localnow">DateTime.LocalNow()</Link>,{' '}
+        <Link href="/docs/power-query/list-distinct-contains">
+          List.Distinct() &amp; List.Contains()
+        </Link>
+        , <Link href="/docs/dax/mid-left-right">LEFT(), RIGHT() &amp; MID()</Link>,{' '}
+        <Link href="/docs/dax/blank-vs-zero">BLANK() vs 0</Link>,{' '}
+        <Link href="/docs/dax/trim-upper-lower">TRIM(), UPPER() &amp; LOWER()</Link>,{' '}
+        <Link href="/docs/dax/datediff">DATEDIFF()</Link>,{' '}
+        <Link href="/docs/dax/calendar-calendarauto">
+          CALENDAR() vs CALENDARAUTO()
+        </Link>
+        ,{' '}
+        <Link href="/docs/dax/dateadd-parallelperiod">
+          DATEADD() vs PARALLELPERIOD()
+        </Link>
+        , <Link href="/docs/dax/union">UNION(), EXCEPT() &amp; INTERSECT()</Link>, and{' '}
+        <Link href="/docs/dax/today-now">
+          TODAY() &amp; NOW(): Calculated Column vs Measure Timing
+        </Link>
+        .
+      </>,
+    ],
+  },
+  {
     date: '2026-08-29',
     entries: [
       <>
