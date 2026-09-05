@@ -1,0 +1,93 @@
+---
+title: "CROSSFILTER()"
+description: Learn why a standard one-to-many relationship only filters from the dimension side to the fact side by default, and how CROSSFILTER() temporarily lets a fact-table filter flow backward to the dimension table for a single calculation.
+---
+
+# CROSSFILTER()
+
+A standard one-to-many relationship filters in one direction only: from the "one" side to the "many" side. `CROSSFILTER()` temporarily overrides that direction — or removes it entirely — for a single calculation.
+
+```dax lineNumbers
+CROSSFILTER(<column1>, <column2>, <direction>)
+```
+
+`<direction>` is one of `NONE`, `ONEDIRECTION`, or `BOTH`.
+
+---
+
+## The Default: Filters Flow One Way
+
+```dax lineNumbers
+CALCULATE(COUNTROWS(DimProduct), FactSales[Promotion] = "Yes")
+```
+
+With `DimProduct` on the "one" side and `FactSales` on the "many" side, filtering `FactSales[Promotion]` has no path back to `DimProduct` — a standard relationship simply doesn't propagate that direction. This measure still counts **every** row in `DimProduct`, completely unaffected by the `Promotion` filter.
+
+<CrossFilterPlayground />
+
+---
+
+## CROSSFILTER(..., BOTH): Letting It Flow Backward
+
+```dax lineNumbers
+CALCULATE(
+    COUNTROWS(DimProduct),
+    CROSSFILTER(FactSales[ProductID], DimProduct[ProductID], BOTH),
+    FactSales[Promotion] = "Yes"
+)
+```
+
+Adding `CROSSFILTER(FactSales[ProductID], DimProduct[ProductID], BOTH)` temporarily makes the relationship bidirectional for this one calculation — now the `Promotion = "Yes"` filter on `FactSales` *does* propagate back, narrowing `DimProduct` down to only the products that actually have a matching promotional sale.
+
+```text
+DimProduct: A, B, C
+FactSales: A/Yes, A/No, B/Yes, C/No   <- only A and B have a "Yes" promotion sale
+
+CALCULATE(COUNTROWS(DimProduct), FactSales[Promotion]="Yes")                                -> 3  (unaffected)
+CALCULATE(COUNTROWS(DimProduct), CROSSFILTER(...,BOTH), FactSales[Promotion]="Yes")          -> 2  (A and B only)
+```
+
+---
+
+## The Other Directions: NONE and ONEDIRECTION
+
+```text
+CROSSFILTER(..., NONE)          -- disables the relationship's filtering entirely, in either direction
+CROSSFILTER(..., ONEDIRECTION)  -- restores the relationship to its normal single-direction behavior
+```
+
+`NONE` is useful when a calculation specifically needs to ignore a relationship altogether for one measure, without changing the relationship itself in the model. `ONEDIRECTION` is mostly useful for explicitly restoring the default inside a calculation that's already inside a context where the direction was changed some other way.
+
+---
+
+## Common Mistakes
+
+### Assuming a Fact-Table Filter Always Reaches the Dimension Table
+
+The single most common surprise here: a filter on the "many" side has no effect on the "one" side by default, no matter how intuitive it feels that it should. `CROSSFILTER()` (or a model-level bidirectional relationship) is required to make that direction work.
+
+### Reaching for a Bidirectional Relationship in the Model Instead of CROSSFILTER()
+
+Setting a relationship to bidirectional at the model level affects every calculation that touches it, everywhere in the report — often causing ambiguous filter propagation in models with multiple relationships. `CROSSFILTER()` scopes the same behavior to exactly one calculation, which is usually the safer choice.
+
+### Forgetting CROSSFILTER() Only Lasts for the One CALCULATE It's In
+
+The direction change applies only within that specific `CALCULATE()` call — it doesn't persist to any other measure or visual, even ones evaluated immediately afterward in the same report.
+
+---
+
+## Best Practices
+
+- Default to `CROSSFILTER()` scoped to a single calculation rather than changing a relationship's direction in the model, unless every calculation touching that relationship genuinely needs the bidirectional behavior.
+- Be explicit about which direction is intended (`BOTH`, `NONE`) — don't rely on assuming the current model-level setting.
+- Document why a specific measure needs `CROSSFILTER()` — it's not obvious from the measure's name that it's overriding the model's normal relationship behavior.
+
+---
+
+## Next Steps
+
+- [KEEPFILTERS()](/docs/dax/keepfilters)
+- [CALCULATE](/docs/dax/calculate)
+- [Filter Context](/docs/dax/filter-context)
+- [Star Schema](/docs/modeling/star-schema)
+- [DAX Function Reference](/docs/dax/functions)
