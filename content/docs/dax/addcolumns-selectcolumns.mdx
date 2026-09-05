@@ -1,0 +1,75 @@
+---
+title: "ADDCOLUMNS() vs SELECTCOLUMNS()"
+description: Learn why ADDCOLUMNS keeps every original column and adds new ones, while SELECTCOLUMNS returns only the columns explicitly listed -- dropping the rest of the source table entirely, not just hiding them.
+---
+
+# ADDCOLUMNS() vs SELECTCOLUMNS()
+
+Both functions compute new columns from expressions against a table — the difference is entirely in what happens to the columns that were already there.
+
+```dax lineNumbers
+ADDCOLUMNS(<table>, <name>, <expression>, ...)
+SELECTCOLUMNS(<table>, <name>, <expression>, ...)
+```
+
+---
+
+## ADDCOLUMNS(): Keeps Everything, Adds More
+
+```dax lineNumbers
+ADDCOLUMNS(Products, "Profit", Products[Price] * 0.3)
+```
+
+The result has every original column from `Products` — `Product`, `Category`, `Price` — plus the new `Profit` column tacked on. Nothing from the source table disappears.
+
+<AddColumnsSelectColumnsPlayground />
+
+---
+
+## SELECTCOLUMNS(): Only What's Listed
+
+```dax lineNumbers
+SELECTCOLUMNS(Products, "Product", Products[Product], "Profit", Products[Price] * 0.3)
+```
+
+The result has **only** `Product` and `Profit` — `Category` and `Price` are gone entirely, not hidden or still-accessible-if-needed. `SELECTCOLUMNS()` is a reshaping/projection function: it builds a brand new table shape from scratch, and anything not explicitly listed simply isn't part of it.
+
+```text
+Source table (Products): Product, Category, Price
+
+ADDCOLUMNS(Products, "Profit", ...)     -> Product, Category, Price, Profit   (everything + new)
+SELECTCOLUMNS(Products, "Product", ..., "Profit", ...)  -> Product, Profit    (only what's listed)
+```
+
+---
+
+## Common Mistakes
+
+### Expecting SELECTCOLUMNS to Add Like ADDCOLUMNS Does
+
+Reaching for `SELECTCOLUMNS()` out of habit when the actual goal is "keep everything, plus this one new column" silently drops every column not explicitly re-listed — a nested expression or a later step referencing one of those dropped columns then fails, sometimes confusingly far from where the column actually disappeared.
+
+### Forgetting to Re-List a Column SELECTCOLUMNS Still Needs
+
+Every column the result needs to carry forward — including ones just passing through unchanged — has to be explicitly named in `SELECTCOLUMNS()`'s argument list. There's no shorthand for "this one, unchanged, plus these new ones."
+
+### Using ADDCOLUMNS When the Goal Is Actually a Narrow, Reshaped Table
+
+The reverse mistake: `ADDCOLUMNS()` always keeps the full original column set, which can leave a calculated table or nested table expression carrying far more columns than it actually needs, when `SELECTCOLUMNS()` would have produced the intended narrower shape from the start.
+
+---
+
+## Best Practices
+
+- Use `ADDCOLUMNS()` when the goal is "everything that was already there, plus new computed columns."
+- Use `SELECTCOLUMNS()` when the goal is a specific, narrower table shape — and explicitly list every column that needs to survive, including unchanged ones.
+- Double-check a `SELECTCOLUMNS()` call's full argument list whenever a downstream step reports a missing column — it's very often simply not in the list.
+
+---
+
+## Next Steps
+
+- [SUMMARIZE()](/docs/dax/summarize)
+- [Calculated Tables](/docs/dax/calculated-tables)
+- [CALCULATE](/docs/dax/calculate)
+- [DAX Function Reference](/docs/dax/functions)

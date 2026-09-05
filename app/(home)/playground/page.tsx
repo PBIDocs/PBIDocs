@@ -83,6 +83,11 @@ const daxPlaygrounds: PlaygroundEntry[] = [
     href: '/docs/dax/values-distinct#try-it-live',
     pitch: 'Add an orphaned fact row and watch VALUES() grow an extra blank row that DISTINCT() never gets.',
   },
+  {
+    fn: 'ADDCOLUMNS() vs SELECTCOLUMNS()',
+    href: '/docs/dax/addcolumns-selectcolumns#try-it-live',
+    pitch: 'Watch SELECTCOLUMNS silently drop every column you didn’t explicitly list back in.',
+  },
 ];
 
 const powerQueryPlaygrounds: PlaygroundEntry[] = [

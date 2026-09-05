@@ -41,6 +41,7 @@
     "union",
     "today-now",
     "keepfilters",
-    "values-distinct"
+    "values-distinct",
+    "addcolumns-selectcolumns"
   ]
 }
