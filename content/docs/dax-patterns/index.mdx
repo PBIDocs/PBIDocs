@@ -5,7 +5,7 @@ description: Ready-made DAX patterns for totals, ranking, percent of total, runn
 
 # DAX Patterns
 
-A handful of calculation shapes show up in nearly every Power BI report — totals that ignore filters, rankings, percent-of-total breakdowns, and running totals. This section covers the standard pattern for each one, ready to adapt. For systems and program engineering reports specifically, it also covers the standard Earned Value Management (CPI, SPI, EAC) metric set, the latest-value-per-item plus disconnected-axis pattern behind a risk matrix heat map, and the covered-vs-verified bridge-table pattern behind a requirements traceability matrix.
+A handful of calculation shapes show up in nearly every Power BI report — totals that ignore filters, rankings, percent-of-total breakdowns, and running totals. This section covers the standard pattern for each one, ready to adapt. For systems and program engineering reports specifically, it also covers the standard Earned Value Management (CPI, SPI, EAC) metric set, the latest-value-per-item plus disconnected-axis pattern behind a risk matrix heat map, the covered-vs-verified bridge-table pattern behind a requirements traceability matrix, and the per-asset uptime pattern behind MTBF/MTTR reliability metrics.
 
 ## Start Here
 
@@ -44,6 +44,11 @@ A handful of calculation shapes show up in nearly every Power BI report — tota
     title="Coverage & Verification"
     description="Covered-vs-verified through a many-to-many bridge table, without double-counting."
     href="/docs/dax-patterns/coverage-verification"
+  />
+  <Card
+    title="Reliability Metrics (MTBF, MTTR & Availability)"
+    description="Per-asset uptime, MTBF, MTTR, and Availability % from a raw failure/repair log."
+    href="/docs/dax-patterns/reliability-mtbf-mttr"
   />
 </Cards>
 
