@@ -36,6 +36,7 @@ import { TodayNowPlayground } from './today-now-playground';
 import { KeepFiltersPlayground } from './keepfilters-playground';
 import { ValuesDistinctPlayground } from './values-distinct-playground';
 import { AddColumnsSelectColumnsPlayground } from './addcolumns-selectcolumns-playground';
+import { CrossFilterPlayground } from './crossfilter-playground';
 
 export function getMDXComponents(components?: MDXComponents) {
   return {
@@ -76,6 +77,7 @@ export function getMDXComponents(components?: MDXComponents) {
     KeepFiltersPlayground,
     ValuesDistinctPlayground,
     AddColumnsSelectColumnsPlayground,
+    CrossFilterPlayground,
     ...components,
   } satisfies MDXComponents;
 }

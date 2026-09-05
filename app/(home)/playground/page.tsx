@@ -88,6 +88,11 @@ const daxPlaygrounds: PlaygroundEntry[] = [
     href: '/docs/dax/addcolumns-selectcolumns#try-it-live',
     pitch: 'Watch SELECTCOLUMNS silently drop every column you didn’t explicitly list back in.',
   },
+  {
+    fn: 'CROSSFILTER()',
+    href: '/docs/dax/crossfilter#try-it-live',
+    pitch: 'Filter the fact table and watch it do nothing to the dimension table — until CROSSFILTER lets it.',
+  },
 ];
 
 const powerQueryPlaygrounds: PlaygroundEntry[] = [

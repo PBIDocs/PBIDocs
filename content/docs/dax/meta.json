@@ -42,6 +42,7 @@
     "today-now",
     "keepfilters",
     "values-distinct",
-    "addcolumns-selectcolumns"
+    "addcolumns-selectcolumns",
+    "crossfilter"
   ]
 }
