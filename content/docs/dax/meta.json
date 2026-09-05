@@ -39,6 +39,7 @@
     "calendar-calendarauto",
     "dateadd-parallelperiod",
     "union",
-    "today-now"
+    "today-now",
+    "keepfilters"
   ]
 }

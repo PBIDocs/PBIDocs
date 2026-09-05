@@ -1,0 +1,91 @@
+---
+title: "KEEPFILTERS()"
+description: Learn why CALCULATE() replaces an existing filter on the same column by default, how KEEPFILTERS() makes it AND with that filter instead, and why the two versions only diverge once the outer and inner filters actually disagree.
+---
+
+# KEEPFILTERS()
+
+By default, `CALCULATE()`'s own filter arguments **replace** any existing filter on the same column — `KEEPFILTERS()` changes that to **AND** with it instead.
+
+```dax lineNumbers
+CALCULATE(<expression>, KEEPFILTERS(<filter>))
+```
+
+---
+
+## The Default: CALCULATE Replaces, It Doesn't Add
+
+```dax lineNumbers
+CALCULATE(SUM(Sales[Amount]), Sales[Category] = "Furniture")
+```
+
+If the surrounding visual is already filtered to `Category = "Electronics"`, this measure still returns the **Furniture** total — `CALCULATE()`'s own condition on `Category` overwrites the existing `Electronics` filter on that same column entirely, rather than combining with it.
+
+<KeepFiltersPlayground />
+
+This is the documented, correct default behavior of `CALCULATE()` — not a bug — but it surprises people who expect filter arguments to narrow down further from whatever's already selected, the way an additional slicer would.
+
+---
+
+## KEEPFILTERS(): AND Instead of Replace
+
+```dax lineNumbers
+CALCULATE(SUM(Sales[Amount]), KEEPFILTERS(Sales[Category] = "Furniture"))
+```
+
+Wrapping the condition in `KEEPFILTERS()` makes it combine with the existing filter using `AND`, instead of overwriting it. With the visual still filtered to `Electronics`, this now asks for rows that are **both** `Electronics` and `Furniture` at once — impossible for a single-valued `Category` column — so the result is `0` (technically `BLANK()`, since no rows satisfy both conditions), not the plain Furniture total.
+
+```text
+Visual filtered to: Category = Electronics
+
+CALCULATE(..., Category = "Furniture")                -> 300  (Furniture's own total; replaced Electronics)
+CALCULATE(..., KEEPFILTERS(Category = "Furniture"))    -> 0    (Electronics AND Furniture -> no matching rows)
+```
+
+---
+
+## They Only Diverge When the Filters Actually Disagree
+
+If the outer filter and `CALCULATE()`'s own condition already happen to match the same value, both versions return the identical result — `KEEPFILTERS()` only changes anything once the two conditions conflict.
+
+```text
+Visual filtered to: Category = Furniture
+
+CALCULATE(..., Category = "Furniture")                -> 300  (same value either way)
+CALCULATE(..., KEEPFILTERS(Category = "Furniture"))    -> 300  (Furniture AND Furniture -> still Furniture)
+```
+
+This is exactly why the behavior can go unnoticed for a long time — a measure written and tested against a report where the filters happen to line up won't show any difference at all, until a viewer picks a different slicer value.
+
+---
+
+## Common Mistakes
+
+### Assuming CALCULATE()'s Filter Always Narrows Down Further
+
+The intuitive mental model — "this just adds another restriction on top of whatever's already selected" — is exactly backwards for the same-column case. `CALCULATE()`'s own condition on a column always wins outright unless `KEEPFILTERS()` says otherwise.
+
+### Adding KEEPFILTERS() as a Reflexive Habit
+
+`KEEPFILTERS()` is specifically for the case where the outer and inner filters genuinely need to combine (AND) rather than one overriding the other. Adding it everywhere "just in case" can silently change measures that were correctly relying on the replace behavior — for instance, a measure meant to show one specific category's total *regardless* of what's currently filtered would break under `KEEPFILTERS()`, since it would then return blank for every other filter selection instead of the intended fixed total.
+
+### Not Testing Against a Filter That Actually Conflicts
+
+Since the two versions agree whenever the outer and inner filters already match, a measure only gets tested meaningfully by trying a *different* outer filter value than the one hardcoded inside `CALCULATE()` — testing against the same value proves nothing about which behavior is actually in effect.
+
+---
+
+## Best Practices
+
+- Reach for `KEEPFILTERS()` specifically when a filter argument needs to narrow down within whatever's already selected, not replace it.
+- Test a `KEEPFILTERS()` measure against a report state where the outer filter genuinely disagrees with the inner condition — that's the only state where the two versions produce different, checkable results.
+- Comment on any `CALCULATE()` filter argument on a column the report also lets users slice by, noting explicitly whether it's meant to replace or combine with that selection.
+
+---
+
+## Next Steps
+
+- [CALCULATE](/docs/dax/calculate)
+- [Filter Context](/docs/dax/filter-context)
+- [ALL, ALLEXCEPT, ALLSELECTED & REMOVEFILTERS](/docs/dax/filter-functions)
+- [DAX Function Reference](/docs/dax/functions)

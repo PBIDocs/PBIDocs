@@ -32,7 +32,7 @@ These accept a single column and evaluate it within the current filter context �
 | [CALCULATE](/docs/dax/calculate) | Evaluates an expression in a modified filter context — the most-used function in DAX. |
 | [FILTER](/docs/dax/filter) | Returns a table containing only rows that meet a condition. |
 | [ALL, ALLEXCEPT, ALLSELECTED & REMOVEFILTERS](/docs/dax/filter-functions) | Remove or partially restore filters — the basis of percent-of-total and grand-total patterns. |
-| `KEEPFILTERS` | Adds a filter without overwriting an existing one on the same column, inside `CALCULATE`. |
+| [KEEPFILTERS](/docs/dax/keepfilters) | ANDs a filter with an existing one on the same column instead of CALCULATE's default of replacing it. |
 | `CROSSFILTER` | Changes a relationship's cross-filter direction or disables it, for a single calculation. |
 | [EARLIER](/docs/dax/earlier) | Reaches back to an outer row context from inside a nested one — mostly replaced by `VAR` in modern DAX. |
 
