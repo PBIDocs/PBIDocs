@@ -37,6 +37,7 @@ import { KeepFiltersPlayground } from './keepfilters-playground';
 import { ValuesDistinctPlayground } from './values-distinct-playground';
 import { AddColumnsSelectColumnsPlayground } from './addcolumns-selectcolumns-playground';
 import { CrossFilterPlayground } from './crossfilter-playground';
+import { IfErrorPlayground } from './iferror-playground';
 
 export function getMDXComponents(components?: MDXComponents) {
   return {
@@ -78,6 +79,7 @@ export function getMDXComponents(components?: MDXComponents) {
     ValuesDistinctPlayground,
     AddColumnsSelectColumnsPlayground,
     CrossFilterPlayground,
+    IfErrorPlayground,
     ...components,
   } satisfies MDXComponents;
 }

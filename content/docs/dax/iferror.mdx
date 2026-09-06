@@ -1,0 +1,78 @@
+---
+title: "IFERROR()"
+description: Learn why IFERROR only catches a genuine DAX error, substituting a fallback -- and why it leaves a BLANK() result completely untouched, since blank is a valid value, not an error.
+---
+
+# IFERROR()
+
+`IFERROR()` catches a genuine DAX **error** and substitutes a fallback value. It does not catch, replace, or otherwise notice a `BLANK()` result — blank is a valid value, not an error.
+
+```dax lineNumbers
+IFERROR(value, value_if_error)
+```
+
+---
+
+## Catching a Real Error
+
+```dax lineNumbers
+IFERROR([Total Sales] / 0, "N/A")
+```
+
+Dividing by the literal `0` with the raw `/` operator produces a genuine DAX error — without `IFERROR()`, that error can break the entire visual. Wrapped in `IFERROR()`, the error is caught and `"N/A"` is returned instead.
+
+<IfErrorPlayground />
+
+---
+
+## Not Catching a Blank
+
+```dax lineNumbers
+IFERROR(SUM(Sales[Amount]), "N/A")
+```
+
+If the current filter context has zero matching rows, `SUM()` returns `BLANK()` — not an error. `IFERROR()` only intercepts genuine errors, so this passes the `BLANK()` straight through unchanged; the `"N/A"` fallback is never used, even though the result looks just as "empty" to a viewer as an error would.
+
+```text
+[Total Sales] / 0                          -> Error: division by zero
+IFERROR([Total Sales] / 0, "N/A")          -> "N/A"          (caught)
+
+SUM(Sales[Amount])   with 0 matching rows  -> BLANK()
+IFERROR(SUM(Sales[Amount]), "N/A")         -> BLANK()        (not caught -- blank isn't an error)
+```
+
+---
+
+## Common Mistakes
+
+### Expecting IFERROR to Also Convert Blanks to a Fallback
+
+`IFERROR(measure, 0)` does **not** turn a blank result into `0` — only an actual error becomes `0` this way; a blank result stays blank. Converting blank to a specific fallback value needs an explicit check instead, such as `IF(ISBLANK(measure), 0, measure)`, or DAX's `COALESCE()` function (which returns the first non-blank value in a list, built specifically for this).
+
+### Wrapping DIVIDE() in IFERROR
+
+```dax lineNumbers
+IFERROR(DIVIDE([Total Profit], [Total Sales]), 0)
+```
+
+`DIVIDE()` already returns `BLANK()` (or an explicit alternate result, if supplied as its third argument) instead of erroring on division by zero — it never produces the kind of error `IFERROR()` exists to catch. Wrapping it in `IFERROR()` adds nothing but extra evaluation cost; see [DIVIDE()](/docs/dax/divide#wrapping-divide-in-a-redundant-blank-check) for the same redundant pattern already covered there.
+
+### Using IFERROR to Mask a Genuine Formula Bug
+
+Catching every error with a generic fallback can hide a real modeling or formula mistake that's worth actually seeing and fixing, rather than silently papering over it with `"N/A"` everywhere.
+
+---
+
+## Best Practices
+
+- Reach for `IFERROR()` specifically for expressions that can genuinely error (a raw `/` operator, a type-mismatch-prone calculation) — not as a catch-all for anything that might look empty.
+- Use `DIVIDE()` instead of `/` to prevent a division error in the first place, rather than catching it after the fact.
+- Use `ISBLANK()` or `COALESCE()` when the actual goal is converting a blank result to a specific fallback — `IFERROR()` doesn't do this.
+
+---
+
+## Next Steps
+
+- [DIVIDE()](/docs/dax/divide)
+- [BLANK() vs 0: ISBLANK() and the Comparison Trap](/docs/dax/blank-vs-zero)
+- [DAX Function Reference](/docs/dax/functions)

@@ -43,6 +43,7 @@
     "keepfilters",
     "values-distinct",
     "addcolumns-selectcolumns",
-    "crossfilter"
+    "crossfilter",
+    "iferror"
   ]
 }
