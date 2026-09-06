@@ -56,7 +56,7 @@ export default async function BlogPostPage(props: { params: Promise<{ slug: stri
     : null;
 
   return (
-    <div className="mx-auto w-full min-w-0 max-w-6xl px-6 py-16 sm:py-24">
+    <div className="mx-auto w-full min-w-0 max-w-[1600px] px-6 py-16 sm:py-24">
       <script
         type="application/ld+json"
         // eslint-disable-next-line react/no-danger
@@ -69,45 +69,47 @@ export default async function BlogPostPage(props: { params: Promise<{ slug: stri
           dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
         />
       )}
-      <Link
-        href="/blog"
-        className="text-sm text-fd-muted-foreground hover:text-fd-foreground transition-colors"
-      >
-        ← Back to Blog
-      </Link>
+      <div className="mx-auto max-w-3xl lg:max-w-[1100px]">
+        <Link
+          href="/blog"
+          className="text-sm text-fd-muted-foreground hover:text-fd-foreground transition-colors"
+        >
+          ← Back to Blog
+        </Link>
 
-      <div className="mt-10 flex flex-col gap-10 lg:flex-row">
-        <article className="min-w-0 max-w-3xl flex-1 overflow-x-hidden">
-          <div className="mb-10 border-b border-fd-border pb-6">
-            <DocsTitle>{post.title}</DocsTitle>
-            <DocsDescription className="mb-0">{post.description}</DocsDescription>
-            <div className="mt-3 flex flex-wrap items-center gap-3 text-sm text-fd-muted-foreground/80">
-              <time dateTime={post.date}>{formatDate(post.date)}</time>
-              {post.tags?.map((tag) => (
-                <span key={tag} className="rounded-full border border-fd-border px-2.5 py-0.5">
-                  {tag}
-                </span>
-              ))}
+        <div className="mt-10 flex flex-col gap-10 lg:flex-row">
+          <article className="min-w-0 max-w-3xl flex-1 overflow-x-hidden">
+            <div className="mb-10 border-b border-fd-border pb-6">
+              <DocsTitle>{post.title}</DocsTitle>
+              <DocsDescription className="mb-0">{post.description}</DocsDescription>
+              <div className="mt-3 flex flex-wrap items-center gap-3 text-sm text-fd-muted-foreground/80">
+                <time dateTime={post.date}>{formatDate(post.date)}</time>
+                {post.tags?.map((tag) => (
+                  <span key={tag} className="rounded-full border border-fd-border px-2.5 py-0.5">
+                    {tag}
+                  </span>
+                ))}
+              </div>
+              <div className="mt-4">
+                <AskAi pageTitle={post.title} />
+              </div>
             </div>
-            <div className="mt-4">
-              <AskAi pageTitle={post.title} />
-            </div>
-          </div>
 
-          <DocsBody>
-            <MDX components={getMDXComponents({ pre: DocsCodeBlock })} />
-          </DocsBody>
+            <DocsBody>
+              <MDX components={getMDXComponents({ pre: DocsCodeBlock })} />
+            </DocsBody>
 
-          {post.faq && post.faq.length > 0 && <Faq items={post.faq} />}
-        </article>
+            {post.faq && post.faq.length > 0 && <Faq items={post.faq} />}
+          </article>
 
-        {post.toc.length > 0 && (
-          <aside className="hidden w-64 shrink-0 lg:block">
-            <div className="sticky top-24">
-              <PageToc toc={post.toc} />
-            </div>
-          </aside>
-        )}
+          {post.toc.length > 0 && (
+            <aside className="hidden w-64 shrink-0 lg:block">
+              <div className="sticky top-24">
+                <PageToc toc={post.toc} />
+              </div>
+            </aside>
+          )}
+        </div>
       </div>
     </div>
   );
