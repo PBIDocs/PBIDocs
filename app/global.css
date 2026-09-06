@@ -155,6 +155,24 @@ figure.shiki[data-wrap] pre {
   word-break: break-word;
 }
 
+/* The desktop "More" nav item (Blog/Changelog/FAQ) uses fumadocs-ui's
+   NavigationMenu.Content, which defaults to a responsive multi-column grid
+   (1/2/3 columns) meant for richer entries with icons/descriptions -- for
+   our plain-text links this rendered as a wide three-box "mega menu" that
+   looked inconsistent with the docs section's own compact "More" dropdown
+   (a different, simpler menu component fumadocs' notebook layout uses).
+   Forcing a single column here shrinks the whole popup back down to a
+   normal compact dropdown, matching the docs one. Targeted by its distinct
+   CSS-variable-based Tailwind classes (w-(--anchor-width) is unique to this
+   one NavigationMenu.Content on the site) since there's no other stable
+   hook; !important is needed to beat the md:/lg: grid-cols utilities'
+   own media-query specificity at wider viewports. */
+[class*="w-(--anchor-width)"][class*="max-w-(--available-width)"] {
+  grid-template-columns: 1fr !important;
+  width: 220px !important;
+  max-width: 220px !important;
+}
+
 /* Homepage function ticker: scrolls one full copy-width to the left, then
    loops seamlessly since the track renders the list twice back to back. */
 @keyframes marquee {
