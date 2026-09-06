@@ -93,6 +93,11 @@ const daxPlaygrounds: PlaygroundEntry[] = [
     href: '/docs/dax/crossfilter#try-it-live',
     pitch: 'Filter the fact table and watch it do nothing to the dimension table — until CROSSFILTER lets it.',
   },
+  {
+    fn: 'IFERROR()',
+    href: '/docs/dax/iferror#try-it-live',
+    pitch: 'Watch IFERROR catch a real error, then pass a BLANK() straight through untouched.',
+  },
 ];
 
 const powerQueryPlaygrounds: PlaygroundEntry[] = [
