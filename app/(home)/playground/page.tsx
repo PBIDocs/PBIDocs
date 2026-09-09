@@ -98,6 +98,11 @@ const daxPlaygrounds: PlaygroundEntry[] = [
     href: '/docs/dax/iferror#try-it-live',
     pitch: 'Watch IFERROR catch a real error, then pass a BLANK() straight through untouched.',
   },
+  {
+    fn: 'ALL() vs ALLSELECTED()',
+    href: '/docs/dax/filter-functions#try-it-live',
+    pitch: 'Pick a slicer region and watch ALLSELECTED track it while ALL ignores the selection entirely.',
+  },
 ];
 
 const powerQueryPlaygrounds: PlaygroundEntry[] = [
