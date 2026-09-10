@@ -211,6 +211,11 @@ const powerQueryPlaygrounds: PlaygroundEntry[] = [
     href: '/docs/power-query/list-distinct-contains#try-it-live',
     pitch: 'Watch "Apple" and "apple" both survive List.Distinct() until you check the comparer box.',
   },
+  {
+    fn: 'Merge Queries — Join Kinds',
+    href: '/docs/power-query/merge-queries#try-it-live',
+    pitch: 'Switch from Left Outer to Inner and watch an unmatched customer silently vanish from the result.',
+  },
 ];
 
 function PlaygroundGroup({ title, items }: { title: string; items: PlaygroundEntry[] }) {

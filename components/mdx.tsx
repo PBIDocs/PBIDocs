@@ -39,6 +39,7 @@ import { AddColumnsSelectColumnsPlayground } from './addcolumns-selectcolumns-pl
 import { CrossFilterPlayground } from './crossfilter-playground';
 import { IfErrorPlayground } from './iferror-playground';
 import { AllSelectedPlayground } from './allselected-playground';
+import { MergeJoinKindPlayground } from './merge-join-kind-playground';
 
 export function getMDXComponents(components?: MDXComponents) {
   return {
@@ -82,6 +83,7 @@ export function getMDXComponents(components?: MDXComponents) {
     CrossFilterPlayground,
     IfErrorPlayground,
     AllSelectedPlayground,
+    MergeJoinKindPlayground,
     ...components,
   } satisfies MDXComponents;
 }
