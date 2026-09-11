@@ -40,6 +40,7 @@ import { CrossFilterPlayground } from './crossfilter-playground';
 import { IfErrorPlayground } from './iferror-playground';
 import { AllSelectedPlayground } from './allselected-playground';
 import { MergeJoinKindPlayground } from './merge-join-kind-playground';
+import { TableGroupPlayground } from './table-group-playground';
 
 export function getMDXComponents(components?: MDXComponents) {
   return {
@@ -84,6 +85,7 @@ export function getMDXComponents(components?: MDXComponents) {
     IfErrorPlayground,
     AllSelectedPlayground,
     MergeJoinKindPlayground,
+    TableGroupPlayground,
     ...components,
   } satisfies MDXComponents;
 }

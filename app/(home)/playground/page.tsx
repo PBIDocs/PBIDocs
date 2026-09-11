@@ -216,6 +216,11 @@ const powerQueryPlaygrounds: PlaygroundEntry[] = [
     href: '/docs/power-query/merge-queries#try-it-live',
     pitch: 'Switch from Left Outer to Inner and watch an unmatched customer silently vanish from the result.',
   },
+  {
+    fn: 'Table.Group()',
+    href: '/docs/power-query/table-group#try-it-live',
+    pitch: 'Type "bikes" instead of "Bikes" and watch it silently become its own extra group.',
+  },
 ];
 
 function PlaygroundGroup({ title, items }: { title: string; items: PlaygroundEntry[] }) {
