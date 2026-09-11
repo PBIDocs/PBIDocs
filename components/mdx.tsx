@@ -41,6 +41,7 @@ import { IfErrorPlayground } from './iferror-playground';
 import { AllSelectedPlayground } from './allselected-playground';
 import { MergeJoinKindPlayground } from './merge-join-kind-playground';
 import { TableGroupPlayground } from './table-group-playground';
+import { UnpivotOtherColumnsPlayground } from './unpivot-other-columns-playground';
 
 export function getMDXComponents(components?: MDXComponents) {
   return {
@@ -86,6 +87,7 @@ export function getMDXComponents(components?: MDXComponents) {
     AllSelectedPlayground,
     MergeJoinKindPlayground,
     TableGroupPlayground,
+    UnpivotOtherColumnsPlayground,
     ...components,
   } satisfies MDXComponents;
 }

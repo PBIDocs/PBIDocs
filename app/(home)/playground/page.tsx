@@ -216,6 +216,11 @@ const powerQueryPlaygrounds: PlaygroundEntry[] = [
     href: '/docs/power-query/table-group#try-it-live',
     pitch: 'Type "bikes" instead of "Bikes" and watch it silently become its own extra group.',
   },
+  {
+    fn: 'Table.Unpivot() vs UnpivotOtherColumns()',
+    href: '/docs/power-query/table-pivot-unpivot#try-it-live',
+    pitch: 'Add a new month column and watch a fixed-list unpivot silently leave it behind.',
+  },
 ];
 
 export default function PlaygroundIndexPage() {
