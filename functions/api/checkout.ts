@@ -47,7 +47,10 @@ export async function onRequestPost({ request, env }: RequestContext): Promise<R
     }
 
     return json({ url: session.url }, 200);
-  } catch {
-    return json({ error: 'Something went wrong. Please try again.' }, 500);
+  } catch (err) {
+    // TEMPORARY diagnostic — message only, never secret values. Remove once
+    // the live checkout failure is root-caused.
+    const message = err instanceof Error ? err.message : String(err);
+    return json({ error: 'Something went wrong. Please try again.', debug: message }, 500);
   }
 }
