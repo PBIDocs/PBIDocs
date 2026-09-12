@@ -98,6 +98,11 @@ const daxPlaygrounds: PlaygroundEntry[] = [
     href: '/docs/dax/filter-functions#try-it-live',
     pitch: 'Pick a slicer region and watch ALLSELECTED track it while ALL ignores the selection entirely.',
   },
+  {
+    fn: 'RANKX() — Skip vs Dense',
+    href: '/docs/dax/rankx#try-it-live',
+    pitch: 'Create a tie and watch Skip jump a rank ahead while Dense keeps counting with no gap.',
+  },
 ];
 
 const powerQueryPlaygrounds: PlaygroundEntry[] = [
