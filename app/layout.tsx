@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { RootProvider } from 'fumadocs-ui/provider/next';
 import './global.css';
 import { Inter } from 'next/font/google';
+import { FixMoreMenuPosition } from '@/components/fix-more-menu-position';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -47,6 +48,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         >
           {children}
         </RootProvider>
+        <FixMoreMenuPosition />
       </body>
     </html>
   );

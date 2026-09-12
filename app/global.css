@@ -176,6 +176,35 @@ figure.shiki[data-wrap] pre {
   max-width: 160px !important;
 }
 
+/* The desktop "More" trigger has no visual indicator that it opens a
+   dropdown -- fumadocs-ui's NavigationMenu.Trigger renders it as plain
+   text (`item.text`, set internally in header.js), with no way to pass in
+   an icon from our own layout.tsx. Add a chevron via ::after instead.
+   [data-base-ui-navigation-menu-trigger] is a stable, base-ui-authored
+   hook currently unique to this one trigger (the only `type: 'menu'` nav
+   link); its aria-expanded attribute (managed by base-ui itself) drives
+   the rotation, so no JS is needed here. mask-image + background-color
+   lets the icon inherit currentColor like a real lucide icon would,
+   adapting to both themes and the trigger's own hover/active colors
+   automatically -- a plain <img> or unicode character couldn't do that. */
+[data-base-ui-navigation-menu-trigger]::after {
+  content: '';
+  display: inline-block;
+  width: 0.875rem;
+  height: 0.875rem;
+  background-color: currentColor;
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  transition: transform 0.2s ease;
+}
+[data-base-ui-navigation-menu-trigger][aria-expanded='true']::after {
+  transform: rotate(180deg);
+}
+
 /* Homepage function ticker: scrolls one full copy-width to the left, then
    loops seamlessly since the track renders the list twice back to back. */
 @keyframes marquee {
