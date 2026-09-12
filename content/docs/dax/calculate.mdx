@@ -458,6 +458,8 @@ Continue building your DAX skills:
 
 Want all the filter-modifying functions side by side? See the [DAX CALCULATE Modifiers Cheat Sheet](/blog/dax-calculate-modifiers-cheat-sheet).
 
+Got "a function 'CALCULATE' has been used in a True/False expression"? That's from nesting CALCULATE directly inside a boolean filter condition — see [that error explained](/blog/calculate-true-false-expression-error) for why context transition makes that specific nesting circular.
+
 See a disconnected date table used for real, non-time-intelligence math: [Build an Earned Value Management Dashboard](/tutorials/build-an-evm-dashboard).
 
 Packaging a CALCULATE-based pattern into a reusable, named function? See [DAX User-Defined Functions (UDFs)](/docs/dax/user-defined-functions#parameters-type-subtype-and-val-vs-expr) for how `val`/`expr` parameter modes control filter context inside a UDF.
