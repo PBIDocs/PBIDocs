@@ -180,7 +180,7 @@ export default function HomePage() {
             <div className="text-left">
               <span className="mb-4 inline-flex items-center gap-1.5 rounded-full bg-fd-primary/10 px-3 py-1 text-xs font-semibold text-fd-primary">
                 <Sparkles className="size-3.5" />
-                New: AI-Powered
+                AI-Powered
               </span>
               <h2 className="mb-3 text-3xl font-bold tracking-tight">Describe it. Get the DAX.</h2>
               <p className="mb-6 text-fd-muted-foreground">
@@ -212,7 +212,7 @@ export default function HomePage() {
           <div className="p-8 text-left sm:p-10">
             <span className="mb-4 inline-flex items-center gap-1.5 rounded-full bg-fd-primary/10 px-3 py-1 text-xs font-semibold text-fd-primary">
               <FlaskConical className="size-3.5" />
-              New: Interactive Examples
+              Interactive Examples
             </span>
             <h2 className="mb-3 text-3xl font-bold tracking-tight">
               Stop reading examples. Try them.
