@@ -1,0 +1,117 @@
+---
+title: "DAX Error: A Table of Multiple Values Was Supplied Where a Single Value Was Expected"
+description: "This error means a table-returning expression — VALUES(), FILTER(), RELATEDTABLE() — ended up somewhere DAX needed a scalar, and had more than one row to give it. Here's why it depends on filter context, and how to fix it."
+date: "2026-09-12"
+tags: ["DAX", "Troubleshooting"]
+faq:
+  - question: "What does \"a table of multiple values was supplied where a single value was expected\" mean?"
+    answer: "A DAX expression that returns a table — VALUES(), FILTER(), RELATEDTABLE(), or similar — ended up in a spot that needs a single scalar value, and that table happened to have more than one row (or more than one column) at the moment it was evaluated."
+  - question: "How is this different from \"a single value for column cannot be determined\"?"
+    answer: "That error comes from referencing a raw column directly with no aggregation at all. This one comes from a table-returning function or expression — the code already looks like it's trying to produce one value, it just isn't guaranteed to."
+  - question: "Why does DAX sometimes accept a table without erroring at all?"
+    answer: "DAX automatically converts a table into a scalar when that table has exactly one row and one column — this is a documented, intentional coercion, not a bug. The error only appears once that table actually holds more than one value, which is often filter-context-dependent rather than something visible in the formula itself."
+  - question: "What's the actual difference between VALUES() and SELECTEDVALUE()?"
+    answer: "VALUES() always returns a table, even when there's only one distinct value in it — using it directly in a scalar context relies on DAX's single-row coercion and breaks the moment more than one value is in context. SELECTEDVALUE() is built for exactly that situation: it returns the single value if there's only one, and a supplied fallback (BLANK() by default) otherwise, with no error."
+---
+
+The full error usually reads:
+
+```text
+A table of multiple values was supplied where a single value was
+expected. This can happen when a DAX expression returns a table
+which is used in a context where a single value is expected.
+```
+
+DAX actually tolerates tables in scalar positions more than that message suggests — a table with exactly one row and one column is automatically converted into the scalar it holds. This error only fires once that same expression genuinely produces more than one row, which usually depends on *what's currently in filter context*, not on anything visibly wrong in the formula.
+
+## Cause 1: VALUES() Used Directly Instead of SELECTEDVALUE()
+
+```dax lineNumbers
+Selected Category =
+VALUES(DimProduct[Category])
+```
+
+`VALUES()` always returns a table. If exactly one category is in the current filter context — a slicer set to one value, or a single row in a table visual — that table has one row, DAX coerces it to a scalar, and this looks like it works.
+
+```text
+Slicer set to "Bikes" only:
+Selected Category -> "Bikes"                      <- one row, coerces fine
+
+No slicer selection, or "Select All":
+Selected Category -> ERROR                        <- multiple rows, no coercion possible
+```
+
+The moment more than one category is in context — no slicer selection, or a "Select All" state — `VALUES()` returns multiple rows, and there's nothing left to coerce.
+
+**Fix:** use `SELECTEDVALUE()`, which is built for exactly this — a single value when there is one, a fallback when there isn't.
+
+```dax lineNumbers
+Selected Category =
+SELECTEDVALUE(DimProduct[Category], "Multiple Categories")
+```
+
+See [SELECTEDVALUE](/docs/dax/selectedvalue) for the fallback argument and when it's worth customizing.
+
+## Cause 2: A Table-Returning Function Inside a Scalar Argument
+
+```dax lineNumbers
+Has Discounted Sales =
+IF(FILTER(FactSales, FactSales[Discount] > 0), "Yes", "No")
+```
+
+`IF()`'s first argument needs a single boolean. `FILTER()` returns a table — every matching row, not a yes/no answer. If the filter happens to match exactly one row, DAX's single-row coercion papers over the mistake; the instant it matches more than one (which, for "any discounted sale," is normal), the error appears.
+
+**Fix:** ask for a count or a boolean condition directly, instead of the filtered rows themselves.
+
+```dax lineNumbers
+Has Discounted Sales =
+IF(COUNTROWS(FILTER(FactSales, FactSales[Discount] > 0)) > 0, "Yes", "No")
+```
+
+## Cause 3: RELATEDTABLE() Used Where a Single Related Value Was Meant
+
+```dax lineNumbers
+Customer Order Count =
+RELATEDTABLE(Orders)
+```
+
+`RELATEDTABLE()` always returns a table — every row on the "many" side of a relationship — even in a context (like a calculated column on the "one" side) where it's tempting to treat it as "the customer's orders" as if that resolved to something scalar. It never does on its own.
+
+**Fix:** wrap it in an aggregator that actually reduces the table to one number.
+
+```dax lineNumbers
+Customer Order Count =
+COUNTROWS(RELATEDTABLE(Orders))
+```
+
+## Why the Same Measure Can Work in One Visual and Break in Another
+
+This is the version that causes the most confusion, because nothing about the formula itself changes between the two cases.
+
+```text
+Table visual with Category on rows, one slicer value selected:
+Category  | Selected Category
+Bikes     | "Bikes"                    <- one row in context, coerces fine
+
+Same measure, Grand Total row, or slicer cleared:
+Total     | ERROR                      <- many rows in context now
+```
+
+The formula is identical in both places — what changed is how many rows `VALUES()` (or `FILTER()`, or `RELATEDTABLE()`) actually returns once evaluated, and that depends entirely on the filter context the measure happens to run inside. A measure that looks finished at the row level needs to be checked again with a total, a cleared slicer, or a wider selection before it's actually done.
+
+## Common Mistakes
+
+**Testing only with a single value selected.** Exactly like the coercion behavior above shows, a measure built around `VALUES()` or `FILTER()` can pass every check while a slicer is narrowed to one value and still be one click away from erroring the moment it isn't.
+
+**Reaching for VALUES() when SELECTEDVALUE() was actually meant.** `VALUES()` is the right choice when the *table itself* is needed for further filtering or iteration. The moment the goal is "the one value currently selected, or a fallback," `SELECTEDVALUE()` is the function actually built for that — not `VALUES()` plus an assumption that only one row will ever show up.
+
+**Confusing this with "a single value for column cannot be determined."** That error comes from a bare column reference with no aggregation at all. This one comes from a table-returning function or expression that DAX was relying on its own row/column coercion to resolve — a subtler, context-dependent version of a similar underlying idea.
+
+## Next Steps
+
+- [SELECTEDVALUE](/docs/dax/selectedvalue)
+- [VALUES() vs DISTINCT()](/docs/dax/values-distinct)
+- [FILTER](/docs/dax/filter)
+- [CALCULATE](/docs/dax/calculate)
+
+Getting "a single value for column cannot be determined" instead? That's a different, more common trigger — a raw column reference with no aggregation at all. See [that error explained](/blog/single-value-column-cannot-be-determined).
