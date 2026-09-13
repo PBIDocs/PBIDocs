@@ -9,6 +9,8 @@
     "types:check": "fumadocs-mdx && next typegen && tsc --noEmit",
     "postinstall": "fumadocs-mdx",
     "lint": "eslint",
+    "check:anchors": "node anchor-check.js",
+    "check:orphans": "node orphan-check.js",
     "d1:subscribers": "wrangler d1 execute pbidocs-subscribers --remote --command \"SELECT COUNT(*) AS total_subscribers FROM subscribers;\"",
     "d1:subscribers:recent": "wrangler d1 execute pbidocs-subscribers --remote --command \"SELECT email, created_at FROM subscribers ORDER BY created_at DESC LIMIT 20;\"",
     "d1:feedback": "wrangler d1 execute pbidocs-subscribers --remote --command \"SELECT page, SUM(CASE WHEN helpful = 1 THEN 1 ELSE 0 END) AS helpful_votes, SUM(CASE WHEN helpful = 0 THEN 1 ELSE 0 END) AS not_helpful_votes, COUNT(*) AS total_votes FROM page_feedback GROUP BY page ORDER BY total_votes DESC;\"",
@@ -20,7 +22,8 @@
     "fumadocs-mdx": "15.2.2",
     "fumadocs-ui": "npm:@fumadocs/base-ui@16.14.0",
     "lucide-react": "^1.28.0",
-    "next": "16.3.0",
+    "next": "16.3.5",
+    "nextjs-toploader": "^3.9.17",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "stripe": "^22.6.0"
