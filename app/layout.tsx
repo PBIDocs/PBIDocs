@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { RootProvider } from 'fumadocs-ui/provider/next';
 import './global.css';
 import { Inter } from 'next/font/google';
+import NextTopLoader from 'nextjs-toploader';
 import { FixMoreMenuPosition } from '@/components/fix-more-menu-position';
 
 const inter = Inter({
@@ -39,6 +40,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={inter.className} suppressHydrationWarning>
       <body className="flex flex-col min-h-screen">
+        <NextTopLoader color="var(--color-fd-primary)" height={3} showSpinner={false} shadow={false} />
         <RootProvider
           search={{
             options: {
