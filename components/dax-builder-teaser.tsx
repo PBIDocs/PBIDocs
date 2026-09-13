@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { Loader2 } from 'lucide-react';
+import { cn } from '@/lib/cn';
 
 interface Example {
   prompt: string;
@@ -111,22 +112,43 @@ export function DaxBuilderTeaser() {
         </span>
       </div>
 
-      {phase === 'thinking' && (
-        <div className="mt-3 flex items-center gap-1.5 text-xs text-fd-muted-foreground">
+      {/* Both states below share one grid cell (rather than each being
+          conditionally mounted in normal flow) so the card reserves the
+          tallest state's height from the very first render, permanently --
+          not just "while a result happens to be showing". Without this,
+          the card's own height changes as the demo cycles through typing
+          (nothing here) -> thinking (one line) -> result (five lines),
+          which barely shows on desktop (this card sits beside taller
+          hero text in a 2-column grid, so the row's height is already set
+          by that sibling) but visibly pushed the rest of the mobile page
+          up and down every cycle, since there the card stacks standalone
+          in the document flow with nothing taller next to it. `invisible`
+          (not `hidden`/conditional mounting) keeps each state's layout
+          space reserved even while the other one is showing. */}
+      <div className="mt-3 grid">
+        <div
+          className={cn(
+            'col-start-1 row-start-1 flex items-center gap-1.5 text-xs text-fd-muted-foreground',
+            phase === 'thinking' ? 'visible' : 'invisible',
+          )}
+        >
           <Loader2 className="size-3 animate-spin" />
           Building…
         </div>
-      )}
 
-      {showResult && (
-        <pre className="animate-in fade-in slide-in-from-bottom-1 mt-3 overflow-x-auto rounded-lg bg-fd-secondary px-3 py-2.5 text-xs leading-relaxed duration-500">
+        <pre
+          className={cn(
+            'col-start-1 row-start-1 overflow-x-auto rounded-lg bg-fd-secondary px-3 py-2.5 text-xs leading-relaxed transition-opacity duration-500',
+            showResult ? 'visible opacity-100' : 'invisible opacity-0',
+          )}
+        >
           <code>
             <span className="text-fd-primary">{example.measure}</span>
             {' =\n'}
             {example.formula}
           </code>
         </pre>
-      )}
+      </div>
     </div>
   );
 }
