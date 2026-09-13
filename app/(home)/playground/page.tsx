@@ -103,6 +103,11 @@ const daxPlaygrounds: PlaygroundEntry[] = [
     href: '/docs/dax/rankx#try-it-live',
     pitch: 'Create a tie and watch Skip jump a rank ahead while Dense keeps counting with no gap.',
   },
+  {
+    fn: 'TOPN() — Ties at the Cutoff',
+    href: '/docs/dax/topn#try-it-live',
+    pitch: 'Ask for the Top 3 and watch a tie for last place hand back 4 rows instead.',
+  },
 ];
 
 const powerQueryPlaygrounds: PlaygroundEntry[] = [
