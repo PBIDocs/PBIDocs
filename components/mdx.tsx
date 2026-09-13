@@ -43,6 +43,7 @@ import { MergeJoinKindPlayground } from './merge-join-kind-playground';
 import { TableGroupPlayground } from './table-group-playground';
 import { UnpivotOtherColumnsPlayground } from './unpivot-other-columns-playground';
 import { RankxTiesPlayground } from './rankx-ties-playground';
+import { TopNTiesPlayground } from './topn-ties-playground';
 
 export function getMDXComponents(components?: MDXComponents) {
   return {
@@ -90,6 +91,7 @@ export function getMDXComponents(components?: MDXComponents) {
     TableGroupPlayground,
     UnpivotOtherColumnsPlayground,
     RankxTiesPlayground,
+    TopNTiesPlayground,
     ...components,
   } satisfies MDXComponents;
 }
