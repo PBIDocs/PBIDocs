@@ -127,43 +127,66 @@ export default function HomePage() {
       </div>
 
       {/* Hero */}
-      <section className="max-w-4xl animate-in fade-in slide-in-from-bottom-4 duration-700">
-        <div className="mb-6 inline-flex rounded-full border px-4 py-1 text-sm text-fd-muted-foreground">
-         Power BI + AI Documentation Platform
+      <section className="w-full max-w-6xl animate-in fade-in slide-in-from-bottom-4 duration-700">
+        <div className="grid grid-cols-1 items-center gap-12 lg:grid-cols-2 lg:gap-8">
+          <div className="text-center lg:text-left">
+            <div className="mb-6 inline-flex rounded-full border px-4 py-1 text-sm text-fd-muted-foreground">
+              Power BI + AI Documentation Platform
+            </div>
+
+            <h1 className="mb-6 text-5xl leading-[1.05] font-bold tracking-tighter sm:text-6xl lg:text-7xl">
+              Master <span className="text-fd-primary">Power BI</span>.
+              <br />
+              Build smarter with AI.
+            </h1>
+
+            <p className="mx-auto mb-8 max-w-xl text-lg text-fd-muted-foreground lg:mx-0">
+              Learn DAX, Power Query, Data Modeling, Microsoft Fabric, and AI-assisted
+              Power BI development with clear documentation and practical examples.
+            </p>
+
+            <div className="mb-8">
+              <HeroSearch />
+            </div>
+
+            <div className="flex flex-wrap justify-center gap-4 lg:justify-start">
+              <Link
+                href="/docs"
+                className="rounded-lg bg-fd-primary px-6 py-3 font-semibold text-fd-primary-foreground hover:bg-fd-primary/90"
+              >
+                Browse Documentation
+              </Link>
+
+              <Link
+                href="/docs/getting-started/introduction"
+                className="rounded-lg border px-6 py-3 font-semibold hover:bg-fd-muted"
+              >
+                Get Started
+              </Link>
+            </div>
+          </div>
+
+          <div>
+            <div className="mb-3 flex items-center justify-center gap-1.5 lg:justify-start">
+              <Sparkles className="size-3.5 text-fd-primary" />
+              <span className="text-xs font-semibold text-fd-primary">AI-Powered — try it live</span>
+            </div>
+            <DaxBuilderTeaser />
+            <p className="mt-3 text-center text-sm text-fd-muted-foreground lg:text-left">
+              Describe a calculation in plain English, get back a real DAX measure or Power Query
+              M step.{' '}
+              <Link
+                href="/tools/dax-formula-builder"
+                className="inline-flex items-center gap-1 font-medium text-fd-primary hover:underline"
+              >
+                Try the Formula Builder
+                <ArrowRight className="size-3.5" />
+              </Link>
+            </p>
+          </div>
         </div>
 
-        <h1 className="text-6xl sm:text-7xl font-bold tracking-tighter leading-[1.05] mb-6">
-        Master <span className="text-fd-primary">Power BI</span>.
-        <br />
-        Build smarter with AI.
-        </h1>
-
-        <p className="text-lg text-fd-muted-foreground max-w-2xl mx-auto mb-8">
-          Learn DAX, Power Query, Data Modeling, Microsoft Fabric, and AI-assisted
-          Power BI development with clear documentation and practical examples.
-        </p>
-
-        <div className="mb-8">
-          <HeroSearch />
-        </div>
-
-        <div className="flex justify-center gap-4 mb-14">
-          <Link
-            href="/docs"
-            className="rounded-lg bg-fd-primary hover:bg-fd-primary/90 text-fd-primary-foreground px-6 py-3 font-semibold"
-          >
-            Browse Documentation
-          </Link>
-
-          <Link
-            href="/docs/getting-started/introduction"
-            className="rounded-lg border px-6 py-3 font-semibold hover:bg-fd-muted"
-          >
-            Get Started
-          </Link>
-        </div>
-
-        <div className="flex justify-center gap-10">
+        <div className="mt-14 flex justify-center gap-10">
           {stats.map((stat) => (
             <div key={stat.label}>
               <div className="text-3xl font-bold text-fd-primary">{stat.value}</div>
@@ -171,34 +194,6 @@ export default function HomePage() {
             </div>
           ))}
         </div>
-      </section>
-
-      {/* DAX Formula Builder CTA */}
-      <section className="mt-16 w-full max-w-5xl">
-        <SpotlightCard className="rounded-2xl border border-fd-border bg-fd-card/40">
-          <div className="grid grid-cols-1 items-center gap-8 p-8 sm:p-10 lg:grid-cols-2">
-            <div className="text-left">
-              <span className="mb-4 inline-flex items-center gap-1.5 rounded-full bg-fd-primary/10 px-3 py-1 text-xs font-semibold text-fd-primary">
-                <Sparkles className="size-3.5" />
-                AI-Powered
-              </span>
-              <h2 className="mb-3 text-3xl font-bold tracking-tight">Describe it. Get the DAX.</h2>
-              <p className="mb-6 text-fd-muted-foreground">
-                Type a calculation in plain English and get back a real DAX measure — or a Power
-                Query M step — with a full explanation. Free, no signup required — 5 a day, or go
-                Pro for more.
-              </p>
-              <Link
-                href="/tools/dax-formula-builder"
-                className="inline-flex items-center gap-1.5 rounded-lg bg-fd-primary px-6 py-3 font-semibold text-fd-primary-foreground hover:bg-fd-primary/90"
-              >
-                Try the Formula Builder
-                <ArrowRight className="size-4" />
-              </Link>
-            </div>
-            <DaxBuilderTeaser />
-          </div>
-        </SpotlightCard>
       </section>
 
       {/* Function Ticker */}
