@@ -108,6 +108,11 @@ const daxPlaygrounds: PlaygroundEntry[] = [
     href: '/docs/dax/topn#try-it-live',
     pitch: 'Ask for the Top 3 and watch a tie for last place hand back 4 rows instead.',
   },
+  {
+    fn: 'USERELATIONSHIP()',
+    href: '/docs/dax/userelationship#try-it-live',
+    pitch: 'Pick a month and watch Total Sales and Sales by Ship Date disagree on the same fact table.',
+  },
 ];
 
 const powerQueryPlaygrounds: PlaygroundEntry[] = [
