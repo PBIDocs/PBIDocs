@@ -118,6 +118,11 @@ const daxPlaygrounds: PlaygroundEntry[] = [
     href: '/docs/dax/lookupvalue#try-it-live',
     pitch: 'Give two matching rows different prices and watch a real error appear, live.',
   },
+  {
+    fn: 'RELATEDTABLE()',
+    href: '/docs/dax/related#try-it-live',
+    pitch: 'Switch off the relationship and watch a real order count silently become BLANK().',
+  },
 ];
 
 const powerQueryPlaygrounds: PlaygroundEntry[] = [
