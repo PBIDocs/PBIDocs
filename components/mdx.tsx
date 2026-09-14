@@ -45,6 +45,7 @@ import { UnpivotOtherColumnsPlayground } from './unpivot-other-columns-playgroun
 import { RankxTiesPlayground } from './rankx-ties-playground';
 import { TopNTiesPlayground } from './topn-ties-playground';
 import { UserRelationshipPlayground } from './userelationship-playground';
+import { LookupValuePlayground } from './lookupvalue-playground';
 
 export function getMDXComponents(components?: MDXComponents) {
   return {
@@ -94,6 +95,7 @@ export function getMDXComponents(components?: MDXComponents) {
     RankxTiesPlayground,
     TopNTiesPlayground,
     UserRelationshipPlayground,
+    LookupValuePlayground,
     ...components,
   } satisfies MDXComponents;
 }

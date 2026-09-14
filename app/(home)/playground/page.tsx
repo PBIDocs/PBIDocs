@@ -113,6 +113,11 @@ const daxPlaygrounds: PlaygroundEntry[] = [
     href: '/docs/dax/userelationship#try-it-live',
     pitch: 'Pick a month and watch Total Sales and Sales by Ship Date disagree on the same fact table.',
   },
+  {
+    fn: 'LOOKUPVALUE()',
+    href: '/docs/dax/lookupvalue#try-it-live',
+    pitch: 'Give two matching rows different prices and watch a real error appear, live.',
+  },
 ];
 
 const powerQueryPlaygrounds: PlaygroundEntry[] = [
