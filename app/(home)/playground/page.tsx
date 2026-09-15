@@ -128,6 +128,11 @@ const daxPlaygrounds: PlaygroundEntry[] = [
     href: '/docs/dax/distinctcount#try-it-live',
     pitch: 'Clear one cell and watch DISTINCTCOUNT quietly count "nothing" as its own value.',
   },
+  {
+    fn: 'COUNTROWS() vs COUNT() vs COUNTA()',
+    href: '/docs/dax/countrows#try-it-live',
+    pitch: 'Type "N/A" into one cell and watch all three functions land on a different number.',
+  },
 ];
 
 const powerQueryPlaygrounds: PlaygroundEntry[] = [
