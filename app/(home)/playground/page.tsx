@@ -246,6 +246,11 @@ const powerQueryPlaygrounds: PlaygroundEntry[] = [
     href: '/docs/power-query/table-pivot-unpivot#try-it-live',
     pitch: 'Add a new month column and watch a fixed-list unpivot silently leave it behind.',
   },
+  {
+    fn: 'Table.ReplaceValue()',
+    href: '/docs/power-query/table-replacevalue#try-it-live',
+    pitch: 'Leave a column off the search list and watch a real "N/A" survive with no warning at all.',
+  },
 ];
 
 export default function PlaygroundIndexPage() {
