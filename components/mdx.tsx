@@ -47,6 +47,7 @@ import { TopNTiesPlayground } from './topn-ties-playground';
 import { UserRelationshipPlayground } from './userelationship-playground';
 import { LookupValuePlayground } from './lookupvalue-playground';
 import { RelatedTablePlayground } from './relatedtable-playground';
+import { TableReplaceValuePlayground } from './table-replacevalue-playground';
 
 export function getMDXComponents(components?: MDXComponents) {
   return {
@@ -98,6 +99,7 @@ export function getMDXComponents(components?: MDXComponents) {
     UserRelationshipPlayground,
     LookupValuePlayground,
     RelatedTablePlayground,
+    TableReplaceValuePlayground,
     ...components,
   } satisfies MDXComponents;
 }

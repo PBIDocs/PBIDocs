@@ -78,6 +78,8 @@ Table.ReplaceValue(Source, "N/A", "", Replacer.ReplaceText, {"Notes"})
 
 Using `Replacer.ReplaceValue` on a `Notes` column expecting it to strip `"N/A"` out of a longer sentence like `"Status: N/A for now"` won't do anything — the cell isn't *exactly* `"N/A"`, just contains it. That case needs `Replacer.ReplaceText`.
 
+<TableReplaceValuePlayground />
+
 ---
 
 ## Common Mistakes
