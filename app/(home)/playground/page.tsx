@@ -133,6 +133,11 @@ const daxPlaygrounds: PlaygroundEntry[] = [
     href: '/docs/dax/countrows#try-it-live',
     pitch: 'Type "N/A" into one cell and watch all three functions land on a different number.',
   },
+  {
+    fn: 'SUMX()',
+    href: '/docs/dax/sumx#try-it-live',
+    pitch: 'Watch "sum of the products" and "product of the sums" land nowhere near each other.',
+  },
 ];
 
 const powerQueryPlaygrounds: PlaygroundEntry[] = [
