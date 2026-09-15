@@ -123,6 +123,11 @@ const daxPlaygrounds: PlaygroundEntry[] = [
     href: '/docs/dax/related#try-it-live',
     pitch: 'Switch off the relationship and watch a real order count silently become BLANK().',
   },
+  {
+    fn: 'DISTINCTCOUNT() vs DISTINCTCOUNTNOBLANK()',
+    href: '/docs/dax/distinctcount#try-it-live',
+    pitch: 'Clear one cell and watch DISTINCTCOUNT quietly count "nothing" as its own value.',
+  },
 ];
 
 const powerQueryPlaygrounds: PlaygroundEntry[] = [

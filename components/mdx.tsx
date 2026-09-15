@@ -48,6 +48,7 @@ import { UserRelationshipPlayground } from './userelationship-playground';
 import { LookupValuePlayground } from './lookupvalue-playground';
 import { RelatedTablePlayground } from './relatedtable-playground';
 import { TableReplaceValuePlayground } from './table-replacevalue-playground';
+import { DistinctCountBlankPlayground } from './distinctcount-blank-playground';
 
 export function getMDXComponents(components?: MDXComponents) {
   return {
@@ -100,6 +101,7 @@ export function getMDXComponents(components?: MDXComponents) {
     LookupValuePlayground,
     RelatedTablePlayground,
     TableReplaceValuePlayground,
+    DistinctCountBlankPlayground,
     ...components,
   } satisfies MDXComponents;
 }
