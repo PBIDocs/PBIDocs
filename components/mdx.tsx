@@ -49,6 +49,7 @@ import { LookupValuePlayground } from './lookupvalue-playground';
 import { RelatedTablePlayground } from './relatedtable-playground';
 import { TableReplaceValuePlayground } from './table-replacevalue-playground';
 import { DistinctCountBlankPlayground } from './distinctcount-blank-playground';
+import { CountRowsCountCountaPlayground } from './countrows-count-counta-playground';
 
 export function getMDXComponents(components?: MDXComponents) {
   return {
@@ -102,6 +103,7 @@ export function getMDXComponents(components?: MDXComponents) {
     RelatedTablePlayground,
     TableReplaceValuePlayground,
     DistinctCountBlankPlayground,
+    CountRowsCountCountaPlayground,
     ...components,
   } satisfies MDXComponents;
 }
