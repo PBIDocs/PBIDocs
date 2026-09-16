@@ -51,6 +51,7 @@ import { TableReplaceValuePlayground } from './table-replacevalue-playground';
 import { DistinctCountBlankPlayground } from './distinctcount-blank-playground';
 import { CountRowsCountCountaPlayground } from './countrows-count-counta-playground';
 import { SumXPlayground } from './sumx-playground';
+import { SelectedValuePlayground } from './selectedvalue-playground';
 
 export function getMDXComponents(components?: MDXComponents) {
   return {
@@ -106,6 +107,7 @@ export function getMDXComponents(components?: MDXComponents) {
     DistinctCountBlankPlayground,
     CountRowsCountCountaPlayground,
     SumXPlayground,
+    SelectedValuePlayground,
     ...components,
   } satisfies MDXComponents;
 }
