@@ -138,6 +138,11 @@ const daxPlaygrounds: PlaygroundEntry[] = [
     href: '/docs/dax/sumx#try-it-live',
     pitch: 'Watch "sum of the products" and "product of the sums" land nowhere near each other.',
   },
+  {
+    fn: 'SELECTEDVALUE()',
+    href: '/docs/dax/selectedvalue#try-it-live',
+    pitch: 'Check a second box on a live slicer and watch it fall back instead of guessing.',
+  },
 ];
 
 const powerQueryPlaygrounds: PlaygroundEntry[] = [
