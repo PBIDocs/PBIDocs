@@ -271,6 +271,11 @@ const powerQueryPlaygrounds: PlaygroundEntry[] = [
     href: '/docs/power-query/table-replacevalue#try-it-live',
     pitch: 'Leave a column off the search list and watch a real "N/A" survive with no warning at all.',
   },
+  {
+    fn: 'Table.SelectRows()',
+    href: '/docs/power-query/table-selectrows#try-it-live',
+    pitch: 'Filter for "active" and watch "Active" and "ACTIVE" both get silently dropped.',
+  },
 ];
 
 export default function PlaygroundIndexPage() {
