@@ -77,6 +77,8 @@ Both compute a value per row, but for a genuinely different purpose:
 
 Reaching for `Table.TransformColumns` to combine two columns into a new one doesn't work — it only ever sees one column's existing value, never the whole row. `Table.AddColumn` is the one with row-wide visibility.
 
+<TableAddColumnPlayground />
+
 ---
 
 ## Common Mistakes

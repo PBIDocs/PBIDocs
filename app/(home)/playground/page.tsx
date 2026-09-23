@@ -276,6 +276,11 @@ const powerQueryPlaygrounds: PlaygroundEntry[] = [
     href: '/docs/power-query/table-selectrows#try-it-live',
     pitch: 'Filter for "active" and watch "Active" and "ACTIVE" both get silently dropped.',
   },
+  {
+    fn: 'Table.AddColumn() vs Table.TransformColumns()',
+    href: '/docs/power-query/table-addcolumn#try-it-live',
+    pitch: 'Try reaching a second column from TransformColumns and watch it throw a real error every time.',
+  },
 ];
 
 export default function PlaygroundIndexPage() {
