@@ -53,6 +53,7 @@ import { CountRowsCountCountaPlayground } from './countrows-count-counta-playgro
 import { SumXPlayground } from './sumx-playground';
 import { SelectedValuePlayground } from './selectedvalue-playground';
 import { TableSelectRowsPlayground } from './table-selectrows-playground';
+import { TableAddColumnPlayground } from './table-addcolumn-playground';
 
 export function getMDXComponents(components?: MDXComponents) {
   return {
@@ -110,6 +111,7 @@ export function getMDXComponents(components?: MDXComponents) {
     SumXPlayground,
     SelectedValuePlayground,
     TableSelectRowsPlayground,
+    TableAddColumnPlayground,
     ...components,
   } satisfies MDXComponents;
 }
