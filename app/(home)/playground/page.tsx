@@ -281,6 +281,11 @@ const powerQueryPlaygrounds: PlaygroundEntry[] = [
     href: '/docs/power-query/table-addcolumn#try-it-live',
     pitch: 'Try reaching a second column from TransformColumns and watch it throw a real error every time.',
   },
+  {
+    fn: 'Table.TransformColumns()',
+    href: '/docs/power-query/table-transformcolumns#try-it-live',
+    pitch: 'Lowercase one letter in the column name and watch the whole step fail, live.',
+  },
 ];
 
 export default function PlaygroundIndexPage() {
