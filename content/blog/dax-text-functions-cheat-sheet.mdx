@@ -1,0 +1,141 @@
+---
+title: "DAX Text Functions Cheat Sheet"
+description: "A fast, scannable reference for the DAX text functions you'll actually reach for — substrings, case and whitespace, combining values, replacing text, and formatting numbers as strings."
+date: "2026-09-19"
+tags: ["DAX", "Cheat Sheet"]
+---
+
+Quick reference for the text functions that cover most real report needs — dynamic titles, cleaning imported labels, building a single display string out of several fields. See [MID(), LEFT() & RIGHT()](/docs/dax/mid-left-right) and [TRIM(), UPPER() & LOWER()](/docs/dax/trim-upper-lower) for the full explanation behind two of the sections below.
+
+## Substrings
+
+| Function | Returns |
+|---|---|
+| `LEFT(text, num_chars)` | The first `num_chars` characters |
+| `RIGHT(text, num_chars)` | The last `num_chars` characters |
+| `MID(text, start_num, num_chars)` | `num_chars` characters starting at position `start_num` |
+
+```dax lineNumbers
+Area Code =
+LEFT([PhoneNumber], 3)
+```
+
+`MID()`'s `start_num` is 1-based, not 0-based — the first character in the string is position 1, not 0. See [MID(), LEFT() & RIGHT()](/docs/dax/mid-left-right) for the off-by-one mistake this causes when a value is carried over from Power Query's `Text.Middle()`, which counts from 0.
+
+## Case and Whitespace
+
+| Function | Returns |
+|---|---|
+| `UPPER(text)` | The text, uppercased |
+| `LOWER(text)` | The text, lowercased |
+| `TRIM(text)` | The text, with leading/trailing spaces removed and internal runs of spaces collapsed to one |
+
+```dax lineNumbers
+Clean Category =
+TRIM(UPPER([Category]))
+```
+
+`TRIM()` in DAX collapses repeated internal spaces too, not just the leading/trailing ones — a real difference from Power Query's `Text.Trim()`, which only strips the ends. See [TRIM(), UPPER() & LOWER()](/docs/dax/trim-upper-lower) for that comparison in full.
+
+## Length and Searching
+
+| Function | Returns |
+|---|---|
+| `LEN(text)` | The number of characters in the text |
+| `FIND(find_text, within_text)` | The position of `find_text`, **case-sensitive** — errors if not found |
+| `SEARCH(find_text, within_text)` | The position of `find_text`, **case-insensitive** — errors if not found |
+
+```dax lineNumbers
+Has Prefix =
+IF(
+    ISERROR(SEARCH("SKU-", [ProductCode])),
+    "No",
+    "Yes"
+)
+```
+
+`FIND()` and `SEARCH()` are otherwise identical — same arguments, same 1-based position, same behavior on no match (an error, not blank, which is why both are almost always wrapped in `ISERROR()` or paired with the optional fourth `NotFoundValue` argument). The only difference is case sensitivity, and it's easy to reach for the wrong one out of habit.
+
+## Combining Text
+
+| Method | Notes |
+|---|---|
+| `&` operator | Simplest option for a handful of known pieces |
+| `CONCATENATE(text1, text2)` | Exactly two arguments — no more |
+| `CONCATENATEX(table, expression, [delimiter])` | Joins one value per row of a table into a single string |
+
+```dax lineNumbers
+Full Name =
+[FirstName] & " " & [LastName]
+```
+
+`CONCATENATE()` rarely earns its keep over `&` since it caps out at two arguments — chaining several `&`s reads just as clearly and isn't limited. `CONCATENATEX()` is the one that actually does something `&` can't: turning a whole table's worth of per-row values into one delimited string.
+
+```dax lineNumbers
+Products in Order =
+CONCATENATEX(
+    RELATEDTABLE(FactOrderLines),
+    DimProduct[ProductName],
+    ", "
+)
+```
+
+## Replacing Text
+
+| Function | Matches by |
+|---|---|
+| `SUBSTITUTE(text, old_text, new_text, [instance_num])` | The literal text of `old_text`, wherever it appears |
+| `REPLACE(old_text, start_num, num_chars, new_text)` | Character **position**, regardless of content |
+
+```dax lineNumbers
+Cleaned Phone =
+SUBSTITUTE(SUBSTITUTE([Phone], "-", ""), " ", "")
+```
+
+`SUBSTITUTE()` replaces every occurrence by default — the optional fourth argument targets only the Nth occurrence if that's actually the intent. `REPLACE()` doesn't look at content at all; it overwrites whatever characters happen to sit at the given position, which only makes sense when every value has a truly fixed, known layout.
+
+## Formatting Values as Text
+
+```dax lineNumbers
+Formatted Sales =
+FORMAT([Total Sales], "$#,##0.00")
+```
+
+| Format string | Turns `1234.5` into |
+|---|---|
+| `"$#,##0.00"` | `$1,234.50` |
+| `"0.0%"` (on `0.5`) | `50.0%` |
+| `"General Date"` (on a date) | The system's short date format |
+
+`FORMAT()` always returns text, not a number — useful for a display string in a card or a concatenated title, wrong for anything that still needs to be summed, compared, or sorted numerically afterward.
+
+## Case-Sensitive Comparison
+
+```dax lineNumbers
+Exact Match =
+EXACT([EnteredCode], [ExpectedCode])
+```
+
+DAX's own `=` operator is case-insensitive on text — `"ABC" = "abc"` returns `TRUE`. `EXACT()` is the one function that actually checks case, returning `TRUE` only when both text and case match exactly.
+
+## Quick Decision Table
+
+| Need | Function |
+|---|---|
+| First/last/middle N characters | `LEFT()` / `RIGHT()` / `MID()` |
+| Normalize case or whitespace | `UPPER()`, `LOWER()`, `TRIM()` |
+| Find text case-sensitively | `FIND()` |
+| Find text case-insensitively | `SEARCH()` |
+| Join a few known values | `&` |
+| Join one value per row of a table | `CONCATENATEX()` |
+| Replace text by content | `SUBSTITUTE()` |
+| Replace text by position | `REPLACE()` |
+| Turn a number into a display string | `FORMAT()` |
+| Case-sensitive equality check | `EXACT()` |
+
+## Next Steps
+
+- [MID(), LEFT() & RIGHT()](/docs/dax/mid-left-right)
+- [TRIM(), UPPER() & LOWER()](/docs/dax/trim-upper-lower)
+- [ISBLANK() vs = 0](/docs/dax/blank-vs-zero)
+- [DAX CALCULATE Modifiers Cheat Sheet](/blog/dax-calculate-modifiers-cheat-sheet)
