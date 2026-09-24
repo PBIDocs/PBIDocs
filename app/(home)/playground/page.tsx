@@ -148,6 +148,11 @@ const daxPlaygrounds: PlaygroundEntry[] = [
     href: '/docs/dax/earlier#try-it-live',
     pitch: 'Drop EARLIER() from a rank calculation and watch every single row silently come out 1st.',
   },
+  {
+    fn: 'CALCULATE() + ALL()',
+    href: '/docs/dax/calculate#try-it-live',
+    pitch: 'Forget ALL() in a percent-of-total measure and watch every category read 100%.',
+  },
 ];
 
 const powerQueryPlaygrounds: PlaygroundEntry[] = [
