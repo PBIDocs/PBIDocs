@@ -153,6 +153,11 @@ const daxPlaygrounds: PlaygroundEntry[] = [
     href: '/docs/dax/calculate#try-it-live',
     pitch: 'Forget ALL() in a percent-of-total measure and watch every category read 100%.',
   },
+  {
+    fn: 'FILTER()',
+    href: '/docs/dax/filter#try-it-live',
+    pitch: 'Edit the sales values and watch a dynamic AVERAGE() threshold move right along with them.',
+  },
 ];
 
 const powerQueryPlaygrounds: PlaygroundEntry[] = [
