@@ -54,6 +54,8 @@ SalesAmount = 900  -> 0 rows have more -> Rank 1
 
 `FactSales[SalesAmount]` inside `FILTER()` refers to each row `FILTER()` is currently examining (the inner context). `EARLIER(FactSales[SalesAmount])` refers back to the row the calculated column itself is being computed for (the outer context) — without it, the comparison would just be `FactSales[SalesAmount] > FactSales[SalesAmount]`, which is never true.
 
+<EarlierPlayground />
+
 ---
 
 ## The Modern Alternative: Just Use a Measure

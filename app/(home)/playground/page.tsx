@@ -143,6 +143,11 @@ const daxPlaygrounds: PlaygroundEntry[] = [
     href: '/docs/dax/selectedvalue#try-it-live',
     pitch: 'Check a second box on a live slicer and watch it fall back instead of guessing.',
   },
+  {
+    fn: 'EARLIER()',
+    href: '/docs/dax/earlier#try-it-live',
+    pitch: 'Drop EARLIER() from a rank calculation and watch every single row silently come out 1st.',
+  },
 ];
 
 const powerQueryPlaygrounds: PlaygroundEntry[] = [
