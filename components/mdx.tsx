@@ -55,6 +55,7 @@ import { SelectedValuePlayground } from './selectedvalue-playground';
 import { TableSelectRowsPlayground } from './table-selectrows-playground';
 import { TableAddColumnPlayground } from './table-addcolumn-playground';
 import { TableTransformColumnsPlayground } from './table-transformcolumns-playground';
+import { EarlierPlayground } from './earlier-playground';
 
 export function getMDXComponents(components?: MDXComponents) {
   return {
@@ -114,6 +115,7 @@ export function getMDXComponents(components?: MDXComponents) {
     TableSelectRowsPlayground,
     TableAddColumnPlayground,
     TableTransformColumnsPlayground,
+    EarlierPlayground,
     ...components,
   } satisfies MDXComponents;
 }
