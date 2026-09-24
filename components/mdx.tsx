@@ -56,6 +56,7 @@ import { TableSelectRowsPlayground } from './table-selectrows-playground';
 import { TableAddColumnPlayground } from './table-addcolumn-playground';
 import { TableTransformColumnsPlayground } from './table-transformcolumns-playground';
 import { EarlierPlayground } from './earlier-playground';
+import { CalculatePercentOfTotalPlayground } from './calculate-percent-of-total-playground';
 
 export function getMDXComponents(components?: MDXComponents) {
   return {
@@ -116,6 +117,7 @@ export function getMDXComponents(components?: MDXComponents) {
     TableAddColumnPlayground,
     TableTransformColumnsPlayground,
     EarlierPlayground,
+    CalculatePercentOfTotalPlayground,
     ...components,
   } satisfies MDXComponents;
 }
