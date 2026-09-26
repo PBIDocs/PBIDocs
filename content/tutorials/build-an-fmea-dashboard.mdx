@@ -1,0 +1,313 @@
+---
+title: "Build an FMEA (Failure Mode & Effects Analysis) Dashboard in Power BI"
+description: "An end-to-end tutorial for reliability and systems engineers: turn a failure mode register into RPN scoring, before/after corrective-action tracking, and a severity-override priority rule, using the same latest-assessment DAX pattern as a risk register."
+date: "2026-09-26"
+tags: ["Tutorial", "DAX", "Data Modeling"]
+faq:
+  - question: "What does RPN stand for in FMEA, and how is it calculated?"
+    answer: "Risk Priority Number — Severity x Occurrence x Detection, each typically rated 1 to 10, giving a score from 1 to 1,000. A higher RPN means the failure mode needs corrective action sooner."
+  - question: "Why should a high Severity rating override the RPN threshold?"
+    answer: "A low-occurrence, well-detected failure mode can still have a low RPN even when its consequence is severe (a safety issue, for example) — RPN averages the three factors together, which can bury a high-severity item under a low overall score. Standard FMEA practice flags any high-Severity rating as a priority regardless of RPN."
+  - question: "How do you track whether a corrective action actually reduced RPN?"
+    answer: "Keep every assessment as its own row (don't overwrite history), then compare the failure mode's first assessment to its most recent one — Initial RPN minus Current RPN gives the actual reduction achieved."
+  - question: "Why use the latest assessment instead of the worst one ever recorded?"
+    answer: "Picking the highest RPN across all of a failure mode's history (with MAX) keeps showing the original, pre-corrective-action severity forever, even after a fix has measurably improved it — the dashboard needs the most recent assessment specifically, found by date, not the worst value ever seen."
+---
+
+FMEA (Failure Mode and Effects Analysis) runs on the same "latest assessment per item" DAX pattern as a risk register, with one extra wrinkle that trips up most first attempts: the Risk Priority Number (RPN) is a *product* of three ratings, which means a single very high rating can hide inside an unremarkable-looking overall score — unless the model explicitly checks for it.
+
+```text
+Failure Mode Register (failure modes + a history of assessments)
+        |
+        | DAX: find each failure mode's LATEST assessment
+        |
+RPN = Severity x Occurrence x Detection
+        |
+        | Severity >= 9 overrides the RPN threshold
+        |
+Action Priority (High / Medium / Low)
+```
+
+No downloadable file — two small tables, small enough to paste into `.csv` files.
+
+---
+
+## What You're Building
+
+A one-page FMEA dashboard answering the questions an actual design review asks:
+
+- How many failure modes currently need action, and how urgently?
+- Is any high-severity failure mode hiding under a deceptively low RPN?
+- Which corrective actions have actually reduced RPN, and by how much?
+- Has anything gotten *worse* since it was first assessed?
+
+```text
++------------------------------------------------------------+
+|  Total Failure Modes | High Priority | Medium Priority | Avg RPN |
++------------------------------------------------------------+
+|  Current RPN by Failure Mode (bar chart, colored by priority)|
++------------------------------------------------------------+
+|  Failure Mode Register (table: component, S/O/D, RPN,        |
+|  priority, RPN reduction %)                                   |
++------------------------------------------------------------+
+```
+
+---
+
+## Step 1: The Raw Data
+
+Two tables: the failure modes themselves, and a history of assessments — since tracking whether a corrective action actually worked requires keeping every assessment, not overwriting the row each time.
+
+```text
+failure_modes.csv
+FailureModeID,Component,FailureModeDescription,Category
+FM-01,Conveyor Motor,Bearing seizure from inadequate lubrication,Mechanical
+FM-02,Sensor Board,Firmware crash on invalid sensor input,Software
+FM-03,Pressure Vessel,Weld corrosion undetected between inspections,Mechanical
+FM-04,Wiring Harness,Short circuit from chafed insulation,Electrical
+FM-05,Sensor Board,Calibration drift over time,Electrical
+FM-06,Control Firmware,Update failure under low battery,Software
+FM-07,Hydraulic Line,Fitting leak under vibration,Mechanical
+FM-08,Power Supply,Voltage spike on startup,Electrical
+```
+
+```text
+fmea_assessments.csv
+FailureModeID,AssessmentDate,Severity,Occurrence,Detection
+FM-01,2026-05-01,7,6,5
+FM-01,2026-07-01,7,2,5
+FM-02,2026-05-01,6,3,7
+FM-03,2026-05-01,9,1,3
+FM-04,2026-05-01,8,4,4
+FM-05,2026-05-01,5,4,3
+FM-06,2026-05-01,4,2,5
+FM-06,2026-07-01,4,5,5
+FM-07,2026-05-01,6,3,4
+FM-08,2026-05-01,7,2,2
+```
+
+Two failure modes have been reassessed. `FM-01` improved after a corrective action (a lubrication schedule cut Occurrence from 6 to 2). `FM-06` got *worse* — more field failures than expected pushed Occurrence from 2 to 5. `FM-03` has only one assessment, with a Severity of 9 and an RPN that, as built below, turns out deceptively low on its own.
+
+---
+
+## Step 2: Load and Type in Power Query
+
+Connect both files, and set `AssessmentDate` to a proper date type:
+
+```powerquery lineNumbers
+#"Changed Type" = Table.TransformColumnTypes(
+    Source, {{"AssessmentDate", type date}}
+)
+```
+
+---
+
+## Step 3: Build the Model
+
+`DimFailureMode` and `FactFMEAAssessment` relate one-to-many on `FailureModeID` — standard star schema, one row per failure mode in the dimension, one row per assessment in the fact table.
+
+```text
+DimFailureMode (1)             FactFMEAAssessment (many)
+FailureModeID                  FailureModeID
+Component                      AssessmentDate
+FailureModeDescription         Severity
+Category                       Occurrence
+                                Detection
+```
+
+See [Star Schema](/docs/modeling/star-schema) and [Fact Tables](/docs/modeling/fact-tables) for the general shape this follows.
+
+---
+
+## Step 4: Find Each Failure Mode's Current and Initial Ratings
+
+The core problem is the same one a risk register has: a naive `AVERAGE` over `Severity`, `Occurrence`, or `Detection` would blend `FM-01`'s two assessments together, hiding exactly how much the corrective action improved things. The fix is resolving each failure mode to its single latest row — and, separately, its single *first* row, so "before" and "after" can be compared directly.
+
+```dax lineNumbers
+Current Severity =
+VAR LatestDate = CALCULATE(MAX(FactFMEAAssessment[AssessmentDate]))
+RETURN
+    CALCULATE(
+        SELECTEDVALUE(FactFMEAAssessment[Severity]),
+        FactFMEAAssessment[AssessmentDate] = LatestDate
+    )
+
+Current Occurrence =
+VAR LatestDate = CALCULATE(MAX(FactFMEAAssessment[AssessmentDate]))
+RETURN
+    CALCULATE(
+        SELECTEDVALUE(FactFMEAAssessment[Occurrence]),
+        FactFMEAAssessment[AssessmentDate] = LatestDate
+    )
+
+Current Detection =
+VAR LatestDate = CALCULATE(MAX(FactFMEAAssessment[AssessmentDate]))
+RETURN
+    CALCULATE(
+        SELECTEDVALUE(FactFMEAAssessment[Detection]),
+        FactFMEAAssessment[AssessmentDate] = LatestDate
+    )
+```
+
+With `DimFailureMode[FailureModeID]` in the current filter context, `LatestDate` finds the most recent assessment date *within that one failure mode's rows*, and the outer `CALCULATE` pulls the rating from that specific row — the same pattern as [Current Likelihood/Impact in the risk register pattern](/docs/dax-patterns/risk-score-heat-map#finding-each-items-latest-value), applied to three ratings instead of two.
+
+```dax lineNumbers
+Initial Severity =
+VAR FirstDate = CALCULATE(MIN(FactFMEAAssessment[AssessmentDate]))
+RETURN
+    CALCULATE(
+        SELECTEDVALUE(FactFMEAAssessment[Severity]),
+        FactFMEAAssessment[AssessmentDate] = FirstDate
+    )
+
+Initial Occurrence =
+VAR FirstDate = CALCULATE(MIN(FactFMEAAssessment[AssessmentDate]))
+RETURN
+    CALCULATE(
+        SELECTEDVALUE(FactFMEAAssessment[Occurrence]),
+        FactFMEAAssessment[AssessmentDate] = FirstDate
+    )
+
+Initial Detection =
+VAR FirstDate = CALCULATE(MIN(FactFMEAAssessment[AssessmentDate]))
+RETURN
+    CALCULATE(
+        SELECTEDVALUE(FactFMEAAssessment[Detection]),
+        FactFMEAAssessment[AssessmentDate] = FirstDate
+    )
+```
+
+Identical shape, just `MIN()` instead of `MAX()`. For a failure mode with only one assessment, `FirstDate` and `LatestDate` are the same date, so `Initial` and `Current` naturally come out equal — no special-casing needed.
+
+---
+
+## Step 5: RPN, the Severity Override, and Action Priority
+
+```dax lineNumbers
+Current RPN =
+[Current Severity] * [Current Occurrence] * [Current Detection]
+
+Initial RPN =
+[Initial Severity] * [Initial Occurrence] * [Initial Detection]
+```
+
+```dax lineNumbers
+Action Priority =
+SWITCH(
+    TRUE(),
+    [Current Severity] >= 9, "High",
+    [Current RPN] >= 100, "High",
+    [Current RPN] >= 50, "Medium",
+    [Current RPN] > 0, "Low",
+    BLANK()
+)
+```
+
+The first condition is the entire point of this measure: `FM-03` rates Severity 9, Occurrence 1, Detection 3 — an RPN of just 27, which the RPN-only thresholds below it would call "Low." Because `SWITCH(TRUE(), ...)` checks conditions in order and stops at the first match, the Severity check runs *before* the RPN checks ever get a chance to under-rate it — see [SWITCH](/docs/dax/switch#switchtrue--for-range-conditions) for why this ordering matters.
+
+```dax lineNumbers
+RPN Reduction =
+[Initial RPN] - [Current RPN]
+
+RPN Reduction % =
+DIVIDE([RPN Reduction], [Initial RPN])
+```
+
+For `FM-01`: Initial RPN is `7 x 6 x 5 = 210`, Current RPN is `7 x 2 x 5 = 70` — a reduction of 140, or about 66.7%. For `FM-06`, the numbers move the other way: Initial RPN `4 x 2 x 5 = 40`, Current RPN `4 x 5 x 5 = 100` — a *negative* reduction of -60, meaning it has gotten worse, not better, since it was first assessed.
+
+---
+
+## Step 6: Counting Failure Modes by Priority
+
+```dax lineNumbers
+Total Failure Modes =
+DISTINCTCOUNT(DimFailureMode[FailureModeID])
+
+High Priority Count =
+CALCULATE(
+    DISTINCTCOUNT(DimFailureMode[FailureModeID]),
+    FILTER(DimFailureMode, [Action Priority] = "High")
+)
+
+Medium Priority Count =
+CALCULATE(
+    DISTINCTCOUNT(DimFailureMode[FailureModeID]),
+    FILTER(DimFailureMode, [Action Priority] = "Medium")
+)
+
+Average Current RPN =
+AVERAGEX(DimFailureMode, [Current RPN])
+```
+
+`FILTER(DimFailureMode, ...)` iterates every failure mode, evaluating `[Action Priority]` once per failure mode (each one's own row context resolves `Current Severity`/`Current RPN` correctly), then keeps only the matches — the same measure-derived counting shape as [Counting Items by Band](/docs/dax-patterns/risk-score-heat-map#counting-items-by-band).
+
+---
+
+## Step 7: Lay Out the Report
+
+```text
+Page: "FMEA Register"
+
+Row 1 (KPI cards):
+  [Total Failure Modes]  [High Priority Count]  [Medium Priority Count]  [Average Current RPN]
+
+Row 2 (bar chart):
+  X-axis: DimFailureMode[FailureModeDescription]
+  Y-axis: [Current RPN]
+  Color: [Action Priority]
+
+Row 3 (table, the FMEA register):
+  Columns: Component, FailureModeDescription, [Current Severity],
+           [Current Occurrence], [Current Detection], [Current RPN],
+           [Action Priority], [RPN Reduction %]
+
+Slicer (top of page): DimFailureMode[Category]
+```
+
+With this dataset: `FM-02` (RPN 126), `FM-03` (RPN 27, flagged High only because of the Severity override), `FM-04` (RPN 128), and `FM-06` (RPN 100, after worsening) all land in **High**. `FM-01` (RPN 70), `FM-05` (RPN 60), and `FM-07` (RPN 72) land in **Medium**. Only `FM-08` (RPN 28) lands in **Low**. Sorting the bar chart by `Current RPN` descending puts `FM-04` and `FM-02` at the top — but the table's `Action Priority` column is what actually catches `FM-03`, since at RPN 27 its bar is the single shortest one on the entire chart, exactly where a reviewer skimming top-to-bottom would stop looking.
+
+See [Charts](/docs/visuals/charts) and [Tables](/docs/visuals/tables) for configuring these visual types.
+
+---
+
+## Common Mistakes
+
+### Using RPN Alone, Without a Severity Override
+
+`FM-03`'s RPN of 27 is the single lowest number on the whole register — it would rank dead last for attention by the number alone — while its Severity of 9 means the failure mode itself is genuinely dangerous, just currently rated as unlikely and well-detected. RPN is a product of three factors that can average out a serious consequence; a Severity-based override is what standard FMEA practice uses to catch exactly this case.
+
+### Picking the Worst Historical RPN Instead of the Latest One
+
+```dax lineNumbers
+Current RPN (Wrong) =
+MAXX(
+    FactFMEAAssessment,
+    FactFMEAAssessment[Severity] * FactFMEAAssessment[Occurrence] * FactFMEAAssessment[Detection]
+)
+```
+
+This looks like it should show "the current severity of the problem," but `MAXX()` here has no concept of *time* — it returns the highest RPN ever recorded for the failure mode, from any assessment. For `FM-01`, that's permanently 210, the pre-corrective-action value, even though the actual current RPN is 70. The dashboard would never show the improvement, no matter how effective the fix was.
+
+### Reusing RPN Thresholds Across a Different Rating Scale
+
+The 100/50 thresholds above assume each factor is rated 1–10 (max RPN 1,000). Some FMEA methodologies rate Severity, Occurrence, and Detection on a 1–5 scale instead (max RPN 125) — applying the same 100/50 thresholds there would flag nearly everything as High. The threshold bands have to match the rating scale actually being used, not be copied in from a different FMEA's dashboard.
+
+---
+
+## Tutorial Checklist
+
+- Each failure mode's current ratings come from its single most recent assessment, and its initial ratings from its single first assessment — never a blend of every historical row.
+- `Action Priority` checks Severity for a safety-critical override *before* falling through to the RPN thresholds.
+- `Current RPN` is resolved by date (latest assessment), never by picking the highest value ever recorded with a plain `MAXX()`.
+- The RPN threshold bands match the actual 1–10 rating scale used in the source data.
+
+---
+
+## Next Steps
+
+- [FMEA & RPN Scoring](/docs/dax-patterns/fmea-rpn-scoring) — a fast reference for these same latest/initial-assessment, RPN, and severity-override measures
+- [Risk Score & Heat Map](/docs/dax-patterns/risk-score-heat-map) — the closely related risk register pattern this one builds on
+- [SWITCH](/docs/dax/switch)
+- [DIVIDE](/docs/dax/divide)
+- [Star Schema](/docs/modeling/star-schema)
+- [Build a Risk Register and Risk Matrix Dashboard in Power BI](/tutorials/build-a-risk-register-dashboard)
