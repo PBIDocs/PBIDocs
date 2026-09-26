@@ -59,6 +59,7 @@ import { EarlierPlayground } from './earlier-playground';
 import { CalculatePercentOfTotalPlayground } from './calculate-percent-of-total-playground';
 import { FilterAboveAveragePlayground } from './filter-above-average-playground';
 import { ListAccumulatePlayground } from './list-accumulate-playground';
+import { ListGenerateOffByOnePlayground } from './list-generate-offbyone-playground';
 
 export function getMDXComponents(components?: MDXComponents) {
   return {
@@ -122,6 +123,7 @@ export function getMDXComponents(components?: MDXComponents) {
     CalculatePercentOfTotalPlayground,
     FilterAboveAveragePlayground,
     ListAccumulatePlayground,
+    ListGenerateOffByOnePlayground,
     ...components,
   } satisfies MDXComponents;
 }
