@@ -306,6 +306,11 @@ const powerQueryPlaygrounds: PlaygroundEntry[] = [
     href: '/docs/power-query/list-accumulate#try-it-live',
     pitch: 'Swap the accumulator\'s parameter names and watch the final result land nowhere close.',
   },
+  {
+    fn: 'List.Generate()',
+    href: '/docs/power-query/list-generate#try-it-live',
+    pitch: 'Flip < to <= in the condition and watch the sequence quietly gain one more item.',
+  },
 ];
 
 export default function PlaygroundIndexPage() {

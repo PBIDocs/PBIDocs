@@ -108,6 +108,8 @@ The optional fourth argument (`selector`) picks what actually ends up in the fin
 
 Since `condition` is checked *before* each step (including the very first), a boundary condition like `_ <= 10` vs `_ < 10` changes whether the final value is included — worth checking against a known expected count.
 
+<ListGenerateOffByOnePlayground />
+
 ### A Condition That Never Becomes False
 
 If `next` doesn't actually move the state toward whatever `condition` checks, the loop runs indefinitely — the same infinite-loop risk as a `while` loop in any other language, and just as easy to introduce with a typo in the state update.
