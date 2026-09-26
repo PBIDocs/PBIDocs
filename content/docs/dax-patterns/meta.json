@@ -8,6 +8,7 @@
     "running-total",
     "evm-metrics",
     "risk-score-heat-map",
+    "fmea-rpn-scoring",
     "coverage-verification",
     "reliability-mtbf-mttr"
   ]
