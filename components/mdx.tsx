@@ -58,6 +58,7 @@ import { TableTransformColumnsPlayground } from './table-transformcolumns-playgr
 import { EarlierPlayground } from './earlier-playground';
 import { CalculatePercentOfTotalPlayground } from './calculate-percent-of-total-playground';
 import { FilterAboveAveragePlayground } from './filter-above-average-playground';
+import { ListAccumulatePlayground } from './list-accumulate-playground';
 
 export function getMDXComponents(components?: MDXComponents) {
   return {
@@ -120,6 +121,7 @@ export function getMDXComponents(components?: MDXComponents) {
     EarlierPlayground,
     CalculatePercentOfTotalPlayground,
     FilterAboveAveragePlayground,
+    ListAccumulatePlayground,
     ...components,
   } satisfies MDXComponents;
 }

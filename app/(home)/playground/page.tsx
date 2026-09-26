@@ -301,6 +301,11 @@ const powerQueryPlaygrounds: PlaygroundEntry[] = [
     href: '/docs/power-query/table-transformcolumns#try-it-live',
     pitch: 'Lowercase one letter in the column name and watch the whole step fail, live.',
   },
+  {
+    fn: 'List.Accumulate()',
+    href: '/docs/power-query/list-accumulate#try-it-live',
+    pitch: 'Swap the accumulator\'s parameter names and watch the final result land nowhere close.',
+  },
 ];
 
 export default function PlaygroundIndexPage() {
