@@ -104,6 +104,8 @@ See [List.Generate()](/docs/power-query/list-generate) for the sequence-building
 
 The first argument is always the running **state**, the second is the **current list item** — swapping them silently produces wrong results rather than an error, since both are usually the same type and the expression can still evaluate without complaint.
 
+<ListAccumulatePlayground />
+
 ### Reaching for List.Accumulate When a Built-In Already Exists
 
 Rebuilding `List.Sum`, `List.Max`, or `List.Count` from scratch with `List.Accumulate()` works, but is harder to read and slower to write than the built-in — worth checking the [M Function Reference](/docs/power-query/functions) first for anything that looks like a standard aggregation.
