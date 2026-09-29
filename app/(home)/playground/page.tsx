@@ -149,6 +149,11 @@ const daxPlaygrounds: PlaygroundEntry[] = [
     pitch: 'Drop EARLIER() from a rank calculation and watch every single row silently come out 1st.',
   },
   {
+    fn: 'COUNTX()',
+    href: '/docs/dax/iterator#try-it-live',
+    pitch: 'Leave a value blank and watch COUNTX() quietly count fewer rows than COUNTROWS().',
+  },
+  {
     fn: 'CALCULATE() + ALL()',
     href: '/docs/dax/calculate#try-it-live',
     pitch: 'Forget ALL() in a percent-of-total measure and watch every category read 100%.',
