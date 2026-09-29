@@ -154,6 +154,11 @@ const daxPlaygrounds: PlaygroundEntry[] = [
     pitch: 'Leave a value blank and watch COUNTX() quietly count fewer rows than COUNTROWS().',
   },
   {
+    fn: 'Sort by Column',
+    href: '/docs/dax/calculated-columns#try-it-live',
+    pitch: 'Mistype one Month Number and watch the calendar order break, live.',
+  },
+  {
     fn: 'CALCULATE() + ALL()',
     href: '/docs/dax/calculate#try-it-live',
     pitch: 'Forget ALL() in a percent-of-total measure and watch every category read 100%.',
