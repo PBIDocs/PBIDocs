@@ -61,6 +61,7 @@ import { FilterAboveAveragePlayground } from './filter-above-average-playground'
 import { ListAccumulatePlayground } from './list-accumulate-playground';
 import { ListGenerateOffByOnePlayground } from './list-generate-offbyone-playground';
 import { CountXBlankPlayground } from './countx-blank-playground';
+import { SortByColumnPlayground } from './sort-by-column-playground';
 
 export function getMDXComponents(components?: MDXComponents) {
   return {
@@ -126,6 +127,7 @@ export function getMDXComponents(components?: MDXComponents) {
     ListAccumulatePlayground,
     ListGenerateOffByOnePlayground,
     CountXBlankPlayground,
+    SortByColumnPlayground,
     ...components,
   } satisfies MDXComponents;
 }
