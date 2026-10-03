@@ -1,0 +1,9 @@
+RequirementID,RequirementText,Category,Priority
+REQ-001,System shall power on within 5 seconds,Functional,High
+REQ-002,System shall operate at -20C to 50C,Performance,High
+REQ-003,System shall log all user actions,Functional,Medium
+REQ-004,System shall encrypt data at rest,Safety,High
+REQ-005,System shall support 100 concurrent users,Performance,Medium
+REQ-006,System shall provide an audible alarm on failure,Safety,High
+REQ-007,System shall support firmware update without data loss,Functional,Medium
+REQ-008,System shall meet MTBF of 5000 hours,Performance,Low

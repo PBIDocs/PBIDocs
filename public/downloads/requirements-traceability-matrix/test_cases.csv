@@ -1,0 +1,10 @@
+TestCaseID,TestCaseName,VerificationMethod
+TC-01,Power-On Timing Test,Test
+TC-02,Thermal Chamber Test,Test
+TC-03,Action Logging Verification,Demonstration
+TC-04,Encryption Algorithm Review,Analysis
+TC-05,Load Test - 100 Users,Test
+TC-06,Alarm Audibility Test,Test
+TC-07,Firmware Update Procedure Review,Inspection
+TC-08,Regression Test Suite,Test
+TC-09,Penetration Test,Test

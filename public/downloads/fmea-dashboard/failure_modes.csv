@@ -1,0 +1,9 @@
+FailureModeID,Component,FailureModeDescription,Category
+FM-01,Conveyor Motor,Bearing seizure from inadequate lubrication,Mechanical
+FM-02,Sensor Board,Firmware crash on invalid sensor input,Software
+FM-03,Pressure Vessel,Weld corrosion undetected between inspections,Mechanical
+FM-04,Wiring Harness,Short circuit from chafed insulation,Electrical
+FM-05,Sensor Board,Calibration drift over time,Electrical
+FM-06,Control Firmware,Update failure under low battery,Software
+FM-07,Hydraulic Line,Fitting leak under vibration,Mechanical
+FM-08,Power Supply,Voltage spike on startup,Electrical
