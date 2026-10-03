@@ -3,7 +3,6 @@ import { RootProvider } from 'fumadocs-ui/provider/next';
 import './global.css';
 import { Inter } from 'next/font/google';
 import NextTopLoader from 'nextjs-toploader';
-import Script from 'next/script';
 import { FixMoreMenuPosition } from '@/components/fix-more-menu-position';
 
 const inter = Inter({
@@ -52,12 +51,6 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           {children}
         </RootProvider>
         <FixMoreMenuPosition />
-        <Script
-          src="https://static.cloudflareinsights.com/beacon.min.js"
-          strategy="afterInteractive"
-          type="module"
-          data-cf-beacon='{"token": "e8856d321b0a43c9899ede4fb0df6da8"}'
-        />
       </body>
     </html>
   );
