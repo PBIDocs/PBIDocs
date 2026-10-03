@@ -1,0 +1,9 @@
+RiskID,RiskDescription,Category,Owner
+RISK-01,Key supplier delivery delay,Schedule,J. Smith
+RISK-02,Requirements change after design freeze,Technical,A. Chen
+RISK-03,Budget overrun on subsystem integration,Cost,M. Patel
+RISK-04,Single point of failure in power supply,Safety,J. Smith
+RISK-05,Test facility unavailable during critical window,Schedule,A. Chen
+RISK-06,Software defect rate exceeds threshold,Technical,M. Patel
+RISK-07,Key personnel attrition,Schedule,J. Smith
+RISK-08,Regulatory approval delay,Compliance,A. Chen

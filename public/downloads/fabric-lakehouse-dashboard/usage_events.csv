@@ -1,0 +1,14 @@
+EventID,EventDate,UserEmail,FeatureName,EventType
+1,2026-06-01,alice@acme.io,Dashboard,view
+2,2026-06-01,Bob@Acme.io,Export,click
+3,2026-06-01,alice@acme.io,Export,click
+4,2026-06-02,priya@acme.io,Dashboard,view
+5,2026-06-02,priya@acme.io,Dashboard,view
+5,2026-06-02,priya@acme.io,Dashboard,view
+6,2026-06-03,bob@acme.io,Alerts,click
+7,2026-06-03,diego@acme.io,Dashboard,view
+8,2026-06-04,alice@acme.io,Alerts,click
+9,2026-06-05,priya@acme.io,Export,click
+10,2026-06-05,diego@acme.io,Export,click
+11,2026-06-06,alice@acme.io,Dashboard,view
+12,2026-06-06,bob@acme.io,Dashboard,view

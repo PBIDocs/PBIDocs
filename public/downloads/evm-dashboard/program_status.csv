@@ -1,0 +1,9 @@
+TaskID,TaskName,PlannedStart,PlannedEnd,BAC,PercentComplete,ActualCost
+1,Requirements Analysis,2026-01-01,2026-02-15,45000,1.00,42000
+2,System Architecture,2026-01-15,2026-03-15,60000,0.90,58000
+3,Subsystem A Design,2026-02-15,2026-04-30,80000,0.65,58000
+4,Subsystem B Design,2026-02-15,2026-04-30,75000,0.55,50000
+5,Integration Planning,2026-03-01,2026-04-15,30000,0.40,15000
+6,Prototype Build,2026-04-01,2026-06-30,120000,0.20,30000
+7,Verification & Test,2026-05-01,2026-07-31,90000,0.05,5000
+8,Documentation,2026-01-01,2026-07-31,25000,0.35,10000
