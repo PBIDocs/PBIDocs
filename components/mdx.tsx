@@ -62,6 +62,7 @@ import { ListAccumulatePlayground } from './list-accumulate-playground';
 import { ListGenerateOffByOnePlayground } from './list-generate-offbyone-playground';
 import { CountXBlankPlayground } from './countx-blank-playground';
 import { SortByColumnPlayground } from './sort-by-column-playground';
+import { ListTransformVsAddColumnPlayground } from './list-transform-vs-addcolumn-playground';
 
 export function getMDXComponents(components?: MDXComponents) {
   return {
@@ -128,6 +129,7 @@ export function getMDXComponents(components?: MDXComponents) {
     ListGenerateOffByOnePlayground,
     CountXBlankPlayground,
     SortByColumnPlayground,
+    ListTransformVsAddColumnPlayground,
     ...components,
   } satisfies MDXComponents;
 }

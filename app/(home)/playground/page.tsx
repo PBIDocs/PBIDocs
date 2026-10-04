@@ -321,6 +321,11 @@ const powerQueryPlaygrounds: PlaygroundEntry[] = [
     href: '/docs/power-query/list-generate#try-it-live',
     pitch: 'Flip < to <= in the condition and watch the sequence quietly gain one more item.',
   },
+  {
+    fn: 'List.Transform() vs Table.AddColumn()',
+    href: '/docs/power-query/list-transform#try-it-live',
+    pitch: 'Same math, two shapes — one keeps the product name attached, one hands back a bare list.',
+  },
 ];
 
 export default function PlaygroundIndexPage() {
