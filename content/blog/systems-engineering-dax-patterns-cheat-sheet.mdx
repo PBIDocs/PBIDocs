@@ -1,0 +1,161 @@
+---
+title: "Systems & Program Engineering DAX Patterns Cheat Sheet"
+description: "A fast, scannable reference for the DAX patterns systems and program engineers actually need in Power BI: EVM (CPI/SPI/EAC), risk scoring, FMEA/RPN, requirements coverage, and reliability metrics (MTBF/MTTR)."
+date: "2026-10-04"
+tags: ["DAX", "Cheat Sheet", "Data Modeling"]
+---
+
+Most DAX content is written around sales data. This is a reference for the five calculation shapes that show up constantly in systems and program engineering reporting instead — earned value, risk scoring, failure mode analysis, requirements coverage, and reliability metrics. Each section links to a full fast-reference page and a complete tutorial with a real dataset.
+
+## Earned Value Management (EVM)
+
+```dax lineNumbers
+PV (Planned Value) =
+SUMX(Tasks, Tasks[BAC] * Tasks[PlannedPercentComplete])
+
+EV (Earned Value) =
+SUMX(Tasks, Tasks[BAC] * Tasks[PercentComplete])
+
+AC (Actual Cost) =
+SUM(Tasks[ActualCost])
+
+CPI (Cost Performance Index) =
+DIVIDE([EV (Earned Value)], [AC (Actual Cost)])
+
+SPI (Schedule Performance Index) =
+DIVIDE([EV (Earned Value)], [PV (Planned Value)])
+
+EAC (Estimate at Completion) =
+DIVIDE([BAC (Budget at Completion)], [CPI (Cost Performance Index)])
+```
+
+```text
+CPI/SPI < 1  -> over budget / behind schedule
+CPI/SPI = 1  -> exactly on budget / on schedule
+CPI/SPI > 1  -> under budget / ahead of schedule
+```
+
+`EV` and `PV` are computed **per task**, then summed — never as one blended, program-wide percent complete. See [Earned Value Management (EVM) Metrics](/docs/dax-patterns/evm-metrics) for the full measure set (CV, SV, VAC, TCPI, and the other standard EAC formulas) and [Build an EVM Dashboard](/tutorials/build-an-evm-dashboard) for a complete walkthrough with a disconnected date table.
+
+## Risk Score & Heat Map
+
+```dax lineNumbers
+Current Likelihood =
+VAR LatestDate = CALCULATE(MAX(FactRiskAssessment[AssessmentDate]))
+RETURN
+    CALCULATE(
+        SELECTEDVALUE(FactRiskAssessment[Likelihood]),
+        FactRiskAssessment[AssessmentDate] = LatestDate
+    )
+
+Risk Score =
+[Current Likelihood] * [Current Impact]
+
+Risk Level =
+SWITCH(
+    TRUE(),
+    [Risk Score] >= 15, "Critical",
+    [Risk Score] >= 9, "High",
+    [Risk Score] >= 4, "Medium",
+    [Risk Score] > 0, "Low",
+    BLANK()
+)
+```
+
+A risk reassessed over time needs its **latest** likelihood/impact, never an average across every historical assessment — that would hide whether a risk has gotten better or worse. See [Risk Score & Heat Map](/docs/dax-patterns/risk-score-heat-map) for the disconnected-axis matrix pattern and [Build a Risk Register Dashboard](/tutorials/build-a-risk-register-dashboard) for the full walkthrough.
+
+## FMEA & RPN Scoring
+
+```dax lineNumbers
+Current RPN =
+[Current Severity] * [Current Occurrence] * [Current Detection]
+
+Action Priority =
+SWITCH(
+    TRUE(),
+    [Current Severity] >= 9, "High",
+    [Current RPN] >= 100, "High",
+    [Current RPN] >= 50, "Medium",
+    [Current RPN] > 0, "Low",
+    BLANK()
+)
+
+RPN Reduction % =
+DIVIDE([Initial RPN] - [Current RPN], [Initial RPN])
+```
+
+RPN is a *product* of three ratings, which can bury a genuinely dangerous, low-likelihood failure mode under a deceptively low score — the `Severity >= 9` check has to run **before** the RPN thresholds, not after. See [FMEA & RPN Scoring](/docs/dax-patterns/fmea-rpn-scoring) for the full before/after comparison and [Build an FMEA Dashboard](/tutorials/build-an-fmea-dashboard) for a complete walkthrough.
+
+## Coverage & Verification (Requirements Traceability)
+
+```dax lineNumbers
+Requirements Covered =
+DISTINCTCOUNT(BridgeRequirementTest[RequirementID])
+
+Coverage % =
+DIVIDE([Requirements Covered], [Total Requirements])
+
+Requirements Verified =
+VAR PassingTestCaseIDs =
+    CALCULATETABLE(
+        VALUES(FactTestResults[TestCaseID]),
+        FactTestResults[Status] = "Pass"
+    )
+VAR VerifiedRequirementIDs =
+    CALCULATETABLE(
+        VALUES(BridgeRequirementTest[RequirementID]),
+        FILTER(
+            BridgeRequirementTest,
+            BridgeRequirementTest[TestCaseID] IN PassingTestCaseIDs
+        )
+    )
+RETURN
+    COUNTROWS(VerifiedRequirementIDs)
+```
+
+```text
+Coverage %  -> a test exists for this requirement
+Verified %  -> that test actually passed
+
+Verified % is always <= Coverage %
+```
+
+"Covered" and "verified" are always two different numbers — reporting coverage alone overstates progress. See [Coverage & Verification](/docs/dax-patterns/coverage-verification) for the full bridge-table pattern and [Build a Requirements Traceability Matrix](/tutorials/build-a-requirements-traceability-matrix) for a complete walkthrough.
+
+## Reliability Metrics (MTBF, MTTR & Availability)
+
+```dax lineNumbers
+MTBF (Hours) =
+DIVIDE([Total Uptime Hours], [Total Failures])
+
+MTTR (Hours) =
+DIVIDE([Total Repair Hours], [Total Failures])
+
+Availability % =
+DIVIDE([MTBF (Hours)], [MTBF (Hours)] + [MTTR (Hours)])
+```
+
+`Total Uptime Hours` itself needs a calculated column first — the gap between one failure and the *previous* repair for that same asset, with the asset's commissioning date as a fallback for its first-ever failure. See [Reliability Metrics (MTBF, MTTR & Availability)](/docs/dax-patterns/reliability-mtbf-mttr) for that calculated column and [Build a Reliability Dashboard](/tutorials/build-a-reliability-mtbf-mttr-dashboard) for a complete walkthrough.
+
+## Quick Decision Table
+
+| Need | Pattern |
+|---|---|
+| Is the program on budget / on schedule? | EVM: `CPI`, `SPI` |
+| What will this program actually cost? | EVM: `EAC` |
+| Where do risks cluster by severity? | Risk Score & Heat Map |
+| Is a low-probability failure mode still dangerous? | FMEA: `Severity` override on `RPN` |
+| Did a corrective action actually help? | FMEA: `RPN Reduction %` |
+| Has every requirement been tested? | Coverage & Verification: `Coverage %` |
+| Has every requirement's test actually passed? | Coverage & Verification: `Verified %` |
+| How often does an asset fail, and for how long? | Reliability: `MTBF`, `MTTR` |
+
+## Next Steps
+
+- [DAX Patterns](/docs/dax-patterns) — the full index, including the general-purpose patterns (totals, ranking, running totals) this cheat sheet doesn't cover
+- [Earned Value Management (EVM) Metrics](/docs/dax-patterns/evm-metrics)
+- [Risk Score & Heat Map](/docs/dax-patterns/risk-score-heat-map)
+- [FMEA & RPN Scoring](/docs/dax-patterns/fmea-rpn-scoring)
+- [Coverage & Verification](/docs/dax-patterns/coverage-verification)
+- [Reliability Metrics (MTBF, MTTR & Availability)](/docs/dax-patterns/reliability-mtbf-mttr)
+- [DAX CALCULATE Modifiers Cheat Sheet](/blog/dax-calculate-modifiers-cheat-sheet) — the filter-modifying functions every pattern above is built on
