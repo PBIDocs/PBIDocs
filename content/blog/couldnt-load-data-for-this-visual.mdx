@@ -87,7 +87,7 @@ The results might contain incorrect values because the relationship
 
 or a message about circular or ambiguous relationships. This means the model's relationships don't give the query engine a single unambiguous path to resolve the visual's fields — usually multiple active paths between the same two tables, or a relationship that's inactive but needed by this specific visual without a `USERELATIONSHIP()` to activate it.
 
-**Fix:** check **Model view** for the relationship named in the error. If it's intentionally inactive, the measure needs `USERELATIONSHIP()` to use it — see [CALCULATE](/docs/dax/calculate#userelationship) for the pattern. If there are genuinely multiple active paths, only one relationship between two tables can be active at a time; the others need to be inactive or the model needs restructuring.
+**Fix:** check **Model view** for the relationship named in the error. If it's intentionally inactive, the measure needs `USERELATIONSHIP()` to use it — see [CALCULATE](/docs/dax/calculate#userelationship) for the pattern. If there are genuinely multiple active paths, only one relationship between two tables can be active at a time; the others need to be inactive or the model needs restructuring — see [You Can't Create a Direct Active Relationship Between These Tables](/blog/direct-active-relationship-ambiguity-error) for the two real fixes.
 
 ## Common Mistakes
 

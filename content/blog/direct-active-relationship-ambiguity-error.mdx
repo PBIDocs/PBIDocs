@@ -1,0 +1,113 @@
+---
+title: "Power BI Error: You Can't Create a Direct Active Relationship Between These Tables"
+description: "This error means Power BI already has an indirect active path between two tables and won't let a second active relationship create ambiguity. Here's why, and the two real fixes."
+date: "2026-10-04"
+tags: ["Data Modeling", "Troubleshooting"]
+faq:
+  - question: "Why can't Power BI have two active relationships between the same two tables?"
+    answer: "Because a measure referencing both tables would have no way to know which relationship to filter through — Power BI refuses to guess, and requires exactly one active (unambiguous) filter path between any two tables at a time."
+  - question: "What's the difference between an active and inactive relationship?"
+    answer: "An active relationship propagates filters automatically, the way every normal calculation expects. An inactive relationship exists in the model but does nothing until a specific measure invokes it with USERELATIONSHIP() — the standard way to use a second path without creating ambiguity."
+  - question: "Do I need a separate date table for every date column in my fact table?"
+    answer: "Not necessarily — USERELATIONSHIP() lets a single date table serve multiple date columns (OrderDate, ShipDate) through one active and one or more inactive relationships. A second date table (a role-playing dimension) is only needed if the measures built on each date column need to be sliced independently and simultaneously in the same visual."
+---
+
+The full error reads something like:
+
+```text
+You can't create a direct active relationship between "FactSales" and "DimDate" because an active relationship already exists.
+```
+
+This isn't a bug in the model — it's Power BI refusing to let two active relationships exist between the same pair of tables at once, because a measure referencing both tables would have no way to know which path to filter through.
+
+---
+
+## Why This Happens
+
+The classic trigger: a single fact table has two date columns — `OrderDate` and `ShipDate` — and a relationship already connects `DimDate` to `OrderDate`. Trying to connect the *same* `DimDate` table to `ShipDate` as a second **active** relationship is exactly what this error blocks.
+
+```text
+DimDate[Date]  ----active---->  FactSales[OrderDate]   (already exists)
+DimDate[Date]  ----active---->  FactSales[ShipDate]    (blocked — ambiguous)
+```
+
+If both were active, a measure like `[Total Sales]` filtered by a date on a report page would have two equally valid paths to follow — Power BI has no rule for picking one over the other, so it refuses to create the second active relationship at all rather than guess.
+
+---
+
+## Fix 1: Make the Second Relationship Inactive, Then Use USERELATIONSHIP()
+
+The standard fix. Create the second relationship (`DimDate[Date]` to `FactSales[ShipDate]`), but leave **"Make this relationship active"** unchecked. Power BI allows this — an inactive relationship exists in the model without filtering anything by default.
+
+```dax lineNumbers
+Sales by Ship Date =
+CALCULATE(
+    [Total Sales],
+    USERELATIONSHIP(
+        FactSales[ShipDate],
+        DimDate[Date]
+    )
+)
+```
+
+`USERELATIONSHIP()` temporarily activates that specific inactive relationship for just this one measure's evaluation, without touching the already-active `OrderDate` relationship anywhere else in the model. See [USERELATIONSHIP()](/docs/dax/userelationship) for the full pattern, and [CALCULATE](/docs/dax/calculate#userelationship) for how it fits inside `CALCULATE()`'s filter arguments.
+
+This is the right fix when `OrderDate` is clearly the "primary" date most measures should filter by, and `ShipDate` is only needed for a handful of specific, deliberately-built measures.
+
+---
+
+## Fix 2: Add a Second Date Table (a Role-Playing Dimension)
+
+If measures built on `OrderDate` and `ShipDate` both need to be sliced independently — at the same time, in the same visual, by two different slicers — a single shared `DimDate` table can't do that even with `USERELATIONSHIP()`, since only one relationship can be *active* (and therefore respond to a slicer directly) at once.
+
+```text
+DimOrderDate[Date]  ----active---->  FactSales[OrderDate]
+DimShipDate[Date]   ----active---->  FactSales[ShipDate]
+```
+
+Duplicate the date table (a second calculated table with the same `CALENDAR()` definition, or a second import of the same query), rename it (`DimShipDate`), and relate it to `ShipDate` as a normal active relationship. Now both relationships are active, but they connect to two *different* tables, so there's no ambiguity — each one can have its own slicer, its own axis, its own independent filter. See [Date Tables](/docs/modeling/date-tables) for the base pattern this duplicates.
+
+---
+
+## Which Fix to Use
+
+| Situation | Fix |
+|---|---|
+| One date column is clearly primary; the other is only used in a few specific measures | `USERELATIONSHIP()` (Fix 1) |
+| Both date columns need independent slicers in the same report | A second date table (Fix 2) |
+| Model already has many date columns needing independent slicing | A second date table, even though it costs more memory than `USERELATIONSHIP()` |
+
+---
+
+## Common Mistakes
+
+### Trying to Make Both Relationships Active
+
+This is exactly what the error prevents — there's no override or setting that allows two active relationships between the same two tables. One of them has to become inactive (Fix 1), or connect to a different table entirely (Fix 2).
+
+### Using USERELATIONSHIP() When Independent Slicing Is Actually Needed
+
+`USERELATIONSHIP()` only activates a relationship inside the one measure it's used in — it doesn't respond to a slicer placed on the report page. Building an entire page meant to slice by `ShipDate` independently of `OrderDate` needs Fix 2, not a measure-level `USERELATIONSHIP()`.
+
+### Forgetting Which Relationship Is Already Active
+
+Before deciding which one to make inactive, check **Model view** — the solid line is active, the dashed line is inactive. It's easy to assume `OrderDate` is already active (since it's usually created first) without actually checking.
+
+---
+
+## Checklist
+
+- Model view confirms which relationship between the two tables is currently active (solid line) versus inactive (dashed line).
+- If only a few measures need the second date column, the second relationship stays inactive and `USERELATIONSHIP()` activates it per-measure.
+- If both date columns need independent slicers, a second date table is built instead, rather than fighting the single-shared-table approach.
+- Measures using `USERELATIONSHIP()` have been checked against a known value to confirm they're filtering through the intended relationship, not the default active one.
+
+---
+
+## Next Steps
+
+- [USERELATIONSHIP()](/docs/dax/userelationship)
+- [CALCULATE](/docs/dax/calculate)
+- [Date Tables](/docs/modeling/date-tables)
+- [Star Schema](/docs/modeling/star-schema)
+- [CROSSFILTER()](/docs/dax/crossfilter) — for the related case of needing to change filter *direction* rather than which relationship is active.
