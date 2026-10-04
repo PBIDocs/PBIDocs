@@ -84,6 +84,8 @@ Reaching for `List.Transform()` on a table column directly (`List.Transform(Sour
 
 `List.Transform()` always returns a list, never a table — a common surprise for anyone expecting a `Source[Amount]` transform to stay attached to the original rows. If the result needs to go back into a table, it needs a separate step (`Table.AddColumn` for a new column, or `Table.FromList` to build a fresh table from the list).
 
+<ListTransformVsAddColumnPlayground />
+
 ### Using each _ When the Function Needs Extra Arguments
 
 ```powerquery lineNumbers
