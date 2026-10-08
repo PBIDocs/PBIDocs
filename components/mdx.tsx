@@ -63,6 +63,7 @@ import { ListGenerateOffByOnePlayground } from './list-generate-offbyone-playgro
 import { CountXBlankPlayground } from './countx-blank-playground';
 import { SortByColumnPlayground } from './sort-by-column-playground';
 import { ListTransformVsAddColumnPlayground } from './list-transform-vs-addcolumn-playground';
+import { CalculatedTableRefreshPlayground } from './calculated-table-refresh-playground';
 
 export function getMDXComponents(components?: MDXComponents) {
   return {
@@ -130,6 +131,7 @@ export function getMDXComponents(components?: MDXComponents) {
     CountXBlankPlayground,
     SortByColumnPlayground,
     ListTransformVsAddColumnPlayground,
+    CalculatedTableRefreshPlayground,
     ...components,
   } satisfies MDXComponents;
 }
