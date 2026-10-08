@@ -168,6 +168,11 @@ const daxPlaygrounds: PlaygroundEntry[] = [
     href: '/docs/dax/filter#try-it-live',
     pitch: 'Edit the sales values and watch a dynamic AVERAGE() threshold move right along with them.',
   },
+  {
+    fn: 'Calculated Tables',
+    href: '/docs/dax/calculated-tables#try-it-live',
+    pitch: 'Edit a product\'s Status and watch the calculated table stay stuck until you hit refresh.',
+  },
 ];
 
 const powerQueryPlaygrounds: PlaygroundEntry[] = [
