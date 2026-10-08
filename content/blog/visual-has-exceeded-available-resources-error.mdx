@@ -1,0 +1,99 @@
+---
+title: "Power BI Error: Visual Has Exceeded the Available Resources"
+description: "\"Visual has exceeded the available resources\" means a visual's query hit a hard time or memory cap in Power BI Service (and now Desktop too). Here's why the limit exists, and the fixes that actually hold up once the report is published."
+date: "2026-10-08"
+tags: ["Power BI Service", "Performance", "Troubleshooting"]
+faq:
+  - question: "What does \"Visual has exceeded the available resources\" actually mean?"
+    answer: "The visual's underlying query ran past a hard time or memory cap that Power BI enforces to stop a single runaway query from degrading the service for everyone else. It isn't a bug in the visual — it's a limit being hit."
+  - question: "Why does this error show up in Power BI Desktop now, not just the Service?"
+    answer: "Desktop started simulating the Service's query limits following the May 2023 release, specifically so this kind of problem could be caught and fixed before publishing, rather than surprising users only after the report goes live."
+  - question: "Does turning off query limits in Desktop fix the problem?"
+    answer: "No — it only disables the local simulation so the report can keep being worked on. The Service enforces its own hard limits regardless of any Desktop setting, so a visual that still exceeds them will fail the same way once published."
+---
+
+The full error reads:
+
+```text
+Visual has exceeded the available resources.
+```
+
+In Power BI Desktop, the dialog is titled **"Resources Exceeded"** — click **"See details"** for the specifics. This isn't a bug in the visual itself; it's Power BI enforcing a hard cap on how long a query can run and how much memory it can use, to stop one runaway visual from degrading performance for every other user sharing the same capacity.
+
+---
+
+## Why This Happens
+
+Power BI Service has always capped query duration and memory per visual. Power BI Desktop started simulating those same caps locally following the May 2023 release, specifically so a report author hits this error *before* publishing, not only after. The underlying cause is always one of three things: the query is returning too much data, a column's cardinality is blowing up memory, or the DAX itself is inefficient.
+
+---
+
+## Cause 1: The Query Is Genuinely Too Big
+
+A table visual (or matrix) trying to render tens of thousands of rows, or a chart plotting every individual transaction instead of an aggregate, asks the engine to materialize far more data than a visual can usefully display anyway.
+
+**Fix:** filter the visual down to what's actually needed — a date range, a top-N, a specific category — rather than relying on the user to scroll through an unfiltered table. A visual-level filter or a slicer that narrows the result before it's requested is usually enough on its own.
+
+---
+
+## Cause 2: High-Cardinality Columns Inflating Memory
+
+A column with a huge number of distinct values — a raw `DateTime` column with second-level precision, a GUID, a free-text field — costs far more memory per row than a column with a handful of repeated values, since the engine's columnar compression depends on repetition.
+
+```text
+OrderDateTime (one unique value per row) -> poor compression, high memory
+OrderDate + OrderTime (split, each with far fewer distinct values) -> much better compression
+```
+
+**Fix:** split a high-precision datetime column into separate `Date` and `Time` columns in Power Query before it ever reaches the visual — see [M Language](/docs/power-query/m-language) for the `DateTime.Date`/`DateTime.Time` functions this uses. More generally, avoid putting genuinely unique-per-row columns directly into a visual at all; they belong in a detail table reached by drillthrough, not a chart axis.
+
+---
+
+## Cause 3: Inefficient DAX Behind the Visual
+
+A measure with nested iterators, repeated expensive sub-expressions, or `CALCULATE()` calls stacked without variables can take an engine far longer to resolve than an equivalent, better-structured version computing the same result.
+
+**Fix:** capture repeated sub-expressions in `VAR` so they're computed once instead of re-evaluated per row — see [Variables (VAR)](/docs/dax/variables) — and check [DAX Performance](/docs/dax/performance) for the broader set of patterns (avoiding unnecessary row-by-row iteration, preferring simple `CALCULATE()` filters over `FILTER()` where possible) that reduce how much work a query actually does.
+
+---
+
+## A Desktop-Only Diagnostic: Adjusting Query Limits
+
+Power BI Desktop's **File > Options and settings > Options > Report settings > Query limit simulations** lets a report author set a custom limit (or `0` for no limit) to keep working locally while a real fix is developed.
+
+This is a diagnostic convenience, not a fix — the Power BI Service enforces its own hard limits independent of anything set in Desktop. A visual that only works because Desktop's simulation was turned off will fail the same way the moment the report is published, since the Service never sees that local setting at all.
+
+---
+
+## Common Mistakes
+
+### Treating the Desktop Query Limit Setting as a Fix
+
+Turning limits off (or raising them) in Desktop makes the error go away locally, which can look like the problem is solved — but the Service's own caps are unaffected by any Desktop setting, so the same visual fails again once published.
+
+### Optimizing DAX Before Checking Cardinality
+
+A measure can be written as efficiently as possible and still exceed resources if it's forced to operate over a column with extremely high cardinality. Checking column cardinality (via **View > Performance Analyzer**, or simply the column's distinct count) is worth doing before assuming the DAX itself is the problem.
+
+### Filtering the Report Instead of the Visual
+
+A report-level or page-level filter reduces what's available everywhere, which often isn't what's needed — the fix is usually a filter scoped to the specific visual that's actually failing, not a blanket filter that changes every other visual on the page too.
+
+---
+
+## Checklist
+
+- The failing visual's actual row count and column cardinality have been checked, not just assumed to be reasonable.
+- Any raw high-precision datetime column feeding the visual has been split into Date/Time (or otherwise reduced in cardinality) upstream, in Power Query.
+- The measure behind the visual uses `VAR` for repeated sub-expressions rather than re-evaluating them.
+- Desktop's query limit setting, if adjusted, is understood as a local diagnostic tool — not something that changes what the Service enforces after publishing.
+
+---
+
+## Next Steps
+
+- [DAX Performance](/docs/dax/performance)
+- [Variables (VAR)](/docs/dax/variables)
+- [Aggregations](/docs/modeling/aggregations) — pre-summarizing a large fact table so visuals query a smaller table by default
+- [M Language](/docs/power-query/m-language)
+- [Not Enough Memory in Power BI Desktop](/blog/not-enough-memory-power-bi-desktop) — the related error when the constraint is local machine memory rather than a Service-side query cap
