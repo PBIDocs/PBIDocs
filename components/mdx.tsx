@@ -64,6 +64,7 @@ import { CountXBlankPlayground } from './countx-blank-playground';
 import { SortByColumnPlayground } from './sort-by-column-playground';
 import { ListTransformVsAddColumnPlayground } from './list-transform-vs-addcolumn-playground';
 import { CalculatedTableRefreshPlayground } from './calculated-table-refresh-playground';
+import { CrossFilterVisualsPlayground } from './crossfilter-visuals-playground';
 
 export function getMDXComponents(components?: MDXComponents) {
   return {
@@ -132,6 +133,7 @@ export function getMDXComponents(components?: MDXComponents) {
     SortByColumnPlayground,
     ListTransformVsAddColumnPlayground,
     CalculatedTableRefreshPlayground,
+    CrossFilterVisualsPlayground,
     ...components,
   } satisfies MDXComponents;
 }

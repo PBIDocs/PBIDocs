@@ -173,6 +173,11 @@ const daxPlaygrounds: PlaygroundEntry[] = [
     href: '/docs/dax/calculated-tables#try-it-live',
     pitch: 'Edit a product\'s Status and watch the calculated table stay stuck until you hit refresh.',
   },
+  {
+    fn: 'Filter Context',
+    href: '/docs/dax/filter-context#try-it-live',
+    pitch: 'Click one bar in a chart and watch two completely separate visuals update, with zero DAX changed.',
+  },
 ];
 
 const powerQueryPlaygrounds: PlaygroundEntry[] = [
