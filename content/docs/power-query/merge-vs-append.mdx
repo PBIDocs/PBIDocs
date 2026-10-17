@@ -61,6 +61,8 @@ SalesFeb columns: CustID, Amount        <- different name for the same thing
 
 `Table.Combine()` treats `CustomerID` and `CustID` as two unrelated columns, producing a result with **both**, each half-populated with `null` for the rows from the table that didn't have that exact name. This doesn't error — it silently produces a wider, wrong table. Fix by renaming columns to match before appending.
 
+<AppendColumnMismatchPlayground />
+
 ### Merging When Append Was Actually Needed
 
 Trying to merge two tables of the same shape (this month's file and last month's) on a shared ID column produces a matched-and-joined result with duplicated/renamed columns (`Amount` and `Amount.1`), not the stacked table that was actually wanted.

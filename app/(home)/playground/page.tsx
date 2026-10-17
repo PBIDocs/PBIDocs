@@ -351,6 +351,11 @@ const powerQueryPlaygrounds: PlaygroundEntry[] = [
     href: '/docs/power-query/custom-functions#try-it-live',
     pitch: 'Edit n and watch a recursive Factorial() unwind, one call at a time, down to the base case.',
   },
+  {
+    fn: 'Merge vs. Append',
+    href: '/docs/power-query/merge-vs-append#try-it-live',
+    pitch: 'Mistype one ID column name and watch Table.Combine() silently double it, full of nulls.',
+  },
 ];
 
 export default function PlaygroundIndexPage() {
