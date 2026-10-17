@@ -341,6 +341,11 @@ const powerQueryPlaygrounds: PlaygroundEntry[] = [
     href: '/docs/power-query/list-transform#try-it-live',
     pitch: 'Same math, two shapes — one keeps the product name attached, one hands back a bare list.',
   },
+  {
+    fn: 'Table.TransformColumnTypes() vs Table.TransformColumns()',
+    href: '/docs/power-query/table-transformcolumntypes#try-it-live',
+    pitch: 'Swap a type for a function between these two near-identical names and watch one of them break.',
+  },
 ];
 
 export default function PlaygroundIndexPage() {
