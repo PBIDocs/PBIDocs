@@ -178,6 +178,11 @@ const daxPlaygrounds: PlaygroundEntry[] = [
     href: '/docs/dax/filter-context#try-it-live',
     pitch: 'Click one bar in a chart and watch two completely separate visuals update, with zero DAX changed.',
   },
+  {
+    fn: 'Running Totals',
+    href: '/docs/dax/time-intelligence#try-it-live',
+    pitch: 'Edit one month\'s sales and watch every running total after it shift, but never the ones before it.',
+  },
 ];
 
 const powerQueryPlaygrounds: PlaygroundEntry[] = [
