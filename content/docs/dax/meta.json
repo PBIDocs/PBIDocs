@@ -12,6 +12,7 @@
     "row-context",
     "filter-context",
     "calculate",
+    "calculatetable",
     "if",
     "divide",
     "iterator",

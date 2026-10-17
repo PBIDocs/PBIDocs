@@ -164,6 +164,11 @@ const daxPlaygrounds: PlaygroundEntry[] = [
     pitch: 'Forget ALL() in a percent-of-total measure and watch every category read 100%.',
   },
   {
+    fn: 'CALCULATE() vs CALCULATETABLE()',
+    href: '/docs/dax/calculatetable#try-it-live',
+    pitch: 'Swap in a scalar expression and watch CALCULATETABLE() refuse it while CALCULATE() shrugs.',
+  },
+  {
     fn: 'FILTER()',
     href: '/docs/dax/filter#try-it-live',
     pitch: 'Edit the sales values and watch a dynamic AVERAGE() threshold move right along with them.',

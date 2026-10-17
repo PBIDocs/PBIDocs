@@ -69,6 +69,7 @@ import { RunningTotalPlayground } from './running-total-playground';
 import { TransformColumnTypesVsTransformColumnsPlayground } from './transformcolumntypes-vs-transformcolumns-playground';
 import { RecursiveFactorialPlayground } from './recursive-factorial-playground';
 import { AppendColumnMismatchPlayground } from './append-column-mismatch-playground';
+import { CalculateVsCalculateTablePlayground } from './calculate-vs-calculatetable-playground';
 
 export function getMDXComponents(components?: MDXComponents) {
   return {
@@ -142,6 +143,7 @@ export function getMDXComponents(components?: MDXComponents) {
     TransformColumnTypesVsTransformColumnsPlayground,
     RecursiveFactorialPlayground,
     AppendColumnMismatchPlayground,
+    CalculateVsCalculateTablePlayground,
     ...components,
   } satisfies MDXComponents;
 }

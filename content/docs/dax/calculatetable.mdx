@@ -1,0 +1,127 @@
+---
+title: "CALCULATETABLE()"
+description: Learn how CALCULATETABLE evaluates a table expression in a modified filter context — CALCULATE's table-returning counterpart, and why its first argument has to actually be a table.
+---
+
+# CALCULATETABLE()
+
+`CALCULATETABLE()` modifies filter context exactly the way [CALCULATE()](/docs/dax/calculate) does — the difference is in what it hands back. Its first argument has to be a table expression, and it always returns a table.
+
+```dax lineNumbers
+CALCULATETABLE(
+    expression as table,
+    filter1,
+    filter2,
+    ...
+) as table
+```
+
+---
+
+## Basic Example
+
+```dax lineNumbers
+Bike Products =
+CALCULATETABLE(
+    DimProduct,
+    DimProduct[Category] = "Bikes"
+)
+```
+
+This returns a table — every row of `DimProduct` where `Category` equals `"Bikes"` — with the filter applied the same way a `CALCULATE()` filter argument would modify filter context for a measure.
+
+---
+
+## CALCULATETABLE() vs. CALCULATE()
+
+`CALCULATE()` and `CALCULATETABLE()` modify filter context identically. The real difference is about the first argument's type, not the filtering behavior:
+
+```dax lineNumbers
+CALCULATE(VALUES(DimProduct[Category]), ...)        -- returns a table (CALCULATE adapts to its argument)
+CALCULATETABLE(VALUES(DimProduct[Category]), ...)   -- also returns a table (identical result here)
+
+CALCULATE(SUM(FactSales[SalesAmount]), ...)         -- returns a scalar
+CALCULATETABLE(SUM(FactSales[SalesAmount]), ...)    -- errors — SUM() returns a scalar, not a table
+```
+
+`CALCULATE()`'s return type matches whatever its first argument returns — a scalar expression gives back a scalar, a table expression gives back a table. `CALCULATETABLE()` only accepts the second case; passing it a scalar expression is a genuine error, not a silent conversion.
+
+<CalculateVsCalculateTablePlayground />
+
+---
+
+## A Real Use Case: Capturing an Intermediate Table
+
+The most common real-world use is capturing a filtered table in a `VAR`, for a later step to filter against:
+
+```dax lineNumbers
+Requirements Verified =
+VAR PassingTestCaseIDs =
+    CALCULATETABLE(
+        VALUES(FactTestResults[TestCaseID]),
+        FactTestResults[Status] = "Pass"
+    )
+VAR VerifiedRequirementIDs =
+    CALCULATETABLE(
+        VALUES(BridgeRequirementTest[RequirementID]),
+        FILTER(
+            BridgeRequirementTest,
+            BridgeRequirementTest[TestCaseID] IN PassingTestCaseIDs
+        )
+    )
+RETURN
+    COUNTROWS(VerifiedRequirementIDs)
+```
+
+`PassingTestCaseIDs` captures the set of test cases with a passing result as its own table; `VerifiedRequirementIDs` then filters a different table against that captured set. Writing `CALCULATETABLE()` here (rather than `CALCULATE()`) makes the intent explicit at a glance — this step produces a table, not a number. See [Coverage & Verification](/docs/dax-patterns/coverage-verification) for the full pattern this is drawn from, and [Build a Requirements Traceability Matrix](/tutorials/build-a-requirements-traceability-matrix) for the complete walkthrough.
+
+---
+
+## Common Uses
+
+- Capturing an intermediate filtered table in a `VAR`, to be filtered against again in a later step.
+- Defining a calculated table (**Modeling > New Table**) that needs its own filter context modifications applied.
+- Supplying a correctly-filtered table to [UNION()](/docs/dax/union), `EXCEPT()`, or `INTERSECT()`, where each side of the combination needs independent filtering.
+
+---
+
+## Common Mistakes
+
+### Passing a Scalar Expression
+
+```dax lineNumbers
+Total Bike Sales (Wrong) =
+CALCULATETABLE(
+    SUM(FactSales[SalesAmount]),
+    DimProduct[Category] = "Bikes"
+)
+```
+
+`SUM()` returns a single number, not a table — `CALCULATETABLE()` requires its first argument to actually evaluate to a table, and errors here rather than silently wrapping the scalar in a one-row table. [CALCULATE()](/docs/dax/calculate) is the right function for a scalar aggregation like this one.
+
+### Assuming CALCULATE() Can't Return a Table
+
+The reverse misconception is just as common: assuming `CALCULATE()` only ever returns scalars, and reaching for `CALCULATETABLE()` purely out of habit even in places where `CALCULATE()` would return the exact same table. Both are valid when the first argument is already a table expression — `CALCULATETABLE()` is the clearer choice for readability, not because `CALCULATE()` is incapable of the same result.
+
+### Using CALCULATETABLE() Where a Measure Is Actually Needed
+
+A calculated table is evaluated once per refresh, not dynamically per filter context the way a measure is — see [Calculated Tables](/docs/dax/calculated-tables#expecting-real-time-updates) for what that means in practice before using `CALCULATETABLE()` to define one.
+
+---
+
+## Best Practices
+
+- Use `CALCULATETABLE()` when the intent is explicitly "this step produces a table" — defining a calculated table, or capturing an intermediate `VAR` — even in cases where `CALCULATE()` would technically work identically.
+- Keep the first argument to `CALCULATETABLE()` unambiguously a table expression (a bare table reference, `VALUES()`, `FILTER()`, `SUMMARIZE()`, and similar), never an aggregation function.
+- Combine with `VAR` to name the captured table meaningfully, rather than nesting `CALCULATETABLE()` calls directly inside each other.
+
+---
+
+## Next Steps
+
+- [CALCULATE](/docs/dax/calculate)
+- [Calculated Tables](/docs/dax/calculated-tables)
+- [FILTER](/docs/dax/filter)
+- [VALUES() & DISTINCT()](/docs/dax/values-distinct)
+- [UNION(), EXCEPT() & INTERSECT()](/docs/dax/union)
+- [Coverage & Verification](/docs/dax-patterns/coverage-verification) — the full pattern behind the Requirements Verified example above
