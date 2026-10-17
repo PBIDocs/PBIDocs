@@ -75,6 +75,8 @@ Table.TransformColumns(Source, {{"Amount", each Number.Round(_, 2)}})
 
 Passing a function where a type is expected (or vice versa) produces an error naming the mismatch — the two functions aren't interchangeable despite the similar signatures. See [Table.TransformColumns()](/docs/power-query/table-transformcolumns) for the value-transforming half of this pair.
 
+<TransformColumnTypesVsTransformColumnsPlayground />
+
 ---
 
 ## Common Mistakes
