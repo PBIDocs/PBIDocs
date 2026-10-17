@@ -346,6 +346,11 @@ const powerQueryPlaygrounds: PlaygroundEntry[] = [
     href: '/docs/power-query/table-transformcolumntypes#try-it-live',
     pitch: 'Swap a type for a function between these two near-identical names and watch one of them break.',
   },
+  {
+    fn: 'Recursive Functions',
+    href: '/docs/power-query/custom-functions#try-it-live',
+    pitch: 'Edit n and watch a recursive Factorial() unwind, one call at a time, down to the base case.',
+  },
 ];
 
 export default function PlaygroundIndexPage() {

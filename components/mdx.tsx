@@ -67,6 +67,7 @@ import { CalculatedTableRefreshPlayground } from './calculated-table-refresh-pla
 import { CrossFilterVisualsPlayground } from './crossfilter-visuals-playground';
 import { RunningTotalPlayground } from './running-total-playground';
 import { TransformColumnTypesVsTransformColumnsPlayground } from './transformcolumntypes-vs-transformcolumns-playground';
+import { RecursiveFactorialPlayground } from './recursive-factorial-playground';
 
 export function getMDXComponents(components?: MDXComponents) {
   return {
@@ -138,6 +139,7 @@ export function getMDXComponents(components?: MDXComponents) {
     CrossFilterVisualsPlayground,
     RunningTotalPlayground,
     TransformColumnTypesVsTransformColumnsPlayground,
+    RecursiveFactorialPlayground,
     ...components,
   } satisfies MDXComponents;
 }
