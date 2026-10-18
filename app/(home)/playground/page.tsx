@@ -174,6 +174,11 @@ const daxPlaygrounds: PlaygroundEntry[] = [
     pitch: 'Edit Total Sales once and watch Gross Profit and Profit Margin update automatically on top of it.',
   },
   {
+    fn: 'UDF val vs expr',
+    href: '/docs/dax/user-defined-functions#try-it-live',
+    pitch: 'Same ALL(\'Date\') call, two parameter modes — one ignores it, one actually removes the filter.',
+  },
+  {
     fn: 'FILTER()',
     href: '/docs/dax/filter#try-it-live',
     pitch: 'Edit the sales values and watch a dynamic AVERAGE() threshold move right along with them.',
