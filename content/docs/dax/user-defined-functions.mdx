@@ -147,6 +147,8 @@ EVALUATE
 
 `CountRowsNow`'s `ALL('Date')` does nothing, because by the time it runs, `t` is already a fixed, filtered table — there's no filter context left to remove. `CountRowsLater` receives the *expression* `'Sales'`, not its already-evaluated result, so `CALCULATETABLE` inside the function genuinely gets to apply `ALL('Date')` before the table is materialized. See [CALCULATE](/docs/dax/calculate) for the filter-context mechanics this depends on.
 
+<UdfValExprPlayground />
+
 ---
 
 ## Default Expressions (Optional Parameters)
