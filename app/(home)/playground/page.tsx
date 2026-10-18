@@ -169,6 +169,11 @@ const daxPlaygrounds: PlaygroundEntry[] = [
     pitch: 'Swap in a scalar expression and watch CALCULATETABLE() refuse it while CALCULATE() shrugs.',
   },
   {
+    fn: 'Measure Dependencies',
+    href: '/docs/dax/measures#try-it-live',
+    pitch: 'Edit Total Sales once and watch Gross Profit and Profit Margin update automatically on top of it.',
+  },
+  {
     fn: 'FILTER()',
     href: '/docs/dax/filter#try-it-live',
     pitch: 'Edit the sales values and watch a dynamic AVERAGE() threshold move right along with them.',
