@@ -184,6 +184,11 @@ const daxPlaygrounds: PlaygroundEntry[] = [
     pitch: 'Move one Custom Column step earlier and watch every step after it stop folding too.',
   },
   {
+    fn: 'Table.Buffer()',
+    href: '/docs/power-query/table-buffer#try-it-live',
+    pitch: 'Re-evaluate a volatile source twice without buffering and watch the two references disagree.',
+  },
+  {
     fn: 'FILTER()',
     href: '/docs/dax/filter#try-it-live',
     pitch: 'Edit the sales values and watch a dynamic AVERAGE() threshold move right along with them.',
