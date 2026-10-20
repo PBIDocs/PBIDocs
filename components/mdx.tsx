@@ -72,6 +72,7 @@ import { AppendColumnMismatchPlayground } from './append-column-mismatch-playgro
 import { CalculateVsCalculateTablePlayground } from './calculate-vs-calculatetable-playground';
 import { MeasureDependencyChainPlayground } from './measure-dependency-chain-playground';
 import { UdfValExprPlayground } from './udf-val-expr-playground';
+import { QueryFoldingOrderPlayground } from './query-folding-order-playground';
 
 export function getMDXComponents(components?: MDXComponents) {
   return {
@@ -148,6 +149,7 @@ export function getMDXComponents(components?: MDXComponents) {
     CalculateVsCalculateTablePlayground,
     MeasureDependencyChainPlayground,
     UdfValExprPlayground,
+    QueryFoldingOrderPlayground,
     ...components,
   } satisfies MDXComponents;
 }

@@ -179,6 +179,11 @@ const daxPlaygrounds: PlaygroundEntry[] = [
     pitch: 'Same ALL(\'Date\') call, two parameter modes — one ignores it, one actually removes the filter.',
   },
   {
+    fn: 'Query Folding',
+    href: '/docs/power-query/query-folding#try-it-live',
+    pitch: 'Move one Custom Column step earlier and watch every step after it stop folding too.',
+  },
+  {
     fn: 'FILTER()',
     href: '/docs/dax/filter#try-it-live',
     pitch: 'Edit the sales values and watch a dynamic AVERAGE() threshold move right along with them.',
