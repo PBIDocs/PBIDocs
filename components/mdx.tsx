@@ -77,6 +77,7 @@ import { TableBufferPlayground } from './table-buffer-playground';
 import { SummarizeGroupingPlayground } from './summarize-grouping-playground';
 import { StarSchemaDiagram } from './star-schema-diagram';
 import { LookupValueAnatomyDiagram } from './lookupvalue-anatomy-diagram';
+import { SwitchAnatomyDiagram } from './switch-anatomy-diagram';
 
 export function getMDXComponents(components?: MDXComponents) {
   return {
@@ -158,6 +159,7 @@ export function getMDXComponents(components?: MDXComponents) {
     SummarizeGroupingPlayground,
     StarSchemaDiagram,
     LookupValueAnatomyDiagram,
+    SwitchAnatomyDiagram,
     ...components,
   } satisfies MDXComponents;
 }
