@@ -76,6 +76,7 @@ import { QueryFoldingOrderPlayground } from './query-folding-order-playground';
 import { TableBufferPlayground } from './table-buffer-playground';
 import { SummarizeGroupingPlayground } from './summarize-grouping-playground';
 import { StarSchemaDiagram } from './star-schema-diagram';
+import { LookupValueAnatomyDiagram } from './lookupvalue-anatomy-diagram';
 
 export function getMDXComponents(components?: MDXComponents) {
   return {
@@ -156,6 +157,7 @@ export function getMDXComponents(components?: MDXComponents) {
     TableBufferPlayground,
     SummarizeGroupingPlayground,
     StarSchemaDiagram,
+    LookupValueAnatomyDiagram,
     ...components,
   } satisfies MDXComponents;
 }
