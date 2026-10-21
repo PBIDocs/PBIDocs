@@ -74,6 +74,7 @@ import { MeasureDependencyChainPlayground } from './measure-dependency-chain-pla
 import { UdfValExprPlayground } from './udf-val-expr-playground';
 import { QueryFoldingOrderPlayground } from './query-folding-order-playground';
 import { TableBufferPlayground } from './table-buffer-playground';
+import { SummarizeGroupingPlayground } from './summarize-grouping-playground';
 
 export function getMDXComponents(components?: MDXComponents) {
   return {
@@ -152,6 +153,7 @@ export function getMDXComponents(components?: MDXComponents) {
     UdfValExprPlayground,
     QueryFoldingOrderPlayground,
     TableBufferPlayground,
+    SummarizeGroupingPlayground,
     ...components,
   } satisfies MDXComponents;
 }
