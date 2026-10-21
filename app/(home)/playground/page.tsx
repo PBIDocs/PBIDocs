@@ -189,6 +189,11 @@ const daxPlaygrounds: PlaygroundEntry[] = [
     pitch: 'Re-evaluate a volatile source twice without buffering and watch the two references disagree.',
   },
   {
+    fn: 'SUMMARIZE()',
+    href: '/docs/dax/summarize#try-it-live',
+    pitch: 'Move one transaction to a different category and watch both group totals shift live.',
+  },
+  {
     fn: 'FILTER()',
     href: '/docs/dax/filter#try-it-live',
     pitch: 'Edit the sales values and watch a dynamic AVERAGE() threshold move right along with them.',
