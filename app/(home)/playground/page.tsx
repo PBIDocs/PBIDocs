@@ -179,16 +179,6 @@ const daxPlaygrounds: PlaygroundEntry[] = [
     pitch: 'Same ALL(\'Date\') call, two parameter modes — one ignores it, one actually removes the filter.',
   },
   {
-    fn: 'Query Folding',
-    href: '/docs/power-query/query-folding#try-it-live',
-    pitch: 'Move one Custom Column step earlier and watch every step after it stop folding too.',
-  },
-  {
-    fn: 'Table.Buffer()',
-    href: '/docs/power-query/table-buffer#try-it-live',
-    pitch: 'Re-evaluate a volatile source twice without buffering and watch the two references disagree.',
-  },
-  {
     fn: 'SUMMARIZE()',
     href: '/docs/dax/summarize#try-it-live',
     pitch: 'Move one transaction to a different category and watch both group totals shift live.',
@@ -385,6 +375,21 @@ const powerQueryPlaygrounds: PlaygroundEntry[] = [
     fn: 'Merge vs. Append',
     href: '/docs/power-query/merge-vs-append#try-it-live',
     pitch: 'Mistype one ID column name and watch Table.Combine() silently double it, full of nulls.',
+  },
+  {
+    fn: 'Query Folding',
+    href: '/docs/power-query/query-folding#try-it-live',
+    pitch: 'Move one Custom Column step earlier and watch every step after it stop folding too.',
+  },
+  {
+    fn: 'Table.Buffer()',
+    href: '/docs/power-query/table-buffer#try-it-live',
+    pitch: 'Re-evaluate a volatile source twice without buffering and watch the two references disagree.',
+  },
+  {
+    fn: 'M Case Sensitivity',
+    href: '/docs/power-query/m-language#try-it-live',
+    pitch: 'Change one letter\'s case in a column or function name and watch M refuse to recognize it.',
   },
 ];
 
