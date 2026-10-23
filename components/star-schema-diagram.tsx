@@ -9,7 +9,7 @@ const DIMENSIONS = [
 
 export function StarSchemaDiagram() {
   return (
-    <div className="not-prose my-6 flex justify-center rounded-xl border border-fd-border bg-fd-secondary/30 p-5">
+    <div id="anatomy-diagram" className="not-prose my-6 flex justify-center rounded-xl border border-fd-border bg-fd-secondary/30 p-5">
       <svg viewBox="0 0 560 320" className="h-auto w-full max-w-lg" role="img" aria-label="Star schema diagram: FactSales in the center, surrounded by DimDate, DimStore, DimCustomer, and DimProduct">
         {DIMENSIONS.map((d) => (
           <line
