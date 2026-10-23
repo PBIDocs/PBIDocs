@@ -215,7 +215,9 @@ export default function HomePage() {
             <p className="mb-6 max-w-2xl text-fd-muted-foreground">
               Most Power BI references show you a formula and a result and leave it at that. On 74
               function pages so far — DAX and Power Query M — you can edit the numbers yourself
-              and watch the actual result recalculate, right on the page, no Excel, no upload.
+              and watch the actual result recalculate, right on the page, no Excel, no upload. A
+              growing set of pages also break the formula down visually — numbered, color-coded
+              diagrams showing exactly which argument touches which piece of data.
             </p>
             <div className="flex flex-wrap gap-3">
               <Link
@@ -230,6 +232,13 @@ export default function HomePage() {
                 className="inline-flex items-center gap-1.5 rounded-lg border border-fd-border px-5 py-2.5 text-sm font-semibold hover:bg-fd-muted"
               >
                 Try DIVIDE() live
+                <ArrowRight className="size-4" />
+              </Link>
+              <Link
+                href="/docs/dax/lookupvalue#anatomy-diagram"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-fd-border px-5 py-2.5 text-sm font-semibold hover:bg-fd-muted"
+              >
+                See LOOKUPVALUE() visualized
                 <ArrowRight className="size-4" />
               </Link>
             </div>

@@ -27,7 +27,7 @@ function Badge({ n, className }: { n: string; className?: string }) {
 
 export function SwitchAnatomyDiagram() {
   return (
-    <div className="not-prose my-6 rounded-xl border border-fd-border bg-fd-secondary/30 p-5">
+    <div id="anatomy-diagram" className="not-prose my-6 rounded-xl border border-fd-border bg-fd-secondary/30 p-5">
       <p className="mb-4 text-xs font-semibold tracking-wider text-fd-muted-foreground/70 uppercase">
         Anatomy of SWITCH()
       </p>
