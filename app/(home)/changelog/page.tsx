@@ -12,6 +12,180 @@ export const metadata: Metadata = {
 
 const changelog: { date: string; entries: ReactNode[] }[] = [
   {
+    date: '2026-10-24',
+    entries: [
+      <>
+        Added a{' '}
+        <Link href="/blog/power-bi-desktop-keyboard-shortcuts-cheat-sheet">
+          Power BI Desktop Keyboard Shortcuts Cheat Sheet
+        </Link>{' '}
+        — DAX formula bar editing, report canvas, and table/matrix navigation shortcuts, verified
+        against Microsoft&apos;s own documentation.
+      </>,
+    ],
+  },
+  {
+    date: '2026-10-21 – 2026-10-23',
+    entries: [
+      <>
+        Introduced a new visual format: &quot;function anatomy&quot; diagrams that break a
+        function down into numbered, color-coded pieces tied to a worked example. Replaced the
+        old ASCII <Link href="/docs/modeling/star-schema">Star Schema</Link> diagram with a real
+        SVG version, then shipped four more, each using a shape matched to how that function
+        actually evaluates:{' '}
+        <Link href="/docs/dax/lookupvalue">LOOKUPVALUE()</Link>,{' '}
+        <Link href="/docs/dax/switch">SWITCH()</Link>,{' '}
+        <Link href="/docs/dax/related">RELATED()</Link>, and{' '}
+        <Link href="/docs/power-query/table-selectrows">Table.SelectRows()</Link>. Surfaced on
+        the homepage as a second way to learn, alongside the live playgrounds.
+      </>,
+      <>
+        Added an <Link href="/docs/power-query/m-language">M Case Sensitivity</Link> playground —
+        bringing the live playground count to 75 — and fixed a real bug along the way: two
+        existing playgrounds had been miscategorized since they were added, so the playground
+        browser&apos;s DAX / Power Query M filter was showing and hiding them incorrectly.
+      </>,
+    ],
+  },
+  {
+    date: '2026-10-17 – 2026-10-20',
+    entries: [
+      <>
+        Added a dedicated <Link href="/docs/dax/calculatetable">CALCULATETABLE()</Link> page and
+        nine more playgrounds, several of which caught real bugs while being built:{' '}
+        <Link href="/docs/dax/time-intelligence">Running Totals</Link>,{' '}
+        <Link href="/docs/power-query/table-transformcolumntypes">
+          Table.TransformColumnTypes() vs. Table.TransformColumns()
+        </Link>
+        ,{' '}
+        <Link href="/docs/power-query/custom-functions">Recursive Functions (Factorial)</Link>,{' '}
+        <Link href="/docs/power-query/merge-vs-append">Merge vs. Append</Link> (fixed a silent
+        column-name collision bug), <Link href="/docs/dax/measures">Measure Dependencies</Link>,{' '}
+        <Link href="/docs/dax/user-defined-functions">UDF val vs. expr parameters</Link>,{' '}
+        <Link href="/docs/power-query/query-folding">Query Folding order</Link>, and{' '}
+        <Link href="/docs/power-query/table-buffer">Table.Buffer()</Link>.
+      </>,
+    ],
+  },
+  {
+    date: '2026-10-03 – 2026-10-08',
+    entries: [
+      <>
+        Added real, downloadable <code>.csv</code> sample data for all 6 tutorials, verified
+        byte-for-byte against each tutorial&apos;s own source data.
+      </>,
+      <>
+        Added three blog posts:{' '}
+        <Link href="/blog/direct-active-relationship-ambiguity-error">
+          Direct/Active Relationship Ambiguity Error
+        </Link>
+        ,{' '}
+        <Link href="/blog/systems-engineering-dax-patterns-cheat-sheet">
+          Systems Engineering DAX Patterns Cheat Sheet
+        </Link>
+        , and{' '}
+        <Link href="/blog/visual-has-exceeded-available-resources-error">
+          &quot;Visual Has Exceeded the Available Resources&quot;
+        </Link>
+        .
+      </>,
+      <>
+        Added <Link href="/docs/power-query/list-accumulate">List.Transform() vs. Table.AddColumn()</Link>,{' '}
+        <Link href="/docs/dax/calculated-tables">Calculated Tables</Link> (refresh-time vs.
+        live-measure behavior), and{' '}
+        <Link href="/docs/dax/filter-context">Filter Context</Link> (cross-filtering between
+        visuals) playgrounds.
+      </>,
+    ],
+  },
+  {
+    date: '2026-09-26 – 2026-09-29',
+    entries: [
+      <>
+        Added a <Link href="/tutorials/build-an-fmea-dashboard">
+          Build an FMEA Dashboard
+        </Link>{' '}
+        tutorial with its matching{' '}
+        <Link href="/docs/dax-patterns/fmea-rpn-scoring">FMEA / RPN Scoring</Link> pattern
+        reference, all RPN math verified independently before shipping.
+      </>,
+      <>
+        Added <Link href="/docs/power-query/list-accumulate">List.Accumulate()</Link>,{' '}
+        <Link href="/docs/power-query/list-generate">List.Generate()</Link> (an off-by-one
+        boundary condition), and two DAX playgrounds for{' '}
+        <Link href="/docs/dax/countrows">COUNTX()</Link> and sorting a column by another column.
+      </>,
+    ],
+  },
+  {
+    date: '2026-09-12 – 2026-09-24',
+    entries: [
+      <>
+        Added a <Link href="/blog/dax-text-functions-cheat-sheet">
+          DAX Text Functions Cheat Sheet
+        </Link>{' '}
+        and two error-message posts:{' '}
+        <Link href="/blog/table-of-multiple-values-supplied-error">
+          A Table of Multiple Values Was Supplied
+        </Link>{' '}
+        and{' '}
+        <Link href="/blog/calculate-true-false-expression-error">
+          CALCULATE Used in a True/False Expression
+        </Link>
+        .
+      </>,
+      <>
+        Added around 15 more playgrounds across DAX and Power Query, including{' '}
+        <Link href="/docs/dax/rankx">RANKX() Skip vs. Dense ranking</Link>,{' '}
+        <Link href="/docs/dax/userelationship">USERELATIONSHIP()</Link>,{' '}
+        <Link href="/docs/dax/lookupvalue">LOOKUPVALUE()</Link>,{' '}
+        <Link href="/docs/dax/related">RELATEDTABLE()</Link>,{' '}
+        <Link href="/docs/power-query/table-replacevalue">Table.ReplaceValue()</Link>,{' '}
+        <Link href="/docs/dax/distinctcount">
+          DISTINCTCOUNT() vs. DISTINCTCOUNTNOBLANK()
+        </Link>
+        ,{' '}
+        <Link href="/docs/dax/countrows">COUNTROWS() vs. COUNT() vs. COUNTA()</Link>,{' '}
+        <Link href="/docs/dax/sumx">SUMX()</Link>,{' '}
+        <Link href="/docs/dax/selectedvalue">SELECTEDVALUE()</Link>,{' '}
+        <Link href="/docs/power-query/table-selectrows">Table.SelectRows()</Link>,{' '}
+        <Link href="/docs/power-query/table-addcolumn">
+          Table.AddColumn() vs. Table.TransformColumns()
+        </Link>
+        , <Link href="/docs/dax/earlier">EARLIER()</Link>, and{' '}
+        <Link href="/docs/dax/calculate">CALCULATE() + ALL() + FILTER()</Link>.
+      </>,
+    ],
+  },
+  {
+    date: '2026-09-05 – 2026-09-11',
+    entries: [
+      <>
+        Added around 10 more playgrounds, including{' '}
+        <Link href="/docs/dax/keepfilters">KEEPFILTERS()</Link>,{' '}
+        <Link href="/docs/dax/values-distinct">VALUES() vs. DISTINCT()</Link>,{' '}
+        <Link href="/docs/dax/addcolumns-selectcolumns">
+          ADDCOLUMNS() vs. SELECTCOLUMNS()
+        </Link>
+        , <Link href="/docs/dax/crossfilter">CROSSFILTER()</Link>,{' '}
+        <Link href="/docs/dax/iferror">IFERROR()</Link>,{' '}
+        <Link href="/docs/dax/filter-functions">ALL() vs. ALLSELECTED()</Link>,{' '}
+        <Link href="/docs/power-query/merge-vs-append">
+          Merge Queries join-kind behavior
+        </Link>
+        , <Link href="/docs/power-query/table-group">Table.Group()</Link>, and{' '}
+        <Link href="/docs/power-query/table-pivot-unpivot">
+          Unpivot Columns vs. Unpivot Other Columns
+        </Link>
+        .
+      </>,
+      <>
+        Added tag filtering to the <Link href="/blog">Blog</Link> and search + language
+        filtering to the <Link href="/playground">Playground</Link> index.
+      </>,
+    ],
+  },
+  {
     date: '2026-09-04 – 2026-09-05',
     entries: [
       <>
