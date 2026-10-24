@@ -81,6 +81,7 @@ import { SwitchAnatomyDiagram } from './switch-anatomy-diagram';
 import { RelatedAnatomyDiagram } from './related-anatomy-diagram';
 import { SelectRowsAnatomyDiagram } from './selectrows-anatomy-diagram';
 import { MCaseSensitivityPlayground } from './m-case-sensitivity-playground';
+import { RelationshipAnatomyDiagram } from './relationship-anatomy-diagram';
 
 export function getMDXComponents(components?: MDXComponents) {
   return {
@@ -166,6 +167,7 @@ export function getMDXComponents(components?: MDXComponents) {
     RelatedAnatomyDiagram,
     SelectRowsAnatomyDiagram,
     MCaseSensitivityPlayground,
+    RelationshipAnatomyDiagram,
     ...components,
   } satisfies MDXComponents;
 }
