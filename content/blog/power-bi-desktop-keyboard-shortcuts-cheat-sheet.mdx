@@ -1,0 +1,88 @@
+---
+title: "Power BI Desktop Keyboard Shortcuts Cheat Sheet"
+description: "A fast, scannable reference for the Power BI Desktop shortcuts worth memorizing — DAX formula bar editing, report canvas selection, and table navigation."
+date: "2026-10-24"
+tags: ["Power BI Desktop", "Cheat Sheet"]
+---
+
+Quick reference for the shortcuts that actually save time in Power BI Desktop — editing DAX, arranging visuals on the canvas, and moving around tables and matrices. Press **Shift + ?** inside Power BI Desktop at any time to pull up the built-in shortcut list.
+
+## DAX Formula Bar
+
+The formula bar is a real code editor, and most of its shortcuts aren't discoverable from the UI.
+
+| Action | Shortcut |
+|---|---|
+| Submit the formula | `Ctrl + Enter` or `Enter` |
+| Insert a new line | `Shift + Enter` or `Alt + Enter` |
+| Insert a new line above | `Ctrl + Shift + Enter` |
+| Comment / uncomment the current line | `Ctrl + /` |
+| Select the current line | `Ctrl + L` |
+| Select all occurrences of the current word | `Ctrl + F2` |
+| Select next occurrence of the current selection | `Ctrl + D` |
+| Move the current line up / down | `Alt + ↑` / `Alt + ↓` |
+| Jump to matching bracket | `Ctrl + Shift + \` |
+| Jump to start / end of the line | `Ctrl + Home` / `Ctrl + End` |
+| Go to a specific line number | `Ctrl + G` |
+| Show autocomplete suggestions | `Ctrl + Space` |
+| Expand / collapse the formula bar | `Ctrl + J` |
+| Close the formula bar | `Esc` |
+
+`Ctrl + D` in particular is worth building a habit around — it's the fastest way to rename every occurrence of a measure or column reference inside a single formula without retyping each one.
+
+## Report Canvas
+
+All of these require editing mode. See [Report Design](/docs/ai-power-bi/report-design) for layout and alignment principles beyond the shortcuts themselves.
+
+| Action | Shortcut |
+|---|---|
+| Multi-select visuals | `Ctrl + Spacebar` (or `Ctrl` + click with a mouse) |
+| Group selected visuals | `Ctrl + G` |
+| Clear selection | `Ctrl + Shift + C` |
+| Move a visual (small steps) | Arrow keys |
+| Move a visual (larger steps) | `Shift` + arrow keys |
+| Resize a visual | Arrow keys (with the visual selected, not a data point) |
+| Maintain aspect ratio while resizing | `Shift` + drag a resize handle |
+| Show or hide a data point tooltip | `Ctrl + H` |
+| Right-click equivalent | `Shift + F10` |
+
+## Canvas Zoom and Scroll
+
+| Action | Shortcut |
+|---|---|
+| Zoom in / out | `Ctrl + Plus` / `Ctrl + Minus` |
+| Scroll canvas up / down | `Page Up` / `Page Down` |
+| Scroll canvas left / right | `Alt + Page Up` / `Alt + Page Down` |
+
+## Selection Pane (Layering)
+
+| Action | Shortcut |
+|---|---|
+| Open the selection pane | `F6` |
+| Move an object up a layer | `Ctrl + Shift + F` |
+| Move an object down a layer | `Ctrl + Shift + B` |
+| Hide / show an object | `Ctrl + Shift + S` |
+
+Useful for the "visual hidden behind another visual" problem — rather than dragging things around to find it, open the pane and toggle visibility directly.
+
+## Table and Matrix Navigation
+
+For moving around a table or matrix visual without a mouse, such as when checking exact values cell by cell.
+
+| Action | Shortcut |
+|---|---|
+| Move one cell up / down / left / right | Arrow keys |
+| Jump to the first / last cell in a row | `Ctrl + Home key` / `Ctrl + End key` |
+| Jump to the first / last element in a column | `Ctrl + ↑` / `Ctrl + ↓` |
+| Jump to the first / last cell in the whole table | `Ctrl + Home` / `Ctrl + End` |
+| Select multiple contiguous rows | `Shift + ↑` / `Shift + ↓` |
+| Select multiple non-contiguous rows | `Ctrl + Enter` or `Ctrl + Space` |
+| Expand / collapse a matrix level | `Shift + →` / `Shift + ←` |
+
+## Next Steps
+
+- [Measures](/docs/dax/measures)
+- [CALCULATE](/docs/dax/calculate)
+- [DAX CALCULATE Modifiers Cheat Sheet](/blog/dax-calculate-modifiers-cheat-sheet)
+
+Source: [Keyboard shortcuts in Power BI Desktop](https://learn.microsoft.com/power-bi/create-reports/desktop-accessibility-keyboard-shortcuts), Microsoft Learn.
