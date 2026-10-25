@@ -84,6 +84,7 @@ import { MCaseSensitivityPlayground } from './m-case-sensitivity-playground';
 import { RelationshipAnatomyDiagram } from './relationship-anatomy-diagram';
 import { BridgeTableAnatomyDiagram } from './bridge-table-anatomy-diagram';
 import { ManyToManyAnatomyDiagram } from './many-to-many-anatomy-diagram';
+import { ScdAnatomyDiagram } from './scd-anatomy-diagram';
 
 export function getMDXComponents(components?: MDXComponents) {
   return {
@@ -172,6 +173,7 @@ export function getMDXComponents(components?: MDXComponents) {
     RelationshipAnatomyDiagram,
     BridgeTableAnatomyDiagram,
     ManyToManyAnatomyDiagram,
+    ScdAnatomyDiagram,
     ...components,
   } satisfies MDXComponents;
 }
