@@ -20,6 +20,8 @@ import { HeroSearch } from '@/components/hero-search';
 import { SpotlightCard } from '@/components/spotlight-card';
 import { FunctionTicker } from '@/components/function-ticker';
 import { DaxBuilderTeaser } from '@/components/dax-builder-teaser';
+import { DividePlayground } from '@/components/divide-playground';
+import { LookupValueAnatomyDiagram } from '@/components/lookupvalue-anatomy-diagram';
 import { source } from '@/lib/source';
 import { getBlogPosts } from '@/lib/blog-source';
 import { getTutorials } from '@/lib/tutorial-source';
@@ -217,9 +219,24 @@ export default function HomePage() {
               function pages so far — DAX and Power Query M — you can edit the numbers yourself
               and watch the actual result recalculate, right on the page, no Excel, no upload. A
               growing set of pages also break the formula down visually — numbered, color-coded
-              diagrams showing exactly which argument touches which piece of data.
+              diagrams showing exactly which argument touches which piece of data. Try both right
+              here:
             </p>
-            <div className="flex flex-wrap gap-3">
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+              <div>
+                <p className="mb-2 text-xs font-semibold tracking-wider text-fd-muted-foreground/70 uppercase">
+                  Edit the numbers — DIVIDE()
+                </p>
+                <DividePlayground showAskAi={false} />
+              </div>
+              <div>
+                <p className="mb-2 text-xs font-semibold tracking-wider text-fd-muted-foreground/70 uppercase">
+                  See the argument flow — LOOKUPVALUE()
+                </p>
+                <LookupValueAnatomyDiagram />
+              </div>
+            </div>
+            <div className="mt-6 flex flex-wrap gap-3">
               <Link
                 href="/playground"
                 className="inline-flex items-center gap-1.5 rounded-lg bg-fd-primary px-5 py-2.5 text-sm font-semibold text-fd-primary-foreground hover:bg-fd-primary/90"
@@ -231,14 +248,14 @@ export default function HomePage() {
                 href="/docs/dax/divide"
                 className="inline-flex items-center gap-1.5 rounded-lg border border-fd-border px-5 py-2.5 text-sm font-semibold hover:bg-fd-muted"
               >
-                Try DIVIDE() live
+                Open DIVIDE() &amp; ask AI about it
                 <ArrowRight className="size-4" />
               </Link>
               <Link
                 href="/docs/dax/lookupvalue#anatomy-diagram"
                 className="inline-flex items-center gap-1.5 rounded-lg border border-fd-border px-5 py-2.5 text-sm font-semibold hover:bg-fd-muted"
               >
-                See LOOKUPVALUE() visualized
+                Open LOOKUPVALUE() full page
                 <ArrowRight className="size-4" />
               </Link>
             </div>

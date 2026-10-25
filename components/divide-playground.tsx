@@ -13,7 +13,7 @@ function formatNumber(n: number): string {
   return Number(n.toFixed(4)).toString();
 }
 
-export function DividePlayground() {
+export function DividePlayground({ showAskAi = true }: { showAskAi?: boolean }) {
   const [numerator, setNumerator] = useState('120000');
   const [denominator, setDenominator] = useState('500000');
   const [alternateResult, setAlternateResult] = useState('');
@@ -102,13 +102,15 @@ export function DividePlayground() {
             of dividing
           </span>
         )}
-        <AskAiInlineButton
-          prompt={buildAskAiPrompt(
-            'Explain why this DAX returns the result shown:\n\n```\n',
-            formula,
-            `\n\`\`\`\nResult: ${resultDisplay}`,
-          )}
-        />
+        {showAskAi && (
+          <AskAiInlineButton
+            prompt={buildAskAiPrompt(
+              'Explain why this DAX returns the result shown:\n\n```\n',
+              formula,
+              `\n\`\`\`\nResult: ${resultDisplay}`,
+            )}
+          />
+        )}
       </div>
     </div>
   );
