@@ -14,6 +14,7 @@ import {
   Shield,
   FlaskConical,
   Terminal,
+  Workflow,
 } from 'lucide-react';
 import { NewsletterForm } from '@/components/newsletter-form';
 import { HeroSearch } from '@/components/hero-search';
@@ -209,34 +210,24 @@ export default function HomePage() {
           <div className="p-8 text-left sm:p-10">
             <span className="mb-4 inline-flex items-center gap-1.5 rounded-full bg-fd-primary/10 px-3 py-1 text-xs font-semibold text-fd-primary">
               <FlaskConical className="size-3.5" />
-              Interactive Examples
+              On every function page
             </span>
             <h2 className="mb-3 text-3xl font-bold tracking-tight">
-              Stop reading examples. Try them.
+              Don&apos;t just read the example — try it yourself
             </h2>
-            <p className="mb-6 max-w-2xl text-fd-muted-foreground">
-              Most Power BI references show you a formula and a result and leave it at that. On 75
-              function pages so far — DAX and Power Query M — you can edit the numbers yourself
-              and watch the actual result recalculate, right on the page, no Excel, no upload. A
-              growing set of pages also break the formula down visually — numbered, color-coded
-              diagrams showing exactly which argument touches which piece of data. Try both right
-              here:
+            <p className="mb-2 max-w-2xl text-fd-muted-foreground">
+              Edit the numbers in a real, live example — right on the page, no Excel required —
+              and watch the result recalculate instantly. 75 function pages have one so far,
+              across DAX and Power Query M.
             </p>
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-              <div>
-                <p className="mb-2 text-xs font-semibold tracking-wider text-fd-muted-foreground/70 uppercase">
-                  Edit the numbers — DIVIDE()
-                </p>
-                <DividePlayground showAskAi={false} />
-              </div>
-              <div>
-                <p className="mb-2 text-xs font-semibold tracking-wider text-fd-muted-foreground/70 uppercase">
-                  See the argument flow — LOOKUPVALUE()
-                </p>
-                <LookupValueAnatomyDiagram />
-              </div>
+            <p className="mb-6 max-w-2xl text-sm text-fd-muted-foreground/70">
+              Completely free, unlimited — it&apos;s just math running in your browser, not an API
+              call.
+            </p>
+            <div className="max-w-xl">
+              <DividePlayground showAskAi={false} showPresets />
             </div>
-            <div className="mt-6 flex flex-wrap gap-3">
+            <div className="mt-2 flex flex-wrap gap-3">
               <Link
                 href="/playground"
                 className="inline-flex items-center gap-1.5 rounded-lg bg-fd-primary px-5 py-2.5 text-sm font-semibold text-fd-primary-foreground hover:bg-fd-primary/90"
@@ -251,11 +242,46 @@ export default function HomePage() {
                 Open DIVIDE() &amp; ask AI about it
                 <ArrowRight className="size-4" />
               </Link>
+            </div>
+          </div>
+        </SpotlightCard>
+      </section>
+
+      {/* Anatomy Diagram CTA */}
+      <section className="mt-10 w-full max-w-5xl">
+        <SpotlightCard className="rounded-2xl border border-fd-border bg-fd-card/40">
+          <div className="p-8 text-left sm:p-10">
+            <span className="mb-4 inline-flex items-center gap-1.5 rounded-full bg-fd-primary/10 px-3 py-1 text-xs font-semibold text-fd-primary">
+              <Workflow className="size-3.5" />
+              On lookup &amp; branching function pages
+            </span>
+            <h2 className="mb-3 text-3xl font-bold tracking-tight">
+              See exactly <em className="not-italic text-fd-primary">how</em> a formula finds its
+              answer
+            </h2>
+            <p className="mb-6 max-w-2xl text-fd-muted-foreground">
+              A color-coded diagram walks each argument straight from the formula to the exact
+              piece of data it touches — numbered badges tying search values to matched rows,
+              branches to their results, keys to the relationships they define. No more guessing
+              which argument did what, or where a result came from. 10 of these are live today,
+              across DAX functions and modeling concepts.
+            </p>
+            <div className="max-w-xl">
+              <LookupValueAnatomyDiagram />
+            </div>
+            <div className="mt-2 flex flex-wrap gap-3">
               <Link
                 href="/docs/dax/lookupvalue#anatomy-diagram"
-                className="inline-flex items-center gap-1.5 rounded-lg border border-fd-border px-5 py-2.5 text-sm font-semibold hover:bg-fd-muted"
+                className="inline-flex items-center gap-1.5 rounded-lg bg-fd-primary px-5 py-2.5 text-sm font-semibold text-fd-primary-foreground hover:bg-fd-primary/90"
               >
                 Open LOOKUPVALUE() full page
+                <ArrowRight className="size-4" />
+              </Link>
+              <Link
+                href="/docs/modeling/relationships#anatomy-diagram"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-fd-border px-5 py-2.5 text-sm font-semibold hover:bg-fd-muted"
+              >
+                See a Relationship visualized
                 <ArrowRight className="size-4" />
               </Link>
             </div>

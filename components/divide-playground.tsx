@@ -6,6 +6,13 @@ import { highlightCode } from '@/lib/highlight-code';
 import { PlaygroundRow, PlaygroundTable } from '@/components/playground-table';
 import { AskAiInlineButton } from '@/components/ask-ai-inline-button';
 import { buildAskAiPrompt } from '@/lib/ask-ai-events';
+import { cn } from '@/lib/cn';
+
+const PRESETS = [
+  { label: 'Normal', numerator: '120000', denominator: '500000', alternateResult: '' },
+  { label: '÷0 → BLANK()', numerator: '120000', denominator: '0', alternateResult: '' },
+  { label: '÷0 → fallback', numerator: '120000', denominator: '0', alternateResult: '0' },
+];
 
 function formatNumber(n: number): string {
   // Round to 4 decimal places, then let toString() drop trailing zeros
@@ -13,7 +20,7 @@ function formatNumber(n: number): string {
   return Number(n.toFixed(4)).toString();
 }
 
-export function DividePlayground({ showAskAi = true }: { showAskAi?: boolean }) {
+export function DividePlayground({ showAskAi = true, showPresets = false }: { showAskAi?: boolean; showPresets?: boolean }) {
   const [numerator, setNumerator] = useState('120000');
   const [denominator, setDenominator] = useState('500000');
   const [alternateResult, setAlternateResult] = useState('');
@@ -43,6 +50,34 @@ export function DividePlayground({ showAskAi = true }: { showAskAi?: boolean }) 
         <FlaskConical className="size-3.5" />
         Try it live
       </p>
+
+      {showPresets && (
+        <div className="mb-4 flex flex-wrap gap-2">
+          {PRESETS.map((preset) => {
+            const isActive =
+              numerator === preset.numerator && denominator === preset.denominator && alternateResult === preset.alternateResult;
+            return (
+              <button
+                key={preset.label}
+                type="button"
+                onClick={() => {
+                  setNumerator(preset.numerator);
+                  setDenominator(preset.denominator);
+                  setAlternateResult(preset.alternateResult);
+                }}
+                className={cn(
+                  'rounded-md border px-2.5 py-1 font-mono text-xs',
+                  isActive
+                    ? 'border-fd-primary/40 bg-fd-primary/10 text-fd-primary'
+                    : 'border-fd-border bg-fd-background text-fd-muted-foreground hover:text-fd-foreground',
+                )}
+              >
+                {preset.label}
+              </button>
+            );
+          })}
+        </div>
+      )}
 
       <PlaygroundTable>
         <PlaygroundRow label="Numerator">
