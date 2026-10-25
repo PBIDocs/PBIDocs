@@ -86,6 +86,7 @@ import { BridgeTableAnatomyDiagram } from './bridge-table-anatomy-diagram';
 import { ManyToManyAnatomyDiagram } from './many-to-many-anatomy-diagram';
 import { ScdAnatomyDiagram } from './scd-anatomy-diagram';
 import { CompositeModelAnatomyDiagram } from './composite-model-anatomy-diagram';
+import { AggregationAnatomyDiagram } from './aggregation-anatomy-diagram';
 
 export function getMDXComponents(components?: MDXComponents) {
   return {
@@ -176,6 +177,7 @@ export function getMDXComponents(components?: MDXComponents) {
     ManyToManyAnatomyDiagram,
     ScdAnatomyDiagram,
     CompositeModelAnatomyDiagram,
+    AggregationAnatomyDiagram,
     ...components,
   } satisfies MDXComponents;
 }
