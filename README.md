@@ -4,11 +4,14 @@
 
 ## What's here
 
-- **[Docs](https://pbidocs.com/docs)** — 80+ reference pages across DAX (including a full function reference), Power Query (including an M function reference), data modeling, Microsoft Fabric, the Power BI Service, visuals, governance, and AI-assisted workflows.
+- **[Docs](https://pbidocs.com/docs)** — 150+ reference pages across DAX (including a full function reference), Power Query (including an M function reference), data modeling, Microsoft Fabric, the Power BI Service, visuals, governance, and AI-assisted workflows.
 - **[Tutorials](https://pbidocs.com/tutorials)** — end-to-end walkthroughs, building one real thing from a messy raw dataset through to a finished report.
 - **[Blog](https://pbidocs.com/blog)** — practical fixes for specific errors ("column contains a duplicate value," "the key didn't match any rows"), plus cheat sheets that don't fit the reference docs.
+- **[Playground](https://pbidocs.com/playground)** — 75+ interactive "try it live" examples across DAX and Power Query M: edit real numbers and watch the actual result recalculate, right on the page.
+- **Anatomy diagrams** — on a growing set of function and modeling pages, a numbered, color-coded diagram ties each argument straight to the exact piece of data it touches.
+- **[DAX Formula Builder](https://pbidocs.com/tools/dax-formula-builder)** and **Ask AI** — describe a calculation in plain English and get back a real DAX measure or Power Query M step; a page-scoped AI chat panel is also available on every docs page.
 
-Content is written in MDX, lives entirely in [`content/`](./content), and every page includes syntax-highlighted DAX/M/Power Query code, ASCII diagrams for concepts and layouts, and cross-links between related pages.
+Content is written in MDX and lives entirely in [`content/`](./content). Most pages include syntax-highlighted DAX/M/Power Query code, cross-links between related pages, and — where there's a real teaching point to show — an interactive playground or an anatomy diagram, both implemented as React components under [`components/`](./components) and embedded directly in the MDX.
 
 ## Contributing
 
@@ -24,6 +27,7 @@ Found an error, an outdated screenshot, or a gap in the docs? Issues and PRs are
 - [Fumadocs](https://fumadocs.dev) for the docs collection, search, and MDX pipeline
 - [Tailwind CSS](https://tailwindcss.com)
 - Deployed on [Cloudflare Pages](https://pages.cloudflare.com), with a [D1](https://developers.cloudflare.com/d1/) database backing the newsletter signup and page feedback widget
+- [Cloudflare Pages Functions](./functions/api) power the AI features (Ask AI, DAX Formula Builder) and Stripe-backed subscription billing for the paid tier
 
 ## Local development
 
@@ -41,11 +45,13 @@ Open [http://localhost:3000](http://localhost:3000).
 | `content/docs/` | Reference documentation, one folder per topic area, each with a `meta.json` controlling nav order. |
 | `content/blog/` | Blog posts — flat MDX collection, no nested structure. |
 | `content/tutorials/` | End-to-end tutorials — same flat-collection pattern as the blog. |
+| `components/` | Shared MDX components, including every interactive playground and anatomy diagram, registered in `components/mdx.tsx` and embedded in content as plain JSX tags (e.g. `<DividePlayground />`). |
 | `app/docs/[[...slug]]/` | Docs page renderer. |
 | `app/(home)/blog/`, `app/(home)/tutorials/` | Blog and tutorial listing/detail pages. |
+| `app/(home)/playground/` | The interactive playground index, with search and DAX/Power Query filtering. |
 | `lib/source.ts`, `lib/blog-source.ts`, `lib/tutorial-source.ts` | Content source adapters for each collection. |
 | `source.config.ts` | Fumadocs MDX collection definitions and frontmatter schemas. |
-| `functions/api/` | Cloudflare Pages Functions backing the newsletter signup and feedback widget. |
+| `functions/api/` | Cloudflare Pages Functions backing the newsletter signup, page feedback widget, Ask AI, DAX Formula Builder, and Stripe billing. |
 
 ## License
 
