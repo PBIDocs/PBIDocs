@@ -85,6 +85,7 @@ import { RelationshipAnatomyDiagram } from './relationship-anatomy-diagram';
 import { BridgeTableAnatomyDiagram } from './bridge-table-anatomy-diagram';
 import { ManyToManyAnatomyDiagram } from './many-to-many-anatomy-diagram';
 import { ScdAnatomyDiagram } from './scd-anatomy-diagram';
+import { CompositeModelAnatomyDiagram } from './composite-model-anatomy-diagram';
 
 export function getMDXComponents(components?: MDXComponents) {
   return {
@@ -174,6 +175,7 @@ export function getMDXComponents(components?: MDXComponents) {
     BridgeTableAnatomyDiagram,
     ManyToManyAnatomyDiagram,
     ScdAnatomyDiagram,
+    CompositeModelAnatomyDiagram,
     ...components,
   } satisfies MDXComponents;
 }
