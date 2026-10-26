@@ -89,6 +89,7 @@ import { CompositeModelAnatomyDiagram } from './composite-model-anatomy-diagram'
 import { AggregationAnatomyDiagram } from './aggregation-anatomy-diagram';
 import { CalculateAnatomyDiagram } from './calculate-anatomy-diagram';
 import { EvmAnatomyDiagram } from './evm-anatomy-diagram';
+import { SumXAnatomyDiagram } from './sumx-anatomy-diagram';
 
 export function getMDXComponents(components?: MDXComponents) {
   return {
@@ -182,6 +183,7 @@ export function getMDXComponents(components?: MDXComponents) {
     AggregationAnatomyDiagram,
     CalculateAnatomyDiagram,
     EvmAnatomyDiagram,
+    SumXAnatomyDiagram,
     ...components,
   } satisfies MDXComponents;
 }
