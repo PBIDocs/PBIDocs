@@ -93,6 +93,7 @@ import { SumXAnatomyDiagram } from './sumx-anatomy-diagram';
 import { FilterAnatomyDiagram } from './filter-anatomy-diagram';
 import { ContextTransitionAnatomyDiagram } from './context-transition-anatomy-diagram';
 import { AllFunctionsAnatomyDiagram } from './all-functions-anatomy-diagram';
+import { RankxAnatomyDiagram } from './rankx-anatomy-diagram';
 
 export function getMDXComponents(components?: MDXComponents) {
   return {
@@ -190,6 +191,7 @@ export function getMDXComponents(components?: MDXComponents) {
     FilterAnatomyDiagram,
     ContextTransitionAnatomyDiagram,
     AllFunctionsAnatomyDiagram,
+    RankxAnatomyDiagram,
     ...components,
   } satisfies MDXComponents;
 }
