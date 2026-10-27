@@ -253,7 +253,7 @@ export default function HomePage() {
           <div className="p-8 text-left sm:p-10">
             <span className="mb-4 inline-flex items-center gap-1.5 rounded-full bg-fd-primary/10 px-3 py-1 text-xs font-semibold text-fd-primary">
               <Workflow className="size-3.5" />
-              On lookup &amp; branching function pages
+              On DAX, Power Query &amp; modeling pages
             </span>
             <h2 className="mb-3 text-3xl font-bold tracking-tight">
               See exactly <em className="not-italic text-fd-primary">how</em> a formula finds its
@@ -262,9 +262,9 @@ export default function HomePage() {
             <p className="mb-6 max-w-2xl text-fd-muted-foreground">
               A color-coded diagram walks each argument straight from the formula to the exact
               piece of data it touches — numbered badges tying search values to matched rows,
-              branches to their results, keys to the relationships they define. No more guessing
-              which argument did what, or where a result came from. 10 of these are live today,
-              across DAX functions and modeling concepts.
+              branches to their results, filters to the rows they keep. No more guessing which
+              argument did what, or where a result came from. 18 of these are live today, across
+              DAX functions, modeling concepts, and systems-engineering patterns.
             </p>
             <div className="max-w-xl">
               <LookupValueAnatomyDiagram />
