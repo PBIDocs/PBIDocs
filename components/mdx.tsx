@@ -95,6 +95,7 @@ import { ContextTransitionAnatomyDiagram } from './context-transition-anatomy-di
 import { AllFunctionsAnatomyDiagram } from './all-functions-anatomy-diagram';
 import { RankxAnatomyDiagram } from './rankx-anatomy-diagram';
 import { RiskMatrixAnatomyDiagram } from './risk-matrix-anatomy-diagram';
+import { FmeaAnatomyDiagram } from './fmea-anatomy-diagram';
 
 export function getMDXComponents(components?: MDXComponents) {
   return {
@@ -194,6 +195,7 @@ export function getMDXComponents(components?: MDXComponents) {
     AllFunctionsAnatomyDiagram,
     RankxAnatomyDiagram,
     RiskMatrixAnatomyDiagram,
+    FmeaAnatomyDiagram,
     ...components,
   } satisfies MDXComponents;
 }

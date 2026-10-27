@@ -15,19 +15,22 @@ const changelog: { date: string; entries: ReactNode[] }[] = [
     date: '2026-10-26 – 2026-10-27',
     entries: [
       <>
-        Eight more anatomy diagrams, bringing the total to 19, focused on how DAX evaluates
+        Nine more anatomy diagrams, bringing the total to 20, focused on how DAX evaluates
         filters and iterations:{' '}
         <Link href="/docs/dax/calculate">CALCULATE()</Link> (filter context before and after, plus
         a second diagram for context transition), <Link href="/docs/dax/sumx">SUMX()</Link>,{' '}
         <Link href="/docs/dax/filter">FILTER()</Link>,{' '}
         <Link href="/docs/dax/filter-functions">ALL(), ALLEXCEPT() &amp; REMOVEFILTERS()</Link>,{' '}
-        <Link href="/docs/dax/rankx">RANKX()</Link>, and the first two on systems-engineering
-        patterns: <Link href="/docs/dax-patterns/evm-metrics">EVM Metrics</Link> and a{' '}
+        <Link href="/docs/dax/rankx">RANKX()</Link>, and the first three on systems-engineering
+        patterns: <Link href="/docs/dax-patterns/evm-metrics">EVM Metrics</Link>, a{' '}
         <Link href="/docs/dax-patterns/risk-score-heat-map">Risk Score &amp; Heat Map</Link> 5×5
-        matrix. Both use the same datasets as their tutorials (
+        matrix, and <Link href="/docs/dax-patterns/fmea-rpn-scoring">FMEA &amp; RPN Scoring</Link>{' '}
+        (the severity override that catches a dangerous failure mode with the lowest RPN on the
+        register). All three use the same datasets as their tutorials (
         <Link href="/tutorials/build-an-evm-dashboard">EVM dashboard</Link>,{' '}
-        <Link href="/tutorials/build-a-risk-register-dashboard">risk register</Link>) so every
-        number matches.
+        <Link href="/tutorials/build-a-risk-register-dashboard">risk register</Link>,{' '}
+        <Link href="/tutorials/build-an-fmea-dashboard">FMEA dashboard</Link>) so every number
+        matches.
       </>,
       <>
         Fixed a misleading example on <Link href="/docs/dax/row-context">Row Context</Link>: a
