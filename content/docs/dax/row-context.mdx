@@ -276,9 +276,37 @@ Without context transition, many advanced calculations would not be possible.
 
 ## Why Context Transition Matters
 
-Consider a calculated column:
+Consider two calculated columns on `DimCustomer`:
 
 ```dax lineNumbers
+No Transition =
+SUM(FactSales[SalesAmount])
+
+With Transition =
+CALCULATE(SUM(FactSales[SalesAmount]))
+```
+
+A calculated column only has **row context**, and row context doesn't filter anything. So `No Transition` sees all of `FactSales` and returns the same grand total on every customer row.
+
+`With Transition` wraps the same expression in `CALCULATE()`, which converts the current customer row into a filter. That filter flows across the relationship to `FactSales`, so each row returns that customer's own total.
+
+<ContextTransitionAnatomyDiagram />
+
+### Measure References Do This Automatically
+
+Every measure reference is implicitly wrapped in `CALCULATE()`. So this column returns the same per-customer totals as `With Transition`, with no `CALCULATE()` written:
+
+```dax lineNumbers
+Customer Sales =
+[Total Sales]
+```
+
+### Watch Out on Fact Tables
+
+That implicit transition causes a classic mistake in calculated columns on a fact table:
+
+```dax lineNumbers
+-- Returns about 100% on every row, not a percent of total
 Sales Percentage =
 DIVIDE(
     FactSales[SalesAmount],
@@ -286,13 +314,15 @@ DIVIDE(
 )
 ```
 
-The measure **[Total Sales]** is evaluated using filter context.
+Context transition filters `FactSales` down to the current sales row itself, so `[Total Sales]` returns that row's own amount. To divide by the table-wide total, use `SUM()` directly, which sees the whole table because there's no transition:
 
-However, a calculated column only has **row context**.
-
-By using `CALCULATE()`, DAX converts the current row into a filter, allowing measures to evaluate correctly.
-
-This behavior is known as **context transition**.
+```dax lineNumbers
+Sales Percentage =
+DIVIDE(
+    FactSales[SalesAmount],
+    SUM(FactSales[SalesAmount])
+)
+```
 
 ---
 
