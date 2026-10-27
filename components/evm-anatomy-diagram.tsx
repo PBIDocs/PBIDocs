@@ -1,12 +1,27 @@
+import Link from 'next/link';
 import { cn } from '@/lib/cn';
 
-// Four tasks from the EVM dashboard tutorial's dataset, as of one reporting date.
-const TASKS = [
-  { name: 'Requirements Analysis', short: 'Reqs', bac: 45000, planned: 1.0, complete: 1.0, actual: 42000 },
-  { name: 'System Architecture', short: 'Architecture', bac: 60000, planned: 1.0, complete: 0.9, actual: 58000 },
-  { name: 'Subsystem A Design', short: 'Subsys A', bac: 80000, planned: 0.8, complete: 0.65, actual: 58000 },
-  { name: 'Prototype Build', short: 'Prototype', bac: 120000, planned: 0.25, complete: 0.2, actual: 30000 },
+// The EVM dashboard tutorial's full dataset (program_status.csv), as of its mid-May status date.
+const STATUS_DATE = '2026-05-15';
+
+const RAW_TASKS = [
+  { name: 'Requirements Analysis', short: 'Reqs', start: '2026-01-01', end: '2026-02-15', bac: 45000, complete: 1.0, actual: 42000 },
+  { name: 'System Architecture', short: 'Architecture', start: '2026-01-15', end: '2026-03-15', bac: 60000, complete: 0.9, actual: 58000 },
+  { name: 'Subsystem A Design', short: 'Subsys A', start: '2026-02-15', end: '2026-04-30', bac: 80000, complete: 0.65, actual: 58000 },
+  { name: 'Subsystem B Design', short: 'Subsys B', start: '2026-02-15', end: '2026-04-30', bac: 75000, complete: 0.55, actual: 50000 },
+  { name: 'Integration Planning', short: 'Integration', start: '2026-03-01', end: '2026-04-15', bac: 30000, complete: 0.4, actual: 15000 },
+  { name: 'Prototype Build', short: 'Prototype', start: '2026-04-01', end: '2026-06-30', bac: 120000, complete: 0.2, actual: 30000 },
+  { name: 'Verification & Test', short: 'V&T', start: '2026-05-01', end: '2026-07-31', bac: 90000, complete: 0.05, actual: 5000 },
+  { name: 'Documentation', short: 'Docs', start: '2026-01-01', end: '2026-07-31', bac: 25000, complete: 0.35, actual: 10000 },
 ];
+
+// Same as the tutorial's PV measure: share of each task's baseline duration elapsed, clamped to 0–100%.
+const day = (iso: string) => Date.parse(`${iso}T00:00:00Z`);
+const TASKS = RAW_TASKS.map((t) => ({
+  ...t,
+  planned: Math.min(1, Math.max(0, (day(STATUS_DATE) - day(t.start)) / (day(t.end) - day(t.start)))),
+}));
+const prototype = TASKS.find((t) => t.name === 'Prototype Build')!;
 
 const sum = (f: (t: (typeof TASKS)[number]) => number) => TASKS.reduce((s, t) => s + f(t), 0);
 
@@ -22,7 +37,7 @@ const EAC = BAC / CPI;
 const blendedEV = BAC * (sum((t) => t.complete) / TASKS.length);
 
 const fmt = (n: number) => `${n < 0 ? '−' : ''}$${Math.round(Math.abs(n)).toLocaleString('en-US')}`;
-// Table cells use $K so all seven columns fit at phone width; every task value is a whole thousand.
+// Table cells use $K so all seven columns fit at phone width; the cards below carry the exact totals.
 const fmtK = (n: number) => `$${Math.round(n / 1000)}K`;
 const pct = (n: number) => `${Math.round(n * 100)}%`;
 
@@ -52,6 +67,14 @@ export function EvmAnatomyDiagram() {
     <div id="anatomy-diagram" className="not-prose my-6 rounded-xl border border-fd-border bg-fd-secondary/30 p-3 sm:p-5">
       <p className="mb-4 text-xs font-semibold tracking-wider text-fd-muted-foreground/70 uppercase">
         Anatomy of an EVM status report
+      </p>
+      <p className="-mt-2 mb-3 text-xs text-fd-muted-foreground">
+        The{' '}
+        <Link href="/tutorials/build-an-evm-dashboard" className="underline">
+          EVM dashboard tutorial
+        </Link>
+        &apos;s task list,
+        status as of May 15, 2026. Plan % is how far each task is through its baseline dates by then.
       </p>
 
       <div className="overflow-x-auto">
@@ -157,8 +180,8 @@ export function EvmAnatomyDiagram() {
           <Badge n="1" className="mt-0.5 bg-sky-500" />
           <p>
             <span className="font-mono text-sky-600 dark:text-sky-400">PV</span> — what the plan said each task should
-            be worth by now. Prototype Build was only scheduled to be {pct(TASKS[3].planned)} done, so it contributes{' '}
-            {fmt(TASKS[3].bac * TASKS[3].planned)}, not its full {fmt(TASKS[3].bac)}.
+            be worth by now. Prototype Build is only {pct(prototype.planned)} of the way through its planned dates, so
+            it contributes {fmt(prototype.bac * prototype.planned)}, not its full {fmt(prototype.bac)}.
           </p>
         </div>
         <div className="flex items-start gap-2">
@@ -167,7 +190,7 @@ export function EvmAnatomyDiagram() {
             <span className="font-mono text-emerald-600 dark:text-emerald-400">EV</span> — earned{' '}
             <strong>per task</strong>, then summed with <span className="font-mono">SUMX</span>. Multiplying the total
             BAC by the average percent complete instead gives {fmt(blendedEV)}, {fmt(blendedEV - EV)} too optimistic,
-            because the large Prototype Build task is the least complete.
+            because the two big late-stage tasks, Prototype Build and Verification &amp; Test, are the least complete.
           </p>
         </div>
         <div className="flex items-start gap-2">
