@@ -12,8 +12,45 @@ export const metadata: Metadata = {
 
 const changelog: { date: string; entries: ReactNode[] }[] = [
   {
-    date: '2026-10-24',
+    date: '2026-10-26 – 2026-10-27',
     entries: [
+      <>
+        Seven more anatomy diagrams, bringing the total to 18, focused on how DAX evaluates
+        filters and iterations:{' '}
+        <Link href="/docs/dax/calculate">CALCULATE()</Link> (filter context before and after, plus
+        a second diagram for context transition), <Link href="/docs/dax/sumx">SUMX()</Link>,{' '}
+        <Link href="/docs/dax/filter">FILTER()</Link>,{' '}
+        <Link href="/docs/dax/filter-functions">ALL(), ALLEXCEPT() &amp; REMOVEFILTERS()</Link>,{' '}
+        <Link href="/docs/dax/rankx">RANKX()</Link>, and the first one on a systems-engineering
+        pattern, <Link href="/docs/dax-patterns/evm-metrics">EVM Metrics</Link>, which uses the
+        same dataset and status date as the{' '}
+        <Link href="/tutorials/build-an-evm-dashboard">EVM dashboard tutorial</Link> so every
+        number matches.
+      </>,
+      <>
+        Fixed a misleading example on <Link href="/docs/dax/row-context">Row Context</Link>: a
+        fact-table calculated column dividing by <code>[Total Sales]</code> was presented as context
+        transition working correctly, when it actually returns about 100% on every row. The
+        section now explains why, and shows the correct form.
+      </>,
+    ],
+  },
+  {
+    date: '2026-10-24 – 2026-10-25',
+    entries: [
+      <>
+        Took anatomy diagrams beyond single functions into data modeling, with six more:{' '}
+        <Link href="/docs/modeling/relationships">Relationships</Link>,{' '}
+        <Link href="/docs/modeling/bridge-tables">Bridge Tables</Link>,{' '}
+        <Link href="/docs/modeling/many-to-many">Many-to-Many</Link>,{' '}
+        <Link href="/docs/modeling/slowly-changing-dimensions">Slowly Changing Dimensions</Link>,{' '}
+        <Link href="/docs/modeling/storage-modes">Composite Models</Link>, and{' '}
+        <Link href="/docs/modeling/aggregations">Aggregations</Link>.
+      </>,
+      <>
+        Redesigned the homepage to embed a working DIVIDE() playground, with one-click presets,
+        and the full LOOKUPVALUE() anatomy diagram directly, instead of only linking to them.
+      </>,
       <>
         Added a{' '}
         <Link href="/blog/power-bi-desktop-keyboard-shortcuts-cheat-sheet">
