@@ -15,16 +15,18 @@ const changelog: { date: string; entries: ReactNode[] }[] = [
     date: '2026-10-26 – 2026-10-27',
     entries: [
       <>
-        Seven more anatomy diagrams, bringing the total to 18, focused on how DAX evaluates
+        Eight more anatomy diagrams, bringing the total to 19, focused on how DAX evaluates
         filters and iterations:{' '}
         <Link href="/docs/dax/calculate">CALCULATE()</Link> (filter context before and after, plus
         a second diagram for context transition), <Link href="/docs/dax/sumx">SUMX()</Link>,{' '}
         <Link href="/docs/dax/filter">FILTER()</Link>,{' '}
         <Link href="/docs/dax/filter-functions">ALL(), ALLEXCEPT() &amp; REMOVEFILTERS()</Link>,{' '}
-        <Link href="/docs/dax/rankx">RANKX()</Link>, and the first one on a systems-engineering
-        pattern, <Link href="/docs/dax-patterns/evm-metrics">EVM Metrics</Link>, which uses the
-        same dataset and status date as the{' '}
-        <Link href="/tutorials/build-an-evm-dashboard">EVM dashboard tutorial</Link> so every
+        <Link href="/docs/dax/rankx">RANKX()</Link>, and the first two on systems-engineering
+        patterns: <Link href="/docs/dax-patterns/evm-metrics">EVM Metrics</Link> and a{' '}
+        <Link href="/docs/dax-patterns/risk-score-heat-map">Risk Score &amp; Heat Map</Link> 5×5
+        matrix. Both use the same datasets as their tutorials (
+        <Link href="/tutorials/build-an-evm-dashboard">EVM dashboard</Link>,{' '}
+        <Link href="/tutorials/build-a-risk-register-dashboard">risk register</Link>) so every
         number matches.
       </>,
       <>
