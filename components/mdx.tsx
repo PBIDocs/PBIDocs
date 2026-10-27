@@ -96,6 +96,7 @@ import { AllFunctionsAnatomyDiagram } from './all-functions-anatomy-diagram';
 import { RankxAnatomyDiagram } from './rankx-anatomy-diagram';
 import { RiskMatrixAnatomyDiagram } from './risk-matrix-anatomy-diagram';
 import { FmeaAnatomyDiagram } from './fmea-anatomy-diagram';
+import { ReliabilityAnatomyDiagram } from './reliability-anatomy-diagram';
 
 export function getMDXComponents(components?: MDXComponents) {
   return {
@@ -196,6 +197,7 @@ export function getMDXComponents(components?: MDXComponents) {
     RankxAnatomyDiagram,
     RiskMatrixAnatomyDiagram,
     FmeaAnatomyDiagram,
+    ReliabilityAnatomyDiagram,
     ...components,
   } satisfies MDXComponents;
 }
