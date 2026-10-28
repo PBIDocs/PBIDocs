@@ -98,6 +98,7 @@ import { RiskMatrixAnatomyDiagram } from './risk-matrix-anatomy-diagram';
 import { FmeaAnatomyDiagram } from './fmea-anatomy-diagram';
 import { ReliabilityAnatomyDiagram } from './reliability-anatomy-diagram';
 import { TraceabilityAnatomyDiagram } from './traceability-anatomy-diagram';
+import { MergeAnatomyDiagram } from './merge-anatomy-diagram';
 
 export function getMDXComponents(components?: MDXComponents) {
   return {
@@ -200,6 +201,7 @@ export function getMDXComponents(components?: MDXComponents) {
     FmeaAnatomyDiagram,
     ReliabilityAnatomyDiagram,
     TraceabilityAnatomyDiagram,
+    MergeAnatomyDiagram,
     ...components,
   } satisfies MDXComponents;
 }
