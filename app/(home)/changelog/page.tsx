@@ -39,6 +39,14 @@ const changelog: { date: string; entries: ReactNode[] }[] = [
         every number matches.
       </>,
       <>
+        Three more, bringing the total to 25: <Link href="/docs/power-query/merge-queries">Merge
+        Queries</Link> (the nested table column, and how a duplicate key silently inflates a total
+        on expand), <Link href="/docs/power-query/table-pivot-unpivot">Unpivot</Link> (headers
+        becoming values, and nulls dropping out), and{' '}
+        <Link href="/docs/dax/time-intelligence">Time Intelligence</Link> (the exact months
+        DATESYTD, SAMEPERIODLASTYEAR, DATEADD, and DATESINPERIOD each hand to CALCULATE).
+      </>,
+      <>
         Fixed a misleading example on <Link href="/docs/dax/row-context">Row Context</Link>: a
         fact-table calculated column dividing by <code>[Total Sales]</code> was presented as context
         transition working correctly, when it actually returns about 100% on every row. The
