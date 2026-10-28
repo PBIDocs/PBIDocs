@@ -63,6 +63,56 @@ function LevelPill({ level }: { level: Level }) {
   );
 }
 
+// The 5×5 grid on its own, also used as the homepage preview for the systems-engineering tutorials.
+export function RiskMatrixGrid({ className }: { className?: string }) {
+  return (
+    <div className={cn('flex gap-1.5', className)}>
+      <div className="flex w-4 items-center justify-center">
+        <span className="-rotate-90 text-[11px] whitespace-nowrap text-fd-muted-foreground">Likelihood →</span>
+      </div>
+      <div className="min-w-0 flex-1">
+        <div className="grid grid-cols-[1.25rem_repeat(5,minmax(0,1fr))] gap-1">
+          {[...AXIS].reverse().map((l) => (
+            <div key={l} className="contents">
+              <div className="flex items-center justify-center font-mono text-xs text-fd-muted-foreground">{l}</div>
+              {AXIS.map((i) => {
+                const here = CURRENT.filter((r) => r.likelihood === l && r.impact === i);
+                return (
+                  <div
+                    key={i}
+                    className={cn(
+                      'flex aspect-square flex-col items-center justify-center rounded-md border border-fd-border/60 font-mono',
+                      LEVEL_STYLE[levelOf(l * i)].cell,
+                    )}
+                  >
+                    {here.length > 0 ? (
+                      <>
+                        <span className="text-sm leading-none font-bold">{here.length}</span>
+                        <span className="mt-0.5 text-[9px] leading-none text-fd-muted-foreground sm:text-[10px]">
+                          {here.map((r) => shortId(r.id)).join(',')}
+                        </span>
+                      </>
+                    ) : (
+                      <span className="text-xs text-fd-muted-foreground/50">0</span>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          ))}
+          <div />
+          {AXIS.map((i) => (
+            <div key={i} className="text-center font-mono text-xs text-fd-muted-foreground">
+              {i}
+            </div>
+          ))}
+        </div>
+        <p className="mt-1 text-center text-[11px] text-fd-muted-foreground">Impact →</p>
+      </div>
+    </div>
+  );
+}
+
 export function RiskMatrixAnatomyDiagram() {
   const r01History = ASSESSMENTS.filter((a) => a.risk === 'RISK-01');
   const r01AvgLikelihood = r01History.reduce((s, a) => s + a.likelihood, 0) / r01History.length;
@@ -148,50 +198,7 @@ export function RiskMatrixAnatomyDiagram() {
             <Badge n="3" className="bg-violet-500" />
             5×5 matrix on disconnected axes
           </p>
-          <div className="mt-2 flex gap-1.5">
-            <div className="flex w-4 items-center justify-center">
-              <span className="-rotate-90 text-[11px] whitespace-nowrap text-fd-muted-foreground">Likelihood →</span>
-            </div>
-            <div className="min-w-0 flex-1">
-              <div className="grid grid-cols-[1.25rem_repeat(5,minmax(0,1fr))] gap-1">
-                {[...AXIS].reverse().map((l) => (
-                  <div key={l} className="contents">
-                    <div className="flex items-center justify-center font-mono text-xs text-fd-muted-foreground">{l}</div>
-                    {AXIS.map((i) => {
-                      const here = CURRENT.filter((r) => r.likelihood === l && r.impact === i);
-                      return (
-                        <div
-                          key={i}
-                          className={cn(
-                            'flex aspect-square flex-col items-center justify-center rounded-md border border-fd-border/60 font-mono',
-                            LEVEL_STYLE[levelOf(l * i)].cell,
-                          )}
-                        >
-                          {here.length > 0 ? (
-                            <>
-                              <span className="text-sm leading-none font-bold">{here.length}</span>
-                              <span className="mt-0.5 text-[9px] leading-none text-fd-muted-foreground sm:text-[10px]">
-                                {here.map((r) => shortId(r.id)).join(',')}
-                              </span>
-                            </>
-                          ) : (
-                            <span className="text-xs text-fd-muted-foreground/50">0</span>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                ))}
-                <div />
-                {AXIS.map((i) => (
-                  <div key={i} className="text-center font-mono text-xs text-fd-muted-foreground">
-                    {i}
-                  </div>
-                ))}
-              </div>
-              <p className="mt-1 text-center text-[11px] text-fd-muted-foreground">Impact →</p>
-            </div>
-          </div>
+          <RiskMatrixGrid className="mt-2" />
         </div>
       </div>
 
