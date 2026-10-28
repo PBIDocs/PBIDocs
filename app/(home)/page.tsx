@@ -15,6 +15,12 @@ import {
   FlaskConical,
   Terminal,
   Workflow,
+  Gauge,
+  TriangleAlert,
+  Wrench,
+  Activity,
+  ListChecks,
+  Cog,
 } from 'lucide-react';
 import { NewsletterForm } from '@/components/newsletter-form';
 import { HeroSearch } from '@/components/hero-search';
@@ -23,6 +29,7 @@ import { FunctionTicker } from '@/components/function-ticker';
 import { DaxBuilderTeaser } from '@/components/dax-builder-teaser';
 import { DividePlayground } from '@/components/divide-playground';
 import { LookupValueAnatomyDiagram } from '@/components/lookupvalue-anatomy-diagram';
+import { RiskMatrixGrid } from '@/components/risk-matrix-anatomy-diagram';
 import { source } from '@/lib/source';
 import { getBlogPosts } from '@/lib/blog-source';
 import { getTutorials } from '@/lib/tutorial-source';
@@ -115,6 +122,40 @@ const stats = [
     label: 'DAX Pages',
   },
   { value: `${docsMeta.pages.length}`, label: 'Topics' },
+];
+
+// Each hook is a real result from that tutorial's own dataset.
+const engineeringTutorials = [
+  {
+    href: '/tutorials/build-an-evm-dashboard',
+    title: 'Earned Value Management',
+    hook: 'CPI 0.90, SPI 0.64: over budget and behind, from a plain task list.',
+    icon: Gauge,
+  },
+  {
+    href: '/tutorials/build-a-risk-register-dashboard',
+    title: 'Risk Register & Matrix',
+    hook: 'Latest-assessment logic and a 5×5 heat map on disconnected axes.',
+    icon: TriangleAlert,
+  },
+  {
+    href: '/tutorials/build-an-fmea-dashboard',
+    title: 'FMEA & RPN',
+    hook: 'Catch the Severity 9 failure mode hiding at the lowest RPN.',
+    icon: Wrench,
+  },
+  {
+    href: '/tutorials/build-a-reliability-mtbf-mttr-dashboard',
+    title: 'Reliability (MTBF / MTTR)',
+    hook: 'MTBF, MTTR, and 97.0% availability from a raw failure log.',
+    icon: Activity,
+  },
+  {
+    href: '/tutorials/build-a-requirements-traceability-matrix',
+    title: 'Requirements Traceability',
+    hook: '87.5% covered, 62.5% verified, and the exact gap list.',
+    icon: ListChecks,
+  },
 ];
 
 export default function HomePage() {
@@ -284,6 +325,59 @@ export default function HomePage() {
                 See a Relationship visualized
                 <ArrowRight className="size-4" />
               </Link>
+            </div>
+          </div>
+        </SpotlightCard>
+      </section>
+
+      {/* Systems & Program Engineering */}
+      <section className="mt-10 w-full max-w-5xl">
+        <SpotlightCard className="rounded-2xl border border-fd-border bg-fd-card/40">
+          <div className="grid grid-cols-1 gap-8 p-8 text-left sm:p-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,22rem)]">
+            <div>
+              <span className="mb-4 inline-flex items-center gap-1.5 rounded-full bg-fd-primary/10 px-3 py-1 text-xs font-semibold text-fd-primary">
+                <Cog className="size-3.5" />
+                For systems &amp; program engineers
+              </span>
+              <h2 className="mb-3 text-3xl font-bold tracking-tight">
+                Beyond the sales report
+              </h2>
+              <p className="mb-6 max-w-2xl text-fd-muted-foreground">
+                Full Power BI builds for the work engineering programs actually report on, each with
+                a real dataset, every DAX measure, and a diagram whose numbers match the tutorial
+                exactly.
+              </p>
+              <div className="space-y-2">
+                {engineeringTutorials.map((t) => (
+                  <Link
+                    key={t.href}
+                    href={t.href}
+                    className="group flex items-start gap-3 rounded-lg border border-fd-border p-3 transition-colors hover:border-fd-primary/50 hover:bg-fd-accent/50"
+                  >
+                    <t.icon className="mt-0.5 size-4 shrink-0 text-fd-primary" />
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-sm font-semibold transition-colors group-hover:text-fd-primary">
+                        {t.title}
+                      </span>
+                      <span className="block text-sm text-fd-muted-foreground">{t.hook}</span>
+                    </span>
+                    <ArrowRight className="mt-0.5 size-4 shrink-0 text-fd-muted-foreground transition-transform group-hover:translate-x-1" />
+                  </Link>
+                ))}
+              </div>
+              <Link
+                href="/blog/systems-engineering-dax-patterns-cheat-sheet"
+                className="mt-4 inline-flex items-center gap-1.5 text-sm font-medium text-fd-muted-foreground transition-colors hover:text-fd-primary"
+              >
+                All five patterns on one cheat sheet
+                <ArrowRight className="size-4" />
+              </Link>
+            </div>
+            <div className="rounded-xl border border-fd-border bg-fd-background p-4">
+              <p className="mb-2 text-xs font-semibold tracking-wider text-fd-muted-foreground/70 uppercase">
+                Risk matrix, from the tutorial&apos;s data
+              </p>
+              <RiskMatrixGrid />
             </div>
           </div>
         </SpotlightCard>
