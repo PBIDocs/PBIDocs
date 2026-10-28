@@ -62,17 +62,24 @@ const DERIVED = [
   { label: 'EAC', formula: 'BAC ÷ CPI', value: fmt(EAC), bad: EAC > BAC, note: `vs. BAC ${fmt(BAC)}` },
 ];
 
-export function EvmAnatomyDiagram() {
+// inTutorial: rendered on the tutorial page itself, so the caption doesn't link back to the page it's on.
+export function EvmAnatomyDiagram({ inTutorial = false }: { inTutorial?: boolean }) {
   return (
     <div id="anatomy-diagram" className="not-prose my-6 rounded-xl border border-fd-border bg-fd-secondary/30 p-3 sm:p-5">
       <p className="mb-4 text-xs font-semibold tracking-wider text-fd-muted-foreground/70 uppercase">
         Anatomy of an EVM status report
       </p>
       <p className="-mt-2 mb-3 text-xs text-fd-muted-foreground">
-        The{' '}
-        <Link href="/tutorials/build-an-evm-dashboard" className="underline">
-          EVM dashboard tutorial
-        </Link>
+        {inTutorial ? (
+          'This tutorial'
+        ) : (
+          <>
+            The{' '}
+            <Link href="/tutorials/build-an-evm-dashboard" className="underline">
+              EVM dashboard tutorial
+            </Link>
+          </>
+        )}
         &apos;s task list,
         status as of May 15, 2026. Plan % is how far each task is through its baseline dates by then.
       </p>
