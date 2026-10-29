@@ -31,6 +31,11 @@ const changelog: { date: string; entries: ReactNode[] }[] = [
         (filters don&apos;t flow back up a relationship), and why a documented full-access role
         and a forgotten one look identical in Power BI.
       </>,
+      <>
+        Diagram 29: <Link href="/docs/dax/variables">Variables</Link>. A variable is computed once,
+        where it&apos;s declared, and stored as a value, so wrapping it in CALCULATE() later quietly
+        changes nothing. Added that mistake to the page too.
+      </>,
     ],
   },
   {

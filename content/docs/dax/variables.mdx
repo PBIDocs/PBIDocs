@@ -205,6 +205,10 @@ RETURN
 
 Although this example is simple, variables become extremely valuable when several `CALCULATE()` statements are combined.
 
+The `CALCULATE()` has to go *inside* the variable's definition. A variable is evaluated once, where it's declared, and stored as a value, so wrapping it in `CALCULATE()` later changes nothing:
+
+<VariablesAnatomyDiagram />
+
 ---
 
 ## Comparing Values
@@ -381,6 +385,7 @@ Avoid these common errors:
 - Trying to reference a variable outside its measure.
 - Writing one long expression instead of breaking it into smaller variables.
 - Forgetting the `RETURN` statement.
+- Wrapping a variable in `CALCULATE()` and expecting the new filter to change it. The variable was already evaluated where it was declared.
 
 Remember that variables only exist within the measure in which they are declared.
 
