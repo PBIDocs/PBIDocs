@@ -103,6 +103,7 @@ import { UnpivotAnatomyDiagram } from './unpivot-anatomy-diagram';
 import { TimeIntelligenceAnatomyDiagram } from './time-intelligence-anatomy-diagram';
 import { RunningTotalAnatomyDiagram } from './running-total-anatomy-diagram';
 import { PercentOfTotalAnatomyDiagram } from './percent-of-total-anatomy-diagram';
+import { RlsMatrixAnatomyDiagram } from './rls-matrix-anatomy-diagram';
 
 export function getMDXComponents(components?: MDXComponents) {
   return {
@@ -210,6 +211,7 @@ export function getMDXComponents(components?: MDXComponents) {
     TimeIntelligenceAnatomyDiagram,
     RunningTotalAnatomyDiagram,
     PercentOfTotalAnatomyDiagram,
+    RlsMatrixAnatomyDiagram,
     ...components,
   } satisfies MDXComponents;
 }
