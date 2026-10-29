@@ -25,6 +25,12 @@ const changelog: { date: string; entries: ReactNode[] }[] = [
         numerator against three denominators (ALL, ALLEXCEPT, and none at all), with the matrix
         visual each one produces, so the every-row-shows-100% mistake is visible at a glance.
       </>,
+      <>
+        Diagram 28: <Link href="/docs/governance/rls-matrix">RLS Role Matrix</Link>. Four roles
+        against one model, showing which tables each role&apos;s filter reaches, which it can&apos;t
+        (filters don&apos;t flow back up a relationship), and why a documented full-access role
+        and a forgotten one look identical in Power BI.
+      </>,
     ],
   },
   {
