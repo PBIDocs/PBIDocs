@@ -36,6 +36,12 @@ const changelog: { date: string; entries: ReactNode[] }[] = [
         where it&apos;s declared, and stored as a value, so wrapping it in CALCULATE() later quietly
         changes nothing. Added that mistake to the page too.
       </>,
+      <>
+        Diagram 30: <Link href="/docs/modeling/date-tables">Date Tables</Link>. Each column&apos;s
+        job on real rows across a July fiscal year boundary, why a date table built from sales
+        dates has gaps, and how one order lands in a different fiscal year depending on which
+        date relationship is active.
+      </>,
     ],
   },
   {
