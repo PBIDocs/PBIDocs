@@ -20,6 +20,11 @@ const changelog: { date: string; entries: ReactNode[] }[] = [
         returns the current row&apos;s date, and how adding a Year condition makes the total restart
         each January.
       </>,
+      <>
+        Diagram 27: <Link href="/docs/dax-patterns/percent-of-total">Percent of Total</Link>. One
+        numerator against three denominators (ALL, ALLEXCEPT, and none at all), with the matrix
+        visual each one produces, so the every-row-shows-100% mistake is visible at a glance.
+      </>,
     ],
   },
   {
