@@ -105,6 +105,7 @@ import { RunningTotalAnatomyDiagram } from './running-total-anatomy-diagram';
 import { PercentOfTotalAnatomyDiagram } from './percent-of-total-anatomy-diagram';
 import { RlsMatrixAnatomyDiagram } from './rls-matrix-anatomy-diagram';
 import { VariablesAnatomyDiagram } from './variables-anatomy-diagram';
+import { DateTableAnatomyDiagram } from './date-table-anatomy-diagram';
 
 export function getMDXComponents(components?: MDXComponents) {
   return {
@@ -214,6 +215,7 @@ export function getMDXComponents(components?: MDXComponents) {
     PercentOfTotalAnatomyDiagram,
     RlsMatrixAnatomyDiagram,
     VariablesAnatomyDiagram,
+    DateTableAnatomyDiagram,
     ...components,
   } satisfies MDXComponents;
 }
