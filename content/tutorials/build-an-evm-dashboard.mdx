@@ -206,6 +206,10 @@ DIVIDE(
 ```text
 Page: "Program Status"
 
+Status date (slicer):
+  Field: DimDate[Date], style "Before", set to 2026-05-15
+  Edit interactions: filters the cards and the table, not the S-curve
+
 Row 1 (KPI cards):
   [CPI (Cost Performance Index)]  [SPI (Schedule Performance Index)]
   [CV (Cost Variance)]  [SV (Schedule Variance)]
@@ -221,6 +225,8 @@ Row 3 (table):
            [CV (Cost Variance)], [SV (Schedule Variance)]
   Conditional formatting: CV and SV columns, red below zero
 ```
+
+The status-date slicer is what makes the cards mean "as of today". `PV` reads `MAX(DimDate[Date])`, and with no date filter that's the last date in the calendar, July 31, by which point every task's planned work is fully due. `PV` would equal `BAC` ($525,000) and `SPI` would drop to 0.46. Setting the slicer to May 15 makes `MAX(DimDate[Date])` return May 15, so `PV` is $378,390. Turning off the slicer's interaction with the line chart (**Format > Edit interactions**) keeps the S-curve showing the whole schedule.
 
 With this dataset (status as of mid-May against a program running January through July), the numbers tell a specific, realistic story: `CPI` lands around **0.90** and `SPI` around **0.64** — a program that's both over budget and significantly behind schedule, with `TCPI` climbing above **1.10** as a result. That combination (both indices below 1) is exactly the pattern an EVM dashboard exists to surface early, before it shows up as a missed milestone.
 
@@ -240,6 +246,10 @@ Multiplying total program budget by an overall "percent complete" produces a num
 
 `SPI` measures work completed against work planned — it isn't the same as "percent of the calendar elapsed." A program can be exactly on schedule by date and still have a poor `SPI` if the wrong tasks were prioritized.
 
+### Leaving the Status Date Unset
+
+Without a date filter, `MAX(DimDate[Date])` returns the last day of the calendar, so every task counts as fully planned and `PV` equals `BAC`. `EV`, `AC` and `CPI` don't depend on the date, so they still look right, which makes the wrong `SPI` and `SV` easy to miss. Always set the status date to the date the `PercentComplete` and `ActualCost` values were reported.
+
 ### Treating a Single EAC Formula as Definitive
 
 `EAC = BAC / CPI` is the simplest standard formula, but it's one of several (others weight in `SPI`, or let managers substitute a bottom-up re-estimate). Treat it as a data point that starts a conversation, not a number to report as certain.
@@ -252,6 +262,7 @@ Multiplying total program budget by an overall "percent complete" produces a num
 - `DimDate` exists as a continuous calendar but is **not** related to the task table — it's used to project `PV`, not to join.
 - `PV` is computed per task and clamped between 0% and 100% of that task's baseline duration before summing.
 - `EV` and `AC` are computed per task then summed — never as a single program-wide percentage.
+- A status-date slicer sets `MAX(DimDate[Date])` for the cards and table, so `PV` and `SPI` are as of the reporting date, not the end of the calendar.
 - `CPI`, `SPI`, and `EAC` have been sanity-checked against the underlying `BAC`/`EV`/`AC`/`PV` numbers, not just trusted at face value.
 
 ---
