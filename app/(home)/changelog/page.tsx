@@ -42,6 +42,12 @@ const changelog: { date: string; entries: ReactNode[] }[] = [
         dates has gaps, and how one order lands in a different fiscal year depending on which
         date relationship is active.
       </>,
+      <>
+        Diagram 31: <Link href="/docs/visuals/field-parameters">Field Parameters</Link>. The real
+        three-column table Desktop generates (display name, hidden NAMEOF() reference, order), and
+        one chart switching from Revenue by Category to Profit by Region. Also corrected how
+        slicer labels are renamed: edit the display-name string, no calculated column needed.
+      </>,
     ],
   },
   {

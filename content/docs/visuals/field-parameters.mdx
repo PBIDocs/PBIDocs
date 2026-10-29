@@ -67,6 +67,8 @@ Chart Values: [Metric parameter]
 
 Whichever row the user selects in the paired slicer determines what the chart actually plots.
 
+<FieldParametersAnatomyDiagram />
+
 ---
 
 ## Swapping Dimensions, Not Just Measures
@@ -106,16 +108,16 @@ This turns a handful of report pages into a single flexible page, at the cost of
 
 ## Renaming Parameter Labels
 
-The labels shown in the slicer don't have to match the underlying field names — a calculated column on the parameter table can rename them for a friendlier display.
+The labels shown in the slicer don't have to match the underlying field names. The parameter table already has a display-name column, the first value in each row of its DAX definition, and that column is what the slicer shows.
 
-```text
-Field          | Order | Display Name
----------------|-------|---------------
-[Total Sales]  | 0     | "Revenue"
-[Total Profit] | 1     | "Profit"
+```dax lineNumbers
+Metric = {
+    ("Revenue", NAMEOF('FactSales'[Total Sales]), 0),
+    ("Profit", NAMEOF('FactSales'[Total Profit]), 1)
+}
 ```
 
-Edited directly in the field parameter table, similar to any other Power Query or DAX table edit.
+Change the string (here "Total Sales" became "Revenue") by editing the table's DAX, or rename the field in the Fields dialog when creating the parameter. No extra column is needed.
 
 ---
 
