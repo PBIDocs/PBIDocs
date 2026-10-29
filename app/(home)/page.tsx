@@ -304,7 +304,7 @@ export default function HomePage() {
               A color-coded diagram walks each argument straight from the formula to the exact
               piece of data it touches — numbered badges tying search values to matched rows,
               branches to their results, filters to the rows they keep. No more guessing which
-              argument did what, or where a result came from. 25 of these are live today, across
+              argument did what, or where a result came from. 26 of these are live today, across
               DAX functions, modeling concepts, and systems-engineering patterns.
             </p>
             <div className="max-w-xl">

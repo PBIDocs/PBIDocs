@@ -12,6 +12,17 @@ export const metadata: Metadata = {
 
 const changelog: { date: string; entries: ReactNode[] }[] = [
   {
+    date: '2026-10-29',
+    entries: [
+      <>
+        Diagram 26: <Link href="/docs/dax-patterns/running-total">Running Total</Link>. A staircase
+        grid shows which dates FILTER(ALL(...)) keeps for every row of the visual, why MAX() still
+        returns the current row&apos;s date, and how adding a Year condition makes the total restart
+        each January.
+      </>,
+    ],
+  },
+  {
     date: '2026-10-26 – 2026-10-28',
     entries: [
       <>
