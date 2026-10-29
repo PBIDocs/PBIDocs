@@ -101,6 +101,7 @@ import { TraceabilityAnatomyDiagram } from './traceability-anatomy-diagram';
 import { MergeAnatomyDiagram } from './merge-anatomy-diagram';
 import { UnpivotAnatomyDiagram } from './unpivot-anatomy-diagram';
 import { TimeIntelligenceAnatomyDiagram } from './time-intelligence-anatomy-diagram';
+import { RunningTotalAnatomyDiagram } from './running-total-anatomy-diagram';
 
 export function getMDXComponents(components?: MDXComponents) {
   return {
@@ -206,6 +207,7 @@ export function getMDXComponents(components?: MDXComponents) {
     MergeAnatomyDiagram,
     UnpivotAnatomyDiagram,
     TimeIntelligenceAnatomyDiagram,
+    RunningTotalAnatomyDiagram,
     ...components,
   } satisfies MDXComponents;
 }
