@@ -12,6 +12,17 @@ export const metadata: Metadata = {
 
 const changelog: { date: string; entries: ReactNode[] }[] = [
   {
+    date: '2026-11-01',
+    entries: [
+      <>
+        Launched the <Link href="/tools/date-table-generator">Date Table Generator</Link>: pick a
+        range, fiscal year start, week start, and columns, and get a date table to paste into Power BI
+        as DAX or Power Query M, with a row preview and the sort-by-column settings it needs. Free,
+        with no request limit.
+      </>,
+    ],
+  },
+  {
     date: '2026-10-29',
     entries: [
       <>

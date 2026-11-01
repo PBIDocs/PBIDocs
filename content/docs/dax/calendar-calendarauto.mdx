@@ -67,7 +67,7 @@ A source system's `NULL`-turned-into-`1900-01-01` (or `9999-12-31`) convention f
 
 - Default to `CALENDAR()` with an explicit range for any date table meant to ship, not `CALENDARAUTO()`.
 - If `CALENDARAUTO()` is used, audit every date/datetime column in the model afterward — not just the fact table — for outlier values.
-- Base the explicit range on `MIN()`/`MAX()` of the specific column(s) the date table actually needs to support, e.g. `CALENDAR(MIN(Sales[OrderDate]), MAX(Sales[OrderDate]))`.
+- Base the explicit range on `MIN()`/`MAX()` of the specific column(s) the date table actually needs to support, e.g. `CALENDAR(MIN(Sales[OrderDate]), MAX(Sales[OrderDate]))`. The [Date Table Generator](/tools/date-table-generator) writes this pattern for you, widened to whole calendar or fiscal years.
 
 ---
 

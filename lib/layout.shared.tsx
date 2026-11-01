@@ -24,12 +24,17 @@ export function baseOptions(): BaseLayoutProps {
         text: 'More',
         items: [
           {
+            text: 'Date Table Generator',
+            url: '/tools/date-table-generator',
+            menu: { className: 'border-none bg-transparent p-2 gap-0 rounded-md' },
+          },
+          {
             text: 'Changelog',
             url: '/changelog',
             // fumadocs-ui's "menu" nav item renders each child as an
             // icon+description card by default (rounded-lg border bg-fd-card
             // p-3) - built for richer entries, not plain text links. With
-            // only two of these now (Blog moved to a top-level link above),
+            // only a few of these now (Blog moved to a top-level link above),
             // strip the card chrome down to a plain row so it matches the
             // compact link-list style docs pages use for the same "More"
             // menu (a different, simpler component there). cn() here is
