@@ -15,6 +15,13 @@ const changelog: { date: string; entries: ReactNode[] }[] = [
     date: '2026-11-01',
     entries: [
       <>
+        Launched the{' '}
+        <Link href="/tools/time-intelligence-generator">Time Intelligence Generator</Link>: pick a
+        base measure and get YTD, prior year, YoY %, rolling 12 month, and running total measures,
+        either as separate measures (or one DAX query view script) or as a calculation group, with
+        fiscal year support and a month-by-month preview.
+      </>,
+      <>
         Launched the <Link href="/tools/date-table-generator">Date Table Generator</Link>: pick a
         range, fiscal year start, week start, and columns, and get a date table to paste into Power BI
         as DAX or Power Query M, with a row preview and the sort-by-column settings it needs. Free,

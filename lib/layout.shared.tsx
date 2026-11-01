@@ -29,6 +29,11 @@ export function baseOptions(): BaseLayoutProps {
             menu: { className: 'border-none bg-transparent p-2 gap-0 rounded-md' },
           },
           {
+            text: 'Time Intelligence Generator',
+            url: '/tools/time-intelligence-generator',
+            menu: { className: 'border-none bg-transparent p-2 gap-0 rounded-md' },
+          },
+          {
             text: 'Changelog',
             url: '/changelog',
             // fumadocs-ui's "menu" nav item renders each child as an

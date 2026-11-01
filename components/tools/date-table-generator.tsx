@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import Link from 'next/link';
 import { Check, Copy } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { highlightCode } from '@/lib/highlight-code';
@@ -454,6 +455,13 @@ export function DateTableGenerator() {
                 </ul>
               </li>
             )}
+            <li>
+              Build the measures on top of it with the{' '}
+              <Link href="/tools/time-intelligence-generator" className="text-fd-primary hover:underline">
+                Time Intelligence Generator
+              </Link>
+              : YTD, prior year, growth, and rolling windows.
+            </li>
             {fiscalOn && fsm > 1 && (
               <li>
                 Fiscal year-to-date measures need the year-end date:{' '}

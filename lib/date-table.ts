@@ -101,9 +101,10 @@ function fiscalYear(day: PreviewDay, fsm: number, naming: FiscalNaming): number 
   return day.y - (day.m < fsm ? 1 : 0);
 }
 
-// DAX table names need single quotes unless they're a plain identifier.
+// Always quote DAX table names: names like Date collide with function names
+// and fail unquoted, and quoting is valid for every name.
 export function daxTableRef(name: string): string {
-  return /^[A-Za-z_][A-Za-z0-9_]*$/.test(name) ? name : `'${name.replace(/'/g, "''")}'`;
+  return `'${name.replace(/'/g, "''")}'`;
 }
 
 // M identifiers need #"..." unless they're a plain identifier.
