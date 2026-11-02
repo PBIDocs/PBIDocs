@@ -300,10 +300,10 @@ export default function HomePage() {
             <h2 className="mb-3 text-3xl font-bold tracking-tight">Skip the boilerplate</h2>
             <p className="mb-6 max-w-2xl text-fd-muted-foreground">
               The date table, the time intelligence measures, the format string you look up every
-              time. Pick your options, check the preview, and paste the result into your model.
+              time, the EVM numbers for this month&apos;s status report. Pick your options, check the preview, and paste the result into your model.
               Free and unlimited, running entirely in your browser.
             </p>
-            <div className="grid gap-3 sm:grid-cols-3">
+            <div className="grid gap-3 sm:grid-cols-2">
               {tools
                 .filter((t) => !t.ai)
                 .map((t) => (

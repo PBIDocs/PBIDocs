@@ -12,6 +12,17 @@ export const metadata: Metadata = {
 
 const changelog: { date: string; entries: ReactNode[] }[] = [
   {
+    date: '2026-11-02',
+    entries: [
+      <>
+        Launched the <Link href="/tools/evm-calculator">EVM Calculator</Link>: enter BAC, PV, EV,
+        and AC to get CPI, SPI, variances, EAC, ETC, VAC, and TCPI, with a plain-English status, a
+        cost-vs-schedule chart, three EAC methods side by side, and the matching DAX measures. Also
+        added a free tools section to the homepage.
+      </>,
+    ],
+  },
+  {
     date: '2026-11-01',
     entries: [
       <>

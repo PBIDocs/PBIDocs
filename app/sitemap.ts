@@ -38,6 +38,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${baseUrl}/tools/date-table-generator`, lastModified: new Date() },
     { url: `${baseUrl}/tools/time-intelligence-generator`, lastModified: new Date() },
     { url: `${baseUrl}/tools/format-string-builder`, lastModified: new Date() },
+    { url: `${baseUrl}/tools/evm-calculator`, lastModified: new Date() },
     { url: `${baseUrl}/playground`, lastModified: new Date() },
     { url: `${baseUrl}/pricing`, lastModified: new Date() },
     ...docs,

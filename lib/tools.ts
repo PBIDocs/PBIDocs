@@ -1,4 +1,4 @@
-import { CalendarDays, Hash, Sparkles, TrendingUp, type LucideIcon } from 'lucide-react';
+import { CalendarDays, Gauge, Hash, Sparkles, TrendingUp, type LucideIcon } from 'lucide-react';
 
 // Shared by the /tools hub and the homepage tools section.
 export interface Tool {
@@ -43,5 +43,13 @@ export const tools: Tool[] = [
       'Custom format strings for K, M, and B, currency, percentages, and negatives in parentheses, checked against real values before you paste.',
     badge: 'Free · unlimited',
     icon: Hash,
+  },
+  {
+    href: '/tools/evm-calculator',
+    title: 'EVM Calculator',
+    description:
+      'BAC, PV, EV, and AC in; CPI, SPI, EAC, ETC, VAC, and TCPI out, with a plain-English status, three EAC methods compared, and the DAX.',
+    badge: 'Free · unlimited',
+    icon: Gauge,
   },
 ];
