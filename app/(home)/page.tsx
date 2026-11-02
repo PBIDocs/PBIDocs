@@ -27,6 +27,7 @@ import { HeroSearch } from '@/components/hero-search';
 import { SpotlightCard } from '@/components/spotlight-card';
 import { FunctionTicker } from '@/components/function-ticker';
 import { DaxBuilderTeaser } from '@/components/dax-builder-teaser';
+import { tools } from '@/lib/tools';
 import { DividePlayground } from '@/components/divide-playground';
 import { LookupValueAnatomyDiagram } from '@/components/lookupvalue-anatomy-diagram';
 import { RiskMatrixGrid } from '@/components/risk-matrix-anatomy-diagram';
@@ -284,6 +285,48 @@ export default function HomePage() {
                 <ArrowRight className="size-4" />
               </Link>
             </div>
+          </div>
+        </SpotlightCard>
+      </section>
+
+      {/* Free Tools */}
+      <section className="mt-10 w-full max-w-5xl">
+        <SpotlightCard className="rounded-2xl border border-fd-border bg-fd-card/40">
+          <div className="p-8 text-left sm:p-10">
+            <span className="mb-4 inline-flex items-center gap-1.5 rounded-full bg-fd-primary/10 px-3 py-1 text-xs font-semibold text-fd-primary">
+              <Wrench className="size-3.5" />
+              Free generators
+            </span>
+            <h2 className="mb-3 text-3xl font-bold tracking-tight">Skip the boilerplate</h2>
+            <p className="mb-6 max-w-2xl text-fd-muted-foreground">
+              The date table, the time intelligence measures, the format string you look up every
+              time. Pick your options, check the preview, and paste the result into your model.
+              Free and unlimited, running entirely in your browser.
+            </p>
+            <div className="grid gap-3 sm:grid-cols-3">
+              {tools
+                .filter((t) => !t.ai)
+                .map((t) => (
+                  <Link
+                    key={t.href}
+                    href={t.href}
+                    className="group flex flex-col gap-2 rounded-lg border border-fd-border p-4 transition-colors hover:border-fd-primary/50 hover:bg-fd-accent/50"
+                  >
+                    <t.icon className="size-5 text-fd-primary" />
+                    <span className="text-sm font-semibold transition-colors group-hover:text-fd-primary">
+                      {t.title}
+                    </span>
+                    <span className="text-sm text-fd-muted-foreground">{t.description}</span>
+                  </Link>
+                ))}
+            </div>
+            <Link
+              href="/tools"
+              className="mt-6 inline-flex items-center gap-1.5 text-sm font-medium text-fd-muted-foreground transition-colors hover:text-fd-primary"
+            >
+              All tools, including the AI Formula Builder
+              <ArrowRight className="size-4" />
+            </Link>
           </div>
         </SpotlightCard>
       </section>
