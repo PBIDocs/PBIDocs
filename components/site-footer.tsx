@@ -9,9 +9,8 @@ const columns: { title: string; links: { label: string; href: string; external?:
     links: [
       { label: 'Docs', href: '/docs' },
       { label: 'Tutorials', href: '/tutorials' },
+      { label: 'Tools', href: '/tools' },
       { label: 'DAX Formula Builder', href: '/tools/dax-formula-builder' },
-      { label: 'Date Table Generator', href: '/tools/date-table-generator' },
-      { label: 'Time Intelligence Generator', href: '/tools/time-intelligence-generator' },
       { label: 'Interactive Examples', href: '/playground' },
       { label: 'Pricing', href: '/pricing' },
     ],

@@ -15,6 +15,12 @@ const changelog: { date: string; entries: ReactNode[] }[] = [
     date: '2026-11-01',
     entries: [
       <>
+        Added a <Link href="/tools">Tools</Link> page that collects every generator in one place,
+        and launched the <Link href="/tools/format-string-builder">Format String Builder</Link>:
+        custom format strings for K, M, and B, currency, percentages, and negatives in parentheses,
+        with a live preview and a dynamic format string for automatic K/M/B.
+      </>,
+      <>
         Launched the{' '}
         <Link href="/tools/time-intelligence-generator">Time Intelligence Generator</Link>: pick a
         base measure and get YTD, prior year, YoY %, rolling 12 month, and running total measures,
