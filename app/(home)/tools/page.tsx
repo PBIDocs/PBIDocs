@@ -6,7 +6,7 @@ import { tools } from '@/lib/tools';
 export const metadata: Metadata = {
   title: 'Power BI Tools',
   description:
-    'Free Power BI tools: generate DAX measures from plain English, build a date table, write time intelligence measures, create custom format strings, and calculate earned value (EVM) metrics.',
+    'Free Power BI tools: generate DAX measures from plain English, build a date table, write time intelligence measures, create custom format strings, and calculate earned value (EVM) and reliability (MTBF/MTTR) metrics.',
   alternates: {
     canonical: '/tools',
   },

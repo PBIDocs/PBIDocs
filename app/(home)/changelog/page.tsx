@@ -12,6 +12,21 @@ export const metadata: Metadata = {
 
 const changelog: { date: string; entries: ReactNode[] }[] = [
   {
+    date: '2026-11-03',
+    entries: [
+      <>
+        Launched the <Link href="/tools/reliability-calculator">Reliability Calculator</Link>: paste
+        a failure log or enter totals to get MTBF, MTTR, availability, failure rate, and mission
+        reliability, with a per-asset breakdown that flags single-failure assets and the matching
+        DAX measures.
+      </>,
+      <>
+        Linked the free tools from the docs pages, tutorials, and cheat sheets that cover what each
+        one generates.
+      </>,
+    ],
+  },
+  {
     date: '2026-11-02',
     entries: [
       <>

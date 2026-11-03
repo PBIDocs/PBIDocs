@@ -1,4 +1,4 @@
-import { CalendarDays, Gauge, Hash, Sparkles, TrendingUp, type LucideIcon } from 'lucide-react';
+import { Activity, CalendarDays, Gauge, Hash, Sparkles, TrendingUp, type LucideIcon } from 'lucide-react';
 
 // Shared by the /tools hub and the homepage tools section.
 export interface Tool {
@@ -51,5 +51,13 @@ export const tools: Tool[] = [
       'BAC, PV, EV, and AC in; CPI, SPI, EAC, ETC, VAC, and TCPI out, with a plain-English status, three EAC methods compared, and the DAX.',
     badge: 'Free · unlimited',
     icon: Gauge,
+  },
+  {
+    href: '/tools/reliability-calculator',
+    title: 'Reliability Calculator',
+    description:
+      'Paste a failure log or enter totals for MTBF, MTTR, availability, failure rate, and mission reliability, per asset, with the DAX.',
+    badge: 'Free · unlimited',
+    icon: Activity,
   },
 ];

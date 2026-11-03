@@ -135,7 +135,7 @@ Availability % =
 DIVIDE([MTBF (Hours)], [MTBF (Hours)] + [MTTR (Hours)])
 ```
 
-`Total Uptime Hours` itself needs a calculated column first — the gap between one failure and the *previous* repair for that same asset, with the asset's commissioning date as a fallback for its first-ever failure. See [Reliability Metrics (MTBF, MTTR & Availability)](/docs/dax-patterns/reliability-mtbf-mttr) for that calculated column and [Build a Reliability Dashboard](/tutorials/build-a-reliability-mtbf-mttr-dashboard) for a complete walkthrough.
+`Total Uptime Hours` itself needs a calculated column first — the gap between one failure and the *previous* repair for that same asset, with the asset's commissioning date as a fallback for its first-ever failure. See [Reliability Metrics (MTBF, MTTR & Availability)](/docs/dax-patterns/reliability-mtbf-mttr) for that calculated column and [Build a Reliability Dashboard](/tutorials/build-a-reliability-mtbf-mttr-dashboard) for a complete walkthrough. To get the numbers from a failure log without building a model, paste it into the [Reliability Calculator](/tools/reliability-calculator).
 
 ## Quick Decision Table
 
