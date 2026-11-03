@@ -107,7 +107,7 @@ FORMAT([Total Sales], "$#,##0.00")
 | `"0.0%"` (on `0.5`) | `50.0%` |
 | `"General Date"` (on a date) | The system's short date format |
 
-`FORMAT()` always returns text, not a number — useful for a display string in a card or a concatenated title, wrong for anything that still needs to be summed, compared, or sorted numerically afterward.
+`FORMAT()` always returns text, not a number — useful for a display string in a card or a concatenated title, wrong for anything that still needs to be summed, compared, or sorted numerically afterward. To change how a measure *displays* while keeping it a number, use a custom format string instead; the [Format String Builder](/tools/format-string-builder) writes and previews one.
 
 ## Case-Sensitive Comparison
 

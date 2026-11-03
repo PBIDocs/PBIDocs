@@ -214,7 +214,7 @@ MonthName = FORMAT(DimDate[Date], "MMMM")
 MonthNumber = MONTH(DimDate[Date])
 ```
 
-Relate `FactSales[OrderDate]` to `DimDate[Date]` (one-to-many, DimDate on the "one" side). See [Date Tables](/docs/modeling/date-tables) for the full explanation of why this step matters, including handling fiscal years if that applies to a real model.
+Relate `FactSales[OrderDate]` to `DimDate[Date]` (one-to-many, DimDate on the "one" side). See [Date Tables](/docs/modeling/date-tables) for the full explanation of why this step matters, including handling fiscal years if that applies to a real model. For a fuller date table than these three columns, the [Date Table Generator](/tools/date-table-generator) writes one for you.
 
 ---
 

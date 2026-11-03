@@ -78,6 +78,7 @@ Conversely, a "total sales for all of last month" measure evaluated during a mid
 
 - Use `DATEADD()` when the comparison should mirror whatever partial or full range is currently selected.
 - Use `PARALLELPERIOD()` (or explicit `STARTOFMONTH`/`ENDOFMONTH`, `STARTOFQUARTER`/`ENDOFQUARTER`) when the comparison specifically needs the entire prior period, regardless of what's currently selected.
+- To generate a standard set of prior-period and growth measures for your own base measure, use the [Time Intelligence Generator](/tools/time-intelligence-generator).
 - Test time-intelligence measures against both a full-period selection and a partial one (month-to-date, a single day) before shipping — the two functions' difference only shows up in the partial case.
 
 ---
