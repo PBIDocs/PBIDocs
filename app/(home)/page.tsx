@@ -300,12 +300,13 @@ export default function HomePage() {
             <h2 className="mb-3 text-3xl font-bold tracking-tight">Skip the boilerplate</h2>
             <p className="mb-6 max-w-2xl text-fd-muted-foreground">
               The date table, the time intelligence measures, the format string you look up every
-              time, the EVM, MTBF, and risk matrix for this month&apos;s status report. Pick your options, check the preview, and paste the result into your model.
+              time, the EVM and MTBF numbers for this month&apos;s status report. Pick your options, check the preview, and paste the result into your model.
               Free and unlimited, running entirely in your browser.
             </p>
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {tools
                 .filter((t) => !t.ai)
+                .slice(0, 6)
                 .map((t) => (
                   <Link
                     key={t.href}
@@ -324,7 +325,7 @@ export default function HomePage() {
               href="/tools"
               className="mt-6 inline-flex items-center gap-1.5 text-sm font-medium text-fd-muted-foreground transition-colors hover:text-fd-primary"
             >
-              All tools, including the AI Formula Builder
+              All {tools.length} tools, including the AI Formula Builder
               <ArrowRight className="size-4" />
             </Link>
           </div>

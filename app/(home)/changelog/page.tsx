@@ -15,6 +15,12 @@ const changelog: { date: string; entries: ReactNode[] }[] = [
     date: '2026-11-04',
     entries: [
       <>
+        Launched the{' '}
+        <Link href="/tools/field-parameter-generator">Field Parameter Generator</Link>: list measures
+        or columns with display names, sort order, and optional groups to get the field parameter
+        DAX, a slicer preview, and a dynamic title measure.
+      </>,
+      <>
         Launched the <Link href="/tools/risk-matrix-builder">Risk Matrix Builder</Link>: paste a risk
         register to get a 5×5 heat map, scores, adjustable Critical/High/Medium bands, and a ranked
         list, plus the DAX for Risk Score, Risk Level, and the matrix visual&apos;s cell colors.

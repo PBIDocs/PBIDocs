@@ -1,4 +1,4 @@
-import { Activity, CalendarDays, Gauge, Grid3x3, Hash, Sparkles, TrendingUp, type LucideIcon } from 'lucide-react';
+import { Activity, CalendarDays, Gauge, Grid3x3, Hash, SlidersHorizontal, Sparkles, TrendingUp, type LucideIcon } from 'lucide-react';
 
 // Shared by the /tools hub and the homepage tools section.
 export interface Tool {
@@ -43,6 +43,14 @@ export const tools: Tool[] = [
       'Custom format strings for K, M, and B, currency, percentages, and negatives in parentheses, checked against real values before you paste.',
     badge: 'Free · unlimited',
     icon: Hash,
+  },
+  {
+    href: '/tools/field-parameter-generator',
+    title: 'Field Parameter Generator',
+    description:
+      'Let users pick which measure or column a visual shows: display names, sort order, and grouped options, with a slicer preview and a dynamic title.',
+    badge: 'Free · unlimited',
+    icon: SlidersHorizontal,
   },
   {
     href: '/tools/evm-calculator',
