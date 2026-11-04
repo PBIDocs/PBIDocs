@@ -1,4 +1,4 @@
-import { Activity, CalendarDays, Gauge, Hash, Sparkles, TrendingUp, type LucideIcon } from 'lucide-react';
+import { Activity, CalendarDays, Gauge, Grid3x3, Hash, Sparkles, TrendingUp, type LucideIcon } from 'lucide-react';
 
 // Shared by the /tools hub and the homepage tools section.
 export interface Tool {
@@ -59,5 +59,13 @@ export const tools: Tool[] = [
       'Paste a failure log or enter totals for MTBF, MTTR, availability, failure rate, and mission reliability, per asset, with the DAX.',
     badge: 'Free · unlimited',
     icon: Activity,
+  },
+  {
+    href: '/tools/risk-matrix-builder',
+    title: 'Risk Matrix Builder',
+    description:
+      'Paste a risk register for a 5×5 heat map, scores, adjustable Critical/High/Medium bands, a ranked list, and the DAX with matrix cell colors.',
+    badge: 'Free · unlimited',
+    icon: Grid3x3,
   },
 ];

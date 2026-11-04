@@ -12,6 +12,16 @@ export const metadata: Metadata = {
 
 const changelog: { date: string; entries: ReactNode[] }[] = [
   {
+    date: '2026-11-04',
+    entries: [
+      <>
+        Launched the <Link href="/tools/risk-matrix-builder">Risk Matrix Builder</Link>: paste a risk
+        register to get a 5×5 heat map, scores, adjustable Critical/High/Medium bands, and a ranked
+        list, plus the DAX for Risk Score, Risk Level, and the matrix visual&apos;s cell colors.
+      </>,
+    ],
+  },
+  {
     date: '2026-11-03',
     entries: [
       <>

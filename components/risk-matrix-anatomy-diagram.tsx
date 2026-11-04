@@ -63,8 +63,25 @@ function LevelPill({ level }: { level: Level }) {
   );
 }
 
+export interface RiskPoint {
+  id: string;
+  likelihood: number;
+  impact: number;
+}
+
 // The 5×5 grid on its own, also used as the homepage preview for the systems-engineering tutorials.
-export function RiskMatrixGrid({ className }: { className?: string }) {
+// With no props it shows the tutorial's register; the Risk Matrix Builder passes its own risks and bands.
+export function RiskMatrixGrid({
+  className,
+  risks = CURRENT,
+  bandOf = levelOf,
+  label = shortId,
+}: {
+  className?: string;
+  risks?: RiskPoint[];
+  bandOf?: (score: number) => Level;
+  label?: (id: string) => string;
+}) {
   return (
     <div className={cn('flex gap-1.5', className)}>
       <div className="flex w-4 items-center justify-center">
@@ -76,20 +93,24 @@ export function RiskMatrixGrid({ className }: { className?: string }) {
             <div key={l} className="contents">
               <div className="flex items-center justify-center font-mono text-xs text-fd-muted-foreground">{l}</div>
               {AXIS.map((i) => {
-                const here = CURRENT.filter((r) => r.likelihood === l && r.impact === i);
+                const here = risks.filter((r) => r.likelihood === l && r.impact === i);
                 return (
                   <div
                     key={i}
                     className={cn(
                       'flex aspect-square flex-col items-center justify-center rounded-md border border-fd-border/60 font-mono',
-                      LEVEL_STYLE[levelOf(l * i)].cell,
+                      LEVEL_STYLE[bandOf(l * i)].cell,
                     )}
                   >
                     {here.length > 0 ? (
                       <>
                         <span className="text-sm leading-none font-bold">{here.length}</span>
                         <span className="mt-0.5 text-[9px] leading-none text-fd-muted-foreground sm:text-[10px]">
-                          {here.map((r) => shortId(r.id)).join(',')}
+                          {here
+                            .slice(0, 3)
+                            .map((r) => label(r.id))
+                            .join(',')}
+                          {here.length > 3 && '…'}
                         </span>
                       </>
                     ) : (
