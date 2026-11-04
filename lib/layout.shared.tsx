@@ -1,6 +1,7 @@
 import type { BaseLayoutProps } from 'fumadocs-ui/layouts/shared';
 import { Logo } from '@/components/logo';
 import { GitHubIcon } from '@/components/github-icon';
+import { SiteNavMenu } from '@/components/site-nav-menu';
 import { appName, gitConfig } from './shared';
 
 export function baseOptions(): BaseLayoutProps {
@@ -16,34 +17,16 @@ export function baseOptions(): BaseLayoutProps {
     links: [
       { text: 'Docs', url: '/docs' },
       { text: 'Tutorials', url: '/tutorials' },
-      { text: 'Tools', url: '/tools' },
-      { text: 'Blog', url: '/blog' },
-      { text: 'Pricing', url: '/pricing' },
-      {
-        type: 'menu',
-        text: 'More',
-        items: [
-          {
-            text: 'Changelog',
-            url: '/changelog',
-            // fumadocs-ui's "menu" nav item renders each child as an
-            // icon+description card by default (rounded-lg border bg-fd-card
-            // p-3) - built for richer entries, not plain text links. With
-            // only two of these now (Blog moved to a top-level link above),
-            // strip the card chrome down to a plain row so it matches the
-            // compact link-list style docs pages use for the same "More"
-            // menu (a different, simpler component there). cn() here is
-            // tailwind-merge-compatible, so these utilities replace rather
-            // than stack with the defaults.
-            menu: { className: 'border-none bg-transparent p-2 gap-0 rounded-md' },
-          },
-          {
-            text: 'FAQ',
-            url: '/faq',
-            menu: { className: 'border-none bg-transparent p-2 gap-0 rounded-md' },
-          },
-        ],
-      },
+      // Desktop: Tools, Blog, Pricing, and More come from one Radix
+      // navigation menu (Fumadocs' built-in menu item anchored its popup to
+      // the whole nav bar and was unreliable). Mobile: plain links in
+      // Fumadocs' collapsible menu.
+      { type: 'custom', on: 'nav', children: <SiteNavMenu /> },
+      { text: 'Tools', url: '/tools', on: 'menu' },
+      { text: 'Blog', url: '/blog', on: 'menu' },
+      { text: 'Pricing', url: '/pricing', on: 'menu' },
+      { text: 'Changelog', url: '/changelog', on: 'menu' },
+      { text: 'FAQ', url: '/faq', on: 'menu' },
       {
         type: 'icon',
         label: 'GitHub',

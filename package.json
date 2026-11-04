@@ -17,6 +17,7 @@
     "d1:feedback:negative": "wrangler d1 execute pbidocs-subscribers --remote --command \"SELECT page, SUM(CASE WHEN helpful = 0 THEN 1 ELSE 0 END) AS not_helpful_votes, COUNT(*) AS total_votes FROM page_feedback GROUP BY page HAVING not_helpful_votes > 0 ORDER BY not_helpful_votes DESC LIMIT 20;\""
   },
   "dependencies": {
+    "@radix-ui/react-navigation-menu": "^1.4.1",
     "cnfast": "^0.1.0",
     "fumadocs-core": "16.14.0",
     "fumadocs-mdx": "15.2.2",
