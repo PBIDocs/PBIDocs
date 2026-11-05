@@ -1,0 +1,11 @@
+# Cloudflare Pages response headers.
+#
+# Next's opengraph-image files export without a .png extension, so Pages
+# serves them as application/octet-stream with nosniff, which some social
+# platforms reject as a share image. Label them as PNGs.
+
+/opengraph-image
+  Content-Type: image/png
+
+/tools/*/opengraph-image-*
+  Content-Type: image/png

@@ -8,6 +8,8 @@ export interface Tool {
   description: string;
   badge: string;
   icon: LucideIcon;
+  // Lucide file name of the same icon, for the server-rendered share image (lib/tool-og-image.tsx).
+  iconName: string;
   ai?: boolean;
 }
 
@@ -20,6 +22,7 @@ export const tools: Tool[] = [
       'Describe a calculation in plain English and get a working DAX measure or Power Query M step, with an explanation of every function it uses.',
     badge: 'AI · 5 free a day',
     icon: Sparkles,
+    iconName: 'sparkles',
     ai: true,
   },
   {
@@ -30,6 +33,7 @@ export const tools: Tool[] = [
       'A complete date table in DAX or Power Query M, with fiscal years, ISO weeks, day-of-week, and relative-date columns, plus a row preview.',
     badge: 'Free · unlimited',
     icon: CalendarDays,
+    iconName: 'calendar-days',
   },
   {
     href: '/tools/time-intelligence-generator',
@@ -39,6 +43,7 @@ export const tools: Tool[] = [
       'YTD, prior year, YoY %, rolling 12 months, and running totals for any measure, as separate measures or one calculation group.',
     badge: 'Free · unlimited',
     icon: TrendingUp,
+    iconName: 'trending-up',
   },
   {
     href: '/tools/format-string-builder',
@@ -48,6 +53,7 @@ export const tools: Tool[] = [
       'Custom format strings for K, M, and B, currency, percentages, and negatives in parentheses, checked against real values before you paste.',
     badge: 'Free · unlimited',
     icon: Hash,
+    iconName: 'hash',
   },
   {
     href: '/tools/field-parameter-generator',
@@ -57,6 +63,7 @@ export const tools: Tool[] = [
       'Let users pick which measure or column a visual shows: display names, sort order, and grouped options, with a slicer preview and a dynamic title.',
     badge: 'Free · unlimited',
     icon: SlidersHorizontal,
+    iconName: 'sliders-horizontal',
   },
   {
     href: '/tools/evm-calculator',
@@ -66,6 +73,7 @@ export const tools: Tool[] = [
       'BAC, PV, EV, and AC in; CPI, SPI, EAC, ETC, VAC, and TCPI out, with a plain-English status, three EAC methods compared, and the DAX.',
     badge: 'Free · unlimited',
     icon: Gauge,
+    iconName: 'gauge',
   },
   {
     href: '/tools/reliability-calculator',
@@ -75,6 +83,7 @@ export const tools: Tool[] = [
       'Paste a failure log or enter totals for MTBF, MTTR, availability, failure rate, and mission reliability, per asset, with the DAX.',
     badge: 'Free · unlimited',
     icon: Activity,
+    iconName: 'activity',
   },
   {
     href: '/tools/risk-matrix-builder',
@@ -84,5 +93,6 @@ export const tools: Tool[] = [
       'Paste a risk register for a 5×5 heat map, scores, adjustable Critical/High/Medium bands, a ranked list, and the DAX with matrix cell colors.',
     badge: 'Free · unlimited',
     icon: Grid3x3,
+    iconName: 'grid-3x3',
   },
 ];
