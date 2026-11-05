@@ -5,6 +5,7 @@ import { __iconNode as gauge } from 'lucide-react/dist/esm/icons/gauge.mjs';
 import { __iconNode as grid3x3 } from 'lucide-react/dist/esm/icons/grid-3x3.mjs';
 import { __iconNode as hash } from 'lucide-react/dist/esm/icons/hash.mjs';
 import { __iconNode as slidersHorizontal } from 'lucide-react/dist/esm/icons/sliders-horizontal.mjs';
+import { __iconNode as shieldAlert } from 'lucide-react/dist/esm/icons/shield-alert.mjs';
 import { __iconNode as sparkles } from 'lucide-react/dist/esm/icons/sparkles.mjs';
 import { __iconNode as trendingUp } from 'lucide-react/dist/esm/icons/trending-up.mjs';
 import { tools } from '@/lib/tools';
@@ -24,6 +25,7 @@ const ICONS: Record<string, [string, Record<string, string>][]> = {
   gauge,
   'grid-3x3': grid3x3,
   hash,
+  'shield-alert': shieldAlert,
   'sliders-horizontal': slidersHorizontal,
   sparkles,
   'trending-up': trendingUp,

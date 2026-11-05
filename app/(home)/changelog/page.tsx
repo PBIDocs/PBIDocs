@@ -12,6 +12,20 @@ export const metadata: Metadata = {
 
 const changelog: { date: string; entries: ReactNode[] }[] = [
   {
+    date: '2026-11-05',
+    entries: [
+      <>
+        Launched the <Link href="/tools/fmea-calculator">FMEA Calculator</Link>: paste failure modes
+        to get RPNs and High/Medium/Low action priority, with a severity override that flags rare but
+        serious failure modes RPN alone would rank low, plus the matching DAX.
+      </>,
+      <>
+        Every tool page now has its own preview image when shared, and the Tools and More menus in
+        the header were rebuilt.
+      </>,
+    ],
+  },
+  {
     date: '2026-11-04',
     entries: [
       <>

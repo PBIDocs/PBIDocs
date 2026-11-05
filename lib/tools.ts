@@ -1,4 +1,4 @@
-import { Activity, CalendarDays, Gauge, Grid3x3, Hash, SlidersHorizontal, Sparkles, TrendingUp, type LucideIcon } from 'lucide-react';
+import { Activity, CalendarDays, Gauge, Grid3x3, Hash, ShieldAlert, SlidersHorizontal, Sparkles, TrendingUp, type LucideIcon } from 'lucide-react';
 
 // Shared by the /tools hub, the homepage tools section, and the nav's Tools menu.
 export interface Tool {
@@ -94,5 +94,15 @@ export const tools: Tool[] = [
     badge: 'Free · unlimited',
     icon: Grid3x3,
     iconName: 'grid-3x3',
+  },
+  {
+    href: '/tools/fmea-calculator',
+    group: 'engineering',
+    title: 'FMEA Calculator',
+    description:
+      'Paste failure modes for RPNs and High/Medium/Low action priority, with a severity override that catches rare but serious failures, and the DAX.',
+    badge: 'Free · unlimited',
+    icon: ShieldAlert,
+    iconName: 'shield-alert',
   },
 ];
