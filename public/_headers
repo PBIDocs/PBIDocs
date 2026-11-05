@@ -7,5 +7,6 @@
 /opengraph-image
   Content-Type: image/png
 
-/tools/*/opengraph-image-*
+# Pages allows only one * per path, so the tool folder is a named placeholder.
+/tools/:tool/opengraph-image-*
   Content-Type: image/png
