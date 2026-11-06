@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 
 export default function DateTableGeneratorPage() {
   return (
-    <div className="mx-auto max-w-3xl px-6 py-16 sm:py-24">
+    <div className="mx-auto w-full max-w-3xl px-6 py-16 sm:py-24">
       <h1 className="mb-3 text-4xl font-bold tracking-tight">Date Table Generator</h1>
       <p className="mb-10 text-lg text-fd-muted-foreground">
         Pick a range, a fiscal calendar, and the columns you need. Get a date table you can paste

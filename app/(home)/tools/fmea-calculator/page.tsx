@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 
 export default function FmeaCalculatorPage() {
   return (
-    <div className="mx-auto max-w-4xl px-6 py-16 sm:py-24">
+    <div className="mx-auto w-full max-w-4xl px-6 py-16 sm:py-24">
       <h1 className="mb-3 text-4xl font-bold tracking-tight">FMEA Calculator</h1>
       <p className="mb-10 max-w-3xl text-lg text-fd-muted-foreground">
         Paste your failure modes with severity, occurrence, and detection ratings to get each one&apos;s

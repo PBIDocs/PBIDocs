@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 
 export default function ReliabilityCalculatorPage() {
   return (
-    <div className="mx-auto max-w-3xl px-6 py-16 sm:py-24">
+    <div className="mx-auto w-full max-w-3xl px-6 py-16 sm:py-24">
       <h1 className="mb-3 text-4xl font-bold tracking-tight">Reliability Calculator</h1>
       <p className="mb-10 text-lg text-fd-muted-foreground">
         Paste a failure log straight from a spreadsheet, or enter the totals, and get MTBF, MTTR,

@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 
 export default function FormatStringBuilderPage() {
   return (
-    <div className="mx-auto max-w-3xl px-6 py-16 sm:py-24">
+    <div className="mx-auto w-full max-w-3xl px-6 py-16 sm:py-24">
       <h1 className="mb-3 text-4xl font-bold tracking-tight">Format String Builder</h1>
       <p className="mb-10 text-lg text-fd-muted-foreground">
         Show $1.2M instead of $1,234,567.89, negatives in parentheses, or a dash for zero. Pick the

@@ -4,6 +4,7 @@ import { __iconNode as calendarDays } from 'lucide-react/dist/esm/icons/calendar
 import { __iconNode as gauge } from 'lucide-react/dist/esm/icons/gauge.mjs';
 import { __iconNode as grid3x3 } from 'lucide-react/dist/esm/icons/grid-3x3.mjs';
 import { __iconNode as hash } from 'lucide-react/dist/esm/icons/hash.mjs';
+import { __iconNode as listChecks } from 'lucide-react/dist/esm/icons/list-checks.mjs';
 import { __iconNode as slidersHorizontal } from 'lucide-react/dist/esm/icons/sliders-horizontal.mjs';
 import { __iconNode as shieldAlert } from 'lucide-react/dist/esm/icons/shield-alert.mjs';
 import { __iconNode as sparkles } from 'lucide-react/dist/esm/icons/sparkles.mjs';
@@ -25,6 +26,7 @@ const ICONS: Record<string, [string, Record<string, string>][]> = {
   gauge,
   'grid-3x3': grid3x3,
   hash,
+  'list-checks': listChecks,
   'shield-alert': shieldAlert,
   'sliders-horizontal': slidersHorizontal,
   sparkles,
@@ -98,7 +100,7 @@ export function toolImage(href: string) {
           </div>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 24 }}>
           <div
             style={{
               display: 'flex',
@@ -108,11 +110,12 @@ export function toolImage(href: string) {
               color: PURPLE,
               fontSize: 26,
               fontWeight: 600,
+              flexShrink: 0,
             }}
           >
             {tool.ai ? 'AI-powered · 5 free requests a day' : 'Free · unlimited · runs in your browser'}
           </div>
-          <span style={{ fontSize: 26, color: '#71717a' }}>pbidocs.com{tool.href}</span>
+          <span style={{ fontSize: 22, color: '#71717a', whiteSpace: 'nowrap' }}>pbidocs.com{tool.href}</span>
         </div>
       </div>
     ),

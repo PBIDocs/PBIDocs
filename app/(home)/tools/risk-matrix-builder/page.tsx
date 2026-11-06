@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 
 export default function RiskMatrixBuilderPage() {
   return (
-    <div className="mx-auto max-w-4xl px-6 py-16 sm:py-24">
+    <div className="mx-auto w-full max-w-4xl px-6 py-16 sm:py-24">
       <h1 className="mb-3 text-4xl font-bold tracking-tight">Risk Matrix Builder</h1>
       <p className="mb-10 max-w-3xl text-lg text-fd-muted-foreground">
         Paste your risk register, set where Critical, High, and Medium start, and see every risk

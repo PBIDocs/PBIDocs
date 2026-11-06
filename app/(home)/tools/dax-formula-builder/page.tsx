@@ -15,7 +15,7 @@ export const metadata: Metadata = {
 
 export default function DaxFormulaBuilderPage() {
   return (
-    <div className="mx-auto max-w-2xl px-6 py-16 sm:py-24">
+    <div className="mx-auto w-full max-w-2xl px-6 py-16 sm:py-24">
       <h1 className="mb-3 text-4xl font-bold tracking-tight">DAX Formula Builder</h1>
       <p className="mb-6 text-lg text-fd-muted-foreground">
         Describe what you want to calculate or transform. Get back a real DAX measure or Power

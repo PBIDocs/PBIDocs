@@ -14,7 +14,7 @@ export const metadata: Metadata = {
 
 export default function ToolsPage() {
   return (
-    <div className="mx-auto max-w-4xl px-6 py-16 sm:py-24">
+    <div className="mx-auto w-full max-w-4xl px-6 py-16 sm:py-24">
       <h1 className="mb-3 text-4xl font-bold tracking-tight">Power BI Tools</h1>
       <p className="mb-10 max-w-2xl text-lg text-fd-muted-foreground">
         Generators for the parts of a Power BI model you end up writing over and over. Pick your
