@@ -1,4 +1,4 @@
-import { Activity, CalendarDays, Gauge, Grid3x3, Hash, ShieldAlert, SlidersHorizontal, Sparkles, TrendingUp, type LucideIcon } from 'lucide-react';
+import { Activity, CalendarDays, Gauge, Grid3x3, Hash, ListChecks, ShieldAlert, SlidersHorizontal, Sparkles, TrendingUp, type LucideIcon } from 'lucide-react';
 
 // Shared by the /tools hub, the homepage tools section, and the nav's Tools menu.
 export interface Tool {
@@ -104,5 +104,15 @@ export const tools: Tool[] = [
     badge: 'Free · unlimited',
     icon: ShieldAlert,
     iconName: 'shield-alert',
+  },
+  {
+    href: '/tools/traceability-matrix-builder',
+    group: 'engineering',
+    title: 'Traceability Matrix Builder',
+    description:
+      'Paste requirements, trace links, and test results for a requirements traceability matrix, coverage and verified %, the untested gap list, and the DAX.',
+    badge: 'Free · unlimited',
+    icon: ListChecks,
+    iconName: 'list-checks',
   },
 ];

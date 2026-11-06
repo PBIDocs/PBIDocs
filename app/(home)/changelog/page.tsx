@@ -12,6 +12,18 @@ export const metadata: Metadata = {
 
 const changelog: { date: string; entries: ReactNode[] }[] = [
   {
+    date: '2026-11-06',
+    entries: [
+      <>
+        Launched the{' '}
+        <Link href="/tools/traceability-matrix-builder">Traceability Matrix Builder</Link>: paste
+        requirements, requirement-to-test links, and test results to get a traceability matrix,
+        coverage %, verified %, pass rate, and the requirements with no test mapped, plus the
+        matching DAX.
+      </>,
+    ],
+  },
+  {
     date: '2026-11-05',
     entries: [
       <>
