@@ -409,13 +409,23 @@ export default function HomePage() {
                   </Link>
                 ))}
               </div>
-              <Link
-                href="/blog/systems-engineering-dax-patterns-cheat-sheet"
-                className="mt-4 inline-flex items-center gap-1.5 text-sm font-medium text-fd-muted-foreground transition-colors hover:text-fd-primary"
-              >
-                All five patterns on one cheat sheet
-                <ArrowRight className="size-4" />
-              </Link>
+              <div className="mt-4 flex flex-wrap gap-x-6 gap-y-2">
+                <Link
+                  href="/blog/systems-engineering-dax-patterns-cheat-sheet"
+                  className="inline-flex items-center gap-1.5 text-sm font-medium text-fd-muted-foreground transition-colors hover:text-fd-primary"
+                >
+                  All five patterns on one cheat sheet
+                  <ArrowRight className="size-4" />
+                </Link>
+                <Link
+                  href="/tools"
+                  className="inline-flex items-center gap-1.5 text-sm font-medium text-fd-muted-foreground transition-colors hover:text-fd-primary"
+                >
+                  {tools.filter((t) => t.group === 'engineering').length} free engineering tools, including a
+                  Monte Carlo schedule simulator
+                  <ArrowRight className="size-4 shrink-0" />
+                </Link>
+              </div>
             </div>
             <div className="rounded-xl border border-fd-border bg-fd-background p-4">
               <p className="mb-2 text-xs font-semibold tracking-wider text-fd-muted-foreground/70 uppercase">

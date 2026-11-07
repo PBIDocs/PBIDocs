@@ -37,6 +37,28 @@ CPI/SPI > 1  -> under budget / ahead of schedule
 
 `EV` and `PV` are computed **per task**, then summed — never as one blended, program-wide percent complete. See [Earned Value Management (EVM) Metrics](/docs/dax-patterns/evm-metrics) for the full measure set (CV, SV, VAC, TCPI, and the other standard EAC formulas) and [Build an EVM Dashboard](/tutorials/build-an-evm-dashboard) for a complete walkthrough with a disconnected date table. To run the numbers from a status report without building a model, use the [EVM Calculator](/tools/evm-calculator).
 
+### Schedule risk (Monte Carlo)
+
+`SPI` says how far behind the program is today. It doesn't say how likely a finish date is. For that, simulate the schedule from three-point duration estimates and load one row per simulated run into a `Simulations` table. Then reuse the disconnected-date trick from `PV`:
+
+```dax
+Probability Finished By =
+VAR StatusDate = MAX ( FinishCalendar[Date] )
+RETURN
+    DIVIDE (
+        COUNTROWS ( FILTER ( Simulations, Simulations[FinishDate] <= StatusDate ) ),
+        COUNTROWS ( Simulations )
+    )
+
+P80 Finish =
+CONVERT (
+    ROUNDUP ( PERCENTILEX.INC ( Simulations, Simulations[FinishDate] * 1, 0.8 ), 0 ),
+    DATETIME
+)
+```
+
+On a line chart with `FinishCalendar[Date]` on the axis, `Probability Finished By` draws the S-curve. The plan you get by adding up most-likely durations usually lands well below 50% on it, because estimates skew late and parallel paths merge. DAX can't walk a task network, so run the simulation in the [Schedule Risk Simulator](/tools/schedule-risk-simulator) and download the runs as CSV.
+
 ## Risk Score & Heat Map
 
 ```dax lineNumbers
@@ -143,6 +165,7 @@ DIVIDE([MTBF (Hours)], [MTBF (Hours)] + [MTTR (Hours)])
 |---|---|
 | Is the program on budget / on schedule? | EVM: `CPI`, `SPI` |
 | What will this program actually cost? | EVM: `EAC` |
+| When will it realistically finish? | Schedule risk: `P80 Finish`, `Probability Finished By` |
 | Where do risks cluster by severity? | Risk Score & Heat Map |
 | Is a low-probability failure mode still dangerous? | FMEA: `Severity` override on `RPN` |
 | Did a corrective action actually help? | FMEA: `RPN Reduction %` |
