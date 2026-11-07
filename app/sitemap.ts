@@ -40,6 +40,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${baseUrl}/tools/format-string-builder`, lastModified: new Date() },
     { url: `${baseUrl}/tools/field-parameter-generator`, lastModified: new Date() },
     { url: `${baseUrl}/tools/evm-calculator`, lastModified: new Date() },
+    { url: `${baseUrl}/tools/schedule-risk-simulator`, lastModified: new Date() },
     { url: `${baseUrl}/tools/reliability-calculator`, lastModified: new Date() },
     { url: `${baseUrl}/tools/risk-matrix-builder`, lastModified: new Date() },
     { url: `${baseUrl}/tools/fmea-calculator`, lastModified: new Date() },

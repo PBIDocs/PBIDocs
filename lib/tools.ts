@@ -1,4 +1,4 @@
-import { Activity, CalendarDays, Gauge, Grid3x3, Hash, ListChecks, ShieldAlert, SlidersHorizontal, Sparkles, TrendingUp, type LucideIcon } from 'lucide-react';
+import { Activity, CalendarClock, CalendarDays, Gauge, Grid3x3, Hash, ListChecks, ShieldAlert, SlidersHorizontal, Sparkles, TrendingUp, type LucideIcon } from 'lucide-react';
 
 // Shared by the /tools hub, the homepage tools section, and the nav's Tools menu.
 export interface Tool {
@@ -74,6 +74,16 @@ export const tools: Tool[] = [
     badge: 'Free · unlimited',
     icon: Gauge,
     iconName: 'gauge',
+  },
+  {
+    href: '/tools/schedule-risk-simulator',
+    group: 'engineering',
+    title: 'Schedule Risk Simulator',
+    description:
+      'Three-point estimates and predecessors in; a Monte Carlo S-curve, P50/P80/P90 finish dates, your odds on a target date, and task criticality out, with the DAX.',
+    badge: 'Free · unlimited',
+    icon: CalendarClock,
+    iconName: 'calendar-clock',
   },
   {
     href: '/tools/reliability-calculator',

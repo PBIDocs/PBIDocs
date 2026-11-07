@@ -1,5 +1,6 @@
 import { ImageResponse } from 'next/og';
 import { __iconNode as activity } from 'lucide-react/dist/esm/icons/activity.mjs';
+import { __iconNode as calendarClock } from 'lucide-react/dist/esm/icons/calendar-clock.mjs';
 import { __iconNode as calendarDays } from 'lucide-react/dist/esm/icons/calendar-days.mjs';
 import { __iconNode as gauge } from 'lucide-react/dist/esm/icons/gauge.mjs';
 import { __iconNode as grid3x3 } from 'lucide-react/dist/esm/icons/grid-3x3.mjs';
@@ -22,6 +23,7 @@ const PURPLE = '#ad94ff';
 // Shape data for each tool's icon, keyed by the iconName in lib/tools.ts.
 const ICONS: Record<string, [string, Record<string, string>][]> = {
   activity,
+  'calendar-clock': calendarClock,
   'calendar-days': calendarDays,
   gauge,
   'grid-3x3': grid3x3,

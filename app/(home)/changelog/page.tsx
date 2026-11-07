@@ -12,6 +12,17 @@ export const metadata: Metadata = {
 
 const changelog: { date: string; entries: ReactNode[] }[] = [
   {
+    date: '2026-11-07',
+    entries: [
+      <>
+        Launched the <Link href="/tools/schedule-risk-simulator">Schedule Risk Simulator</Link>: paste
+        tasks with three-point duration estimates and predecessors to run a Monte Carlo simulation of
+        the finish date, with an S-curve, P50/P80/P90 dates, the chance of hitting a target, and how
+        often each task is critical, plus a CSV of the runs and the DAX to chart them in Power BI.
+      </>,
+    ],
+  },
+  {
     date: '2026-11-06',
     entries: [
       <>
