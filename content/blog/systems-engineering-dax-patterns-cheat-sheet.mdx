@@ -57,7 +57,7 @@ CONVERT (
 )
 ```
 
-On a line chart with `FinishCalendar[Date]` on the axis, `Probability Finished By` draws the S-curve. The plan you get by adding up most-likely durations usually lands well below 50% on it, because estimates skew late and parallel paths merge. DAX can't walk a task network, so run the simulation in the [Schedule Risk Simulator](/tools/schedule-risk-simulator) and download the runs as CSV.
+On a line chart with `FinishCalendar[Date]` on the axis, `Probability Finished By` draws the S-curve. The plan you get by adding up most-likely durations usually lands well below 50% on it, because estimates skew late and parallel paths merge. DAX can't walk a task network, but it can add up a list of paths: [Build a Monte Carlo Schedule Risk Dashboard](/tutorials/build-a-schedule-risk-monte-carlo-dashboard) runs the whole simulation in calculated tables. For networks too big to list, run it in the [Schedule Risk Simulator](/tools/schedule-risk-simulator) and download the runs as CSV.
 
 ## Risk Score & Heat Map
 

@@ -1,0 +1,491 @@
+---
+title: "Build a Monte Carlo Schedule Risk Dashboard in Power BI"
+description: "An end-to-end tutorial for program and systems engineers: turn three-point duration estimates into 10,000 simulated schedules in DAX, then chart an S-curve, P50/P80 finish dates, the real odds of hitting the plan, and which tasks drive the finish."
+date: "2026-11-08"
+tags: ["Tutorial", "DAX", "Data Modeling"]
+faq:
+  - question: "Can Power BI run a Monte Carlo simulation without Python or R?"
+    answer: "Yes. A calculated table built with GENERATESERIES and RAND() draws thousands of random task durations at refresh time, and BETA.INV turns each random number into a Beta-PERT duration. Grouping those samples by path and taking the longest path per run gives each simulated finish date, all in plain DAX."
+  - question: "What do P50 and P80 finish dates mean?"
+    answer: "P50 is the date the project finishes on or before in half of the simulated runs; P80 is the date it beats in 80% of them. P80 is the common commitment date for programs that want a realistic, defensible schedule rather than a coin flip."
+  - question: "Why does the most-likely schedule have such a low chance of being met?"
+    answer: "Two reasons. Duration estimates are skewed: a task can run much later than its most-likely value but only a little earlier. And wherever parallel paths merge, the next task has to wait for whichever one finishes last, so the merge point inherits the worst of both. That merge bias pushes the real finish later than any single path suggests."
+  - question: "Why put RAND() in a calculated table instead of a measure?"
+    answer: "Calculated tables are evaluated once, at refresh, so every visual reads the same 10,000 runs. A measure re-evaluates RAND() every time a visual queries it, so the numbers change on every click and two visuals on the same page can disagree."
+---
+
+Every program schedule has a finish date. Almost none of them say how likely that date is. This tutorial builds a Monte Carlo schedule risk analysis entirely in DAX: each task gets a best case, most-likely case, and worst case, Power BI draws 10,000 random versions of the schedule at refresh, and the dashboard reads off the odds.
+
+```text
+Tasks (optimistic, most likely, pessimistic) + Paths (task network)
+        |
+        | Calculated table: 10,000 random durations per task (BETA.INV + RAND)
+        |
+Path lengths per run  ->  longest path = that run's finish date
+        |
+        | Measures: percentiles, probability by date, criticality
+        |
+Dashboard (S-curve, P50/P80, odds of hitting the plan, task drivers)
+```
+
+Download the data: [tasks.csv](/downloads/schedule-risk-dashboard/tasks.csv) · [task_paths.csv](/downloads/schedule-risk-dashboard/task_paths.csv) — or paste the two tables below into `.csv` files yourself.
+
+The tasks are the same eight from the [EVM dashboard tutorial](/tutorials/build-an-evm-dashboard). EVM tells you how far behind the program is today; this tells you how likely each finish date is from here.
+
+---
+
+## What You're Building
+
+A one-page schedule risk dashboard answering the questions a program review actually asks:
+
+- What's the chance we hit the date in the plan?
+- What date can we commit to with 80% confidence, and how much buffer is that over the plan?
+- What does the full spread of outcomes look like?
+- Which tasks actually drive the finish date, and which ones don't matter?
+
+```text
++------------------------------------------------------------------+
+| Plan Finish | Probability On Plan | P50 Finish | P80 Finish | P80 Buffer |
++------------------------------------------------------------------+
+|  S-curve: Probability Finished By, over FinishCalendar[Date]      |
++------------------------------------------------------------------+
+|  Histogram of finish dates     |  Task table: O / M / P, PERT     |
+|  (runs per date)               |  mean, Criticality Index         |
++------------------------------------------------------------------+
+```
+
+---
+
+## Step 1: The Raw Data
+
+Two tables. The first is the task list with a three-point duration estimate per task, in calendar days:
+
+```text
+tasks.csv
+TaskID,TaskName,Optimistic,MostLikely,Pessimistic,Predecessors
+1,Requirements Analysis,30,40,60,
+2,System Architecture,35,45,70,1
+3,Subsystem A Design,50,60,90,2
+4,Subsystem B Design,45,60,100,2
+5,Integration Planning,20,25,35,2
+6,Prototype Build,50,60,95,3;4;5
+7,Verification & Test,40,50,80,6
+8,Documentation,20,30,45,6
+```
+
+Look at how lopsided the estimates are. `Subsystem B Design` can finish 15 days early at best, but 40 days late at worst. That skew shows up in almost every real estimate, and it's the first reason the plan date is optimistic.
+
+The network is a classic diamond: after architecture, three design and planning tasks run in parallel, and `Prototype Build` can't start until all three are done.
+
+```text
+                    +--> 3 Subsystem A Design ---+
+                    |                            |
+1 Requirements --> 2 Architecture --> 4 Subsystem B Design --> 6 Prototype --> 7 Verification & Test
+                    |                            |                 |
+                    +--> 5 Integration Planning -+                 +--> 8 Documentation
+```
+
+DAX can't walk a task network. It has no loops or recursion to do a forward pass through predecessors. What it *can* do is add up a fixed list of routes. So the second table lists every path from the first task to a final task:
+
+```text
+task_paths.csv
+PathID,TaskID
+P1,1
+P1,2
+P1,3
+P1,6
+P1,7
+P2,1
+P2,2
+P2,3
+P2,6
+P2,8
+P3,1
+P3,2
+P3,4
+P3,6
+P3,7
+P4,1
+P4,2
+P4,4
+P4,6
+P4,8
+P5,1
+P5,2
+P5,5
+P5,6
+P5,7
+P6,1
+P6,2
+P6,5
+P6,6
+P6,8
+```
+
+Three ways through the middle times two ways out the end gives six paths. A project's duration in any one run is simply its longest path in that run, and that's all the simulation needs. (For networks with too many paths to list by hand, see [When the Network Is Too Big to List](#step-8-when-the-network-is-too-big-to-list) below.)
+
+---
+
+## Step 2: Load and Build the Model
+
+Load both files with **Get Data > Text/CSV**. Make sure `TaskID` is a whole number in both tables and the three estimate columns are numbers. `Predecessors` can stay as text; it's for reading, the paths table does the work.
+
+Relate `Tasks[TaskID]` one-to-many to `PathTasks[TaskID]`. The calculated tables in the next steps add two more relationships.
+
+```text
+Tasks (1) ----------< PathTasks (many)
+TaskID                PathID
+TaskName              TaskID
+Optimistic
+MostLikely
+Pessimistic
+```
+
+---
+
+## Step 3: Draw 10,000 Random Durations per Task
+
+This is the Monte Carlo step itself. **Modeling > New Table**:
+
+```dax lineNumbers
+Samples =
+VAR Iterations =
+    SELECTCOLUMNS ( GENERATESERIES ( 1, 10000, 1 ), "Iteration", [Value] )
+VAR Estimates =
+    SELECTCOLUMNS (
+        Tasks,
+        "TaskID", Tasks[TaskID],
+        "Optimistic", Tasks[Optimistic],
+        "MostLikely", Tasks[MostLikely],
+        "Pessimistic", Tasks[Pessimistic]
+    )
+RETURN
+    ADDCOLUMNS (
+        CROSSJOIN ( Iterations, Estimates ),
+        "Duration",
+            VAR Range = [Pessimistic] - [Optimistic]
+            VAR Alpha = 1 + 4 * ( [MostLikely] - [Optimistic] ) / Range
+            VAR Beta = 1 + 4 * ( [Pessimistic] - [MostLikely] ) / Range
+            RETURN
+                IF (
+                    Range = 0,
+                    [MostLikely],
+                    BETA.INV ( RAND (), Alpha, Beta, [Optimistic], [Pessimistic] )
+                )
+    )
+```
+
+`CROSSJOIN` gives one row per iteration per task: 10,000 x 8 = 80,000 rows. On each row, `RAND()` draws a number between 0 and 1, and `BETA.INV` turns it into a duration from that task's Beta-PERT distribution, the standard schedule-risk distribution, scaled to run from the optimistic to the pessimistic value and peaking at the most likely one. The `Alpha` and `Beta` shape parameters are the usual PERT ones; the `IF` covers a task with no uncertainty at all, where `Range` is zero.
+
+Because this is a [calculated table](/docs/dax/calculated-tables), it's evaluated once, when the model refreshes. Every visual then reads the same 80,000 frozen samples. See [ADDCOLUMNS & SELECTCOLUMNS](/docs/dax/addcolumns-selectcolumns) if the two-step build isn't familiar.
+
+Relate `Tasks[TaskID]` one-to-many to `Samples[TaskID]`, then check the sampling is working before going further:
+
+```dax lineNumbers
+PERT Mean =
+AVERAGEX (
+    Tasks,
+    ( Tasks[Optimistic] + 4 * Tasks[MostLikely] + Tasks[Pessimistic] ) / 6
+)
+
+Mean Sampled Duration =
+AVERAGE ( Samples[Duration] )
+```
+
+In a table with `Tasks[TaskName]`, the two columns should agree to within a few tenths of a day. `Subsystem B Design`, for example, has a PERT mean of `(45 + 4 x 60 + 100) / 6 = 64.2` days, and its 10,000 samples average about 64.2 too. If they're far apart, an estimate column is probably typed as text.
+
+---
+
+## Step 4: Find Each Run's Longest Path
+
+For every path and every run, add up the sampled durations of the tasks on that path:
+
+```dax lineNumbers
+PathRuns =
+GENERATE (
+    VALUES ( PathTasks[PathID] ),
+    VAR ThisPath = PathTasks[PathID]
+    VAR PathTaskIDs =
+        SELECTCOLUMNS (
+            FILTER ( PathTasks, PathTasks[PathID] = ThisPath ),
+            "TaskID", PathTasks[TaskID]
+        )
+    RETURN
+        GROUPBY (
+            FILTER ( Samples, Samples[TaskID] IN PathTaskIDs ),
+            Samples[Iteration],
+            "PathDays", SUMX ( CURRENTGROUP (), Samples[Duration] )
+        )
+)
+```
+
+`GENERATE` runs the inner expression once per path. For each one, `FILTER` keeps only the samples of that path's five tasks, and `GROUPBY` sums them per iteration. Six paths x 10,000 runs = 60,000 rows, each holding one path's length in one simulated schedule.
+
+The finish of each run is its longest path. This table uses the name and columns `Simulations` / `Iteration`, `DurationDays`, `FinishDate` on purpose; Step 8 explains why.
+
+```dax lineNumbers
+Simulations =
+VAR StartDate = DATE ( 2026, 1, 5 )
+VAR PerRun =
+    GROUPBY (
+        PathRuns,
+        PathRuns[Iteration],
+        "DurationDays", MAXX ( CURRENTGROUP (), PathRuns[PathDays] )
+    )
+RETURN
+    ADDCOLUMNS (
+        PerRun,
+        "FinishDate", StartDate + ROUNDUP ( [DurationDays], 0 ) - 1
+    )
+```
+
+Work starts at the beginning of January 5, 2026, so a task that takes one day finishes on January 5. That's why there's a `- 1`, and `ROUNDUP` makes a run of 254.3 days finish on day 255. Set `FinishDate` to a **Date** data type in the column tools.
+
+Last, relate `Simulations[Iteration]` one-to-many to `PathRuns[Iteration]`. Step 7's criticality measure uses it.
+
+```text
+Tasks (1) ---< PathTasks          Simulations (1) ---< PathRuns
+Tasks (1) ---< Samples            FinishCalendar   (disconnected)
+```
+
+---
+
+## Step 5: The Plan Date, and Its Real Odds
+
+First, the date the deterministic plan promises: the longest path when every task takes exactly its most-likely duration.
+
+```dax lineNumbers
+Plan Duration Days =
+MAXX (
+    VALUES ( PathTasks[PathID] ),
+    CALCULATE ( SUMX ( PathTasks, RELATED ( Tasks[MostLikely] ) ) )
+)
+
+Plan Finish =
+DATE ( 2026, 1, 5 ) + [Plan Duration Days] - 1
+```
+
+`MAXX` iterates the six paths; [context transition](/docs/dax/calculate) in `CALCULATE` narrows `PathTasks` to the current path's five rows, and [RELATED](/docs/dax/related) fetches each task's most-likely duration. Two paths tie at `40 + 45 + 60 + 60 + 50 = 255` days, through `Subsystem A Design` and through `Subsystem B Design`, so **Plan Finish** is **September 16, 2026**.
+
+Now ask the simulation how often that actually happens:
+
+```dax lineNumbers
+Simulated Runs =
+COUNTROWS ( Simulations )
+
+Probability On Plan =
+VAR PlanDate = [Plan Finish]
+RETURN
+    DIVIDE (
+        COUNTROWS ( FILTER ( Simulations, Simulations[FinishDate] <= PlanDate ) ),
+        [Simulated Runs]
+    )
+```
+
+About **9%**. The plan everyone has been looking at is close to a one-in-eleven shot. Store `[Plan Finish]` in a variable first so it's evaluated once instead of on each of the 10,000 rows `FILTER` walks.
+
+---
+
+## Step 6: Percentiles and the S-Curve
+
+The measures for committing to a date:
+
+```dax lineNumbers
+P50 Finish =
+CONVERT (
+    ROUNDUP ( PERCENTILEX.INC ( Simulations, Simulations[FinishDate] * 1, 0.5 ), 0 ),
+    DATETIME
+)
+
+P80 Finish =
+CONVERT (
+    ROUNDUP ( PERCENTILEX.INC ( Simulations, Simulations[FinishDate] * 1, 0.8 ), 0 ),
+    DATETIME
+)
+
+P90 Finish =
+CONVERT (
+    ROUNDUP ( PERCENTILEX.INC ( Simulations, Simulations[FinishDate] * 1, 0.9 ), 0 ),
+    DATETIME
+)
+
+P80 Buffer Days =
+DATEDIFF ( [Plan Finish], [P80 Finish], DAY )
+```
+
+`PERCENTILEX.INC` needs a number, so `* 1` turns each date into its serial number; `ROUNDUP` lands an in-between percentile on the next whole day, and `CONVERT` turns the result back into a date. With this dataset, P50 is about **October 6**, P80 about **October 20**, and P90 about **October 27**. Committing to the P80 date means asking for **34 days** of schedule reserve over the plan.
+
+For the S-curve, the model needs a date axis that isn't related to anything, the same disconnected-table pattern the [EVM tutorial](/tutorials/build-an-evm-dashboard) uses for planned value. **New Table**:
+
+```dax lineNumbers
+FinishCalendar =
+CALENDAR (
+    MIN ( Simulations[FinishDate] ) - 14,
+    MAX ( Simulations[FinishDate] ) + 14
+)
+```
+
+Leave it unrelated, then:
+
+```dax lineNumbers
+Probability Finished By =
+VAR StatusDate = MAX ( FinishCalendar[Date] )
+RETURN
+    DIVIDE (
+        COUNTROWS ( FILTER ( Simulations, Simulations[FinishDate] <= StatusDate ) ),
+        [Simulated Runs]
+    )
+```
+
+On a line chart with `FinishCalendar[Date]` on the axis, each point is the share of runs finished by that date: the S-curve. On a card filtered by a single-date slicer, it answers "what are the odds we're done by *this* date?" With this data, September 30 is about 36%, October 15 about 72%, and October 31 about 94%.
+
+---
+
+## Step 7: Which Tasks Drive the Finish
+
+A task's **criticality index** is the share of runs in which it sat on the longest path, so a slip in that task would have moved the finish date.
+
+```dax lineNumbers
+Criticality Index =
+VAR TaskPaths = VALUES ( PathTasks[PathID] )
+VAR CriticalRuns =
+    FILTER (
+        CALCULATETABLE ( PathRuns, TREATAS ( TaskPaths, PathRuns[PathID] ) ),
+        PathRuns[PathDays] = RELATED ( Simulations[DurationDays] )
+    )
+RETURN
+    DIVIDE ( COUNTROWS ( SUMMARIZE ( CriticalRuns, PathRuns[Iteration] ) ), [Simulated Runs] )
+```
+
+With a task on the rows, the `Tasks` -> `PathTasks` relationship leaves `TaskPaths` holding only the paths that go through that task. `TREATAS` applies those path IDs to `PathRuns`, and the `FILTER` keeps the rows where that path was the longest in its run: its length equals the run's `DurationDays`, fetched with `RELATED` across the `Simulations` relationship. `SUMMARIZE` then counts each iteration once, even when a task sits on two paths that tie.
+
+The result is the most useful table on the page:
+
+| Task | Most likely | PERT mean | Criticality |
+|---|---|---|---|
+| Requirements Analysis | 40 | 41.7 | 100% |
+| System Architecture | 45 | 47.5 | 100% |
+| Subsystem A Design | 60 | 63.3 | ~48% |
+| Subsystem B Design | 60 | 64.2 | ~52% |
+| Integration Planning | 25 | 25.8 | ~0% |
+| Prototype Build | 60 | 64.2 | 100% |
+| Verification & Test | 50 | 53.3 | 100% |
+| Documentation | 30 | 30.8 | ~0% |
+
+The plan says Subsystems A and B are both critical, tied at 60 days. The simulation splits them: B drives the finish slightly more often, because its worst case is 10 days worse than A's. `Integration Planning` and `Documentation` essentially never matter, so management attention spent on them buys nothing on the finish date.
+
+---
+
+## Step 8: When the Network Is Too Big to List
+
+Listing paths by hand works for a diamond like this one. A real integrated master schedule can have thousands of routes, because the path count multiplies at every merge. Past a few dozen paths, run the simulation outside the model: paste the tasks and predecessors into the [Schedule Risk Simulator](/tools/schedule-risk-simulator), which does a full forward and backward pass per run in the browser, and download its runs CSV.
+
+That file has exactly the columns built in Step 4: `Iteration`, `DurationDays`, `FinishDate`. Load it as a table named `Simulations` instead of the calculated one, and every measure in Steps 5 and 6 works unchanged. Only `Plan Finish` needs to become a fixed `DATE(...)`, and the tool reports the plan date for you. The simulator's tasks CSV also includes a `CriticalityIndex` column, so `AVERAGE ( Tasks[CriticalityIndex] )` stands in for Step 7. The figures quoted in this tutorial come from the simulator's seeded run of these eight tasks. The DAX version draws its own random numbers, so expect your P-dates within a day or so and your percentages within a point.
+
+---
+
+## Step 9: Lay Out the Report
+
+```text
+Page: "Schedule Risk"
+
+Row 1 (KPI cards):
+  [Plan Finish]  [Probability On Plan]  [P50 Finish]  [P80 Finish]  [P80 Buffer Days]
+
+Row 2 (line chart, the S-curve):
+  X-axis: FinishCalendar[Date]
+  Y-axis: [Probability Finished By]   (format as percentage)
+  Constant lines (optional): at 0.5 and 0.8
+
+Row 3, left (column chart, the histogram):
+  X-axis: Simulations[FinishDate]
+  Y-axis: [Simulated Runs]
+
+Row 3, right (table):
+  Columns: Tasks[TaskName], Tasks[Optimistic], Tasks[MostLikely],
+           Tasks[Pessimistic], [PERT Mean], [Criticality Index]
+
+Optional: a FinishCalendar[Date] slicer with a [Probability Finished By] card
+```
+
+<ScheduleRiskAnatomyDiagram />
+
+If you add the date slicer, use **Format > Edit interactions** to stop it filtering the S-curve, or the curve collapses to a single point. See [Charts](/docs/visuals/charts), [Slicers](/docs/visuals/slicers), and [Tables](/docs/visuals/tables) for configuring these visuals.
+
+---
+
+## Common Mistakes
+
+### Putting RAND() in a Measure
+
+```dax lineNumbers
+Simulated Duration (Wrong) =
+SUMX (
+    Tasks,
+    BETA.INV ( RAND (), 2, 2, Tasks[Optimistic], Tasks[Pessimistic] )
+)
+```
+
+A measure is re-evaluated every time a visual asks for it. Each click, slicer change, or tooltip draws fresh random numbers, so the P80 card and the S-curve on the same page are reading different simulations and won't agree with each other. Keep every `RAND()` in a calculated table, where it's evaluated once at refresh. (This version also just adds every task together, ignoring the network entirely.)
+
+### Adding Up PERT Means Instead of Simulating
+
+A tempting shortcut is to skip the simulation and take each task's PERT mean along the critical path. Through `Subsystem B Design` that's `41.7 + 47.5 + 64.2 + 64.2 + 53.3 = 270.8` days, a finish around October 2. The simulation's average run is 275.4 days, about **4.5 days later**, and its P50 is October 6.
+
+The gap is merge bias. `Prototype Build` waits for the *later* of Subsystems A and B in every run, and the average of the later of two uncertain durations is always more than either one's own average. PERT arithmetic on a single path can't see that; only simulating the paths together does.
+
+### Reading Too Much Into a Refresh
+
+Each refresh draws new random numbers, so P80 might move by a day and Probability On Plan by a fraction of a point between refreshes, with no change to the schedule. With 10,000 runs, a probability near 50% carries about ±1 point of noise. Treat small moves as noise. For figures that never move, such as numbers going into a formal review, use the simulator's seeded CSV from Step 8, which gives the same result every time for the same inputs.
+
+### A Task Missing From the Paths Table
+
+A task that isn't on any path is silently ignored, and the forecast comes out early. Add a guard measure and keep it at zero:
+
+```dax lineNumbers
+Tasks Not On Any Path =
+COUNTROWS ( FILTER ( Tasks, ISEMPTY ( RELATEDTABLE ( PathTasks ) ) ) )
+```
+
+Also check `Plan Duration Days` against your scheduling tool's critical path length. If the two disagree, a path is missing.
+
+### Choosing the Distribution Without Noticing
+
+Beta-PERT weights the most-likely value heavily. A triangular distribution uses the same three numbers but gives the tails more weight, and the difference isn't small. Swap the `RETURN` inside `Samples` for the triangular inverse:
+
+```dax lineNumbers
+VAR U = RAND ()
+VAR F = DIVIDE ( [MostLikely] - [Optimistic], Range )
+RETURN
+    IF (
+        U < F,
+        [Optimistic] + SQRT ( U * Range * ( [MostLikely] - [Optimistic] ) ),
+        [Pessimistic] - SQRT ( ( 1 - U ) * Range * ( [Pessimistic] - [MostLikely] ) )
+    )
+```
+
+Same tasks, same network: P80 moves from about October 20 to about **November 8**, and the chance of hitting the plan drops from about 9% to under 2%. Neither is wrong. Pick one on purpose, write down which, and use the same one every reporting period so the trend means something.
+
+---
+
+## Tutorial Checklist
+
+- Every `RAND()` lives in a calculated table, so all visuals read the same frozen runs.
+- `Mean Sampled Duration` matches `PERT Mean` per task, which confirms the sampling works.
+- The paths table covers every task (`Tasks Not On Any Path` is zero) and `Plan Duration Days` matches the scheduling tool's critical path.
+- Each run's finish is its *longest* path, not the sum of every task.
+- The S-curve uses a disconnected `FinishCalendar`, and any date slicer is kept from filtering it.
+- The distribution choice (Beta-PERT or triangular) is deliberate and stays the same between reports.
+
+---
+
+## Next Steps
+
+- [Schedule Risk Simulator](/tools/schedule-risk-simulator) — paste any task network with three-point estimates to get the S-curve, P-dates, and criticality without building a model, then download the runs as a `Simulations` table for the measures above
+- [Build an Earned Value Management (EVM) Dashboard in Power BI](/tutorials/build-an-evm-dashboard) — the same eight tasks, measured against budget and baseline with CPI and SPI
+- [Systems Engineering DAX Patterns Cheat Sheet](/blog/systems-engineering-dax-patterns-cheat-sheet) — the S-curve and P80 measures on one page with the EVM, risk, FMEA, and reliability patterns
+- [Calculated Tables](/docs/dax/calculated-tables)
+- [ADDCOLUMNS & SELECTCOLUMNS](/docs/dax/addcolumns-selectcolumns)
+- [RELATED](/docs/dax/related)
+- [Variables](/docs/dax/variables)
+- [Build a Risk Register and Risk Matrix Dashboard in Power BI](/tutorials/build-a-risk-register-dashboard)

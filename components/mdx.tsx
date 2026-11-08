@@ -96,6 +96,7 @@ import { AllFunctionsAnatomyDiagram } from './all-functions-anatomy-diagram';
 import { RankxAnatomyDiagram } from './rankx-anatomy-diagram';
 import { RiskMatrixAnatomyDiagram } from './risk-matrix-anatomy-diagram';
 import { FmeaAnatomyDiagram } from './fmea-anatomy-diagram';
+import { ScheduleRiskAnatomyDiagram } from './schedule-risk-anatomy-diagram';
 import { ReliabilityAnatomyDiagram } from './reliability-anatomy-diagram';
 import { TraceabilityAnatomyDiagram } from './traceability-anatomy-diagram';
 import { MergeAnatomyDiagram } from './merge-anatomy-diagram';
@@ -207,6 +208,7 @@ export function getMDXComponents(components?: MDXComponents) {
     RankxAnatomyDiagram,
     RiskMatrixAnatomyDiagram,
     FmeaAnatomyDiagram,
+    ScheduleRiskAnatomyDiagram,
     ReliabilityAnatomyDiagram,
     TraceabilityAnatomyDiagram,
     MergeAnatomyDiagram,

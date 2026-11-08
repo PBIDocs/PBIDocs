@@ -336,11 +336,14 @@ export function ScheduleRiskSimulator() {
           <span className="text-xs font-normal text-fd-muted-foreground">
             One task per line: ID, name, optimistic, most likely, and pessimistic duration in {dayWord}, then
             predecessor IDs separated by <code>;</code>. Commas or tabs, so you can paste from Excel. Links are
-            finish-to-start. The task names come from the{' '}
-            <Link href="/tutorials/build-an-evm-dashboard" className="text-fd-primary hover:underline">
-              EVM dashboard tutorial
+            finish-to-start. The sample is the{' '}
+            <Link
+              href="/tutorials/build-a-schedule-risk-monte-carlo-dashboard"
+              className="text-fd-primary hover:underline"
+            >
+              schedule risk tutorial
             </Link>
-            ; the estimates are an example.
+            &apos;s task list, which builds the same simulation in DAX.
           </span>
         </label>
 

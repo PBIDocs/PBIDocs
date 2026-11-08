@@ -12,6 +12,19 @@ export const metadata: Metadata = {
 
 const changelog: { date: string; entries: ReactNode[] }[] = [
   {
+    date: '2026-11-08',
+    entries: [
+      <>
+        Added a{' '}
+        <Link href="/tutorials/build-a-schedule-risk-monte-carlo-dashboard">
+          Monte Carlo schedule risk dashboard tutorial
+        </Link>
+        : 10,000 simulated schedules built in DAX from three-point estimates, with an S-curve,
+        P50/P80/P90 finish dates, the real odds of hitting the plan, and which tasks drive the finish.
+      </>,
+    ],
+  },
+  {
     date: '2026-11-07',
     entries: [
       <>

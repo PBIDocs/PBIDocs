@@ -42,6 +42,17 @@ export default function ScheduleRiskSimulatorPage() {
           weight and makes a more pessimistic forecast from the same three numbers.
         </p>
         <p>
+          To build the simulation inside Power BI itself, with <code>RAND()</code> and{' '}
+          <code>BETA.INV</code> in a calculated table, follow the{' '}
+          <Link
+            href="/tutorials/build-a-schedule-risk-monte-carlo-dashboard"
+            className="text-fd-primary hover:underline"
+          >
+            Monte Carlo schedule risk tutorial
+          </Link>
+          . Its percentile and S-curve measures read this tool&apos;s runs CSV unchanged.
+        </p>
+        <p>
           SPI from the{' '}
           <Link href="/tutorials/build-an-evm-dashboard" className="text-fd-primary hover:underline">
             EVM dashboard tutorial

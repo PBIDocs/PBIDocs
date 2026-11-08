@@ -20,6 +20,7 @@ import {
   Wrench,
   Activity,
   ListChecks,
+  CalendarClock,
   Cog,
 } from 'lucide-react';
 import { NewsletterForm } from '@/components/newsletter-form';
@@ -156,6 +157,12 @@ const engineeringTutorials = [
     title: 'Requirements Traceability',
     hook: '87.5% covered, 62.5% verified, and the exact gap list.',
     icon: ListChecks,
+  },
+  {
+    href: '/tutorials/build-a-schedule-risk-monte-carlo-dashboard',
+    title: 'Schedule Risk (Monte Carlo)',
+    hook: '10,000 runs in DAX: a 9% chance of the plan date, P80 34 days later.',
+    icon: CalendarClock,
   },
 ];
 
