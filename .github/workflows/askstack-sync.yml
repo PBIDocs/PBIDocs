@@ -1,0 +1,36 @@
+# Keeps askstack's search index in step with the docs.
+# Runs when docs pages change on main, and can be started by hand from the Actions tab.
+# Only changed pages are re-embedded; chunks of deleted or shortened pages are removed.
+name: Sync docs to askstack
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "content/docs/**"
+  workflow_dispatch:
+
+concurrency:
+  group: askstack-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Sync changed pages
+        env:
+          ADMIN_TOKEN: ${{ secrets.ASKSTACK_ADMIN_TOKEN }}
+        run: >
+          node scripts/askstack-sync.mjs
+          --dir content/docs
+          --site pbidocs
+          --base-url https://pbidocs.com
+          --api https://askstack-api.kerndave.workers.dev
