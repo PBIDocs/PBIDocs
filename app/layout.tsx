@@ -4,6 +4,7 @@ import './global.css';
 import { Inter } from 'next/font/google';
 import NextTopLoader from 'nextjs-toploader';
 import { FixMoreMenuPosition } from '@/components/fix-more-menu-position';
+import { Banner } from 'fumadocs-ui/components/banner';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -48,6 +49,17 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             },
           }}
         >
+          {/* Dismissible; changing the id shows it again to people who closed it */}
+          <Banner id="askstack-early-access-1" className="text-sm">
+            <a
+              href="https://askstack.dev/?utm_source=pbidocs&utm_medium=banner"
+              className="underline-offset-4 hover:underline"
+            >
+              <span className="font-semibold">Wrong numbers in your Power BI model?</span>{' '}
+              <span className="max-sm:hidden">askstack traces them to the cause and fixes them. </span>
+              Join the early access →
+            </a>
+          </Banner>
           {children}
         </RootProvider>
         <FixMoreMenuPosition />
