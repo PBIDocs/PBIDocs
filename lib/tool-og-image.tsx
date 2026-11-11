@@ -2,6 +2,7 @@ import { ImageResponse } from 'next/og';
 import { __iconNode as activity } from 'lucide-react/dist/esm/icons/activity.mjs';
 import { __iconNode as calendarClock } from 'lucide-react/dist/esm/icons/calendar-clock.mjs';
 import { __iconNode as calendarDays } from 'lucide-react/dist/esm/icons/calendar-days.mjs';
+import { __iconNode as chartLine } from 'lucide-react/dist/esm/icons/chart-line.mjs';
 import { __iconNode as gauge } from 'lucide-react/dist/esm/icons/gauge.mjs';
 import { __iconNode as grid3x3 } from 'lucide-react/dist/esm/icons/grid-3x3.mjs';
 import { __iconNode as hash } from 'lucide-react/dist/esm/icons/hash.mjs';
@@ -25,6 +26,7 @@ const ICONS: Record<string, [string, Record<string, string>][]> = {
   activity,
   'calendar-clock': calendarClock,
   'calendar-days': calendarDays,
+  'chart-line': chartLine,
   gauge,
   'grid-3x3': grid3x3,
   hash,

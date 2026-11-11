@@ -1,4 +1,4 @@
-import { Activity, CalendarClock, CalendarDays, Gauge, Grid3x3, Hash, ListChecks, ShieldAlert, SlidersHorizontal, Sparkles, TrendingUp, type LucideIcon } from 'lucide-react';
+import { Activity, CalendarClock, CalendarDays, ChartLine, Gauge, Grid3x3, Hash, ListChecks, ShieldAlert, SlidersHorizontal, Sparkles, TrendingUp, type LucideIcon } from 'lucide-react';
 
 // Shared by the /tools hub, the homepage tools section, and the nav's Tools menu.
 export interface Tool {
@@ -94,6 +94,16 @@ export const tools: Tool[] = [
     badge: 'Free · unlimited',
     icon: Activity,
     iconName: 'activity',
+  },
+  {
+    href: '/tools/control-chart-builder',
+    group: 'engineering',
+    title: 'Control Chart Builder',
+    description:
+      'Paste measurements or defect counts for an I-MR, X-bar R, or p control chart with limits from a baseline, Western Electric rule signals, Cp/Cpk, and the DAX.',
+    badge: 'Free · unlimited',
+    icon: ChartLine,
+    iconName: 'chart-line',
   },
   {
     href: '/tools/risk-matrix-builder',

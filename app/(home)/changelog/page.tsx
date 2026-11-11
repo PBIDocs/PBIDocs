@@ -12,6 +12,17 @@ export const metadata: Metadata = {
 
 const changelog: { date: string; entries: ReactNode[] }[] = [
   {
+    date: '2026-11-11',
+    entries: [
+      <>
+        Launched the <Link href="/tools/control-chart-builder">Control Chart Builder</Link>: paste
+        measurements or defect counts to get an I-MR, X̄-R, or p control chart with limits set from a
+        baseline, the four Western Electric rules flagged point by point, and Cp/Cpk against spec
+        limits, plus the DAX to build the same chart in Power BI.
+      </>,
+    ],
+  },
+  {
     date: '2026-11-08',
     entries: [
       <>
