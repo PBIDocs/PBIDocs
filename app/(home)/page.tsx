@@ -22,11 +22,13 @@ import {
   ListChecks,
   CalendarClock,
   Cog,
+  LockOpen,
 } from 'lucide-react';
 import { NewsletterForm } from '@/components/newsletter-form';
 import { HeroSearch } from '@/components/hero-search';
 import { SpotlightCard } from '@/components/spotlight-card';
 import { FunctionTicker } from '@/components/function-ticker';
+import { FreeStatsMatrix } from '@/components/free-stats-matrix';
 import { DaxBuilderTeaser } from '@/components/dax-builder-teaser';
 import { tools } from '@/lib/tools';
 import { DividePlayground } from '@/components/divide-playground';
@@ -124,6 +126,18 @@ const stats = [
     label: 'DAX Pages',
   },
   { value: `${docsMeta.pages.length}`, label: 'Topics' },
+];
+
+// Counted from the content at build time, so the dot-matrix display stays true.
+const freeTools = tools.filter((t) => !t.ai);
+const freeStats = [
+  {
+    value: `${source.getPages().length + getBlogPosts().length + getTutorials().length}+`,
+    label: 'pages of docs, tutorials, and guides',
+  },
+  { value: String(getTutorials().length), label: 'step-by-step dashboard tutorials' },
+  { value: String(freeTools.length), label: 'generators, free and unlimited' },
+  { value: '0', label: 'sign-ins to read the docs or use a generator' },
 ];
 
 // Each hook is a real result from that tutorial's own dataset.
@@ -583,6 +597,40 @@ export default function HomePage() {
               <span className="text-fd-muted-foreground">{'\n...\n'}</span>
             </pre>
           </div>
+        </div>
+      </section>
+
+      {/* Free from day one */}
+      <section className="mt-24 w-full max-w-5xl text-left">
+        <div className="grid grid-cols-1 items-center gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)]">
+          <div>
+            <span className="mb-4 inline-flex items-center gap-1.5 rounded-full bg-fd-primary/10 px-3 py-1 text-xs font-semibold text-fd-primary">
+              <LockOpen className="size-3.5" />
+              No paywall on the basics
+            </span>
+            <h2 className="mb-3 text-3xl font-bold tracking-tight sm:text-4xl">Free from day one</h2>
+            <p className="mb-6 max-w-md text-fd-muted-foreground">
+              Every doc page, tutorial, and anatomy diagram is free to read, and the {freeTools.length} generators are
+              free to use as often as you like. No account, no trial clock. The tools run in your browser, so nothing
+              you paste ever leaves it.
+            </p>
+            <div className="flex flex-wrap gap-3">
+              <Link
+                href="/docs"
+                className="inline-flex items-center gap-1.5 rounded-lg bg-fd-primary px-5 py-2.5 text-sm font-semibold text-fd-primary-foreground hover:bg-fd-primary/90"
+              >
+                Browse the docs
+                <ArrowRight className="size-4" />
+              </Link>
+              <Link
+                href="/tools"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-fd-border px-5 py-2.5 text-sm font-semibold hover:bg-fd-muted"
+              >
+                Try a free tool
+              </Link>
+            </div>
+          </div>
+          <FreeStatsMatrix stats={freeStats} />
         </div>
       </section>
 
