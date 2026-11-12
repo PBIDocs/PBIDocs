@@ -50,14 +50,14 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           }}
         >
           {/* Dismissible; changing the id shows it again to people who closed it */}
-          <Banner id="askstack-early-access-1" className="text-sm">
+          <Banner id="askstack-health-check-1" className="text-sm">
             <a
-              href="https://askstack.dev/?utm_source=pbidocs&utm_medium=banner"
+              href="https://askstack.dev/health-check?utm_source=pbidocs&utm_medium=banner"
               className="underline-offset-4 hover:underline"
             >
-              <span className="font-semibold">Wrong numbers in your Power BI model?</span>{' '}
-              <span className="max-sm:hidden">askstack traces them to the cause and fixes them. </span>
-              Join the early access →
+              <span className="font-semibold">New: free Power BI model health check.</span>{' '}
+              <span className="max-sm:hidden">Find what&apos;s making your numbers wrong and your model slow. </span>
+              Check your model →
             </a>
           </Banner>
           {children}
