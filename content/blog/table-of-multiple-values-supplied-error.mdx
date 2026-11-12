@@ -3,6 +3,9 @@ title: "DAX Error: A Table of Multiple Values Was Supplied Where a Single Value 
 description: "This error means a table-returning expression — VALUES(), FILTER(), RELATEDTABLE() — ended up somewhere DAX needed a scalar, and had more than one row to give it. Here's why it depends on filter context, and how to fix it."
 date: "2026-09-12"
 tags: ["DAX", "Troubleshooting"]
+card:
+  label: "Error"
+  text: "A table of multiple values was supplied where a single value was expected."
 faq:
   - question: "What does \"a table of multiple values was supplied where a single value was expected\" mean?"
     answer: "A DAX expression that returns a table — VALUES(), FILTER(), RELATEDTABLE(), or similar — ended up in a spot that needs a single scalar value, and that table happened to have more than one row (or more than one column) at the moment it was evaluated."

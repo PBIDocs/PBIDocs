@@ -3,6 +3,9 @@ title: "Power Query Error: We Cannot Convert the Value Null to Type Table"
 description: "This error means a step expected a table but received null instead — usually from a filter that matched nothing, a failed merge, or a source that returned nothing this time. Here's how to find which, and the fix for each."
 date: "2026-08-28"
 tags: ["Power Query", "Troubleshooting"]
+card:
+  label: "Error"
+  text: "Expression.Error: We cannot convert the value null to type Table."
 faq:
   - question: "What does \"We cannot convert the value null to type Table\" mean?"
     answer: "A step further down the query expects a table as its input, but the step before it produced null instead — usually because a filter matched zero rows, a merge found no matching key, or a data source genuinely returned nothing for this refresh."

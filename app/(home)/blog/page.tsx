@@ -14,6 +14,7 @@ function toSummary(post: BlogPost): BlogPostSummary {
     description: post.description,
     date: post.date,
     tags: post.tags,
+    card: post.card,
   };
 }
 

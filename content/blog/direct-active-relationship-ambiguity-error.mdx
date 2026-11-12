@@ -3,6 +3,9 @@ title: "Power BI Error: You Can't Create a Direct Active Relationship Between Th
 description: "This error means Power BI already has an indirect active path between two tables and won't let a second active relationship create ambiguity. Here's why, and the two real fixes."
 date: "2026-10-04"
 tags: ["Data Modeling", "Troubleshooting"]
+card:
+  label: "Error"
+  text: "You can't create a direct active relationship between \"FactSales\" and \"DimDate\" because an active relationship already exists."
 faq:
   - question: "Why can't Power BI have two active relationships between the same two tables?"
     answer: "Because a measure referencing both tables would have no way to know which relationship to filter through — Power BI refuses to guess, and requires exactly one active (unambiguous) filter path between any two tables at a time."

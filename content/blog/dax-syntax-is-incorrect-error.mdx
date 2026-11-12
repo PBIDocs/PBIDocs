@@ -3,6 +3,9 @@ title: "DAX Error: The Syntax for '...' Is Incorrect"
 description: "This error means the DAX parser hit a character it didn't expect, before it ever looked at your data. The quoted token tells you where it gave up. Here are the six usual causes: commas, parentheses, separators, quotes, names, and VAR without RETURN."
 date: "2026-11-11"
 tags: ["DAX", "Troubleshooting"]
+card:
+  label: "Error"
+  text: "The syntax for ')' is incorrect. (DAX(SUM(Sales[Amount],)))."
 faq:
   - question: "What does \"the syntax for '...' is incorrect\" mean in DAX?"
     answer: "The formula couldn't be parsed. DAX read your expression left to right, reached the token shown in quotes, and that token couldn't legally appear there. Nothing about your data or relationships is involved: it fails before the formula ever runs."

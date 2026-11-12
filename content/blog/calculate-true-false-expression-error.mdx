@@ -3,6 +3,9 @@ title: "DAX Error: A Function 'CALCULATE' Has Been Used in a True/False Expressi
 description: "This error means CALCULATE() got nested directly inside a boolean condition instead of being used the way it's meant to — as the outer wrapper. Here's the actual rule, and the two ways people usually trip it."
 date: "2026-09-13"
 tags: ["DAX", "Troubleshooting"]
+card:
+  label: "Error"
+  text: "A function 'CALCULATE' has been used in a True/False expression that is used as a table filter expression. This is not allowed."
 faq:
   - question: "What does \"a function CALCULATE has been used in a True/False expression that is used as a table filter expression\" mean?"
     answer: "It means CALCULATE() (or CALCULATETABLE()) was called from inside a boolean comparison that's itself being used as a filter condition — usually inside FILTER() or as one of CALCULATE's own filter arguments. DAX doesn't allow CALCULATE to be nested directly inside that boolean condition."

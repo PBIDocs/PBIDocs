@@ -3,6 +3,9 @@ title: 'DAX Error: Comparison Operations Do Not Support Comparing Values of Type
 description: This DAX error means a comparison mixed two different data types on either side of an operator. The most common trigger is an Excel-style habit that doesn't translate to DAX. Here's why, and the fix.
 date: "2026-08-25"
 tags: ["DAX", "Troubleshooting"]
+card:
+  label: "Error"
+  text: "DAX comparison operations do not support comparing values of type Text with values of type Boolean."
 faq:
   - question: "What does \"DAX comparison operations do not support comparing values of type X with values of type Y\" mean?"
     answer: "It means an expression compared two values of genuinely different data types — most often a number or BLANK() on one side and a text string on the other — and DAX couldn't implicitly convert between them the way it can for some other type pairs."

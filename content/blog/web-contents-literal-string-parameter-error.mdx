@@ -3,6 +3,9 @@ title: "Power Query Error: Web.Contents Can Only Accept a Literal String as the 
 description: "This Formula.Firewall error means Web.Contents' URL was built dynamically instead of being a literal string. Here's why the Power BI Service enforces this when Desktop doesn't, and how to fix it with RelativePath."
 date: "2026-08-25"
 tags: ["Power Query", "Troubleshooting"]
+card:
+  label: "Error"
+  text: "Formula.Firewall: Web.Contents can only accept a literal string as the first parameter in this context."
 faq:
   - question: "What does \"Web.Contents can only accept a literal string as the first parameter\" mean?"
     answer: "The URL passed to Web.Contents was built dynamically (string concatenation, a variable, another query's output) instead of being a fixed literal string. The Power BI Service needs to statically determine a query's data source without running it, and it can't do that with a dynamically built URL."

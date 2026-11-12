@@ -3,6 +3,9 @@ title: "Why Did My Power Query Refresh Suddenly Get Slower?"
 description: "A refresh that used to take seconds and now takes minutes, with no error and no obvious cause, almost always means query folding silently broke somewhere. Here's how to find exactly which step, and the four usual causes."
 date: "2026-08-23"
 tags: ["Power Query", "Troubleshooting"]
+card:
+  label: "Symptom"
+  text: "Last week: refresh in 8 seconds. This week: refresh in 6 minutes."
 faq:
   - question: "Why did my Power Query refresh suddenly get slower without me changing anything major?"
     answer: "A small step — a custom column, a rename, a Table.Buffer — likely broke query folding somewhere in the chain, forcing everything after it to run locally against the full dataset instead of at the source."

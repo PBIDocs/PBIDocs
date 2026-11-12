@@ -3,6 +3,9 @@ title: "Power BI Error: There Isn't Enough Memory to Complete This Operation"
 description: "This memory error almost always means too much raw, unaggregated data is being pulled into Power BI Desktop at once. Here's how to find what's actually consuming the memory, and the fixes for each cause."
 date: "2026-08-25"
 tags: ["Power Query", "Troubleshooting"]
+card:
+  label: "Error"
+  text: "There isn't enough memory to complete this operation. Please close some applications and try again."
 faq:
   - question: "Why does Power BI Desktop run out of memory during refresh?"
     answer: "Almost always because a query is pulling more raw, unaggregated rows or columns into memory than the available RAM can hold at once — often due to missing filters, unnecessary columns, or a Table.Buffer call on a large table."

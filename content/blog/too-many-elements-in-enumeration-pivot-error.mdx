@@ -3,6 +3,9 @@ title: "Power Query Error: There Were Too Many Elements in the Enumeration to Co
 description: "This cryptic error almost always comes from Table.Pivot hitting duplicate row/column combinations with no aggregation function to combine them. Here's what it actually means, and the fix."
 date: "2026-08-28"
 tags: ["Power Query", "Troubleshooting"]
+card:
+  label: "Error"
+  text: "Expression.Error: There were too many elements in the enumeration to complete the operation."
 faq:
   - question: "What does \"There were too many elements in the enumeration to complete the operation\" mean in Power Query?"
     answer: "It almost always comes from Table.Pivot finding more than one row for the same row/column combination, with no aggregation function supplied to combine them into the single cell that combination has to become."

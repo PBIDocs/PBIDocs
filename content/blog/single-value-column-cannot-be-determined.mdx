@@ -3,6 +3,9 @@ title: "Power BI Error: A Single Value for Column Cannot Be Determined"
 description: "This error means a measure referenced a column directly instead of aggregating it. Here's why it often works at the row level and breaks at the total, and how to fix it."
 date: "2026-08-15"
 tags: ["DAX", "Troubleshooting"]
+card:
+  label: "Error"
+  text: "A single value for column 'SalesAmount' in table 'FactSales' cannot be determined."
 faq:
   - question: "Why does \"a single value for column cannot be determined\" happen in DAX?"
     answer: "A measure referenced a column directly instead of wrapping it in an aggregator like SUM, and DAX has no way to collapse many row values into the one number a measure must return."

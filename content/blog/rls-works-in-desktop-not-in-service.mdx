@@ -3,6 +3,9 @@ title: "Row-Level Security Works in Desktop But Not in the Power BI Service"
 description: "RLS filters correctly when testing with \"View as Roles\" in Desktop, then shows everyone all the data once published. Here's why that happens, and the four usual causes."
 date: "2026-08-25"
 tags: ["Power BI Service", "Governance", "Troubleshooting"]
+card:
+  label: "Symptom"
+  text: "Desktop, View as Roles: filtered correctly. Service, same report, real user: sees all the data."
 faq:
   - question: "Why does Row-Level Security work in Power BI Desktop but not after publishing?"
     answer: "\"View as Roles\" in Desktop only proves the DAX filter logic is correct. It doesn't test real user identity resolution or role membership, which only get exercised once the report is actually published and opened by a real user in the Service."

@@ -3,6 +3,9 @@ title: "DAX CALCULATE Modifiers Cheat Sheet"
 description: "A fast, scannable reference for the filter-modifying functions used inside CALCULATE — ALL, ALLEXCEPT, ALLSELECTED, REMOVEFILTERS, KEEPFILTERS, and USERELATIONSHIP."
 date: "2026-08-17"
 tags: ["DAX", "Cheat Sheet"]
+card:
+  label: "DAX"
+  text: "CALCULATE([Total Sales], ALLEXCEPT(DimProduct, DimProduct[Category]))"
 ---
 
 Quick reference for the functions you'll actually pass as filter arguments to `CALCULATE()`. See [CALCULATE](/docs/dax/calculate) for the full explanation of how filter context modification works, and [ALL, ALLEXCEPT, ALLSELECTED & REMOVEFILTERS](/docs/dax/filter-functions) for the deep dive on the filter-removal functions specifically.

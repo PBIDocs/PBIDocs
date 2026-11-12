@@ -3,6 +3,9 @@ title: "How to Fix a Circular Dependency Error in DAX"
 description: "\"A circular dependency was detected\" usually comes from a calculated column, not a measure. Here's how to find the cycle and break it."
 date: "2026-08-10"
 tags: ["DAX", "Troubleshooting"]
+card:
+  label: "Error"
+  text: "A circular dependency was detected: Table[ColumnA], Table[ColumnB], Table[ColumnA]."
 ---
 
 If Power BI just told you *"A circular dependency was detected"*, the fix is almost always the same shape: something you built (usually a calculated column) references itself, either directly or through a chain of other calculated columns and relationships that loop back around.

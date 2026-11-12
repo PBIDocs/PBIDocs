@@ -3,6 +3,9 @@ title: "Power Query Error: Formula.Firewall and Privacy Level Errors"
 description: "\"Formula.Firewall: Query references other queries or steps, so it may not directly access a data source\" comes from Power Query's privacy level checks, not a bug in the query. Here's what triggers it and how to fix it properly."
 date: "2026-08-20"
 tags: ["Power Query", "Troubleshooting"]
+card:
+  label: "Error"
+  text: "Formula.Firewall: Query 'Orders' (step 'Added Custom') references other queries or steps, so it may not directly access a data source."
 faq:
   - question: "What does Formula.Firewall mean in Power Query?"
     answer: "It means Power Query's privacy level checks blocked a step from combining data across more than one source, because it can't confirm the combination is safe."

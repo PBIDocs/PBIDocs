@@ -3,6 +3,9 @@ title: "DAX Time Intelligence Cheat Sheet"
 description: "A fast, scannable reference for the DAX time intelligence functions you'll actually reach for — YTD, prior period, and period-over-period comparisons."
 date: "2026-08-10"
 tags: ["DAX", "Cheat Sheet"]
+card:
+  label: "DAX"
+  text: "CALCULATE([Total Sales], SAMEPERIODLASTYEAR(DimDate[Date]))"
 ---
 
 Quick reference for the time intelligence functions that cover most real report requirements. Every function here assumes a proper marked date table — if `SAMEPERIODLASTYEAR` or `TOTALYTD` are returning wrong or blank results, check that first. See [Time Intelligence](/docs/dax/time-intelligence) for the full explanation of each pattern, and [Date Tables](/docs/modeling/date-tables) for how to set one up correctly.

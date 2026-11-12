@@ -30,6 +30,8 @@ export const blog = defineCollections({
     description: z.string(),
     date: z.string(),
     tags: z.array(z.string()).optional(),
+    // One-line strip on the blog index card: the exact error message, a symptom, or a code snippet.
+    card: z.object({ label: z.string(), text: z.string() }).optional(),
     faq: faqSchema,
   }),
 });
