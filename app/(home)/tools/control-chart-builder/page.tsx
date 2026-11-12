@@ -46,6 +46,14 @@ export default function ControlChartBuilderPage() {
           short-term variation only, so a shift in the middle of the data doesn&apos;t widen the limits and hide itself.
         </p>
         <p>
+          Building it in Power BI? The{' '}
+          <Link href="/tutorials/build-an-spc-control-chart-dashboard" className="text-fd-primary hover:underline">
+            SPC control chart tutorial
+          </Link>{' '}
+          walks through the I-MR example step by step: the moving range column, baseline limits, the rules measure, and
+          Cp/Cpk, with the same numbers this tool shows.
+        </p>
+        <p>
           More engineering calculators: the{' '}
           <Link href="/tools/reliability-calculator" className="text-fd-primary hover:underline">
             Reliability Calculator

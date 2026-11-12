@@ -1,11 +1,11 @@
 ---
 title: "Systems & Program Engineering DAX Patterns Cheat Sheet"
-description: "A fast, scannable reference for the DAX patterns systems and program engineers actually need in Power BI: EVM (CPI/SPI/EAC), risk scoring, FMEA/RPN, requirements coverage, and reliability metrics (MTBF/MTTR)."
+description: "A fast, scannable reference for the DAX patterns systems and program engineers actually need in Power BI: EVM (CPI/SPI/EAC), risk scoring, FMEA/RPN, requirements coverage, reliability metrics (MTBF/MTTR), and SPC control charts (limits, run rules, Cpk)."
 date: "2026-10-04"
 tags: ["DAX", "Cheat Sheet", "Data Modeling"]
 ---
 
-Most DAX content is written around sales data. This is a reference for the five calculation shapes that show up constantly in systems and program engineering reporting instead — earned value, risk scoring, failure mode analysis, requirements coverage, and reliability metrics. Each section links to a full fast-reference page and a complete tutorial with a real dataset.
+Most DAX content is written around sales data. This is a reference for the calculation shapes that show up constantly in systems and program engineering reporting instead — earned value, risk scoring, failure mode analysis, requirements coverage, reliability metrics, and statistical process control. Each section links to a full fast-reference page and a complete tutorial with a real dataset.
 
 ## Earned Value Management (EVM)
 
@@ -159,6 +159,24 @@ DIVIDE([MTBF (Hours)], [MTBF (Hours)] + [MTTR (Hours)])
 
 `Total Uptime Hours` itself needs a calculated column first — the gap between one failure and the *previous* repair for that same asset, with the asset's commissioning date as a fallback for its first-ever failure. See [Reliability Metrics (MTBF, MTTR & Availability)](/docs/dax-patterns/reliability-mtbf-mttr) for that calculated column and [Build a Reliability Dashboard](/tutorials/build-a-reliability-mtbf-mttr-dashboard) for a complete walkthrough. To get the numbers from a failure log without building a model, paste it into the [Reliability Calculator](/tools/reliability-calculator).
 
+## Process Control (SPC Control Charts)
+
+```dax lineNumbers
+Center Line =
+CALCULATE(AVERAGE(Measurements[Value]), REMOVEFILTERS(Measurements), Measurements[SampleNo] <= 20)
+
+Sigma =
+CALCULATE(AVERAGE(Measurements[Moving Range]), REMOVEFILTERS(Measurements), Measurements[SampleNo] <= 20) / 1.128
+
+UCL = [Center Line] + 3 * [Sigma]
+LCL = [Center Line] - 3 * [Sigma]
+
+Cpk =
+MIN(DIVIDE(24.5 - [Center Line], 3 * [Sigma]), DIVIDE([Center Line] - 23.5, 3 * [Sigma]))
+```
+
+`Moving Range` is a calculated column: the absolute difference from the previous `SampleNo`. Two choices decide whether the chart works: limits come from a **fixed baseline**, never all the data, and sigma comes from the **average moving range**, never `STDEV.S`, so a shift can't widen the limits and hide itself. The Western Electric rules are one more measure over a window of z-scores. See [Build an SPC Control Chart Dashboard](/tutorials/build-an-spc-control-chart-dashboard) for the rules measure and a complete walkthrough, or paste measurements into the [Control Chart Builder](/tools/control-chart-builder) for I-MR, X̄-R, and p charts without building a model.
+
 ## Quick Decision Table
 
 | Need | Pattern |
@@ -172,6 +190,8 @@ DIVIDE([MTBF (Hours)], [MTBF (Hours)] + [MTTR (Hours)])
 | Has every requirement been tested? | Coverage & Verification: `Coverage %` |
 | Has every requirement's test actually passed? | Coverage & Verification: `Verified %` |
 | How often does an asset fail, and for how long? | Reliability: `MTBF`, `MTTR` |
+| Has the process changed, or is it just noise? | SPC: `UCL` / `LCL`, `Signal Rules` |
+| Will the process keep making parts in spec? | SPC: `Cpk` |
 
 ## Next Steps
 

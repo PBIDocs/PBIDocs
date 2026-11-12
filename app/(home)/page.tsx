@@ -23,6 +23,7 @@ import {
   CalendarClock,
   Cog,
   LockOpen,
+  ChartLine,
 } from 'lucide-react';
 import { NewsletterForm } from '@/components/newsletter-form';
 import { HeroSearch } from '@/components/hero-search';
@@ -177,6 +178,12 @@ const engineeringTutorials = [
     title: 'Schedule Risk (Monte Carlo)',
     hook: '10,000 runs in DAX: a 9% chance of the plan date, P80 34 days later.',
     icon: CalendarClock,
+  },
+  {
+    href: '/tutorials/build-an-spc-control-chart-dashboard',
+    title: 'SPC Control Charts',
+    hook: 'Flag the shift at S21 while all 30 parts are still in spec, and Cpk 1.45 to 0.82.',
+    icon: ChartLine,
   },
 ];
 
@@ -435,7 +442,7 @@ export default function HomePage() {
                   href="/blog/systems-engineering-dax-patterns-cheat-sheet"
                   className="inline-flex items-center gap-1.5 text-sm font-medium text-fd-muted-foreground transition-colors hover:text-fd-primary"
                 >
-                  All five patterns on one cheat sheet
+                  Every pattern on one cheat sheet
                   <ArrowRight className="size-4" />
                 </Link>
                 <Link

@@ -15,6 +15,16 @@ const changelog: { date: string; entries: ReactNode[] }[] = [
     date: '2026-11-12',
     entries: [
       <>
+        Added the tutorial
+        {' '}
+        <Link href="/tutorials/build-an-spc-control-chart-dashboard">
+          Build an SPC Control Chart Dashboard in Power BI
+        </Link>
+        : an individuals and moving range chart in DAX with limits from a baseline, the four Western
+        Electric rules flagged point by point, and Cp/Cpk, including why limits from all the data hide
+        the very shift the chart should catch.
+      </>,
+      <>
         Launched the <Link href="/tools/dax-syntax-checker">DAX Syntax Checker</Link>: paste a
         formula that fails with &ldquo;The syntax for &lsquo;...&rsquo; is incorrect&rdquo; to see
         the real mistake marked in place, from trailing commas and unbalanced parentheses to curly
