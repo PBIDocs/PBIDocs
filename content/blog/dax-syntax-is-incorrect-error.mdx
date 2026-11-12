@@ -1,0 +1,170 @@
+---
+title: "DAX Error: The Syntax for '...' Is Incorrect"
+description: "This error means the DAX parser hit a character it didn't expect, before it ever looked at your data. The quoted token tells you where it gave up. Here are the six usual causes: commas, parentheses, separators, quotes, names, and VAR without RETURN."
+date: "2026-11-11"
+tags: ["DAX", "Troubleshooting"]
+faq:
+  - question: "What does \"the syntax for '...' is incorrect\" mean in DAX?"
+    answer: "The formula couldn't be parsed. DAX read your expression left to right, reached the token shown in quotes, and that token couldn't legally appear there. Nothing about your data or relationships is involved: it fails before the formula ever runs."
+  - question: "Is the quoted token always the mistake?"
+    answer: "No. It's where the parser gave up, which is often one character after the real mistake. A quoted ')' usually means something just before the closing parenthesis is wrong, like a trailing comma or a missing argument."
+  - question: "Why does DAX copied from a website give a syntax error?"
+    answer: "The usual culprits are curly 'smart' quotes that a blog or Word substituted for straight quotes, or a list separator mismatch: the code uses commas but your Power BI Desktop is set to locale-based separators that expect semicolons (or the reverse)."
+  - question: "Do table names with spaces need quotes in DAX?"
+    answer: "Yes. A table name containing spaces, or starting with a digit, or matching a reserved word, must be wrapped in single quotes: 'Sales Table'[Amount]. Column names always go in square brackets, spaces or not."
+---
+
+The full error usually reads something like:
+
+```text
+The syntax for ')' is incorrect. (DAX(SUM(Sales[Amount],))).
+```
+
+The character in quotes changes (`')'`, `','`, `'RETURN'`, `'['`), but the meaning is always the same: the DAX parser read your formula left to right, reached that token, and that token couldn't legally appear there. This happens before any data is touched. A syntax error has nothing to do with relationships, filter context, or data types. It's purely about the text of the formula.
+
+One habit makes this error much faster to fix: **the quoted token is where the parser gave up, not necessarily where you went wrong.** The real mistake is usually just before it.
+
+## Cause 1: A Trailing or Missing Comma
+
+```dax lineNumbers
+Total Sales =
+SUM(Sales[Amount],)
+```
+
+`SUM()` takes one argument. The trailing comma promises a second one, the parser then finds `)` where an argument should be, and reports `')'` as the problem. The mirror image is just as common: a missing comma between two arguments, which usually gets reported as the start of the second argument.
+
+```dax lineNumbers
+Bike Sales =
+CALCULATE(SUM(Sales[Amount]) Product[Category] = "Bikes")
+```
+
+**Fix:** count the arguments against the function's signature. Here, `CALCULATE` needs a comma between the expression and each filter:
+
+```dax lineNumbers
+Bike Sales =
+CALCULATE(SUM(Sales[Amount]), Product[Category] = "Bikes")
+```
+
+## Cause 2: Unbalanced Parentheses
+
+Long nested formulas (an `IF` inside a `SWITCH` inside a `CALCULATE`) are where parentheses drift. One too few and the parser reaches the end of the formula still waiting; one too many and it finds a `)` with nothing to close.
+
+```dax lineNumbers
+Margin Flag =
+IF(DIVIDE([Profit], [Revenue]) > 0.2, "High", "Low"))
+```
+
+**Fix:** put each nested function on its own line and indent it, so every closing parenthesis lines up under the function it closes. The formula bar in Power BI Desktop highlights the matching parenthesis when your cursor sits next to one, which is the fastest way to find the stray.
+
+```dax lineNumbers
+Margin Flag =
+IF(
+    DIVIDE([Profit], [Revenue]) > 0.2,
+    "High",
+    "Low"
+)
+```
+
+## Cause 3: Comma vs. Semicolon Separators
+
+DAX written in most of the English-speaking world separates arguments with commas and uses a period for decimals. In locales where the comma *is* the decimal mark (much of Europe and South America), DAX uses semicolons between arguments instead:
+
+```dax
+-- Standard separators
+Discounted = [Price] * 0.9 + IF([Qty] > 10, 5, 0)
+
+-- Locale-based separators
+Discounted = [Price] * 0,9 + IF([Qty] > 10; 5; 0)
+```
+
+Paste a formula written one way into a Power BI Desktop set up the other way and every separator becomes a syntax error.
+
+**Fix:** either swap the separators, or change which convention Desktop expects. The DAX separators option lives in **File → Options and settings → Options → Global → Regional settings**. Picking the standard separators there makes nearly every DAX snippet you find online paste cleanly.
+
+## Cause 4: Smart Quotes From Copy-Paste
+
+```dax
+Bike Sales = CALCULATE([Total Sales], Product[Category] = “Bikes”)
+```
+
+Look closely at the quotes around `Bikes`. Those are curly "smart" quotes, which blogs, Word, Outlook, and Teams often substitute for straight ones. DAX only recognizes the straight `"` character, so the curly one is just an unexpected symbol to the parser. The same thing happens with curly single quotes around table names.
+
+**Fix:** retype the quotes inside the formula bar. If you keep snippets in a notes app, turn off its smart-quote substitution, or keep them in a code editor instead.
+
+## Cause 5: Table Names With Spaces, Missing Their Quotes
+
+```dax lineNumbers
+Total Sales =
+SUM(Sales Table[Amount])
+```
+
+The parser reads `Sales`, then hits a space and `Table`, and doesn't know what to do with it. A table name that contains spaces or special characters, starts with a digit, or matches a reserved word must be wrapped in single quotes.
+
+**Fix:**
+
+```dax lineNumbers
+Total Sales =
+SUM('Sales Table'[Amount])
+```
+
+Column and measure names always go in square brackets, whether or not they contain spaces, so `[Order Date]` never needs extra quoting. It's only the table part that does.
+
+## Cause 6: VAR Without RETURN (or Other Keyword Slips)
+
+```dax lineNumbers
+Profit Margin =
+VAR Profit = [Revenue] - [Cost]
+VAR Margin = DIVIDE(Profit, [Revenue])
+```
+
+Variables only define values. A `VAR` block has to end with `RETURN` and an expression, or the parser reaches the end of the formula with nothing to return.
+
+```dax lineNumbers
+Profit Margin =
+VAR Profit = [Revenue] - [Cost]
+VAR Margin = DIVIDE(Profit, [Revenue])
+RETURN
+    Margin
+```
+
+A few other habits from other languages fail the same way:
+
+| Written as | DAX wants | Why |
+|---|---|---|
+| `[Status] != "Closed"` | `[Status] <> "Closed"` | DAX has no `!=` operator |
+| `[Region] IN ("East", "West")` | `[Region] IN { "East", "West" }` | `IN` takes a table constructor in curly braces |
+| `IF(x > 0 AND y > 0, ...)` | `IF(x > 0 && y > 0, ...)` | `AND` is a two-argument function, `&&` is the operator |
+| `VAR Total Sales = ...` | `VAR TotalSales = ...` | Variable names can't contain spaces |
+
+See [variables in DAX](/docs/dax/variables) for the full `VAR`/`RETURN` rules.
+
+## Reading the Error Faster
+
+Because the parser stops at the first token it can't place, a few patterns in the quoted token point straight at the cause:
+
+```text
+'('  or  ')'      -> comma or parenthesis problem just before it (Cause 1 or 2)
+','  or  ';'      -> separator convention mismatch (Cause 3)
+'“'  or  '”'      -> smart quotes (Cause 4)
+'['               -> unquoted table name with a space (Cause 5)
+end of formula    -> missing ')' or missing RETURN (Cause 2 or 6)
+```
+
+If the token still doesn't make sense, cut the formula down. Delete the outermost function, confirm the inner part works as its own measure, then add the layers back one at a time. Syntax errors never depend on context, so the first layer that fails is the one with the mistake.
+
+## Common Mistakes
+
+**Fixing the quoted token instead of what's before it.** Deleting the `)` the error points at almost always makes things worse. Look one token to the left first.
+
+**Assuming a pasted formula is correct because it worked for someone else.** It probably did work, under their separator setting and before their blog platform curled the quotes. Copy-paste causes most syntax errors in formulas that came from elsewhere.
+
+**Writing long formulas on one line.** A one-line nested formula hides parenthesis and comma mistakes. Line breaks and indentation cost nothing in DAX, and they make a syntax error visible at a glance.
+
+## Next Steps
+
+- [DAX basics](/docs/dax/basics)
+- [Variables (VAR / RETURN)](/docs/dax/variables)
+- [CALCULATE](/docs/dax/calculate)
+- [IF](/docs/dax/if) and [SWITCH](/docs/dax/switch)
+
+Formula parses fine but now says "a single value for column cannot be determined"? That's a filter-context problem, not a syntax one. See [that error explained](/blog/single-value-column-cannot-be-determined).
