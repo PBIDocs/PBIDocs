@@ -1,0 +1,318 @@
+---
+title: "Build a Pareto Chart Dashboard in Power BI"
+description: "An end-to-end tutorial for quality and manufacturing engineers: turn a raw defect log into a Pareto chart in DAX, with a rank that breaks ties and keeps Other last, a cumulative % line, the vital few that reach 80%, and the same chart ranked by cost."
+date: "2026-11-12"
+tags: ["Tutorial", "DAX", "Data Modeling"]
+faq:
+  - question: "How do you make a Pareto chart in Power BI?"
+    answer: "Power BI has no built-in Pareto visual, but a line and clustered column chart makes one. Put the category on the X-axis, a count measure as the columns, and a cumulative % measure as the line on the secondary axis. Sort the axis by a rank measure placed in the tooltips, and fix the secondary axis at 0 to 100%."
+  - question: "How do you calculate cumulative percentage for a Pareto chart in DAX?"
+    answer: "For each category, add up the values of every category ranked at or above it, then divide by the total of all categories shown. Use ALLSELECTED on the category column so the ranking and the total respect slicers and filters, and break ties between equal values by name so each bar gets its own step on the line."
+  - question: "What is the 80/20 rule in a Pareto chart?"
+    answer: "The observation that a small share of causes usually accounts for most of the effect, often quoted as 20% of causes producing 80% of the problems. In practice the split is rarely exactly 80/20. A Pareto chart shows the actual split, and the vital few are the causes it takes for the cumulative line to reach the threshold."
+  - question: "Should a Pareto chart use counts or costs?"
+    answer: "Both, when you have the cost. A count Pareto shows which problems happen most often; a cost Pareto shows which hurt most. They often disagree, because a rare defect found late can cost far more than a common one fixed in seconds. Picking what to fix from the count alone can send a team after the cheapest problem."
+---
+
+A Pareto chart answers one question: of everything that's going wrong, which few problems deserve the team's attention first? It sorts causes from largest to smallest, draws a line of the running share, and shows where that line crosses 80%. Most of the time a handful of causes covers most of the problem, and the chart makes that visible in one glance.
+
+Power BI has no Pareto visual. A line and clustered column chart and five measures make one, but two details trip up most attempts: ties, and an "Other" bucket that sorts into the middle. Both are handled below.
+
+```text
+Defect log (one row per defect: date, line, cause, cost)
+        |
+        | Measures: count, rank (ties broken, Other last), cumulative %
+        |
+Vital few: the causes it takes to reach 80%
+        |
+Dashboard (Pareto by count, Pareto by cost, line slicer)
+```
+
+Download the data: [defects.csv](/downloads/pareto-chart-dashboard/defects.csv), 200 rows.
+
+---
+
+## What You're Building
+
+A one-page Pareto dashboard answering the questions a quality review actually asks:
+
+- Which defect causes account for most of the defects?
+- Which account for most of the rework cost, and is that the same list?
+- Does the picture change from one production line to the other?
+
+```text
++---------------------------------------------------------------+
+|  Line slicer  |  Defects  |  Rework cost  |  Vital few causes |
++---------------------------------------------------------------+
+|  Pareto by count               |  Pareto by cost              |
+|  (columns: Defect Count,       |  (columns: Defect Cost,      |
+|   line: Cumulative %)          |   line: Cumulative Cost %)   |
++---------------------------------------------------------------+
+|  Table: cause, count, share, cumulative %, cost, vital few    |
++---------------------------------------------------------------+
+```
+
+---
+
+## Step 1: The Raw Data
+
+A circuit board assembly line logs every defect found at inspection or test in October 2026: 200 defects across two production lines. Each row records the cause and the standard rework cost for that cause.
+
+| DefectID | Date | Line | Cause | Cost |
+|---|---|---|---|---|
+| D-001 | 2026-10-01 | A | Missing component | 22 |
+| D-002 | 2026-10-01 | A | Tombstoning | 6 |
+| D-003 | 2026-10-01 | B | Solder bridge | 4 |
+| D-004 | 2026-10-01 | B | Solder bridge | 4 |
+| D-005 | 2026-10-01 | B | Insufficient solder | 4 |
+| D-006 | 2026-10-01 | B | Scratched board | 15 |
+| … | … | … | … | … |
+
+Summarized by cause, the 200 rows come to:
+
+| Cause | Defects | Cost per defect | Rework cost |
+|---|---|---|---|
+| Solder bridge | 68 | $4 | $272 |
+| Insufficient solder | 47 | $4 | $188 |
+| Solder balls | 29 | $1 | $29 |
+| Missing component | 17 | $22 | $374 |
+| Tombstoning | 12 | $6 | $72 |
+| Lifted lead | 8 | $8 | $64 |
+| Wrong polarity | 8 | $60 | $480 |
+| Scratched board | 4 | $15 | $60 |
+| Other | 7 | $8 | $56 |
+| **Total** | **200** | | **$1,595** |
+
+Notice the cost column before building anything. A solder bridge is touched up at the inspection bench in seconds. A component placed backwards usually isn't caught until the board fails functional test, and then it needs debugging, removal, and a replacement part. That difference decides Step 8.
+
+Keep the log at one row per defect rather than importing the summary. The measures count rows, so slicing by line or date just works, and nothing has to be recalculated when next month's defects arrive.
+
+---
+
+## Step 2: Load the Data
+
+1. **Get Data → Text/CSV**, select `defects.csv`, and choose **Transform Data**.
+2. Check the column types: `Date` as Date, `Cost` as Whole Number (or Fixed Decimal Number for real costs), the rest as Text.
+3. Rename the query to `Defects`, then **Close & Apply**.
+
+One table is all a Pareto chart needs. In a larger model, `Cause` would often come from a related causes table; the measures work the same way, pointed at that table's column.
+
+---
+
+## Step 3: The Base Measure
+
+```dax lineNumbers
+Defect Count = COUNTROWS ( Defects )
+```
+
+Everything else is built on this one measure. Step 8 swaps it for a cost measure and changes nothing else, which is why it pays to keep the base value in its own measure instead of repeating `COUNTROWS` inside the others.
+
+---
+
+## Step 4: Rank Each Cause, Ties and Other Included
+
+The bars have to sort from largest to smallest, and the cumulative line has to add them up in exactly the same order. Both come from one rule: for each cause, find every cause that ranks at or above it.
+
+```dax lineNumbers
+Pareto Rank =
+VAR CurrentCause = SELECTEDVALUE ( Defects[Cause] )
+VAR CurrentValue = [Defect Count]
+VAR CurrentIsOther = CurrentCause = "Other"
+VAR AtOrAbove =
+    FILTER (
+        ADDCOLUMNS ( ALLSELECTED ( Defects[Cause] ), "@Value", [Defect Count] ),
+        VAR IsOther = Defects[Cause] = "Other"
+        RETURN
+            NOT ISBLANK ( [@Value] )
+                && ( Defects[Cause] = CurrentCause
+                    || ( CurrentIsOther && NOT IsOther )
+                    || ( IsOther = CurrentIsOther
+                        && ( [@Value] > CurrentValue
+                            || ( [@Value] = CurrentValue && Defects[Cause] < CurrentCause ) ) ) )
+    )
+RETURN
+    IF ( HASONEVALUE ( Defects[Cause] ) && NOT ISBLANK ( CurrentValue ), COUNTROWS ( AtOrAbove ) )
+```
+
+Reading the filter from the inside out:
+
+- `ADDCOLUMNS ( ALLSELECTED ( Defects[Cause] ), "@Value", [Defect Count] )` builds a small table of every cause the report currently shows, with its count. [ALLSELECTED](/docs/dax/filter-functions#allselected) removes the chart's own filter on the current bar but keeps slicers, so the ranking follows the line slicer in Step 9.
+- A cause ranks above the current one if it has **more** defects, or the **same** number and a name earlier in the alphabet. That tie-break is what keeps Lifted lead and Wrong polarity, both at 8, from landing on the same rank.
+- `Other` is a bucket of small causes, not a fixable cause, so it ranks after every real cause whatever its size, and the real causes rank only against each other.
+- Counting the rows that pass gives the rank: 1 for Solder bridge, 9 for Other.
+
+Why not [RANKX](/docs/dax/rankx#ties)? RANKX gives tied causes the same rank, and has no way to send `Other` to the end. Counting the causes at or above gives every cause its own place, and the next step reuses the same table to add up the cumulative value.
+
+---
+
+## Step 5: Cumulative Count and Cumulative %
+
+The same table, summed instead of counted:
+
+```dax lineNumbers
+Cumulative Count =
+VAR CurrentCause = SELECTEDVALUE ( Defects[Cause] )
+VAR CurrentValue = [Defect Count]
+VAR CurrentIsOther = CurrentCause = "Other"
+VAR AtOrAbove =
+    FILTER (
+        ADDCOLUMNS ( ALLSELECTED ( Defects[Cause] ), "@Value", [Defect Count] ),
+        VAR IsOther = Defects[Cause] = "Other"
+        RETURN
+            NOT ISBLANK ( [@Value] )
+                && ( Defects[Cause] = CurrentCause
+                    || ( CurrentIsOther && NOT IsOther )
+                    || ( IsOther = CurrentIsOther
+                        && ( [@Value] > CurrentValue
+                            || ( [@Value] = CurrentValue && Defects[Cause] < CurrentCause ) ) ) )
+    )
+RETURN
+    IF ( HASONEVALUE ( Defects[Cause] ) && NOT ISBLANK ( CurrentValue ), SUMX ( AtOrAbove, [@Value] ) )
+
+Cumulative % =
+DIVIDE ( [Cumulative Count], CALCULATE ( [Defect Count], ALLSELECTED ( Defects[Cause] ) ) )
+```
+
+Format `Cumulative %` as a percentage with one decimal. The denominator is the [percent-of-total](/docs/dax-patterns/percent-of-total) pattern: the count across every cause shown, which `ALLSELECTED` keeps in step with the ranking table.
+
+| Rank | Cause | Defects | Share | Cumulative % |
+|---|---|---|---|---|
+| 1 | Solder bridge | 68 | 34.0% | 34.0% |
+| 2 | Insufficient solder | 47 | 23.5% | 57.5% |
+| 3 | Solder balls | 29 | 14.5% | 72.0% |
+| 4 | Missing component | 17 | 8.5% | 80.5% |
+| 5 | Tombstoning | 12 | 6.0% | 86.5% |
+| 6 | Lifted lead | 8 | 4.0% | 90.5% |
+| 7 | Wrong polarity | 8 | 4.0% | 94.5% |
+| 8 | Scratched board | 4 | 2.0% | 96.5% |
+| 9 | Other | 7 | 3.5% | 100.0% |
+
+Two rows show the rules at work. Lifted lead and Wrong polarity tie at 8, and the A-to-Z tie-break gives them 90.5% and 94.5%. Other has more defects than Scratched board, but ranks last and ends the line at exactly 100%.
+
+---
+
+## Step 6: The Vital Few
+
+```dax lineNumbers
+Vital Few =
+VAR Before = [Cumulative Count] - [Defect Count]
+VAR AllCauses = CALCULATE ( [Defect Count], ALLSELECTED ( Defects[Cause] ) )
+RETURN
+    IF ( NOT ISBLANK ( [Cumulative Count] ), IF ( DIVIDE ( Before, AllCauses ) < 0.8, 1, 0 ) )
+
+Pareto Bar Color = IF ( [Vital Few] = 1, "#0284C7", "#94A3B8" )
+
+Pareto Threshold = 0.8
+```
+
+A cause is in the vital few if the causes ranked above it haven't reached 80% yet. Testing the share *before* the cause, not after, includes the one that carries the line across the threshold: Solder balls leaves it at 72.0%, so Missing component is in, and the vital few are the top 4 of 9 causes, covering 80.5% of defects. Testing `[Cumulative %] <= 0.8` instead would stop at 3 causes and 72%, short of the goal the chart is meant to show.
+
+That's 4 causes out of 9, not 20%. The 80/20 split is a rule of thumb; the chart's job is to show the real one.
+
+---
+
+## Step 7: Build the Chart
+
+1. Insert a **Line and clustered column chart**.
+2. **X-axis:** `Defects[Cause]`. **Column y-axis:** `Defect Count`. **Line y-axis:** `Cumulative %` and `Pareto Threshold`.
+3. **Tooltips:** `Pareto Rank`.
+4. In the visual's **More options (…)** menu, choose **Sort axis → Pareto Rank**, then **Sort axis → Sort ascending**. The rank in the tooltips is what makes it available to sort by.
+5. **Format → Secondary y-axis → Range:** minimum 0, maximum 1. Without this the line axis scales itself, starts near 34%, and the curve looks steeper than it is.
+6. **Format → Columns → Color → fx:** Format style **Field value**, based on `Pareto Bar Color`.
+7. Optional: turn on data labels for the `Cumulative %` series only, and give `Pareto Threshold` a dashed red line.
+
+See [combo charts](/docs/visuals/charts#combo-charts) for more on the line and clustered column visual.
+
+<ParetoAnatomyDiagram />
+
+---
+
+## Step 8: Rank by Cost
+
+Copy the measures and swap the base:
+
+```dax lineNumbers
+Defect Cost = SUM ( Defects[Cost] )
+```
+
+Then make `Cost Pareto Rank`, `Cumulative Cost`, `Cumulative Cost %`, and `Cost Vital Few` from the Step 4–6 measures with `[Defect Count]` replaced by `[Defect Cost]`. The [Pareto Chart Builder](/tools/pareto-chart-builder) writes the whole cost set for you with **Rank by: Cost**. Build a second chart from them, sorted by `Cost Pareto Rank`.
+
+| Rank | Cause | Rework cost | Share | Cumulative % |
+|---|---|---|---|---|
+| 1 | Wrong polarity | $480 | 30.1% | 30.1% |
+| 2 | Missing component | $374 | 23.4% | 53.5% |
+| 3 | Solder bridge | $272 | 17.1% | 70.6% |
+| 4 | Insufficient solder | $188 | 11.8% | 82.4% |
+| 5 | Tombstoning | $72 | 4.5% | 86.9% |
+| 6 | Lifted lead | $64 | 4.0% | 90.9% |
+| 7 | Scratched board | $60 | 3.8% | 94.7% |
+| 8 | Solder balls | $29 | 1.8% | 96.5% |
+| 9 | Other | $56 | 3.5% | 100.0% |
+
+The two charts disagree on what to fix first. By count, Wrong polarity is 7th of 9, with 4% of the defects, outside the vital few. By cost, it's first, with 30.1% of the rework spend. Solder balls go the other way: third by count, eighth by cost, because they're brushed off in a second. A team that worked from the count chart alone would start on the cheapest problems and never look at the most expensive one.
+
+---
+
+## Step 9: Lay Out the Report
+
+Put both charts side by side, a card for `Defect Count`, `Defect Cost`, and the number of vital causes, and a table below with cause, count, share, `Cumulative %`, cost, and `Vital Few`. Then add a slicer on `Defects[Line]`.
+
+Because every measure ranks with `ALLSELECTED`, the slicer reshapes both charts and the line still ends at 100%. Slicing to each line tells the rest of the story:
+
+- **Line A:** 95 defects across 8 causes. Wrong polarity disappears from the chart entirely, because it never happened there.
+- **Line B:** all 8 wrong-polarity defects, and $480 of its $1,041 rework cost, 46.1%. One cause on one line is nearly half the line's cost, which points at something specific to Line B, like a reel loaded backwards on one feeder, rather than a process-wide problem.
+
+That's the usual next step after a Pareto: take the top bar, slice it by line, shift, supplier, or part number, and draw another Pareto inside it.
+
+---
+
+## Common Mistakes
+
+### Sorting the Axis by the Count
+
+Sorting by `Defect Count` descending gets the big bars in order, but not the end: Other, at 7, sorts ahead of Scratched board, at 4. The line reaches 100% at Other, then drops back to 96.5% at the last bar. Tied causes can also sort in a different order from the one the cumulative measure used, making the line step down between them. Sort by the rank measure, which follows the same rules as the line.
+
+### Ties Without a Tie-Break
+
+Writing the cumulative as "sum every cause with a count greater than or equal to this one" looks right and fails on ties. Lifted lead and Wrong polarity both pick up each other's defects, both show 94.5%, and the line goes flat across two bars. A tie can also decide who's in the vital few: on Line B alone, Missing component and Tombstoning tie at 7, right where the line crosses 80%. Break ties by name so each cause gets its own step.
+
+### Using ALL Instead of ALLSELECTED
+
+`ALL ( Defects[Cause] )` ignores filters on the cause column. Filter out Solder bridge (say, because a fix is already in place), and the chart still counts its 68 defects above every bar: Insufficient solder starts at 57.5% instead of 35.6%, and the vital few shrink from four causes to three. `ALLSELECTED` ranks only the causes the report shows.
+
+### Letting the Secondary Axis Scale Itself
+
+With an automatic range, the line axis starts near the first cumulative value and ends at 100%, so the curve fills the chart whether the problem is concentrated or not. Fix it at 0 to 1, so a steep curve means something.
+
+### A Big Other Bar
+
+If Other is large enough to fall inside the vital few, the chart is telling you the categories are too coarse. Split Other into real causes before acting on the chart. Keeping it last is only honest when it's small.
+
+### Fixing What's Most Common Instead of What Costs Most
+
+A count Pareto is the default because counting is easy. When cost, downtime, or severity is available, build the second chart. The [FMEA dashboard](/tutorials/build-an-fmea-dashboard) makes the same point about rare but severe failure modes.
+
+---
+
+## Tutorial Checklist
+
+- The log has one row per defect, and `Defect Count` is a separate base measure.
+- `Pareto Rank` gives every cause its own rank: 1 for Solder bridge, 9 for Other, 6 and 7 for the tied pair.
+- The chart's axis is sorted by `Pareto Rank` ascending, with the rank in the tooltips.
+- `Cumulative %` ends at exactly 100% on the last bar, with a slicer applied and without.
+- The secondary axis is fixed at 0 to 100%.
+- The vital few include the cause that crosses 80%: four causes, 80.5% of defects.
+- There's a cost Pareto next to the count Pareto, and Wrong polarity ranks first on it.
+
+---
+
+## Next Steps
+
+- [Pareto Chart Builder](/tools/pareto-chart-builder): paste causes with counts or costs for the chart, the vital few, and the DAX for your own table and column names
+- [Build an SPC Control Chart Dashboard in Power BI](/tutorials/build-an-spc-control-chart-dashboard): tell when a process changed; a Pareto then shows which causes the change produced
+- [Build an FMEA Dashboard in Power BI](/tutorials/build-an-fmea-dashboard): rank failure modes by severity, occurrence, and detection before they happen
+- [Systems Engineering DAX Patterns Cheat Sheet](/blog/systems-engineering-dax-patterns-cheat-sheet)
+- [Running Total](/docs/dax-patterns/running-total)
+- [Ranking](/docs/dax-patterns/ranking)
+- [ALL(), ALLEXCEPT() & REMOVEFILTERS()](/docs/dax/filter-functions)
+- [ADDCOLUMNS and SELECTCOLUMNS](/docs/dax/addcolumns-selectcolumns)

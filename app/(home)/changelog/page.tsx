@@ -15,6 +15,16 @@ const changelog: { date: string; entries: ReactNode[] }[] = [
     date: '2026-11-12',
     entries: [
       <>
+        Launched the <Link href="/tools/pareto-chart-builder">Pareto Chart Builder</Link>: paste
+        defect causes with counts and costs to get a Pareto chart, the vital few that reach 80%, and
+        the DAX for a line and clustered column chart, with ties and &ldquo;Other&rdquo; ranked the
+        way they should be. The new tutorial{' '}
+        <Link href="/tutorials/build-a-pareto-chart-dashboard">
+          Build a Pareto Chart Dashboard in Power BI
+        </Link>{' '}
+        shows how ranking by cost instead of count changes which problem gets fixed first.
+      </>,
+      <>
         Added the tutorial
         {' '}
         <Link href="/tutorials/build-an-spc-control-chart-dashboard">

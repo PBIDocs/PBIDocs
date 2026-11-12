@@ -1,4 +1,4 @@
-import { Activity, CalendarClock, CalendarDays, ChartLine, Gauge, Grid3x3, Hash, ListChecks, ShieldAlert, SlidersHorizontal, Sparkles, SpellCheck, TrendingUp, type LucideIcon } from 'lucide-react';
+import { Activity, CalendarClock, CalendarDays, ChartColumnDecreasing, ChartLine, Gauge, Grid3x3, Hash, ListChecks, ShieldAlert, SlidersHorizontal, Sparkles, SpellCheck, TrendingUp, type LucideIcon } from 'lucide-react';
 
 // Shared by the /tools hub, the homepage tools section, and the nav's Tools menu.
 export interface Tool {
@@ -114,6 +114,16 @@ export const tools: Tool[] = [
     badge: 'Free · unlimited',
     icon: ChartLine,
     iconName: 'chart-line',
+  },
+  {
+    href: '/tools/pareto-chart-builder',
+    group: 'engineering',
+    title: 'Pareto Chart Builder',
+    description:
+      'Paste defect causes for a Pareto chart ranked by count or cost, the vital few that reach 80%, ties and "Other" handled, and the DAX for Power BI.',
+    badge: 'Free · unlimited',
+    icon: ChartColumnDecreasing,
+    iconName: 'chart-column-decreasing',
   },
   {
     href: '/tools/risk-matrix-builder',

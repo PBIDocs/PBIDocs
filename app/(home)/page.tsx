@@ -24,6 +24,7 @@ import {
   Cog,
   LockOpen,
   ChartLine,
+  ChartColumnDecreasing,
 } from 'lucide-react';
 import { NewsletterForm } from '@/components/newsletter-form';
 import { HeroSearch } from '@/components/hero-search';
@@ -184,6 +185,12 @@ const engineeringTutorials = [
     title: 'SPC Control Charts',
     hook: 'Flag the shift at S21 while all 30 parts are still in spec, and Cpk 1.45 to 0.82.',
     icon: ChartLine,
+  },
+  {
+    href: '/tutorials/build-a-pareto-chart-dashboard',
+    title: 'Pareto Analysis',
+    hook: 'Wrong polarity: 4% of the defects, 30% of the rework cost. Rank by both.',
+    icon: ChartColumnDecreasing,
   },
 ];
 

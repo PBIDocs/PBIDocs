@@ -1,0 +1,201 @@
+DefectID,Date,Line,Cause,Cost
+D-001,2026-10-01,A,Missing component,22
+D-002,2026-10-01,A,Tombstoning,6
+D-003,2026-10-01,B,Solder bridge,4
+D-004,2026-10-01,B,Solder bridge,4
+D-005,2026-10-01,B,Insufficient solder,4
+D-006,2026-10-01,B,Scratched board,15
+D-007,2026-10-01,B,Insufficient solder,4
+D-008,2026-10-01,B,Tombstoning,6
+D-009,2026-10-01,A,Insufficient solder,4
+D-010,2026-10-01,B,Solder bridge,4
+D-011,2026-10-02,B,Solder balls,1
+D-012,2026-10-02,B,Insufficient solder,4
+D-013,2026-10-02,A,Solder bridge,4
+D-014,2026-10-02,A,Solder bridge,4
+D-015,2026-10-02,A,Insufficient solder,4
+D-016,2026-10-02,A,Insufficient solder,4
+D-017,2026-10-02,A,Missing component,22
+D-018,2026-10-02,B,Insufficient solder,4
+D-019,2026-10-02,A,Missing component,22
+D-020,2026-10-05,B,Solder balls,1
+D-021,2026-10-05,B,Solder bridge,4
+D-022,2026-10-05,B,Tombstoning,6
+D-023,2026-10-05,A,Solder bridge,4
+D-024,2026-10-05,A,Insufficient solder,4
+D-025,2026-10-05,B,Solder balls,1
+D-026,2026-10-05,A,Insufficient solder,4
+D-027,2026-10-05,A,Missing component,22
+D-028,2026-10-05,B,Wrong polarity,60
+D-029,2026-10-06,B,Insufficient solder,4
+D-030,2026-10-06,A,Insufficient solder,4
+D-031,2026-10-06,B,Insufficient solder,4
+D-032,2026-10-06,B,Insufficient solder,4
+D-033,2026-10-06,B,Solder bridge,4
+D-034,2026-10-06,B,Insufficient solder,4
+D-035,2026-10-06,A,Solder bridge,4
+D-036,2026-10-06,B,Solder bridge,4
+D-037,2026-10-06,A,Solder bridge,4
+D-038,2026-10-07,A,Insufficient solder,4
+D-039,2026-10-07,B,Solder balls,1
+D-040,2026-10-07,A,Lifted lead,8
+D-041,2026-10-07,A,Tombstoning,6
+D-042,2026-10-07,B,Insufficient solder,4
+D-043,2026-10-07,A,Solder bridge,4
+D-044,2026-10-07,A,Solder bridge,4
+D-045,2026-10-07,B,Missing component,22
+D-046,2026-10-07,B,Solder balls,1
+D-047,2026-10-08,B,Solder bridge,4
+D-048,2026-10-08,B,Solder bridge,4
+D-049,2026-10-08,A,Solder bridge,4
+D-050,2026-10-08,B,Wrong polarity,60
+D-051,2026-10-08,B,Missing component,22
+D-052,2026-10-08,A,Solder bridge,4
+D-053,2026-10-08,A,Solder bridge,4
+D-054,2026-10-08,B,Wrong polarity,60
+D-055,2026-10-08,A,Solder balls,1
+D-056,2026-10-09,B,Insufficient solder,4
+D-057,2026-10-09,B,Wrong polarity,60
+D-058,2026-10-09,A,Insufficient solder,4
+D-059,2026-10-09,A,Solder balls,1
+D-060,2026-10-09,B,Other,8
+D-061,2026-10-09,B,Solder bridge,4
+D-062,2026-10-09,A,Missing component,22
+D-063,2026-10-09,A,Solder bridge,4
+D-064,2026-10-09,B,Insufficient solder,4
+D-065,2026-10-12,B,Insufficient solder,4
+D-066,2026-10-12,B,Insufficient solder,4
+D-067,2026-10-12,A,Solder bridge,4
+D-068,2026-10-12,A,Solder balls,1
+D-069,2026-10-12,B,Solder bridge,4
+D-070,2026-10-12,B,Insufficient solder,4
+D-071,2026-10-12,B,Insufficient solder,4
+D-072,2026-10-12,A,Tombstoning,6
+D-073,2026-10-12,A,Solder bridge,4
+D-074,2026-10-13,B,Insufficient solder,4
+D-075,2026-10-13,A,Solder bridge,4
+D-076,2026-10-13,B,Lifted lead,8
+D-077,2026-10-13,A,Solder bridge,4
+D-078,2026-10-13,B,Lifted lead,8
+D-079,2026-10-13,A,Solder bridge,4
+D-080,2026-10-13,A,Insufficient solder,4
+D-081,2026-10-13,A,Solder bridge,4
+D-082,2026-10-13,A,Scratched board,15
+D-083,2026-10-14,A,Other,8
+D-084,2026-10-14,A,Solder bridge,4
+D-085,2026-10-14,A,Solder balls,1
+D-086,2026-10-14,B,Insufficient solder,4
+D-087,2026-10-14,B,Missing component,22
+D-088,2026-10-14,B,Solder bridge,4
+D-089,2026-10-14,A,Insufficient solder,4
+D-090,2026-10-14,A,Solder balls,1
+D-091,2026-10-14,A,Solder bridge,4
+D-092,2026-10-15,B,Other,8
+D-093,2026-10-15,B,Other,8
+D-094,2026-10-15,A,Solder bridge,4
+D-095,2026-10-15,B,Insufficient solder,4
+D-096,2026-10-15,B,Insufficient solder,4
+D-097,2026-10-15,A,Solder bridge,4
+D-098,2026-10-15,A,Lifted lead,8
+D-099,2026-10-15,A,Solder bridge,4
+D-100,2026-10-15,B,Solder bridge,4
+D-101,2026-10-16,A,Solder balls,1
+D-102,2026-10-16,B,Solder bridge,4
+D-103,2026-10-16,A,Solder bridge,4
+D-104,2026-10-16,B,Solder balls,1
+D-105,2026-10-16,B,Insufficient solder,4
+D-106,2026-10-16,B,Solder balls,1
+D-107,2026-10-16,B,Solder bridge,4
+D-108,2026-10-16,B,Tombstoning,6
+D-109,2026-10-16,B,Solder bridge,4
+D-110,2026-10-16,B,Solder bridge,4
+D-111,2026-10-19,B,Solder bridge,4
+D-112,2026-10-19,B,Solder balls,1
+D-113,2026-10-19,A,Tombstoning,6
+D-114,2026-10-19,B,Wrong polarity,60
+D-115,2026-10-19,B,Solder bridge,4
+D-116,2026-10-19,B,Missing component,22
+D-117,2026-10-19,B,Solder bridge,4
+D-118,2026-10-19,B,Solder bridge,4
+D-119,2026-10-19,B,Solder bridge,4
+D-120,2026-10-20,A,Solder bridge,4
+D-121,2026-10-20,A,Solder bridge,4
+D-122,2026-10-20,B,Wrong polarity,60
+D-123,2026-10-20,B,Solder balls,1
+D-124,2026-10-20,A,Insufficient solder,4
+D-125,2026-10-20,A,Insufficient solder,4
+D-126,2026-10-20,A,Solder balls,1
+D-127,2026-10-20,A,Solder balls,1
+D-128,2026-10-20,B,Insufficient solder,4
+D-129,2026-10-21,B,Lifted lead,8
+D-130,2026-10-21,A,Solder bridge,4
+D-131,2026-10-21,A,Solder balls,1
+D-132,2026-10-21,B,Tombstoning,6
+D-133,2026-10-21,B,Other,8
+D-134,2026-10-21,B,Missing component,22
+D-135,2026-10-21,B,Insufficient solder,4
+D-136,2026-10-21,B,Solder bridge,4
+D-137,2026-10-21,B,Lifted lead,8
+D-138,2026-10-22,A,Solder bridge,4
+D-139,2026-10-22,B,Tombstoning,6
+D-140,2026-10-22,A,Other,8
+D-141,2026-10-22,A,Insufficient solder,4
+D-142,2026-10-22,A,Solder balls,1
+D-143,2026-10-22,B,Solder balls,1
+D-144,2026-10-22,B,Tombstoning,6
+D-145,2026-10-22,A,Solder balls,1
+D-146,2026-10-22,A,Tombstoning,6
+D-147,2026-10-23,B,Solder bridge,4
+D-148,2026-10-23,A,Solder bridge,4
+D-149,2026-10-23,A,Solder bridge,4
+D-150,2026-10-23,A,Solder balls,1
+D-151,2026-10-23,A,Insufficient solder,4
+D-152,2026-10-23,B,Solder bridge,4
+D-153,2026-10-23,A,Insufficient solder,4
+D-154,2026-10-23,A,Solder bridge,4
+D-155,2026-10-23,B,Scratched board,15
+D-156,2026-10-26,A,Solder balls,1
+D-157,2026-10-26,B,Other,8
+D-158,2026-10-26,A,Missing component,22
+D-159,2026-10-26,A,Solder bridge,4
+D-160,2026-10-26,A,Insufficient solder,4
+D-161,2026-10-26,A,Missing component,22
+D-162,2026-10-26,A,Lifted lead,8
+D-163,2026-10-26,B,Insufficient solder,4
+D-164,2026-10-26,B,Insufficient solder,4
+D-165,2026-10-27,B,Wrong polarity,60
+D-166,2026-10-27,B,Tombstoning,6
+D-167,2026-10-27,A,Solder bridge,4
+D-168,2026-10-27,A,Missing component,22
+D-169,2026-10-27,A,Solder balls,1
+D-170,2026-10-27,B,Solder bridge,4
+D-171,2026-10-27,A,Solder bridge,4
+D-172,2026-10-27,A,Missing component,22
+D-173,2026-10-27,A,Solder balls,1
+D-174,2026-10-28,B,Wrong polarity,60
+D-175,2026-10-28,A,Insufficient solder,4
+D-176,2026-10-28,B,Solder balls,1
+D-177,2026-10-28,B,Missing component,22
+D-178,2026-10-28,B,Solder bridge,4
+D-179,2026-10-28,A,Insufficient solder,4
+D-180,2026-10-28,A,Lifted lead,8
+D-181,2026-10-28,B,Insufficient solder,4
+D-182,2026-10-28,A,Solder balls,1
+D-183,2026-10-29,A,Insufficient solder,4
+D-184,2026-10-29,B,Solder bridge,4
+D-185,2026-10-29,A,Solder balls,1
+D-186,2026-10-29,B,Solder bridge,4
+D-187,2026-10-29,B,Scratched board,15
+D-188,2026-10-29,A,Insufficient solder,4
+D-189,2026-10-29,A,Solder bridge,4
+D-190,2026-10-29,A,Solder bridge,4
+D-191,2026-10-29,B,Solder bridge,4
+D-192,2026-10-30,A,Missing component,22
+D-193,2026-10-30,B,Insufficient solder,4
+D-194,2026-10-30,B,Solder balls,1
+D-195,2026-10-30,B,Insufficient solder,4
+D-196,2026-10-30,B,Missing component,22
+D-197,2026-10-30,A,Solder bridge,4
+D-198,2026-10-30,B,Solder bridge,4
+D-199,2026-10-30,B,Solder bridge,4
+D-200,2026-10-30,B,Solder bridge,4
