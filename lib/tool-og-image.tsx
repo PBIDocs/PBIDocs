@@ -10,6 +10,7 @@ import { __iconNode as listChecks } from 'lucide-react/dist/esm/icons/list-check
 import { __iconNode as slidersHorizontal } from 'lucide-react/dist/esm/icons/sliders-horizontal.mjs';
 import { __iconNode as shieldAlert } from 'lucide-react/dist/esm/icons/shield-alert.mjs';
 import { __iconNode as sparkles } from 'lucide-react/dist/esm/icons/sparkles.mjs';
+import { __iconNode as spellCheck } from 'lucide-react/dist/esm/icons/spell-check.mjs';
 import { __iconNode as trendingUp } from 'lucide-react/dist/esm/icons/trending-up.mjs';
 import { tools } from '@/lib/tools';
 
@@ -34,6 +35,7 @@ const ICONS: Record<string, [string, Record<string, string>][]> = {
   'shield-alert': shieldAlert,
   'sliders-horizontal': slidersHorizontal,
   sparkles,
+  'spell-check': spellCheck,
   'trending-up': trendingUp,
 };
 

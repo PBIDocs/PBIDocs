@@ -35,6 +35,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${baseUrl}/tutorials`, lastModified: new Date() },
     { url: `${baseUrl}/tools`, lastModified: new Date() },
     { url: `${baseUrl}/tools/dax-formula-builder`, lastModified: new Date() },
+    { url: `${baseUrl}/tools/dax-syntax-checker`, lastModified: new Date() },
     { url: `${baseUrl}/tools/date-table-generator`, lastModified: new Date() },
     { url: `${baseUrl}/tools/time-intelligence-generator`, lastModified: new Date() },
     { url: `${baseUrl}/tools/format-string-builder`, lastModified: new Date() },

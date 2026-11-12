@@ -12,6 +12,18 @@ export const metadata: Metadata = {
 
 const changelog: { date: string; entries: ReactNode[] }[] = [
   {
+    date: '2026-11-12',
+    entries: [
+      <>
+        Launched the <Link href="/tools/dax-syntax-checker">DAX Syntax Checker</Link>: paste a
+        formula that fails with &ldquo;The syntax for &lsquo;...&rsquo; is incorrect&rdquo; to see
+        the real mistake marked in place, from trailing commas and unbalanced parentheses to curly
+        quotes, semicolon separators, and unquoted table names, with one-click fixes. Each cause is
+        explained in <Link href="/blog/dax-syntax-is-incorrect-error">the new blog post</Link>.
+      </>,
+    ],
+  },
+  {
     date: '2026-11-11',
     entries: [
       <>

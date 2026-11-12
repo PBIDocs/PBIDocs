@@ -1,4 +1,4 @@
-import { Activity, CalendarClock, CalendarDays, ChartLine, Gauge, Grid3x3, Hash, ListChecks, ShieldAlert, SlidersHorizontal, Sparkles, TrendingUp, type LucideIcon } from 'lucide-react';
+import { Activity, CalendarClock, CalendarDays, ChartLine, Gauge, Grid3x3, Hash, ListChecks, ShieldAlert, SlidersHorizontal, Sparkles, SpellCheck, TrendingUp, type LucideIcon } from 'lucide-react';
 
 // Shared by the /tools hub, the homepage tools section, and the nav's Tools menu.
 export interface Tool {
@@ -24,6 +24,16 @@ export const tools: Tool[] = [
     icon: Sparkles,
     iconName: 'sparkles',
     ai: true,
+  },
+  {
+    href: '/tools/dax-syntax-checker',
+    group: 'model',
+    title: 'DAX Syntax Checker',
+    description:
+      'Paste a formula that says "the syntax is incorrect" to see the real mistake marked in place: commas, parentheses, separators, smart quotes, and table names, with one-click fixes.',
+    badge: 'Free · unlimited',
+    icon: SpellCheck,
+    iconName: 'spell-check',
   },
   {
     href: '/tools/date-table-generator',
