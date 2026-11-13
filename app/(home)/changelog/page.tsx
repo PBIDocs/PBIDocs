@@ -16,6 +16,15 @@ const changelog: { date: string; entries: ReactNode[] }[] = [
     entries: [
       <>
         New blog post:{' '}
+        <Link href="/blog/refresh-credentials-invalid-error">
+          The Credentials Provided for the Data Source Are Invalid
+        </Link>
+        , on why scheduled refresh fails in the Service when Desktop works: expired OAuth tokens,
+        another owner&apos;s credentials, the wrong authentication method, gateway connections, and
+        &ldquo;Skip test connection&rdquo;.
+      </>,
+      <>
+        New blog post:{' '}
         <Link href="/blog/variant-data-type-calculated-column-error">
           Expressions That Yield Variant Data-Type Cannot Be Used to Define Calculated Columns
         </Link>
