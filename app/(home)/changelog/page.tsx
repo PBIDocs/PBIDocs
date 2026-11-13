@@ -15,6 +15,14 @@ const changelog: { date: string; entries: ReactNode[] }[] = [
     date: '2026-11-13',
     entries: [
       <>
+        New blog post:{' '}
+        <Link href="/blog/gateway-offline-refresh-error">
+          The Gateway Is Either Offline or Could Not Be Reached
+        </Link>
+        , covering sleeping gateway machines, a stopped gateway service, blocked ports, out-of-date
+        gateways, and why a second cluster member is the real fix.
+      </>,
+      <>
         Launched <Link href="/tools/weibull-analysis">Weibull Analysis</Link>: paste failure and
         running-unit hours for the shape β, scale η, B10 life, reliability at a replacement interval,
         a Weibull probability plot, and the DAX. The new tutorial{' '}

@@ -1,0 +1,96 @@
+---
+title: "Power BI Refresh Error: The Gateway Is Either Offline or Could Not Be Reached"
+description: "Scheduled refresh fails because the Power BI Service can't talk to your on-premises data gateway. The fix is almost never in the report. Here are the five usual causes, from a sleeping machine to a blocked port, and how to tell which one you have."
+date: "2026-11-13"
+tags: ["Power BI Service", "Troubleshooting"]
+card:
+  label: "Error"
+  text: "Unable to connect to the data source. The gateway is either offline or could not be reached."
+faq:
+  - question: "What does \"the gateway is either offline or could not be reached\" mean?"
+    answer: "The Power BI Service tried to send a refresh request to your on-premises data gateway and got no answer. Either the gateway's Windows service isn't running, the machine it runs on is off or asleep, or the network between that machine and Microsoft's cloud is blocking the connection. The report and its data source are usually fine."
+  - question: "How do I check whether my gateway is online?"
+    answer: "In the Power BI Service, open Settings (the gear icon), then Manage connections and gateways, and look at the Status column on the gateways tab. On the gateway machine itself, open the On-premises data gateway app: its status page says whether the gateway is online and ready to use."
+  - question: "Why does my gateway keep going offline overnight?"
+    answer: "Usually because it's installed on a laptop or desktop that sleeps, hibernates, or restarts for Windows updates. Scheduled refreshes at night find the machine asleep. Install the gateway on an always-on server or VM, or at least disable sleep on the machine that hosts it."
+  - question: "Can I avoid a single gateway machine being a point of failure?"
+    answer: "Yes. Install the gateway on a second machine and add it to the same gateway cluster during setup. The Service sends refreshes to any online member of the cluster, so one machine going down no longer stops refresh."
+---
+
+The error appears in the refresh history of a semantic model or dataflow that uses an on-premises source:
+
+```text
+Unable to connect to the data source. The gateway is either offline or could not be reached.
+```
+
+The wording varies a little depending on where you see it, but the meaning is the same. Refresh for an on-premises source doesn't go directly from the Power BI Service to your database. It goes through the **on-premises data gateway**, a Windows service running on a machine inside your network, which holds an outbound connection open to Microsoft's cloud and waits for work:
+
+```text
+Power BI Service  ->  Azure Relay  <-  Gateway (Windows service, your network)  ->  SQL Server, files, ...
+```
+
+"Offline or could not be reached" means the Service sent a refresh request and nothing answered from the gateway's end. The problem is almost always the gateway machine, its Windows service, or the network path, not the report.
+
+## First: Find Out Which Gateway, and What It Thinks
+
+Two places to look, and they take a minute between them:
+
+1. **In the Service:** **Settings (gear) → Manage connections and gateways → On-premises data gateways.** The Status column shows each gateway as online or offline. If it says offline here, the Service can't see it at all.
+2. **On the gateway machine:** open the **On-premises data gateway** app. Its status page says whether the gateway is online and ready to use, and it's where the restart, network, and diagnostics settings below live.
+
+If the Service says offline and you can't get onto the machine, start with Cause 1. If the app on the machine says it's online but refresh still fails, skip to Cause 3.
+
+## Cause 1: The Machine Was Off, Asleep, or Restarting
+
+The most common cause by far, especially for a gateway installed on someone's laptop or desktop. The machine sleeps at night, hibernates over the weekend, or restarts for Windows updates at 3 a.m., and the 6 a.m. scheduled refresh finds nobody home. Refresh then works fine when you try it at 10 a.m. with the machine awake, which makes the failure look random.
+
+**Fix:** run the gateway on an always-on server or VM, not a workstation. If it has to stay where it is for now, turn off sleep and hibernation on that machine, and schedule its Windows updates for a window that doesn't overlap with refresh times.
+
+## Cause 2: The Gateway Service Isn't Running
+
+The machine is up, but the gateway's Windows service isn't. It may have stopped after an update or a crash, or it may be failing to start at all. A common version: someone changed the service to run under a domain account instead of the default `NT SERVICE\PBIEgwService`, and that account's password has since expired or been changed. The service can no longer sign in, so it never starts.
+
+**Fix:** in the gateway app, open **Service settings** and choose **Restart now**, or restart the service from Windows Services. If it won't stay running, check which account it runs as. Use the default service account unless your organization requires otherwise, and if it must be a domain account, make it a service account whose password doesn't expire on a user schedule.
+
+## Cause 3: The Network Is Blocking the Connection
+
+The gateway only makes outbound connections. It needs to reach Microsoft's cloud (Azure Relay) on port 443, and by default also on ports 5671–5672 and 9350–9354. A firewall change, a new proxy, or a move to a locked-down network segment can cut that off while the machine and service look perfectly healthy.
+
+**Fix:** in the gateway app, run **Diagnostics → Network ports test**. It reports which endpoints and ports the gateway can't reach. Ask your network team to allow outbound traffic to those, or switch the gateway to **HTTPS mode** under **Network** in the app, which sends everything over 443 at some cost in performance. If your network uses a proxy, the gateway has to be configured to use it too.
+
+## Cause 4: The Gateway Is Too Far Out of Date
+
+The gateway gets a new release every month, and Microsoft supports only the most recent six. A gateway nobody has updated in a year can start failing in ways that look like a connection problem, especially after changes on the Service side.
+
+**Fix:** check the version in the gateway app, and install the current release over the top. Settings and data source connections survive the upgrade. Put the monthly update on someone's calendar so it doesn't happen again.
+
+## Cause 5: One Gateway, One Point of Failure
+
+Sometimes the "cause" is simply that every on-premises refresh in the organization depends on one machine, so any of the above takes everything down at once. The same applies to a **personal mode** gateway, which runs under one person's sign-in and stops working for their reports when they're away from that machine or leave the organization.
+
+**Fix:** install the gateway on a second machine and add it to the **same cluster** during setup, using the recovery key. The Service sends work to any online member, so one machine being down no longer stops refresh. Use a standard gateway for anything shared, not personal mode. See [gateways and refresh](/docs/governance/gateway-refresh) for clusters and how to stagger refresh schedules across them.
+
+## After the Fix
+
+1. Confirm the gateway shows **online** in **Manage connections and gateways**.
+2. Run **Refresh now** on an affected semantic model and check the refresh history.
+3. Turn scheduled refresh back on if it was disabled. After four failed refreshes in a row, Power BI switches the schedule off, and fixing the gateway doesn't switch it back on.
+
+If the next failure is about credentials rather than the gateway, the gateway is fine and its connection's stored sign-in isn't. That's a different fix: see [the credentials provided for the data source are invalid](/blog/refresh-credentials-invalid-error), Cause 4.
+
+## Common Mistakes
+
+**Debugging the report.** The semantic model, the queries, and the data source are rarely the problem when the gateway can't be reached. Check the gateway's status before opening Desktop.
+
+**Hosting the gateway on a personal machine "for now".** It works in testing, during the day, while the person who installed it is at their desk. Scheduled refresh runs when none of that is true.
+
+**Restarting the machine and calling it fixed.** If the service account's password expired or a firewall rule changed, the gateway will go offline again. Find which cause it was.
+
+**Changing the gateway's service account without a plan for its password.** A domain account whose password expires every 90 days takes the gateway down every 90 days.
+
+## Next Steps
+
+- [Gateways and Refresh](/docs/governance/gateway-refresh)
+- [Refresh in the Power BI Service](/docs/power-bi-service/refresh)
+- [Power BI Refresh Error: The Credentials Provided for the Data Source Are Invalid](/blog/refresh-credentials-invalid-error)
+- [Power BI Error: OLE DB or ODBC Error](/blog/ole-db-odbc-connection-error)
