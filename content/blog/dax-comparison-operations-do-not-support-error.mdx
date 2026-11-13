@@ -53,7 +53,7 @@ Sales Or Fallback =
 IF([Total Sales] > 0, [Total Sales], "N/A")
 ```
 
-`IF()` allows this to be *written* — DAX doesn't reject it at definition time — but the measure's actual returned type becomes ambiguous: sometimes a number, sometimes text. The error typically doesn't surface here, but the moment something else compares or aggregates this measure's result expecting one consistent type, it does.
+`IF()` allows this to be *written* — DAX doesn't reject it at definition time — but the measure's actual returned type becomes ambiguous: sometimes a number, sometimes text. The error typically doesn't surface here, but the moment something else compares or aggregates this measure's result expecting one consistent type, it does. Write the same formula as a calculated column and DAX refuses it immediately, with [a variant data-type error](/blog/variant-data-type-calculated-column-error).
 
 **Fix:** keep both branches the same type. If a text fallback is genuinely needed for display, do the type-mixing at the visual/formatting layer instead of inside the measure — or return `BLANK()` instead of `"N/A"` and let the visual's formatting handle how a blank displays.
 

@@ -12,6 +12,20 @@ export const metadata: Metadata = {
 
 const changelog: { date: string; entries: ReactNode[] }[] = [
   {
+    date: '2026-11-13',
+    entries: [
+      <>
+        New blog post:{' '}
+        <Link href="/blog/variant-data-type-calculated-column-error">
+          Expressions That Yield Variant Data-Type Cannot Be Used to Define Calculated Columns
+        </Link>
+        , covering the five ways a calculated column ends up returning two data types, from an
+        &ldquo;N/A&rdquo; fallback to a LOOKUPVALUE default, and why the same formula works as a
+        measure.
+      </>,
+    ],
+  },
+  {
     date: '2026-11-12',
     entries: [
       <>

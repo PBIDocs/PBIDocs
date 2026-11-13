@@ -1,0 +1,139 @@
+---
+title: "DAX Error: Expressions That Yield Variant Data-Type Cannot Be Used to Define Calculated Columns"
+description: "This error means your calculated column can return a number on some rows and text (or a date) on others. A column needs one data type, so DAX refuses it. Here are the five usual culprits, from an \"N/A\" fallback to a LOOKUPVALUE default, and how to fix each one."
+date: "2026-11-13"
+tags: ["DAX", "Troubleshooting"]
+card:
+  label: "Error"
+  text: "Expressions that yield variant data-type cannot be used to define calculated columns."
+faq:
+  - question: "What does \"expressions that yield variant data-type\" mean?"
+    answer: "The expression can return values of more than one data type depending on the row: a number on some rows and text on others, for example. DAX calls a mixed result a variant. A calculated column is stored with a single data type, so DAX rejects any formula whose result type isn't fixed."
+  - question: "Why does the same formula work as a measure?"
+    answer: "Measures are calculated at query time and aren't stored, so DAX lets them return a variant. It's still a bad habit: a measure that returns a number or \"N/A\" has no single data type, so number formatting can't be relied on and anything that compares or aggregates it can fail later."
+  - question: "Is BLANK() a different data type?"
+    answer: "No. BLANK() has no type of its own and fits any column, so IF(condition, BLANK(), [Amount]) is a numeric column with some blank rows. Replacing a text fallback like \"N/A\" with BLANK() is the most common fix for this error."
+  - question: "Does mixing whole numbers and decimals cause this error?"
+    answer: "No. DAX promotes numeric types to a common one, so IF(condition, 0, [Price] * 1.2) returns a decimal column. The error comes from mixing genuinely different kinds of value: numbers with text, dates with text, or true/false with text."
+---
+
+The full error reads:
+
+```text
+Expressions that yield variant data-type cannot be used to define calculated columns.
+```
+
+A calculated column is stored, and everything stored in a column has one data type: Whole Number, Decimal Number, Text, Date, True/False. "Variant" is DAX's word for an expression that could produce *more than one* of those depending on the row. DAX works out the result type of your formula before it computes a single value, finds two possibilities, and refuses to create the column.
+
+So the fix is never about the data. It's about finding the branch of the formula that returns a different kind of value from the others, and making them match.
+
+## Cause 1: A Text Fallback in a Numeric IF
+
+```dax lineNumbers
+Unit Price =
+IF ( Sales[Quantity] = 0, "N/A", Sales[Amount] / Sales[Quantity] )
+```
+
+The `IF` returns text on rows where quantity is zero and a number everywhere else. This is the most common version, and it usually comes from Excel, where a cell can hold "N/A" in one row and 12.50 in the next without complaint.
+
+**Fix:** return `BLANK()` instead. Blank has no type of its own, so the column stays numeric, sums and averages simply skip those rows, and visuals show an empty cell.
+
+```dax lineNumbers
+Unit Price =
+IF ( Sales[Quantity] = 0, BLANK (), Sales[Amount] / Sales[Quantity] )
+```
+
+[DIVIDE](/docs/dax/divide) does the same thing in one step, returning blank when the denominator is zero: `DIVIDE ( Sales[Amount], Sales[Quantity] )`. If the report really must *say* "N/A", put that in the visual (a measure for a card or table, or a separate text column for display), not in the numeric column. See [BLANK vs. zero](/docs/dax/blank-vs-zero) for how blanks behave in totals.
+
+## Cause 2: A SWITCH Default of a Different Type
+
+```dax lineNumbers
+Region Name =
+SWITCH (
+    Sales[RegionCode],
+    1, "North",
+    2, "South",
+    3, "West",
+    0
+)
+```
+
+Every listed result is text, but the last argument, the value for anything that doesn't match, is the number `0`. Defaults are the easiest branch to miss, because they sit alone at the bottom with no condition next to them.
+
+**Fix:** make the default the same type as the rest, here `"Unknown"`, or leave it out entirely, in which case unmatched rows get blank. The same check applies to every result in a long `SWITCH ( TRUE (), … )`: one numeric result among twenty text ones is enough. See [SWITCH](/docs/dax/switch).
+
+## Cause 3: A Date Column With a Text Placeholder
+
+```dax lineNumbers
+Ship Date Display =
+IF ( ISBLANK ( Orders[ShipDate] ), "Not shipped", Orders[ShipDate] )
+```
+
+Date on one branch, text on the other. It's the same mistake as Cause 1, but people expect it to work because dates *look* like text in a table.
+
+**Fix:** decide what the column is for. If it's a real date you'll filter, sort, or do date math on, leave the blanks as blanks. If it's purely a label for display, make both branches text, so the column is Text and every value is formatted the way you choose:
+
+```dax lineNumbers
+Ship Date Display =
+IF (
+    ISBLANK ( Orders[ShipDate] ),
+    "Not shipped",
+    FORMAT ( Orders[ShipDate], "yyyy-mm-dd" )
+)
+```
+
+A text column sorts alphabetically, not by date, which is why the `yyyy-mm-dd` order matters here. Keep the original date column for anything that isn't display.
+
+## Cause 4: A Lookup or Error Fallback of the Wrong Type
+
+```dax lineNumbers
+List Price =
+LOOKUPVALUE ( Prices[Price], Prices[SKU], Products[SKU], "Missing" )
+
+Code Number =
+IFERROR ( VALUE ( Products[Code] ), "Invalid" )
+```
+
+Both functions take a "what to return instead" argument: [LOOKUPVALUE](/docs/dax/lookupvalue)'s optional alternate result, and [IFERROR](/docs/dax/iferror)'s value if error. Both fallbacks here are text, while the normal result is a number. `COALESCE ( Products[Discount], "None" )` fails the same way.
+
+**Fix:** use a fallback of the same type, usually `BLANK ()` or `0`, depending on whether "missing" should count as zero in totals. For the price lookup, blank is almost always right: a missing price isn't a free product. Then add a separate True/False column such as `Has Price = NOT ISBLANK ( [List Price] )` if you need to filter for the gaps.
+
+## Cause 5: True/False Mixed With Text
+
+```dax lineNumbers
+Is Late =
+IF ( Orders[DaysLate] > 0, TRUE (), "On time" )
+```
+
+True/False is its own data type. Pairing `TRUE ()` with a text label, or `"Yes"` with `FALSE ()`, makes a variant just like a number and text would.
+
+**Fix:** pick one. `Orders[DaysLate] > 0` on its own is already a True/False column, which slicers and filters handle well. If you want the words on the report, make both branches text: `IF ( Orders[DaysLate] > 0, "Late", "On time" )`.
+
+## What Doesn't Cause It
+
+- **Mixing whole numbers and decimals.** `IF ( Sales[Quantity] = 0, 0, Sales[Amount] / Sales[Quantity] )` is fine: DAX promotes both branches to Decimal Number.
+- **`BLANK ()` in any branch.** It fits every type.
+- **The same formula as a measure.** Measures aren't stored, so DAX allows a variant result there. It doesn't make it a good idea: a measure returning a number or "N/A" has no fixed data type for number formatting to work with, and it moves the type mismatch somewhere harder to find, often as a [comparison error](/blog/dax-comparison-operations-do-not-support-error) in whatever uses it next.
+
+## Finding the Branch in a Long Formula
+
+For a big nested `IF` or `SWITCH`, read only the *return values*, not the conditions. List them out: `"High"`, `"Medium"`, `0`, `"Low"`. The one that doesn't match is the problem. Defaults, `IFERROR` fallbacks, and the third argument of `IF` are where it hides most often.
+
+If the mixed values come from the source data itself (a numeric column with "N/A" typed into some rows), fix it upstream in Power Query instead, where replacing those values with null before setting the column type keeps the whole model clean. See [DataFormat.Error: We couldn't convert to Number](/blog/couldnt-convert-to-number-date-error) for that version of the problem.
+
+## Common Mistakes
+
+**Wrapping everything in FORMAT to make the error go away.** Converting every branch to text does fix the error, but it also turns a numeric column into text: totals stop working and sorting becomes alphabetical, so 100 sorts before 20. Only do it for columns that are genuinely labels.
+
+**Replacing "N/A" with 0 by reflex.** Zero is a value. It drags averages down and counts as a real result in totals. Use `0` only when missing really means zero; otherwise use `BLANK ()`.
+
+**Moving the formula to a measure because "it works there".** It works because measures tolerate variants, not because the formula is right. The mismatch is still there, and it'll surface the next time something compares or formats the result.
+
+## Next Steps
+
+- [Calculated Columns](/docs/dax/calculated-columns)
+- [BLANK vs. Zero](/docs/dax/blank-vs-zero)
+- [IF](/docs/dax/if) and [SWITCH](/docs/dax/switch)
+- [IFERROR](/docs/dax/iferror) and [LOOKUPVALUE](/docs/dax/lookupvalue)
+
+Formula won't save at all, with "the syntax for '...' is incorrect"? That's a parsing problem, not a type one. See [that error explained](/blog/dax-syntax-is-incorrect-error), or paste the formula into the [DAX Syntax Checker](/tools/dax-syntax-checker).
