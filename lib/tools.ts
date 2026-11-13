@@ -5,6 +5,8 @@ export interface Tool {
   href: string;
   title: string;
   group: 'ai' | 'model' | 'engineering';
+  // Engineering tools only: splits them into two columns in the nav's Tools menu.
+  area?: 'project' | 'quality';
   description: string;
   badge: string;
   icon: LucideIcon;
@@ -78,6 +80,7 @@ export const tools: Tool[] = [
   {
     href: '/tools/evm-calculator',
     group: 'engineering',
+    area: 'project',
     title: 'EVM Calculator',
     description:
       'BAC, PV, EV, and AC in; CPI, SPI, EAC, ETC, VAC, and TCPI out, with a plain-English status, three EAC methods compared, and the DAX.',
@@ -88,6 +91,7 @@ export const tools: Tool[] = [
   {
     href: '/tools/schedule-risk-simulator',
     group: 'engineering',
+    area: 'project',
     title: 'Schedule Risk Simulator',
     description:
       'Three-point estimates and predecessors in; a Monte Carlo S-curve, P50/P80/P90 finish dates, your odds on a target date, and task criticality out, with the DAX.',
@@ -98,6 +102,7 @@ export const tools: Tool[] = [
   {
     href: '/tools/reliability-calculator',
     group: 'engineering',
+    area: 'quality',
     title: 'Reliability Calculator',
     description:
       'Paste a failure log or enter totals for MTBF, MTTR, availability, failure rate, and mission reliability, per asset, with the DAX.',
@@ -108,6 +113,7 @@ export const tools: Tool[] = [
   {
     href: '/tools/weibull-analysis',
     group: 'engineering',
+    area: 'quality',
     title: 'Weibull Analysis',
     description:
       'Paste failure and running-unit hours for Weibull β and η, B10 life, reliability at your replacement interval, a probability plot, and the DAX.',
@@ -118,6 +124,7 @@ export const tools: Tool[] = [
   {
     href: '/tools/control-chart-builder',
     group: 'engineering',
+    area: 'quality',
     title: 'Control Chart Builder',
     description:
       'Paste measurements or defect counts for an I-MR, X-bar R, or p control chart with limits from a baseline, Western Electric rule signals, Cp/Cpk, and the DAX.',
@@ -128,6 +135,7 @@ export const tools: Tool[] = [
   {
     href: '/tools/pareto-chart-builder',
     group: 'engineering',
+    area: 'quality',
     title: 'Pareto Chart Builder',
     description:
       'Paste defect causes for a Pareto chart ranked by count or cost, the vital few that reach 80%, ties and "Other" handled, and the DAX for Power BI.',
@@ -138,6 +146,7 @@ export const tools: Tool[] = [
   {
     href: '/tools/risk-matrix-builder',
     group: 'engineering',
+    area: 'project',
     title: 'Risk Matrix Builder',
     description:
       'Paste a risk register for a 5×5 heat map, scores, adjustable Critical/High/Medium bands, a ranked list, and the DAX with matrix cell colors.',
@@ -148,6 +157,7 @@ export const tools: Tool[] = [
   {
     href: '/tools/fmea-calculator',
     group: 'engineering',
+    area: 'quality',
     title: 'FMEA Calculator',
     description:
       'Paste failure modes for RPNs and High/Medium/Low action priority, with a severity override that catches rare but serious failures, and the DAX.',
@@ -158,6 +168,7 @@ export const tools: Tool[] = [
   {
     href: '/tools/traceability-matrix-builder',
     group: 'engineering',
+    area: 'project',
     title: 'Traceability Matrix Builder',
     description:
       'Paste requirements, trace links, and test results for a requirements traceability matrix, coverage and verified %, the untested gap list, and the DAX.',

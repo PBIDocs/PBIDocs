@@ -48,17 +48,18 @@ function ToolLink({ tool }: { tool: Tool }) {
   );
 }
 
-const PANEL_WIDTH: Record<string, number> = { tools: 800, more: 240 };
+const PANEL_WIDTH: Record<string, number> = { tools: 1008, more: 240 };
 const EDGE = 16;
 
 function ToolsPanel() {
   const ai = tools.find((t) => t.group === 'ai');
   const columns = [
     { heading: 'Build your model', items: tools.filter((t) => t.group === 'model') },
-    { heading: 'Engineering', items: tools.filter((t) => t.group === 'engineering') },
+    { heading: 'Project & risk', items: tools.filter((t) => t.group === 'engineering' && t.area === 'project') },
+    { heading: 'Quality & reliability', items: tools.filter((t) => t.group === 'engineering' && t.area !== 'project') },
   ];
   return (
-    <div className="grid w-[min(50rem,calc(100vw-2rem))] grid-cols-1 sm:grid-cols-[1fr_1fr] md:grid-cols-[1fr_1fr_15rem]">
+    <div className="grid w-[min(63rem,calc(100vw-2rem))] grid-cols-1 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_1fr_14rem]">
       {columns.map((col) => (
         <div key={col.heading} className="p-4">
           <p className={headingClass}>{col.heading}</p>
@@ -69,7 +70,7 @@ function ToolsPanel() {
           </ul>
         </div>
       ))}
-      <div className="flex flex-col gap-3 border-fd-border p-4 max-md:col-span-full max-md:border-t md:border-l">
+      <div className="flex flex-col gap-3 border-fd-border p-4 max-lg:border-t sm:max-lg:col-span-1 lg:border-l">
         <p className={headingClass}>AI-powered</p>
         {ai && (
           <MenuLink
