@@ -15,6 +15,16 @@ const changelog: { date: string; entries: ReactNode[] }[] = [
     date: '2026-11-13',
     entries: [
       <>
+        Launched <Link href="/tools/weibull-analysis">Weibull Analysis</Link>: paste failure and
+        running-unit hours for the shape β, scale η, B10 life, reliability at a replacement interval,
+        a Weibull probability plot, and the DAX. The new tutorial{' '}
+        <Link href="/tutorials/build-a-weibull-reliability-dashboard">
+          Build a Weibull Reliability Dashboard in Power BI
+        </Link>{' '}
+        fits the same Weibull with LINESTX and shows why a replacement interval set from MTBF let three
+        pumps in four fail first.
+      </>,
+      <>
         New blog post:{' '}
         <Link href="/blog/refresh-credentials-invalid-error">
           The Credentials Provided for the Data Source Are Invalid

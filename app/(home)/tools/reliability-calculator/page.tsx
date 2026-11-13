@@ -42,6 +42,13 @@ export default function ReliabilityCalculatorPage() {
           builds the same calculation as DAX calculated columns.
         </p>
         <p>
+          MTBF assumes failures happen at random. If your assets wear out, the{' '}
+          <Link href="/tools/weibull-analysis" className="text-fd-primary hover:underline">
+            Weibull Analysis
+          </Link>{' '}
+          tool shows how they fail and when to replace them.
+        </p>
+        <p>
           For the formulas on their own, see{' '}
           <Link href="/docs/dax-patterns/reliability-mtbf-mttr" className="text-fd-primary hover:underline">
             Reliability Metrics (MTBF, MTTR &amp; Availability)

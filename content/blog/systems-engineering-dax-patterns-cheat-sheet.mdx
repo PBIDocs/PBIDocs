@@ -1,6 +1,6 @@
 ---
 title: "Systems & Program Engineering DAX Patterns Cheat Sheet"
-description: "A fast, scannable reference for the DAX patterns systems and program engineers actually need in Power BI: EVM (CPI/SPI/EAC), risk scoring, FMEA/RPN, requirements coverage, reliability metrics (MTBF/MTTR), SPC control charts (limits, run rules, Cpk), and Pareto analysis (cumulative %, vital few)."
+description: "A fast, scannable reference for the DAX patterns systems and program engineers actually need in Power BI: EVM (CPI/SPI/EAC), risk scoring, FMEA/RPN, requirements coverage, reliability metrics (MTBF/MTTR, Weibull B10), SPC control charts (limits, run rules, Cpk), and Pareto analysis (cumulative %, vital few)."
 date: "2026-10-04"
 tags: ["DAX", "Cheat Sheet", "Data Modeling"]
 card:
@@ -162,6 +162,40 @@ DIVIDE([MTBF (Hours)], [MTBF (Hours)] + [MTTR (Hours)])
 
 `Total Uptime Hours` itself needs a calculated column first — the gap between one failure and the *previous* repair for that same asset, with the asset's commissioning date as a fallback for its first-ever failure. See [Reliability Metrics (MTBF, MTTR & Availability)](/docs/dax-patterns/reliability-mtbf-mttr) for that calculated column and [Build a Reliability Dashboard](/tutorials/build-a-reliability-mtbf-mttr-dashboard) for a complete walkthrough. To get the numbers from a failure log without building a model, paste it into the [Reliability Calculator](/tools/reliability-calculator).
 
+## Weibull Life Analysis (β, η, B10)
+
+```dax lineNumbers
+-- Calculated columns, after sorting by hours and adding an Order index in Power Query
+Adjusted Rank =
+IF (
+    Pumps[Status] = "F",
+    VAR N = COUNTROWS ( Pumps )
+    VAR CurrentOrder = Pumps[Order]
+    VAR StillSurviving =
+        PRODUCTX (
+            FILTER ( Pumps, Pumps[Status] = "F" && Pumps[Order] <= CurrentOrder ),
+            DIVIDE ( N - Pumps[Order] + 1, N - Pumps[Order] + 2 )
+        )
+    RETURN
+        ( N + 1 ) * ( 1 - StillSurviving )
+)
+
+Plot Y = IF ( Pumps[Status] = "F", LN ( -LN ( 1 - DIVIDE ( Pumps[Adjusted Rank] - 0.3, COUNTROWS ( Pumps ) + 0.4 ) ) ) )
+
+-- Measures
+Weibull Beta =
+VAR Fit = LINESTX ( FILTER ( ALL ( Pumps ), Pumps[Status] = "F" ), LN ( Pumps[Hours] ), Pumps[Plot Y] )
+RETURN DIVIDE ( 1, MAXX ( Fit, [Slope1] ) )
+
+Weibull Eta =
+VAR Fit = LINESTX ( FILTER ( ALL ( Pumps ), Pumps[Status] = "F" ), LN ( Pumps[Hours] ), Pumps[Plot Y] )
+RETURN EXP ( MAXX ( Fit, [Intercept] ) )
+
+B10 Life = [Weibull Eta] * POWER ( -LN ( 0.9 ), 1 / [Weibull Beta] )
+```
+
+Running units stay in as suspensions: Johnson's adjusted rank, written as a running product so `PRODUCTX` can do it, lets them shift every later failure's rank without being plotted. β below 1 means early failures, about 1 random, above 1 wear-out. For wear-out parts, set intervals from the B-life, not MTBF: the [Weibull tutorial](/tutorials/build-a-weibull-reliability-dashboard) shows a fleet where an MTBF-based interval let three pumps in four fail first. Or paste hours into the [Weibull Analysis](/tools/weibull-analysis) tool.
+
 ## Process Control (SPC Control Charts)
 
 ```dax lineNumbers
@@ -224,6 +258,7 @@ Each cause's cumulative is everything ranked at or above it, with ties broken by
 | Has every requirement been tested? | Coverage & Verification: `Coverage %` |
 | Has every requirement's test actually passed? | Coverage & Verification: `Verified %` |
 | How often does an asset fail, and for how long? | Reliability: `MTBF`, `MTTR` |
+| Do failures come early, at random, or from wear-out? When to replace? | Weibull: `Weibull Beta`, `B10 Life` |
 | Has the process changed, or is it just noise? | SPC: `UCL` / `LCL`, `Signal Rules` |
 | Will the process keep making parts in spec? | SPC: `Cpk` |
 | Which few causes make up most of the defects? | Pareto: `Cumulative %`, `Vital Few` |

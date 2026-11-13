@@ -1,4 +1,4 @@
-import { Activity, CalendarClock, CalendarDays, ChartColumnDecreasing, ChartLine, Gauge, Grid3x3, Hash, ListChecks, ShieldAlert, SlidersHorizontal, Sparkles, SpellCheck, TrendingUp, type LucideIcon } from 'lucide-react';
+import { Activity, CalendarClock, CalendarDays, ChartColumnDecreasing, ChartLine, ChartScatter, Gauge, Grid3x3, Hash, ListChecks, ShieldAlert, SlidersHorizontal, Sparkles, SpellCheck, TrendingUp, type LucideIcon } from 'lucide-react';
 
 // Shared by the /tools hub, the homepage tools section, and the nav's Tools menu.
 export interface Tool {
@@ -104,6 +104,16 @@ export const tools: Tool[] = [
     badge: 'Free · unlimited',
     icon: Activity,
     iconName: 'activity',
+  },
+  {
+    href: '/tools/weibull-analysis',
+    group: 'engineering',
+    title: 'Weibull Analysis',
+    description:
+      'Paste failure and running-unit hours for Weibull β and η, B10 life, reliability at your replacement interval, a probability plot, and the DAX.',
+    badge: 'Free · unlimited',
+    icon: ChartScatter,
+    iconName: 'chart-scatter',
   },
   {
     href: '/tools/control-chart-builder',

@@ -25,6 +25,7 @@ import {
   LockOpen,
   ChartLine,
   ChartColumnDecreasing,
+  ChartScatter,
 } from 'lucide-react';
 import { NewsletterForm } from '@/components/newsletter-form';
 import { HeroSearch } from '@/components/hero-search';
@@ -191,6 +192,12 @@ const engineeringTutorials = [
     title: 'Pareto Analysis',
     hook: 'Wrong polarity: 4% of the defects, 30% of the rework cost. Rank by both.',
     icon: ChartColumnDecreasing,
+  },
+  {
+    href: '/tutorials/build-a-weibull-reliability-dashboard',
+    title: 'Weibull Reliability',
+    hook: 'MTBF said 11,087 hours. β 2.76 says 3 in 4 pumps fail before the 10,000-hour swap.',
+    icon: ChartScatter,
   },
 ];
 

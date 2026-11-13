@@ -45,6 +45,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${baseUrl}/tools/reliability-calculator`, lastModified: new Date() },
     { url: `${baseUrl}/tools/control-chart-builder`, lastModified: new Date() },
     { url: `${baseUrl}/tools/pareto-chart-builder`, lastModified: new Date() },
+    { url: `${baseUrl}/tools/weibull-analysis`, lastModified: new Date() },
     { url: `${baseUrl}/tools/risk-matrix-builder`, lastModified: new Date() },
     { url: `${baseUrl}/tools/fmea-calculator`, lastModified: new Date() },
     { url: `${baseUrl}/tools/traceability-matrix-builder`, lastModified: new Date() },

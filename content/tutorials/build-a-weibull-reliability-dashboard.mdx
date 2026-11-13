@@ -1,0 +1,340 @@
+---
+title: "Build a Weibull Reliability Dashboard in Power BI"
+description: "An end-to-end tutorial for reliability engineers: fit a Weibull distribution in DAX from failure and running-unit hours, with Johnson's adjusted ranks, LINESTX, B10 life, a probability plot, and why a replacement interval set from MTBF lets most units fail first."
+date: "2026-11-13"
+tags: ["Tutorial", "DAX", "Data Modeling"]
+faq:
+  - question: "Can you do Weibull analysis in Power BI?"
+    answer: "Yes, with calculated columns and LINESTX. Rank the units by operating hours in Power Query, compute each failure's adjusted and median rank in DAX, transform hours and median ranks into Weibull plot coordinates, and fit a straight line with LINESTX. The slope gives the shape β and the intercept gives the scale η."
+  - question: "What do the Weibull β and η mean?"
+    answer: "β, the shape, says how the failure rate changes with age: below 1 it falls (early-life failures), close to 1 it's constant (random failures), and above 1 it rises (wear-out). η, the scale or characteristic life, is the age by which 63.2% of units have failed, for any β."
+  - question: "What is B10 life?"
+    answer: "The age by which 10% of units are expected to have failed, or equivalently where reliability drops to 90%. It's calculated from the Weibull fit as η × (−ln 0.9)^(1/β), and it's a common basis for replacement and warranty intervals."
+  - question: "How do you handle units that haven't failed in a Weibull analysis?"
+    answer: "Include them as suspensions. They don't get a plotted point, but Johnson's method adjusts the ranks of every later failure to account for them. Leaving them out biases the fit toward short lives, and so does treating them as failures."
+  - question: "Why is MTBF the wrong basis for a replacement interval?"
+    answer: "MTBF calculated as total hours divided by failures assumes a constant failure rate, which only holds when β is about 1. For parts that wear out, failures bunch up at older ages, so an interval near the MTBF can leave most units failing before they're replaced. The Weibull B-life accounts for the shape."
+---
+
+MTBF tells you *how often* things fail. It doesn't tell you *how*. A pump that fails at random, a pump that fails young from a bad batch, and a pump that wears out can all have the same MTBF, and each one needs a different maintenance plan. A Weibull analysis separates them with one number, the shape β, and then turns the fit into the figure a maintenance plan actually needs: the age by which a given share of units will have failed.
+
+```text
+Fleet log (one row per pump: hours, failed or still running)
+        |
+        | Power Query: sort by hours, add an Order index
+        |
+Calculated columns: reverse rank, adjusted rank, median rank, plot X / Y
+        |
+        | LINESTX: fit a straight line on the Weibull plot
+        |
+Measures: β, η, B10 life, reliability at the replacement interval
+```
+
+Download the data: [pump-fleet.csv](/downloads/weibull-reliability-dashboard/pump-fleet.csv).
+
+---
+
+## What You're Building
+
+A one-page reliability dashboard answering the questions a maintenance review asks:
+
+- Are these pumps failing early, at random, or wearing out?
+- By what age will 10% of them have failed?
+- What share survives to the current replacement interval?
+- Is the replacement interval in the right place?
+
+```text
++---------------------------------------------------------------+
+|   β   |   η   |  B10 life  |  Reliability at interval |  MTBF  |
++---------------------------------------------------------------+
+|  Weibull probability plot         |  Reliability vs. hours     |
+|  (failures, B10 and η lines)      |  (Weibull vs. MTBF)        |
++---------------------------------------------------------------+
+|  Table: pump, hours, status, adjusted rank, median rank       |
++---------------------------------------------------------------+
+```
+
+---
+
+## Step 1: The Raw Data
+
+A plant runs 20 identical process pumps. Twelve have failed; eight are still running. Each row is one pump with its operating hours: hours at failure for a failed pump, hours so far for a running one. Running pumps are called **suspensions**: their life is at least that long, but nobody knows how much longer.
+
+| PumpID | Hours | Status |
+|---|---|---|
+| P-01 | 2,330 | F |
+| P-02 | 10,120 | F |
+| P-03 | 8,010 | S |
+| P-04 | 3,750 | S |
+| P-05 | 4,220 | F |
+| P-06 | 7,490 | F |
+| P-07 | 5,830 | F |
+| P-08 | 4,780 | F |
+| P-09 | 7,540 | F |
+| P-10 | 7,290 | S |
+| P-11 | 7,410 | S |
+| P-12 | 9,120 | S |
+| P-13 | 4,080 | S |
+| P-14 | 5,100 | F |
+| P-15 | 6,650 | F |
+| P-16 | 7,850 | F |
+| P-17 | 7,070 | F |
+| P-18 | 11,200 | F |
+| P-19 | 8,470 | S |
+| P-20 | 4,730 | S |
+
+The current plan replaces every pump at **10,000 hours**. It was set from the fleet's MTBF: 133,040 operating hours over 12 failures is 11,087 hours between failures, so 10,000 felt conservative. Step 6 checks that.
+
+Use operating hours, not calendar time. A pump that sat idle for six months didn't wear for six months.
+
+---
+
+## Step 2: Load the Data and Add an Order Column
+
+Every rank below depends on where each pump falls when the fleet is sorted by hours. Power Query is the simplest place to fix that order once:
+
+1. **Get Data → Text/CSV**, select `pump-fleet.csv`, and choose **Transform Data**.
+2. Set `Hours` to Whole Number.
+3. Sort by `Hours` ascending, then by `Status` ascending, so a failure sorts before a suspension at the same hours.
+4. **Add Column → Index Column → From 1**, and rename it `Order`.
+5. Rename the query to `Pumps`, then **Close & Apply**.
+
+```powerquery lineNumbers
+let
+    Source = Csv.Document(File.Contents("C:\Data\pump-fleet.csv"), [Delimiter = ",", Encoding = 65001]),
+    Promoted = Table.PromoteHeaders(Source, [PromoteAllScalars = true]),
+    Typed = Table.TransformColumnTypes(Promoted, {{"PumpID", type text}, {"Hours", Int64.Type}, {"Status", type text}}),
+    Sorted = Table.Sort(Typed, {{"Hours", Order.Ascending}, {"Status", Order.Ascending}}),
+    Indexed = Table.AddIndexColumn(Sorted, "Order", 1, 1, Int64.Type)
+in
+    Indexed
+```
+
+P-01, the first failure at 2,330 hours, gets `Order` 1. P-18, at 11,200 hours, gets 20.
+
+---
+
+## Step 3: Adjusted Ranks for the Running Pumps
+
+With no suspensions, the third failure would simply have rank 3. Suspensions complicate that: a pump still running at 3,750 hours might have outlasted every failure after it, so each later failure should count for a bit more than one step. **Johnson's method** handles this with a *reverse rank*, the number of pumps at or beyond each position:
+
+```dax lineNumbers
+Reverse Rank = COUNTROWS ( Pumps ) - Pumps[Order] + 1
+```
+
+The textbook formula is a recursion, each failure's adjusted rank built from the previous one:
+
+```text
+Adjusted rank = previous adjusted rank + (N + 1 − previous adjusted rank) / (1 + reverse rank)
+```
+
+DAX has no recursion, but this one rearranges into a running product over the failures so far, which `PRODUCTX` handles:
+
+```dax lineNumbers
+Adjusted Rank =
+IF (
+    Pumps[Status] = "F",
+    VAR N = COUNTROWS ( Pumps )
+    VAR CurrentOrder = Pumps[Order]
+    VAR StillSurviving =
+        PRODUCTX (
+            FILTER ( Pumps, Pumps[Status] = "F" && Pumps[Order] <= CurrentOrder ),
+            DIVIDE ( Pumps[Reverse Rank], Pumps[Reverse Rank] + 1 )
+        )
+    RETURN
+        ( N + 1 ) * ( 1 - StillSurviving )
+)
+```
+
+With no suspensions at all, this gives exactly 1, 2, 3…, so it's safe to use either way. Here's how the first failures come out:
+
+| Order | Pump | Hours | Status | Reverse rank | Adjusted rank |
+|---|---|---|---|---|---|
+| 1 | P-01 | 2,330 | F | 20 | 1.000 |
+| 2 | P-04 | 3,750 | S | 19 | |
+| 3 | P-13 | 4,080 | S | 18 | |
+| 4 | P-05 | 4,220 | F | 17 | 2.111 |
+| 5 | P-20 | 4,730 | S | 16 | |
+| 6 | P-08 | 4,780 | F | 15 | 3.292 |
+| 7 | P-14 | 5,100 | F | 14 | 4.472 |
+
+P-05 is the second failure, but its adjusted rank is 2.111: two pumps left the count still running before it failed, so it stands for a slightly bigger share of what's left. The last failure, P-18, ends at 18.114 rather than 12.
+
+---
+
+## Step 4: Median Ranks and Plot Coordinates
+
+The adjusted rank becomes an estimate of the share of the fleet failed by that age, the **median rank**, using Bernard's approximation. Then two more columns transform hours and median rank into Weibull plot coordinates, where a Weibull distribution is a straight line:
+
+```dax lineNumbers
+Median Rank = DIVIDE ( Pumps[Adjusted Rank] - 0.3, COUNTROWS ( Pumps ) + 0.4 )
+
+Plot X = IF ( Pumps[Status] = "F", LN ( Pumps[Hours] ) )
+
+Plot Y = IF ( Pumps[Status] = "F", LN ( -LN ( 1 - Pumps[Median Rank] ) ) )
+```
+
+The running pumps get blanks in all three: they shaped the ranks, but they aren't points on the plot. P-01 lands at a median rank of 3.43% and P-18 at 87.32%.
+
+---
+
+## Step 5: Fit β and η With LINESTX
+
+On the Weibull plot, `Plot Y = β × (Plot X − ln η)`. So a straight line through the failures gives both parameters. The usual engineering convention for small samples, **rank regression on X**, regresses log hours on `Plot Y`, which puts β in the slope as 1 / β and ln η in the intercept:
+
+```dax lineNumbers
+Weibull Beta =
+VAR Fit =
+    LINESTX ( FILTER ( ALL ( Pumps ), Pumps[Status] = "F" ), Pumps[Plot X], Pumps[Plot Y] )
+RETURN
+    DIVIDE ( 1, MAXX ( Fit, [Slope1] ) )
+
+Weibull Eta =
+VAR Fit =
+    LINESTX ( FILTER ( ALL ( Pumps ), Pumps[Status] = "F" ), Pumps[Plot X], Pumps[Plot Y] )
+RETURN
+    EXP ( MAXX ( Fit, [Intercept] ) )
+
+Fit R2 =
+VAR Fit =
+    LINESTX ( FILTER ( ALL ( Pumps ), Pumps[Status] = "F" ), Pumps[Plot X], Pumps[Plot Y] )
+RETURN
+    MAXX ( Fit, [CoefficientOfDetermination] )
+```
+
+`LINESTX` takes the table to iterate, the Y expression, then the X expression, and returns a one-row table with `Slope1`, `Intercept`, and the fit statistics. Here the "Y" being predicted is log hours, which is why `Plot X` comes first. `ALL ( Pumps )` keeps the fit on the whole fleet, the same set the rank columns were calculated over.
+
+The result: **β = 2.76, η = 8,888 hours**, R² = 0.976.
+
+| β | What it means | What works |
+|---|---|---|
+| Below 1 | Early-life failures: the rate falls with age | Better build, installation, burn-in; replacing old units makes it worse |
+| About 1 | Random failures: the rate is constant | Condition monitoring and spares; time-based replacement does nothing |
+| Above 1 | Wear-out: the rate climbs with age | Time-based replacement, at the right age |
+
+At 2.76, these pumps wear out. Replacement on a schedule is the right idea. The question is the schedule.
+
+---
+
+## Step 6: B10 Life, and the MTBF Trap
+
+```dax lineNumbers
+B10 Life = [Weibull Eta] * POWER ( -LN ( 1 - 0.1 ), 1 / [Weibull Beta] )
+
+Reliability at Interval =
+VAR IntervalHours = 10000
+RETURN
+    EXP ( -POWER ( IntervalHours / [Weibull Eta], [Weibull Beta] ) )
+
+Fleet MTBF =
+DIVIDE ( SUM ( Pumps[Hours] ), CALCULATE ( COUNTROWS ( Pumps ), Pumps[Status] = "F" ) )
+```
+
+**B10 life is 3,935 hours**: one pump in ten has failed by then. And **reliability at 10,000 hours is 25.0%**. Three pumps in four fail before the planned replacement.
+
+The MTBF made 10,000 hours look safe because MTBF, used as a reliability prediction, assumes the exponential distribution: a constant failure rate, β = 1. Compare the two at a few ages:
+
+| Hours | Weibull fit | Constant rate from MTBF |
+|---|---|---|
+| 3,935 | 90.0% | 70.1% |
+| 5,000 | 81.5% | 63.7% |
+| 8,000 | 47.3% | 48.6% |
+| 10,000 | 25.0% | 40.6% |
+
+The constant-rate curve is too pessimistic when the pumps are young and too optimistic once they're old, because it spreads failures evenly across all ages when wear-out piles them up late. The fleet MTBF itself is also inflated by the running pumps' hours: it's 11,087 hours, while the Weibull mean life is 7,910.
+
+For a 90% chance a pump reaches its replacement, the interval belongs near the B10 life: about 3,900 hours, not 10,000. The real answer weighs the cost of a planned replacement against a failure in service, but either way it starts from the B-life, not the MTBF. Swap `0.1` for `0.01` to get B1 (1,681 hours) for a safety-critical part.
+
+---
+
+## Step 7: The Weibull Probability Plot
+
+1. Insert a **Scatter chart**. **X-axis:** `Pumps[Hours]`, summarized as **Don't summarize**. **Y-axis:** `Pumps[Plot Y]`, also **Don't summarize**. **Values:** `Pumps[PumpID]`, so each pump is its own point.
+2. Filter the visual to `Status` = F.
+3. **Format → X-axis → Scale type: Log.**
+4. **Analytics → Y-axis constant line** at −2.250, labeled "B10", and another at 0, labeled "63.2% (η)".
+5. **Analytics → Trend line** on. It regresses Y on X, so its slope differs slightly from the fit in Step 5, but it shows whether the points follow one straight line.
+
+`Plot Y` is in Weibull units, not percentages. To read the axis, use this table, or put `Median Rank` in the tooltips:
+
+| Failed | 1% | 5% | 10% | 50% | 63.2% | 90% | 99% |
+|---|---|---|---|---|---|---|---|
+| Plot Y | −4.600 | −2.970 | −2.250 | −0.367 | 0 | 0.834 | 1.527 |
+
+A straight line of points means one Weibull explains the data. A clear bend means it doesn't (see Mistakes, below).
+
+---
+
+## Step 8: The Reliability Curve
+
+Make an hours axis with a calculated table, then two measures across it:
+
+```dax lineNumbers
+Hours Axis = GENERATESERIES ( 0, 15000, 250 )
+
+Weibull Reliability =
+VAR T = SELECTEDVALUE ( 'Hours Axis'[Value] )
+RETURN
+    EXP ( -POWER ( T / [Weibull Eta], [Weibull Beta] ) )
+
+Constant Rate Reliability =
+VAR T = SELECTEDVALUE ( 'Hours Axis'[Value] )
+RETURN
+    EXP ( -T / [Fleet MTBF] )
+```
+
+A **Line chart** with `'Hours Axis'[Value]` on the X-axis and both measures as values draws the comparison from Step 6. Add an X-axis constant line at 10,000 for the current interval and one at the B10 life.
+
+---
+
+## Step 9: Lay Out the Report
+
+Cards for `Weibull Beta`, `Weibull Eta`, `B10 Life`, `Reliability at Interval`, and `Fleet MTBF` across the top; the probability plot and reliability curve side by side; and a table of pumps with hours, status, `Adjusted Rank`, and `Median Rank` below.
+
+<WeibullAnatomyDiagram />
+
+---
+
+## Common Mistakes
+
+### Leaving Out the Running Pumps
+
+It's tempting to fit only the failures, since they're the only points on the plot. But eight pumps running past 3,750 to 9,120 hours is evidence of longer life. Fit the 12 failures alone and η drops 15%, from 8,888 to 7,545 hours, and B10 from 3,935 to 3,304 hours. Treating the running pumps as failures at their current hours biases it the same way: η comes out at 7,449. Keep them as suspensions.
+
+### Setting the Interval From MTBF
+
+Covered in Step 6, and the reason this analysis exists. MTBF is a fine *rate* for spares planning and availability. It's a poor guide to *when* a wear-out part will fail.
+
+### Mixing Failure Modes or Pump Models
+
+A bearing that wears out and a seal that fails young produce two different Weibulls. Fit them together and the probability plot bends, R² drops, and β lands somewhere meaningless in between. Split the data by failure mode, treating failures from other modes as suspensions for each analysis. For several pump models, rank each model on its own: number `Order` within each model in Power Query (group by model, then add the index inside each group), count `N` with `Pumps[Model] = CurrentModel` in the rank columns, and fit each model separately.
+
+### Slicing the Fit
+
+The rank columns are calculated once over the whole table, so a slicer can't re-rank a subset; that's why the measures use `ALL ( Pumps )`. Filtering the report to one site would otherwise fit a line through ranks that were computed for all 20 pumps. Split groups in the columns, as above, not with slicers.
+
+### Trusting β to Two Decimals From a Small Sample
+
+Twelve failures give a useful β, not a precise one. 2.76 clearly means wear-out; it doesn't mean 2.76 rather than 2.5. Make decisions that hold across a range, and refit as more pumps fail.
+
+---
+
+## Tutorial Checklist
+
+- Hours are operating hours, and running pumps are in the data as suspensions.
+- `Order` comes from Power Query, sorted by hours with failures first on a tie.
+- `Adjusted Rank` gives 1.000 for P-01, 2.111 for P-05, and 18.114 for P-18.
+- `Weibull Beta` returns 2.76 and `Weibull Eta` 8,888, with R² 0.976.
+- `B10 Life` is 3,935 hours, and `Reliability at Interval` is 25.0% at 10,000 hours.
+- The probability plot's points follow one straight line.
+
+---
+
+## Next Steps
+
+- [Weibull Analysis](/tools/weibull-analysis): paste your own failure and running-unit hours for β, η, B-life, both charts, and the DAX with your table's names
+- [Build a Reliability (MTBF/MTTR) Dashboard in Power BI](/tutorials/build-a-reliability-mtbf-mttr-dashboard): uptime, repair time, and availability from a failure and repair log
+- [Build an FMEA Dashboard in Power BI](/tutorials/build-an-fmea-dashboard): rank failure modes by risk before deciding which ones to analyze
+- [Systems Engineering DAX Patterns Cheat Sheet](/blog/systems-engineering-dax-patterns-cheat-sheet)
+- [Calculated Columns](/docs/dax/calculated-columns)
+- [Variables](/docs/dax/variables)
