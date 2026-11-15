@@ -15,6 +15,11 @@ const changelog: { date: string; entries: ReactNode[] }[] = [
     date: '2026-11-15',
     entries: [
       <>
+        New docs page: <Link href="/docs/dax/visual-calculations">Visual Calculations</Link>. RUNNINGSUM,
+        MOVINGAVERAGE, PREVIOUS, and COLLAPSEALL worked through on one example, the Axis and Reset parameters, and
+        when a measure is still the better choice.
+      </>,
+      <>
         Two more docs pages: <Link href="/docs/visuals/drillthrough">Drillthrough</Link> (Keep all filters,
         buttons, cross-report, and why the option goes missing) and{' '}
         <Link href="/docs/visuals/tooltips">Report Page Tooltips</Link> (setup, filtering, and why a tooltip shows

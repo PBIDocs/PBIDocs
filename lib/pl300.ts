@@ -114,7 +114,7 @@ export const DOMAINS: Domain[] = [
           { text: 'Use Copilot to suggest content for a new report page', links: [l('/docs/ai-power-bi/report-design', 'Report design with AI')] },
           { text: 'Configure the report page', links: [] },
           { text: 'Choose when to use a paginated report', links: [] },
-          { text: 'Create visual calculations by using DAX', links: [] },
+          { text: 'Create visual calculations by using DAX', links: [l('/docs/dax/visual-calculations', 'Visual calculations')] },
         ],
       },
       {

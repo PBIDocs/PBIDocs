@@ -1,0 +1,160 @@
+---
+title: "Visual Calculations"
+description: How visual calculations work in Power BI. DAX that runs on the visual instead of the model, so running sums, moving averages, versus-previous, and percent of total take one short formula. Covers RUNNINGSUM, MOVINGAVERAGE, PREVIOUS, COLLAPSE, the Axis and Reset parameters, and when a measure is still the better choice.
+---
+
+# Visual Calculations
+
+A running total as a measure needs `CALCULATE`, `FILTER`, `ALL`, and a clear idea of [filter context](/docs/dax/filter-context). As a **visual calculation**, it's one line:
+
+```dax lineNumbers
+Running Sales = RUNNINGSUM ( [Sales] )
+```
+
+A visual calculation is a DAX formula stored **on a visual**, not in the model. It works on the data the visual already shows: the rows and columns of the table or chart, after aggregation. Instead of thinking about filters and relationships, you think about the visual's grid: this row, the previous row, the total.
+
+---
+
+## The Example
+
+A table visual with Month and a `[Sales]` measure, for the first half of 2026:
+
+| Month | Sales | `RUNNINGSUM` | vs. previous | `MOVINGAVERAGE`, 3 months | % of total |
+|---|---|---|---|---|---|
+| Jan | 100 | 100 | (blank) | 100.0 | 13.3% |
+| Feb | 120 | 220 | 20 | 110.0 | 16.0% |
+| Mar | 90 | 310 | −30 | 103.3 | 12.0% |
+| Apr | 150 | 460 | 60 | 120.0 | 20.0% |
+| May | 130 | 590 | −20 | 123.3 | 17.3% |
+| Jun | 160 | 750 | 30 | 146.7 | 21.3% |
+
+Every column after Sales is a visual calculation, worked through below.
+
+---
+
+## Creating One
+
+1. Select the visual and choose **New visual calculation** on the ribbon.
+2. The visual calculation **edit mode** opens: a preview of the visual, a formula bar, and the **visual matrix**, a grid of the visual's data that shows each result as you type.
+3. Type the formula, or start from a **template** (running sum, moving average, percent of parent, versus previous, and others) using the template button.
+4. Leave edit mode. The calculation appears in the visual's field list, alongside the fields it uses.
+
+Visual calculations refer to fields **by their name in the visual**: `[Sales]`, `[Month]`, with no table name. Only fields already on the visual can be used, so add a field to the visual before you refer to it.
+
+---
+
+## The Core Functions
+
+```dax lineNumbers
+Running Sales = RUNNINGSUM ( [Sales] )
+```
+
+Each row adds its value to all the rows above it: 100, 220, 310, and so on.
+
+```dax lineNumbers
+Sales vs Previous =
+IF ( NOT ISBLANK ( PREVIOUS ( [Sales] ) ), [Sales] - PREVIOUS ( [Sales] ) )
+```
+
+`PREVIOUS` returns the row above. January has no row above, so `PREVIOUS` is blank, and a plain `[Sales] - PREVIOUS ( [Sales] )` would show **100** for January, as if sales had grown from zero. The `IF` leaves it blank. `NEXT`, `FIRST`, and `LAST` work the same way for the row below, the first row, and the last row.
+
+```dax lineNumbers
+Sales 3M Avg = MOVINGAVERAGE ( [Sales], 3 )
+```
+
+The average of the current row and the two before it. At the start there aren't three rows yet, so January averages one month and February two: (100 + 120) / 2 = 110. March is the first full window: (100 + 120 + 90) / 3 = 103.3.
+
+```dax lineNumbers
+% of Total = DIVIDE ( [Sales], COLLAPSEALL ( [Sales], ROWS ) )
+```
+
+`COLLAPSEALL` evaluates `[Sales]` at the **total** level of the rows: 750. January is 100 / 750 = 13.3%. Set the format to percentage under **Data format** in the formatting pane.
+
+| Function | Means | Example |
+|---|---|---|
+| `RUNNINGSUM` | Running total along the axis | `RUNNINGSUM ( [Sales] )` |
+| `MOVINGAVERAGE` | Average over a window of rows | `MOVINGAVERAGE ( [Sales], 3 )` |
+| `PREVIOUS`, `NEXT` | The row before or after | `[Sales] - PREVIOUS ( [Sales] )` |
+| `FIRST`, `LAST` | The first or last row | `[Sales] - FIRST ( [Sales] )` |
+| `COLLAPSE` | One level up: the parent | `DIVIDE ( [Sales], COLLAPSE ( [Sales], ROWS ) )` |
+| `COLLAPSEALL` | The total | `DIVIDE ( [Sales], COLLAPSEALL ( [Sales], ROWS ) )` |
+| `EXPAND`, `EXPANDALL` | One level down, or the lowest level | `EXPAND ( AVERAGE ( [Sales] ), ROWS )` |
+| `RANGE` | A slice of rows around the current one | `AVERAGEX ( RANGE ( 1 ), [Sales] )` |
+| `LOOKUP` | The value at a specific row | `LOOKUP ( SUM ( [Sales] ), [Month], "Jan" )` |
+
+Most visual calculations are evaluated once per row of the visual matrix, so you rarely need `SUM` around a field. Functions that rely on model relationships, such as `RELATED` and `USERELATIONSHIP`, aren't available.
+
+---
+
+## Axis: Which Direction
+
+In a matrix with Year on rows and Region on columns, "previous" could mean the previous year or the previous region. The optional **Axis** parameter says which:
+
+```dax lineNumbers
+Running by Year = RUNNINGSUM ( [Sales], ROWS )
+```
+
+```dax lineNumbers
+Running by Region = RUNNINGSUM ( [Sales], COLUMNS )
+```
+
+`ROWS` walks down, `COLUMNS` walks across, and `ROWS COLUMNS` or `COLUMNS ROWS` walk one and then the other. The default is the visual's first axis, which is `ROWS` for most visuals.
+
+## Reset: Where to Start Again
+
+With Year and Month on rows, a running sum keeps climbing from 2025 into 2026. To restart it each year, use the **Reset** parameter:
+
+```dax lineNumbers
+Running Sales YTD = RUNNINGSUM ( [Sales], HIGHESTPARENT )
+```
+
+`HIGHESTPARENT` restarts at each value of the top level, here each year. `LOWESTPARENT` restarts at each immediate parent, which depends on the level being shown. You can also name the column, `RUNNINGSUM ( [Sales], [Year] )`, or give a level number. Reset needs more than one level on the axis.
+
+---
+
+## Visual Calculation or Measure?
+
+| | Visual calculation | Measure |
+|---|---|---|
+| Lives in | One visual | The model |
+| Reuse in other visuals | No: build it again | Yes |
+| Works on | The aggregated data shown in the visual | Any filter context |
+| Running total starts at | The first row of the visual | Wherever the formula says, usually the start of time |
+| Typical use | One-off comparisons on a single visual | Business logic used across reports |
+
+The running-total row is the one to watch. If the visual is filtered to April–June, a visual calculation's running sum starts at April: 150, 280, 440. A [running total measure](/docs/dax-patterns/running-total) built with `ALL` over the dates includes January to March as well, and shows 460, 590, 750. Neither is wrong. Decide which the report needs.
+
+Visual calculations often perform well, because they work on the few aggregated rows a visual shows rather than on the detail rows in the model.
+
+## Hiding Helper Fields
+
+To show only `% of Total`, the visual still needs `[Sales]` for the formula to use. In edit mode, **hide** `[Sales]` from the visual. Hidden fields stay in the visual matrix, so calculations can refer to them, but they don't appear on the visual.
+
+---
+
+## Limitations
+
+- **Not reusable.** A visual calculation can't be copied to another visual. Business logic that several visuals need belongs in a measure.
+- **No filtering or sorting by a visual calculation**, and no changing its aggregation.
+- **No dynamic format strings.** Use the formatting pane's data format instead.
+- **Exports leave them out.** Exported data doesn't include visual calculation results.
+- **Some places don't support them:** pinning to dashboards, Publish to web, custom visuals, slicers, and AI visuals such as Key Influencers and the Decomposition Tree.
+
+Microsoft is still extending visual calculations, so check the [current limitations](https://learn.microsoft.com/en-us/power-bi/transform-model/desktop-visual-calculations-overview) before building a report around one.
+
+## Common Mistakes
+
+**Subtracting PREVIOUS without a blank check.** The first row shows its whole value as the change.
+
+**Expecting the running sum to include rows the visual doesn't show.** It only sees what's on the visual. Use a measure for a running total from the start of the data.
+
+**Putting reusable logic in a visual calculation.** If a second visual needs it, it should have been a measure.
+
+**Forgetting Reset on a two-level axis.** The running sum carries straight on from one year into the next.
+
+## Next Steps
+
+- [Running Total](/docs/dax-patterns/running-total), the measure version
+- [Percent of Total](/docs/dax-patterns/percent-of-total)
+- [Time Intelligence](/docs/dax/time-intelligence)
+- [Measures](/docs/dax/measures)
