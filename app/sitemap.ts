@@ -51,6 +51,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${baseUrl}/tools/traceability-matrix-builder`, lastModified: new Date() },
     { url: `${baseUrl}/playground`, lastModified: new Date() },
     { url: `${baseUrl}/dax-practice`, lastModified: new Date() },
+    { url: `${baseUrl}/pl-300`, lastModified: new Date() },
     { url: `${baseUrl}/pricing`, lastModified: new Date() },
     ...docs,
     ...posts,

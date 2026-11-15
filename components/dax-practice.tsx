@@ -5,29 +5,29 @@ import Link from 'next/link';
 import { Check, RotateCcw, X } from 'lucide-react';
 import { highlightCode } from '@/lib/highlight-code';
 import { cn } from '@/lib/cn';
-import { EXERCISES, LEVELS, PRODUCTS, SALES, type Exercise, type Level } from '@/lib/dax-exercises';
+import { EXERCISES, LEVELS, PRODUCTS, SALES, type Exercise } from '@/lib/dax-exercises';
 
-const STORAGE_KEY = 'pbidocs-dax-practice-v1';
 type Answers = Record<string, number>;
 
 // Progress lives in localStorage, read through useSyncExternalStore so the
 // server render (no answers) and the browser's stored answers don't clash.
 // If storage is blocked, answers are kept in memory for this visit only.
-const CHANGE_EVENT = 'pbidocs-dax-practice-change';
-let memory = '{}';
+const CHANGE_EVENT = 'pbidocs-practice-change';
+const memory = new Map<string, string>();
 
-function readRaw(): string {
+function readRaw(key: string): string {
   try {
-    return window.localStorage.getItem(STORAGE_KEY) ?? memory;
+    return window.localStorage.getItem(key) ?? memory.get(key) ?? '{}';
   } catch {
-    return memory;
+    return memory.get(key) ?? '{}';
   }
 }
 
-function saveAnswers(a: Answers) {
-  memory = JSON.stringify(a);
+function saveAnswers(key: string, a: Answers) {
+  const raw = JSON.stringify(a);
+  memory.set(key, raw);
   try {
-    window.localStorage.setItem(STORAGE_KEY, memory);
+    window.localStorage.setItem(key, raw);
   } catch {
     // Storage blocked: progress just isn't remembered after this visit.
   }
@@ -156,9 +156,11 @@ function ExerciseCard({
       </div>
       <h3 className="mb-2 text-lg font-semibold">{ex.title}</h3>
       <p className="mb-3 text-sm text-fd-muted-foreground">{ex.setup}</p>
-      <pre className="mb-4 overflow-x-auto rounded-lg border border-fd-border bg-fd-background p-3 font-mono text-sm whitespace-pre">
-        {highlightCode(ex.code)}
-      </pre>
+      {ex.code && (
+        <pre className="mb-4 overflow-x-auto rounded-lg border border-fd-border bg-fd-background p-3 font-mono text-sm whitespace-pre">
+          {highlightCode(ex.code)}
+        </pre>
+      )}
       <p className="mb-3 font-medium">{ex.question}</p>
 
       <ul className="grid grid-cols-1 gap-2">
@@ -221,10 +223,22 @@ function ExerciseCard({
 }
 
 export function DaxPractice() {
-  const raw = useSyncExternalStore(subscribe, readRaw, () => '{}');
+  return <Quiz exercises={EXERCISES} levels={LEVELS} storageKey="pbidocs-dax-practice-v1" />;
+}
+
+export function Quiz({
+  exercises: EXERCISES,
+  levels: LEVELS,
+  storageKey,
+}: {
+  exercises: Exercise[];
+  levels: readonly string[];
+  storageKey: string;
+}) {
+  const raw = useSyncExternalStore(subscribe, () => readRaw(storageKey), () => '{}');
   const answers = useMemo(() => parse(raw), [raw]);
-  const [level, setLevel] = useState<Level | 'All'>('All');
-  const update = saveAnswers;
+  const [level, setLevel] = useState<string>('All');
+  const update = (a: Answers) => saveAnswers(storageKey, a);
 
   const answeredCount = EXERCISES.filter((e) => answers[e.id] !== undefined).length;
   const correctCount = EXERCISES.filter((e) => {
@@ -236,7 +250,7 @@ export function DaxPractice() {
   return (
     <div>
       <div className="sticky top-14 z-10 -mx-2 mb-6 flex flex-wrap items-center gap-2 border-b border-fd-border bg-fd-background/95 px-2 py-3 backdrop-blur">
-        {(['All', ...LEVELS] as const).map((l) => {
+        {['All', ...LEVELS].map((l) => {
           const count = l === 'All' ? EXERCISES.length : EXERCISES.filter((e) => e.level === l).length;
           return (
             <button
@@ -282,9 +296,9 @@ export function DaxPractice() {
             ex={e}
             n={n}
             chosen={answers[e.id]}
-            onChoose={(i) => update({ ...parse(readRaw()), [e.id]: i })}
+            onChoose={(i) => update({ ...parse(readRaw(storageKey)), [e.id]: i })}
             onReset={() => {
-              const next = parse(readRaw());
+              const next = parse(readRaw(storageKey));
               delete next[e.id];
               update(next);
             }}

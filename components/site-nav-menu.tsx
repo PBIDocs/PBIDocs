@@ -4,7 +4,7 @@ import * as NavigationMenu from '@radix-ui/react-navigation-menu';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useLayoutEffect, useRef, useState, type ReactNode } from 'react';
-import { ArrowRight, ChevronDown, CircleHelp, Dumbbell, FlaskConical, History, Info, type LucideIcon } from 'lucide-react';
+import { ArrowRight, ChevronDown, CircleHelp, Dumbbell, FlaskConical, GraduationCap, History, Info, type LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { tools, type Tool } from '@/lib/tools';
 
@@ -21,6 +21,7 @@ const moreLinks: { href: string; title: string; icon: LucideIcon }[] = [
   { href: '/changelog', title: 'Changelog', icon: History },
   { href: '/playground', title: 'Interactive Examples', icon: FlaskConical },
   { href: '/dax-practice', title: 'DAX Practice', icon: Dumbbell },
+  { href: '/pl-300', title: 'PL-300 Study Guide', icon: GraduationCap },
   { href: '/faq', title: 'FAQ', icon: CircleHelp },
   { href: '/about', title: 'About', icon: Info },
 ];

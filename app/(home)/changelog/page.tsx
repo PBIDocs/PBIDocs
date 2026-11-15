@@ -15,6 +15,10 @@ const changelog: { date: string; entries: ReactNode[] }[] = [
     date: '2026-11-15',
     entries: [
       <>
+        New: the <Link href="/pl-300">PL-300 study guide</Link>. Every skill in Microsoft&apos;s current exam
+        outline mapped to the page that teaches it, and sixteen scenario practice questions, four per skill area.
+      </>,
+      <>
         New:{' '}
         <Link href="/dax-practice">DAX practice exercises</Link>. Thirteen questions on one small model, from
         DISTINCTCOUNT to KEEPFILTERS, time intelligence, and real bugs to fix, each answer explained and linked to

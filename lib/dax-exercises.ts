@@ -38,10 +38,10 @@ export type Option = { text: string; code?: boolean; correct?: boolean; why: str
 
 export type Exercise = {
   id: string;
-  level: Level;
+  level: string;
   title: string;
   setup: string;
-  code: string;
+  code?: string;
   question: string;
   options: Option[];
   learn: { href: string; label: string };

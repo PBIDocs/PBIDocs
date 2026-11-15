@@ -40,7 +40,11 @@ export default function DaxPracticePage() {
       <DaxPractice />
 
       <p className="mt-12 text-sm text-fd-muted-foreground">
-        Got one wrong? That&apos;s the point. Each answer links to the page that explains it. For the full picture,
+        Studying for the exam? The{' '}
+        <Link href="/pl-300" className="text-fd-primary hover:underline">
+          PL-300 study guide
+        </Link>{' '}
+        maps every skill to a page and has scenario questions for each area. Got one wrong here? That&apos;s the point. Each answer links to the page that explains it. For the full picture,
         start with{' '}
         <Link href="/docs/dax/filter-context" className="text-fd-primary hover:underline">
           filter context
