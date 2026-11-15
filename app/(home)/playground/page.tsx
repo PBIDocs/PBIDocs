@@ -414,7 +414,11 @@ export default function PlaygroundIndexPage() {
         <Link href="/changelog" className="text-fd-primary hover:underline">
           changelog
         </Link>{' '}
-        for what&apos;s new, or browse the full{' '}
+        for what&apos;s new, test yourself with the{' '}
+        <Link href="/dax-practice" className="text-fd-primary hover:underline">
+          DAX practice exercises
+        </Link>
+        , or browse the full{' '}
         <Link href="/docs" className="text-fd-primary hover:underline">
           documentation
         </Link>

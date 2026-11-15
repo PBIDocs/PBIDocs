@@ -4,7 +4,7 @@ import * as NavigationMenu from '@radix-ui/react-navigation-menu';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useLayoutEffect, useRef, useState, type ReactNode } from 'react';
-import { ArrowRight, ChevronDown, CircleHelp, FlaskConical, History, Info, type LucideIcon } from 'lucide-react';
+import { ArrowRight, ChevronDown, CircleHelp, Dumbbell, FlaskConical, History, Info, type LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { tools, type Tool } from '@/lib/tools';
 
@@ -20,6 +20,7 @@ const headingClass = 'mb-2 px-2.5 font-mono text-[0.68rem] tracking-[0.14em] tex
 const moreLinks: { href: string; title: string; icon: LucideIcon }[] = [
   { href: '/changelog', title: 'Changelog', icon: History },
   { href: '/playground', title: 'Interactive Examples', icon: FlaskConical },
+  { href: '/dax-practice', title: 'DAX Practice', icon: Dumbbell },
   { href: '/faq', title: 'FAQ', icon: CircleHelp },
   { href: '/about', title: 'About', icon: Info },
 ];

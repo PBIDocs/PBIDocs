@@ -326,6 +326,13 @@ export default function HomePage() {
                 Open DIVIDE() &amp; ask AI about it
                 <ArrowRight className="size-4" />
               </Link>
+              <Link
+                href="/dax-practice"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-fd-border px-5 py-2.5 text-sm font-semibold hover:bg-fd-muted"
+              >
+                Test yourself: DAX practice
+                <ArrowRight className="size-4" />
+              </Link>
             </div>
           </div>
         </SpotlightCard>

@@ -15,6 +15,12 @@ const changelog: { date: string; entries: ReactNode[] }[] = [
     date: '2026-11-15',
     entries: [
       <>
+        New:{' '}
+        <Link href="/dax-practice">DAX practice exercises</Link>. Thirteen questions on one small model, from
+        DISTINCTCOUNT to KEEPFILTERS, time intelligence, and real bugs to fix, each answer explained and linked to
+        the page that covers it. Also in the More menu.
+      </>,
+      <>
         New blog post:{' '}
         <Link href="/blog/sort-by-column-more-than-one-value-error">
           Power BI Sort by Column Error: There Can&apos;t Be More Than One Value
