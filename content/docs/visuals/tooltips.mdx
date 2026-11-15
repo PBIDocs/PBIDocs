@@ -1,0 +1,103 @@
+---
+title: "Report Page Tooltips"
+description: How to build custom tooltips in Power BI. Add extra values to a visual's default tooltip, or design a whole report page that appears on hover, filtered to the data point under the cursor. Covers setup, sizing, automatic and manual assignment, and why a tooltip shows totals instead of the hovered value.
+---
+
+# Report Page Tooltips
+
+Every Power BI visual shows a tooltip when you hover over a data point. By default it lists the fields behind that point: the category and its value. You can extend that in two ways:
+
+| | What it shows | Effort |
+|---|---|---|
+| **Extra tooltip fields** | More values, as text, in the default tooltip | A minute |
+| **Report page tooltip** | A small page of visuals, filtered to the hovered point | Ten minutes |
+
+Use tooltips for detail that's useful on demand but would crowd the visual if it were always on screen: a mini trend, a breakdown, a target comparison.
+
+---
+
+## Extra Fields in the Default Tooltip
+
+Select the visual and drag fields or measures into the **Tooltips** well of the Build pane. They appear under the visual's own values when you hover.
+
+Measures in the Tooltips well are calculated **for the hovered data point**. Hover over Widget in a sales-by-product chart, and a `[Margin %]` measure in the well shows Widget's margin. Nothing extra is needed.
+
+This is the right choice for one or two numbers. For anything visual, use a report page tooltip.
+
+---
+
+## Building a Report Page Tooltip
+
+1. **Add a new page** and name it, for example *Product Tooltip*.
+2. In **Format page → Page information**, turn on **Allow use as tooltip**.
+3. In **Format page → Canvas settings**, set **Type** to **Tooltip**. That makes the canvas small (320 × 240 pixels), close to the size it will appear at. You can choose a custom size, but keep it small.
+4. **Build the visuals**: a sparkline-style line chart of sales by month, a card with the margin, a small bar chart by region. Keep text large enough to read at tooltip size.
+5. **Hide the page** (right-click its tab, **Hide page**). It still works as a tooltip.
+
+Then connect it to visuals in one of two ways.
+
+### Automatic: by Field
+
+On the tooltip page, with no visual selected, drag a field such as `Product[Product]` into the page's **Tooltip** well in the Build pane. From then on, any visual that uses `Product[Product]` shows this tooltip page automatically when you hover.
+
+### Manual: per Visual
+
+Select the visual, then in **Format visual → General → Tooltips**, set **Type** to **Report page** and **Page** to *Product Tooltip*. Use this when only some visuals should show the custom tooltip, or when the visual's fields don't match the page's tooltip field.
+
+---
+
+## How the Tooltip Page Is Filtered
+
+When you hover over a data point, the tooltip page is filtered **by that data point's context**: the category under the cursor, plus slicers and filters on the source page. Hovering over *Widget* in a chart filtered to 2025 shows the tooltip page for Widget in 2025.
+
+Those filters reach the tooltip's visuals through the **model's relationships**, like any other filter. A visual on the tooltip page that uses a table unrelated to the hovered field won't change from one data point to the next.
+
+To make the tooltip say what it's showing, use a title measure:
+
+```dax lineNumbers
+Tooltip Title =
+SELECTEDVALUE ( Product[Product], "Several products" )
+```
+
+See [SELECTEDVALUE](/docs/dax/selectedvalue).
+
+---
+
+## A Trend Inside the Tooltip
+
+A line chart of the last 12 months is the most popular tooltip visual. Because the tooltip receives the hovered point's filters, a chart by month on the tooltip page shows the hovered product's own trend.
+
+One catch: if the source visual is itself **by month**, hovering March passes a filter on March, and the tooltip's trend chart collapses to a single point. Either use the tooltip on visuals that aren't by date, or remove the date filter in the tooltip's measures with `REMOVEFILTERS ( 'Date' )` and a window you define, as in [time intelligence](/docs/dax/time-intelligence).
+
+---
+
+## Why the Tooltip Shows Totals
+
+If every data point shows the same numbers in the tooltip, the hovered point isn't filtering the tooltip's visuals. Check:
+
+1. **Do the tooltip's visuals use fields related to the hovered field?** A measure on a disconnected table ignores the filter.
+2. **Is the right page assigned?** With automatic assignment, the tooltip well must hold **the same column** the source visual uses, not a similar one in another table.
+3. **Does a measure on the tooltip page remove the filter?** An `ALL ( Product )` inside a tooltip measure undoes exactly the filter the tooltip relies on.
+
+---
+
+## Performance
+
+A report page tooltip renders its visuals every time it appears, which is every time the pointer moves to another data point. Three or four light visuals are fine. Ten visuals, or a heavy measure, make hovering feel sluggish across the whole report. Measure it with Performance Analyzer while hovering; see [performance optimization](/docs/dax/performance).
+
+## Common Mistakes
+
+**Leaving the tooltip page visible.** Users open it as a normal page and see a tiny, unfiltered page.
+
+**Designing at full page size.** A tooltip built on a 1280 × 720 canvas is scaled down to tooltip size and becomes unreadable. Set the canvas type to Tooltip first.
+
+**Assuming tooltips work on touch screens like on desktop.** On phones and tablets, the tooltip appears on tap, which also selects the point. Don't put information that's essential to the report only in a tooltip.
+
+**Too many visuals on one tooltip.** Every hover renders all of them.
+
+## Next Steps
+
+- [Drillthrough](/docs/visuals/drillthrough), for detail that deserves a full page
+- [Bookmarks & Interactivity](/docs/visuals/bookmarks)
+- [Charts](/docs/visuals/charts)
+- [Formatting](/docs/visuals/formatting)

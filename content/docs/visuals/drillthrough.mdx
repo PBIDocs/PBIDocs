@@ -1,0 +1,133 @@
+---
+title: "Drillthrough"
+description: How to set up drillthrough in Power BI so users can right-click a product, customer, or region and open a details page filtered to it. Covers the drillthrough field, Keep all filters, buttons, dynamic titles, cross-report drillthrough, and why the option sometimes doesn't appear.
+---
+
+# Drillthrough
+
+A summary page shows sales by product. Someone wants the detail for one product: its orders, its customers, its trend. **Drillthrough** lets them right-click that product and jump to a details page that is already filtered to it.
+
+```text
+Summary page                        Product Details page
++---------------------------+       +---------------------------+
+| Sales by Product          |       | <- Back                   |
+|  Widget  ████████  1,000  | ----> | Details for Widget        |
+|  Gadget  ████      450    | right | Orders, trend, customers  |
+|  Gizmo   █         150    | click | (filtered to Widget)      |
++---------------------------+       +---------------------------+
+```
+
+The details page is built once and works for every product. It's the standard way to give a report depth without crowding the summary.
+
+---
+
+## Setting It Up
+
+1. **Create the details page.** Add the visuals you want to see for a single product: a table of orders, a trend line, cards.
+2. **Add the drillthrough field.** With the details page open and nothing selected, find the **Drill through** section in the **Build** pane of Visualizations, and drag `Product[Product]` into it.
+3. Power BI adds a **back button** to the top-left of the page. Keep it, or replace it with your own button using the **Back** action.
+4. **Hide the page** (right-click its tab, **Hide page**), so people only reach it through drillthrough, already filtered. A hidden page still works as a drillthrough target.
+5. On the summary page, **right-click** a product in any visual that uses `Product[Product]`, and choose **Drill through → Product Details**.
+
+The details page opens with a filter on that product, shown in its filter pane.
+
+---
+
+## Which Visuals Offer It
+
+Drillthrough is offered from a visual only when the visual uses **the same field** as the drillthrough well: the same column in the same table.
+
+| Source visual uses | Target's drillthrough field | Offered? |
+|---|---|---|
+| `Product[Product]` | `Product[Product]` | Yes |
+| `Sales[Product]` | `Product[Product]` | No, it's a different column |
+| `Product[Category]` | `Product[Product]` | No |
+
+This is the most common reason the menu item is missing. Use dimension columns consistently in visuals, and the same column in the drillthrough well. It's one more reason to keep labels on [dimension tables](/docs/modeling/dimension-tables) rather than on the fact table.
+
+---
+
+## Keep All Filters
+
+Below the drillthrough field is a **Keep all filters** toggle, on by default.
+
+- **On:** the details page receives every filter affecting the data point you clicked: slicers, page and visual filters, and the other fields in the visual. Right-click Widget in a chart filtered to 2025 and North, and the details page shows Widget, 2025, North.
+- **Off:** only the drillthrough field is passed. The details page shows Widget across all years and regions.
+
+Leave it on unless the details page is meant to show the full history of the item regardless of what the user was looking at.
+
+---
+
+## A Title That Says What Was Clicked
+
+The filter pane shows the drillthrough value, but most users never open it. Put it in a card or a dynamic visual title instead:
+
+```dax lineNumbers
+Details Title =
+"Details for " & SELECTEDVALUE ( Product[Product], "all products" )
+```
+
+`SELECTEDVALUE` returns the single product in the filter, or the fallback text if someone opens the page another way. Use it in a card, or in a visual's title through the **fx** button next to **Title text**. See [SELECTEDVALUE](/docs/dax/selectedvalue).
+
+---
+
+## Drillthrough With a Button
+
+Right-click is invisible to many users. A button makes the action obvious:
+
+1. Insert a **Button** and set its **Action** to **Drill through**, with **Destination** set to the details page.
+2. The button is **disabled** until the user selects exactly one data point in a visual that has the drillthrough field. Set the **tooltip** text for the disabled state to tell them what to do, for example *Select a product first*.
+3. Once a product is selected, the button turns active and drills through to it.
+
+The destination can also come from a measure, through the **fx** button next to **Destination**: a measure returning a page name lets one button go to different details pages depending on a slicer.
+
+---
+
+## Drillthrough on a Measure
+
+Measures and numeric columns can be drillthrough fields too. When you add one, choose when drillthrough applies:
+
+- **Used as category:** the value itself is the filter, as with a text field.
+- **Summarized:** drillthrough is offered wherever the field appears as a summarized value, such as a total in a table.
+
+This is uncommon. A dimension column is almost always what you want.
+
+---
+
+## Across Reports
+
+**Cross-report drillthrough** sends the user to a details page in a **different report** in the same workspace or app.
+
+1. On the target page, turn on **Cross-report** in the Drill through section.
+2. In the source report, turn on the report setting that allows visuals to use drillthrough targets from other reports (under **Options and settings → Options → Current file → Report settings** in Desktop).
+3. Publish both to the same workspace. The target appears in the source's drillthrough menu in the Service.
+
+The two reports must use fields with the same table and column names for the match to work.
+
+---
+
+## Drillthrough, Drill Down, or a Bookmark?
+
+| Need | Use |
+|---|---|
+| Open a separate page about the item that was clicked | **Drillthrough** |
+| Go one level deeper in the same visual: year → quarter → month | **Drill down** on a hierarchy |
+| Jump to a page or a saved view, the same for everyone | **Page navigation** or a [bookmark](/docs/visuals/bookmarks) |
+| Show detail on hover, without leaving the page | A [report page tooltip](/docs/visuals/tooltips) |
+
+## Common Mistakes
+
+**Using a different column in the source visual.** `Sales[Product]` on the chart and `Product[Product]` in the well never match. Drillthrough simply doesn't appear.
+
+**Leaving the details page visible.** Users click its tab, see every product at once, and assume the page is broken.
+
+**No hint that drillthrough exists.** Add a button, or a short line of text on the summary page.
+
+**Turning Keep all filters off by accident.** The details page then ignores the slicers, and its numbers don't match the summary.
+
+## Next Steps
+
+- [Report Page Tooltips](/docs/visuals/tooltips)
+- [Bookmarks & Interactivity](/docs/visuals/bookmarks)
+- [Slicers](/docs/visuals/slicers)
+- [SELECTEDVALUE](/docs/dax/selectedvalue)

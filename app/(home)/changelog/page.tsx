@@ -15,6 +15,12 @@ const changelog: { date: string; entries: ReactNode[] }[] = [
     date: '2026-11-15',
     entries: [
       <>
+        Two more docs pages: <Link href="/docs/visuals/drillthrough">Drillthrough</Link> (Keep all filters,
+        buttons, cross-report, and why the option goes missing) and{' '}
+        <Link href="/docs/visuals/tooltips">Report Page Tooltips</Link> (setup, filtering, and why a tooltip shows
+        totals).
+      </>,
+      <>
         Two new docs pages from the PL-300 gaps:{' '}
         <Link href="/docs/dax-patterns/semi-additive">Semi-Additive Measures</Link> (closing, opening, and average
         balances, including snapshots that skip days) and{' '}
