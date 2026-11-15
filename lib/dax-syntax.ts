@@ -276,7 +276,9 @@ function arityText([min, max]: [number, number]) {
 // Find the measure-name prefix ("Total Sales =" or "Total Sales :=") so the
 // spaces in a measure name aren't read as missing commas.
 function bodyStart(src: string): number {
-  const m = /^\s*([^=\n"'[\],;{}]+?)\s*:?=(?!=)/.exec(src);
+  // Comment lines above the name ("-- Clears both columns") come first.
+  const lead = /^(?:\s+|--[^\n]*|\/\/[^\n]*|\/\*[\s\S]*?\*\/)*/.exec(src)![0].length;
+  const m = /^\s*([^=\n"'[\],;{}]+?)\s*:?=(?!=)/.exec(src.slice(lead));
   if (!m) return 0;
   const name = m[1];
   // "IF(x = 1" is code, not a name: an identifier directly followed by "(".
@@ -284,7 +286,7 @@ function bodyStart(src: string): number {
   if (/[<>!&|+*/^]$/.test(name)) return 0;
   // "VAR x = 1 ..." starts with code too.
   if (/^(VAR|DEFINE|EVALUATE|RETURN)\b/i.test(name.trim())) return 0;
-  return m[0].length;
+  return lead + m[0].length;
 }
 
 // Which separator style a formula is written in: any ';' outside strings,

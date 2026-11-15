@@ -16,6 +16,14 @@ const changelog: { date: string; entries: ReactNode[] }[] = [
     entries: [
       <>
         New blog post:{' '}
+        <Link href="/blog/sort-by-column-more-than-one-value-error">
+          Power BI Sort by Column Error: There Can&apos;t Be More Than One Value
+        </Link>
+        , covering sort keys that include the year, repeating week labels, duplicate names, and a DAX query
+        that finds the offending rows.
+      </>,
+      <>
+        New blog post:{' '}
         <Link href="/blog/scheduled-refresh-turned-off">
           Why Power BI Turned Off Your Scheduled Refresh
         </Link>

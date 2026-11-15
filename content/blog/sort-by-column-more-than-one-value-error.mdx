@@ -1,0 +1,129 @@
+---
+title: "Power BI Sort by Column Error: There Can't Be More Than One Value"
+description: "You set Month Name to sort by another column and Power BI refuses: there can't be more than one value in the sort column for the same value. The rule is strict, one sort key per label, and the fix is usually choosing the right key or making the label unique. Here are the four usual causes and a query that finds the offending rows."
+date: "2026-11-15"
+tags: ["Data Modeling", "Troubleshooting"]
+card:
+  label: "Error"
+  text: "We can't sort the 'Month' column by 'YearMonth'. There can't be more than one value in 'YearMonth' for the same value in 'Month'."
+faq:
+  - question: "What does \"there can't be more than one value in the sort column for the same value\" mean?"
+    answer: "Sort by Column needs exactly one sort key for each distinct value of the column you're sorting. If any label, such as January, appears next to two different keys, such as 202501 and 202601, Power BI can't decide where January goes and refuses the sort. Several labels may share a key; one label may not have several keys."
+  - question: "How do I sort month names in the right order in Power BI?"
+    answer: "Add a Month Number column (1 to 12) to the date table, select the Month Name column, and choose Column tools, Sort by column, Month Number. Use a month-only number, not a year-and-month key, because January has to map to a single value."
+  - question: "How do I find which values break Sort by Column?"
+    answer: "In DAX query view, list the distinct labels with a count of distinct sort keys for each and keep the ones above 1: FILTER(ADDCOLUMNS(VALUES(Table[Label]), \"Keys\", CALCULATE(DISTINCTCOUNT(Table[SortKey]))), [Keys] > 1). Every row it returns is a label that needs fixing."
+  - question: "Why did my percent of total break after I set Sort by Column?"
+    answer: "A visual grouped by a sorted column also groups by its sort-by column behind the scenes. A measure that removes filters with ALL on the label column alone leaves the sort column's filter in place. Use REMOVEFILTERS or ALL on both columns, or on the whole table."
+---
+
+You select a column, choose **Column tools → Sort by column**, pick the column that holds the right order, and get this instead of a sorted axis:
+
+```text
+We can't sort the 'Month' column by 'YearMonth'. There can't be more than one value in
+'YearMonth' for the same value in 'Month'. Please choose a different column for sorting
+or update the data in 'YearMonth'.
+```
+
+The rule behind it is strict. Sort by Column assigns each distinct value of the sorted column **one** position, taken from the sort-by column. If any value appears next to two different sort keys, it would need two positions, so the sort is refused:
+
+| Month | YearMonth | Result |
+|---|---|---|
+| January | 202501 | |
+| January | 202601 | January has two keys: **error** |
+| February | 202502 | |
+
+The reverse is fine. Several labels may share one key (they tie and sort together); one label may not have several keys. The fix is always one of two things: **pick a sort column with one key per label**, or **make the label unique** so each one really does have one key.
+
+## Find the Offending Values
+
+The error names the columns but not the rows. Open **DAX query view** and run this, with your own table and column names:
+
+```dax
+EVALUATE
+FILTER (
+    ADDCOLUMNS (
+        VALUES ( 'Date'[Month] ),
+        "Keys", CALCULATE ( DISTINCTCOUNT ( 'Date'[YearMonth] ) )
+    ),
+    [Keys] > 1
+)
+```
+
+Every row it returns is a label with more than one sort key. If it returns every month, you've chosen the wrong sort column (Cause 1). If it returns one or two odd values, it's a data problem (Causes 3 and 4).
+
+## Cause 1: The Sort Key Includes the Year
+
+The most common version, and the example above. The date table has a `YearMonth` key (202501, 202502, …) and someone uses it to sort a `Month` column that holds only the month name. With more than a year of dates, every month name has one key per year.
+
+**Fix:** sort by the column that matches the label's grain:
+
+| Label column | Example | Sort by |
+|---|---|---|
+| Month name only | January | Month Number (1–12) |
+| Month and year | Jan 2025 | YearMonth (202501) |
+| Weekday name | Monday | Weekday Number (1–7) |
+| Quarter only | Q1 | Quarter Number (1–4) |
+
+If the axis needs to run across years, use a month-and-year label like `Jan 2025` sorted by `YearMonth`, not a bare month name. The [date table generator](/tools/date-table-generator) builds every label with its matching sort column already paired, and [date tables](/docs/modeling/date-tables) covers the structure.
+
+## Cause 2: Week Labels Sorted by a Date
+
+A `Week` column with labels like `Week 1` sorted by `Week Start Date`. Week 1 of 2025 and Week 1 of 2026 start on different dates, so `Week 1` has two keys. The same happens with any label that repeats across periods: fiscal periods, `Day 1` of a sprint, shift names.
+
+**Fix:** either sort by a number that repeats with the label (`Week Number`), or make the label carry its period (`2025-W01`) and sort it by the start date. Pick based on whether the visual should show one bar per week number across all years, or one per actual week.
+
+## Cause 3: Two Items Share a Name
+
+Sorting `Product Name` by `Product ID`, or `Customer` by `Customer Key`, fails as soon as two products or customers share a name. On a dimension with thousands of rows, the duplicate is easy to miss, and it can arrive in a later refresh after the sort worked for months. (That shows up as a refresh error rather than a dialog.)
+
+**Fix:** decide whether they really are two things. If they are, make the name unique, for example `Widget (W-1042)`, or add a sort-by column that's defined per name rather than per ID. If they're the same thing loaded twice, that's a duplicate to remove in Power Query, and it will also cause [the duplicate value error](/blog/column-contains-duplicate-value-error) when the table is on the one side of a relationship.
+
+## Cause 4: Values That Look Different but Aren't
+
+The model compares text **case-insensitively**. `North` and `north` are stored as one value, shown with whichever casing it met first. If the two spellings came from different systems with different sort keys, the model sees one label with two keys, though the source data looked fine.
+
+**Fix:** standardize the text in Power Query before load with **Transform → Format → Capitalize Each Word** (or Uppercase), so each label arrives once, then check that the sort keys agree.
+
+## Don't Build the Sort Key as a Calculated Column From the Same Column
+
+A sort column defined in DAX from the column it sorts, for example a `RANKX` over the labels, can fail with a circular dependency instead, because setting Sort by Column makes the label depend on the key while the key's formula depends on the label. Build sort keys in Power Query or in the source. See [fixing circular dependency errors](/blog/fix-circular-dependency-dax).
+
+## After It Works: One DAX Side Effect
+
+Once `Month` is sorted by `Month Number`, any visual grouped by `Month` also groups by `Month Number` behind the scenes. A measure that clears only the label keeps the hidden filter:
+
+```dax
+-- Returns 100% for every month: Month Number is still filtered
+Share of Year Wrong =
+DIVIDE ( [Total Sales], CALCULATE ( [Total Sales], ALL ( 'Date'[Month] ) ) )
+
+-- Clears both columns
+Share of Year =
+DIVIDE (
+    [Total Sales],
+    CALCULATE ( [Total Sales], REMOVEFILTERS ( 'Date'[Month], 'Date'[Month Number] ) )
+)
+```
+
+See [percent of total](/docs/dax-patterns/percent-of-total) for the rest of that pattern.
+
+## If the Sort Is Set but the Visual Still Looks Wrong
+
+The column's sort order is only the default. Each visual can sort by a measure instead. Open the visual's **More options (…) → Sort axis**, choose the label column, then **Sort ascending**.
+
+## Common Mistakes
+
+**Sorting by a key at a finer grain than the label.** A date, a YearMonth, or an ID is unique per row, not per label. Match the sort column to what the label means.
+
+**Fixing it with a calculated column that ranks the labels.** It works until it creates a circular dependency. Put sort keys in the date table or Power Query.
+
+**Assuming the data is clean because the sort worked yesterday.** A new duplicate name or a new year of dates can break it on refresh. If labels come from a source you don't control, keep the query above handy.
+
+## Next Steps
+
+- [Date tables](/docs/modeling/date-tables)
+- [Dimension tables](/docs/modeling/dimension-tables)
+- [Percent of total](/docs/dax-patterns/percent-of-total)
+- [Power BI Error: Column Contains a Duplicate Value](/blog/column-contains-duplicate-value-error)
+- [How to Fix a Circular Dependency Error in DAX](/blog/fix-circular-dependency-dax)
