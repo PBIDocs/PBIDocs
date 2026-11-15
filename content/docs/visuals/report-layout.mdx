@@ -1,0 +1,135 @@
+---
+title: "Report Layout: Page Settings, Selection Pane, Mobile & Accessibility"
+description: The report-level settings that decide whether a Power BI report works for everyone who opens it. Page size and background, layering and grouping in the Selection pane, a phone layout, and accessibility, from alt text and tab order to color that isn't the only signal.
+---
+
+# Report Layout
+
+Most report work happens inside visuals. This page covers what sits around them: the page itself, how visuals stack and group, how the report looks on a phone, and whether someone using a keyboard or a screen reader can use it.
+
+---
+
+## Page Settings
+
+Select an empty part of the canvas, so no visual is selected, and the Format pane shows **Format page**.
+
+| Setting | Where | Notes |
+|---|---|---|
+| Page size | **Canvas settings → Type** | 16:9 (1280 × 720) is the default. 4:3, Letter, Tooltip, and Custom are the others. |
+| Vertical alignment | **Canvas settings** | Top or middle, when the page is smaller than the window |
+| Background | **Canvas background** | Color or image, with transparency |
+| Area around the page | **Wallpaper** | Shows outside the canvas |
+| Tooltip page | **Page information → Allow use as tooltip** | See [Report Page Tooltips](/docs/visuals/tooltips) |
+
+**View → Page view** controls how the page fits the window while you edit: *Fit to page*, *Fit to width*, or *Actual size*. Readers in the Service can pick their own.
+
+Pick a size once and keep it for every page. A custom height suits a long, scrolling page, but mixed sizes make a report feel like several reports.
+
+For colors and fonts across the whole report, use a [theme](/docs/governance/report-themes) rather than formatting each visual.
+
+---
+
+## The Selection Pane
+
+Open it with **View → Selection**. It lists every object on the page: visuals, shapes, text boxes, buttons, and images.
+
+### Show and Hide
+
+The eye icon beside each item shows or hides it. Hidden objects stay on the page but aren't drawn. That's what [bookmarks](/docs/visuals/bookmarks) capture: a bookmark that hides a chart and shows a table is the usual way to build a "switch view" button.
+
+### Layer Order
+
+Objects higher in the list sit **in front of** objects lower down. A background shape belongs at the bottom; a button over a chart belongs above it. Drag items in the **Layer order** tab, or use **Format → Bring forward / Send backward** on the ribbon.
+
+A common problem: a transparent shape placed on top of a visual blocks clicks on it, so slicers and cross-filtering stop working. Move the shape below the visual in the layer order.
+
+### Groups
+
+Select several objects (Ctrl+click), right-click, and choose **Group → Group**. A group moves, resizes, and hides as one item in the Selection pane, which keeps bookmarks simpler: hide the group instead of five separate objects. Groups can have their own background.
+
+### Tab Order
+
+The second tab of the Selection pane, **Tab order**, sets the order in which keyboard users move between visuals. More on that below.
+
+---
+
+## Mobile Layout
+
+Without a mobile layout, the Power BI mobile app shows the full desktop page shrunk to the phone's screen. It's readable in landscape and hard to use in portrait.
+
+To give a page a phone layout:
+
+1. Open the page and choose **View → Mobile layout**.
+2. A phone-shaped canvas appears, with a **Page visuals** pane listing the page's visuals.
+3. Drag the visuals you want onto the phone canvas and resize them. Stack them vertically: phones scroll, they don't zoom well.
+4. Adjust formatting for the phone where needed, for example larger fonts or fewer data labels. Changes made in mobile layout apply only to the phone view.
+5. Switch back with **View → Mobile layout** again and publish.
+
+Once a page has a mobile layout, phones in portrait use it automatically in the Power BI mobile app. Each page has its own mobile layout, so build one only for pages people actually read on a phone.
+
+What to include: the few KPIs and one or two charts that answer the page's main question. Leave out wide tables and dense matrices. The full desktop page is still there when the phone is turned sideways.
+
+---
+
+## Accessibility
+
+An accessible report works with a keyboard, with a screen reader, and for people who can't tell some colors apart. Most of it is a few settings per visual.
+
+### Alt Text
+
+Each visual has **alt text** under **Format visual → General → Alt text**. Screen readers read it with the visual's title and type. Describe what the visual shows and its main point, not how it looks: *Monthly sales for 2026, peaking in June at $160,000* rather than *A line chart*.
+
+Alt text can be dynamic. Use the **fx** button and a measure, so it changes with the slicers:
+
+```dax lineNumbers
+Sales Alt Text =
+"Total sales "
+    & FORMAT ( [Total Sales], "$#,0" )
+    & " for "
+    & SELECTEDVALUE ( 'Date'[Year], "all years" )
+```
+
+### Tab Order
+
+In **Selection → Tab order**, arrange visuals in the order someone should read them: title, KPIs, then charts, top to bottom and left to right. Hide decorative shapes and images from the tab order so keyboard users don't land on them.
+
+Keyboard users can also open the data behind the focused visual as a table with **Alt+Shift+F11**. A good tab order makes that reachable.
+
+### Color and Contrast
+
+- **Don't use color as the only signal.** A red/green status column is unreadable for many people with color vision deficiency. Add a label, an icon, or a marker shape.
+- **Keep text contrast high.** Light gray text on white fails the usual 4.5:1 contrast guideline for normal-size text.
+- **Use a theme** with a tested, accessible palette, so every new visual starts right.
+
+### Titles and Labels
+
+Give every visual a title that says what it shows. Spell out abbreviations, and avoid relying on a legend far from the data when data labels would do.
+
+---
+
+## Before You Publish
+
+- [ ] Every page uses the same page size.
+- [ ] No shape sits on top of a visual people need to click.
+- [ ] Related objects are grouped, and bookmarks use the groups.
+- [ ] Pages people read on phones have a mobile layout.
+- [ ] Every visual has a title and alt text.
+- [ ] Tab order follows the reading order, with decorative objects hidden.
+- [ ] Nothing relies on color alone.
+
+## Common Mistakes
+
+**A transparent shape blocking clicks.** Check the layer order when a visual stops responding.
+
+**Mobile layout with every visual on the page.** It becomes a long scroll of tiny charts. Choose the few that matter.
+
+**Alt text that describes the chart type.** The screen reader already announces it. Describe the insight.
+
+**Tab order left as the order visuals were created.** Keyboard users jump around the page at random.
+
+## Next Steps
+
+- [Formatting](/docs/visuals/formatting)
+- [Bookmarks & Interactivity](/docs/visuals/bookmarks)
+- [Report Theme JSON Files](/docs/governance/report-themes)
+- [Drillthrough](/docs/visuals/drillthrough)
