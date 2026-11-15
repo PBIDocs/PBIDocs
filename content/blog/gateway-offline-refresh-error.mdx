@@ -74,7 +74,7 @@ Sometimes the "cause" is simply that every on-premises refresh in the organizati
 
 1. Confirm the gateway shows **online** in **Manage connections and gateways**.
 2. Run **Refresh now** on an affected semantic model and check the refresh history.
-3. Turn scheduled refresh back on if it was disabled. After four failed refreshes in a row, Power BI switches the schedule off, and fixing the gateway doesn't switch it back on.
+3. Turn scheduled refresh back on if it was disabled. After four failed refreshes in a row, Power BI switches the schedule off, and fixing the gateway doesn't switch it back on. See [why Power BI turns off scheduled refresh](/blog/scheduled-refresh-turned-off).
 
 If the next failure is about credentials rather than the gateway, the gateway is fine and its connection's stored sign-in isn't. That's a different fix: see [the credentials provided for the data source are invalid](/blog/refresh-credentials-invalid-error), Cause 4.
 

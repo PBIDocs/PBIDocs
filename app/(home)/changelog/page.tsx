@@ -15,6 +15,14 @@ const changelog: { date: string; entries: ReactNode[] }[] = [
     date: '2026-11-15',
     entries: [
       <>
+        New blog post:{' '}
+        <Link href="/blog/scheduled-refresh-turned-off">
+          Why Power BI Turned Off Your Scheduled Refresh
+        </Link>
+        , on schedules disabled after four failures or paused for inactivity, how to tell which from the
+        refresh history, and how to keep refresh running.
+      </>,
+      <>
         Three new Power Query error posts:{' '}
         <Link href="/blog/cannot-apply-operator-text-number-error">We Cannot Apply Operator &amp; to Types Text and Number</Link>,{' '}
         <Link href="/blog/cannot-convert-list-to-text-error">We Cannot Convert a Value of Type List to Type Text</Link>, and{' '}

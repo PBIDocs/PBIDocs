@@ -1,0 +1,83 @@
+---
+title: "Why Power BI Turned Off Your Scheduled Refresh (and How to Keep It On)"
+description: "The report shows last week's numbers and the refresh schedule toggle is off, though nobody switched it off. Power BI disables schedules on its own after repeated failures and after a semantic model goes unused. Here's how to tell which happened, and how to stop it happening again."
+date: "2026-11-15"
+tags: ["Power BI Service", "Troubleshooting"]
+card:
+  label: "Symptom"
+  text: "The report still shows last week's numbers, and the scheduled refresh toggle is off. Nobody turned it off."
+faq:
+  - question: "Why did Power BI disable my scheduled refresh?"
+    answer: "Usually for one of two reasons. After four failed refreshes in a row, Power BI switches the schedule off so it stops retrying a broken refresh. And when nobody has opened a report or dashboard built on the semantic model for about two months, Power BI pauses scheduled refresh to save resources. The refresh history tells you which."
+  - question: "Does Power BI turn refresh back on after I fix the problem?"
+    answer: "No. Fixing the credentials, the gateway, or the query doesn't re-enable the schedule. Run a manual refresh to confirm the fix, then switch scheduled refresh back on in the semantic model's settings."
+  - question: "How do I stop refresh being paused for inactivity?"
+    answer: "Make sure someone actually opens a report or dashboard built on the semantic model within the inactivity window. If nobody has in two months, check whether the model is still needed. If it feeds something that doesn't count as a visit, such as exports or another tool, check its refresh status regularly or have someone open the report as part of a routine."
+  - question: "Who gets told when scheduled refresh fails?"
+    answer: "By default, the semantic model's owner, by email, if failure notifications are on in the refresh settings. You can add other people or a shared mailbox under the option to email other contacts, so a failure doesn't go unnoticed when the owner is away."
+---
+
+You don't get an error message for this one. The symptom is quieter: a report shows numbers from a week or two ago, and when you open the semantic model's settings in the Power BI Service, the scheduled refresh toggle is **off**. Nobody remembers turning it off, because nobody did. Power BI switches schedules off on its own, for two main reasons:
+
+| What you see in the refresh history | What happened |
+|---|---|
+| Four or more failed refreshes in a row, then nothing | The schedule was **disabled after repeated failures** |
+| Successful refreshes, then nothing, and nobody has opened the report in a while | The schedule was **paused for inactivity** |
+| No scheduled refreshes at all, ever | The schedule **was never able to turn on** |
+
+To check: open the workspace, find the semantic model, open its **Settings**, and expand **Refresh** for the schedule and **Refresh history** for what happened. The history is the fastest way to tell the three apart.
+
+## Reason 1: Four Failures in a Row
+
+When a scheduled refresh fails four times in a row, Power BI stops trying and switches the schedule off.
+
+The fix is the failure itself. The refresh history shows the error for each attempt; the most common are:
+
+- **The credentials provided for the data source are invalid.** An expired OAuth token, a changed password, or an owner who left. See [the credentials error explained](/blog/refresh-credentials-invalid-error).
+- **The gateway is either offline or could not be reached.** A sleeping machine, a stopped service, a blocked port. See [the gateway error explained](/blog/gateway-offline-refresh-error).
+- **A source error from the query itself**: a renamed column, a moved file, a database that's down. These read like the errors you'd get in Desktop, so open the file there and refresh to reproduce them.
+
+**Then turn it back on.** Fixing the cause doesn't re-enable the schedule. Run **Refresh now**, confirm it succeeds in the history, and switch the schedule back on.
+
+## Reason 2: Nobody Has Used It in Two Months
+
+To save resources, Power BI pauses scheduled refresh for a semantic model when no one has visited any report or dashboard built on it for about two months. The refresh history shows a run of successful refreshes that simply stops.
+
+**Fix:** switch the schedule back on, and open the report. Then decide whether the model is still needed. A model nobody has looked at in two months is often a leftover worth archiving.
+
+Watch for models that are used without anyone opening them in the Service: one that only feeds exports, a downstream tool, or a report someone looks at quarterly. Those can be paused even though they matter. Give someone a recurring task to open the report, or check refresh status as part of a regular review.
+
+The exact rules for inactivity can depend on the capacity your workspace runs on, so if a model on a Premium or Fabric capacity behaves differently, check Microsoft's current documentation for that capacity.
+
+## Reason 3: The Schedule Could Never Turn On
+
+Some schedules aren't switched off. They were never allowed on. The settings page shows a warning instead of a working schedule:
+
+- **"This dataset includes a dynamic data source"**: a query builds its source address from data, so the Service can't refresh it at all. See [the dynamic data source error](/blog/dynamic-data-source-refresh-error).
+- **Missing credentials or gateway mapping**: a source listed under **Data source credentials** with no sign-in, or an on-premises source with no gateway connection. Enter the credentials, or map the source to a gateway connection, then turn the schedule on.
+
+## Keeping It On
+
+**Send failure emails to more than one person.** In the refresh settings, failure notifications go to the semantic model's owner by default. Add a shared mailbox or a second person under the option to email other contacts, so a failure doesn't go unnoticed for four days while the owner is on leave. Four failures can happen quickly with several refreshes a day.
+
+**Use an account meant for refresh.** Refreshes that depend on one person's password, or on their personal-mode gateway, fail when that person changes their password or leaves. Use a service account or a standard gateway with more than one cluster member.
+
+**Check the history after any change.** After a schema change, a moved file, or a new data source, run one manual refresh in the Service and watch it finish, rather than waiting for the schedule to fail four times.
+
+**Put a "last refreshed" date on the report.** A card showing when the data was last refreshed lets readers spot stale numbers themselves. A common approach is a small Power Query query that returns `DateTime.LocalNow()` at refresh time, loaded as a one-row table. See [DateTime.LocalNow](/docs/power-query/datetime-localnow). Note that it returns the time on the machine running the refresh, which in the Service is usually UTC.
+
+## Common Mistakes
+
+**Fixing the cause and not the schedule.** The most common one by far. The data stays stale because the schedule is still off.
+
+**Turning the schedule back on without fixing the cause.** It fails four more times and switches off again, and nobody notices for another week.
+
+**Assuming silence means success.** With notifications going to one person, a failed refresh can go unnoticed. Check the refresh history, or add a "last refreshed" card.
+
+## Next Steps
+
+- [Refresh in the Power BI Service](/docs/power-bi-service/refresh)
+- [Gateways and Refresh](/docs/governance/gateway-refresh)
+- [Power BI Refresh Error: The Credentials Provided for the Data Source Are Invalid](/blog/refresh-credentials-invalid-error)
+- [Power BI Refresh Error: The Gateway Is Either Offline or Could Not Be Reached](/blog/gateway-offline-refresh-error)
+- [Power BI: This Dataset Includes a Dynamic Data Source and Won't Be Refreshed](/blog/dynamic-data-source-refresh-error)
