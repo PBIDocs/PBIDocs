@@ -12,6 +12,19 @@ export const metadata: Metadata = {
 
 const changelog: { date: string; entries: ReactNode[] }[] = [
   {
+    date: '2026-11-15',
+    entries: [
+      <>
+        New blog post:{' '}
+        <Link href="/blog/dynamic-data-source-refresh-error">
+          This Dataset Includes a Dynamic Data Source and Won&apos;t Be Refreshed
+        </Link>
+        , on why the Service can&apos;t refresh a source whose address comes from data, and the fix
+        for URLs, API paging, server names from a table, per-row file paths, and custom functions.
+      </>,
+    ],
+  },
+  {
     date: '2026-11-13',
     entries: [
       <>

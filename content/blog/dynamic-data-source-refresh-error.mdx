@@ -1,0 +1,203 @@
+---
+title: "Power BI: This Dataset Includes a Dynamic Data Source and Won't Be Refreshed"
+description: "The Power BI Service refuses to schedule refresh because a query builds its data source address from data: a URL, a server name, or a file path. Here's why the Service can't refresh that, how to find the query, and the fix for each of the five usual patterns."
+date: "2026-11-15"
+tags: ["Power BI Service", "Power Query", "Troubleshooting"]
+card:
+  label: "Error"
+  text: "This dataset includes a dynamic data source. Since dynamic data sources aren't refreshed in the Power BI service, this dataset won't be refreshed."
+faq:
+  - question: "What is a dynamic data source in Power BI?"
+    answer: "A data source whose address is computed while the query runs instead of written in the query: a URL built by joining text, a server name read from a table, a file path assembled per row. The Power BI Service has to know every data source before refresh starts, so it can check credentials and route through a gateway, and it can't know an address that only exists after the query has run."
+  - question: "Why does refresh work in Desktop but not in the Service?"
+    answer: "Desktop just runs the query and prompts for credentials as each source turns up. The Service works the other way round: before refreshing, it reads the queries to list every data source and match each one to stored credentials or a gateway connection. A dynamic source can't be listed that way, so the Service won't schedule refresh at all."
+  - question: "Are Power Query parameters dynamic data sources?"
+    answer: "No. A parameter has a fixed current value the Service can read before refresh, and you can change it in the semantic model's settings. Sql.Database(ServerParameter, DatabaseParameter) refreshes fine. What doesn't work is an address computed from data, such as a value looked up in another query or read from a table row."
+  - question: "How do I find which query has the dynamic data source?"
+    answer: "In Power BI Desktop, open File, Options and settings, Data source settings. If some sources can't be listed, it says some data sources may not be listed because of hand-authored queries. Then look for queries where a source function such as Web.Contents, Sql.Database, or File.Contents receives something other than literal text or a parameter, often inside a custom function or an added column."
+---
+
+The message shows up in the semantic model's settings in the Power BI Service, and scheduled refresh can't be turned on:
+
+```text
+This dataset includes a dynamic data source. Since dynamic data sources aren't
+refreshed in the Power BI service, this dataset won't be refreshed.
+```
+
+(Newer versions may say "semantic model" instead of "dataset".) Desktop refreshes the same file without complaint, which is what makes this confusing.
+
+## Why the Service Refuses
+
+Before the Service refreshes anything, it has to know every data source the model touches: to look up stored credentials for each, to decide which ones go through a gateway, and to check privacy levels. It gets that list by **reading your Power Query code without running it**.
+
+That works when the source address is written into the query:
+
+```powerquery
+Sql.Database("sql01.contoso.local", "Sales")
+```
+
+It doesn't work when the address only exists after the query runs:
+
+```powerquery
+Sql.Database(Config{0}[Server], Config{0}[Database])
+```
+
+The Service can't know what's in `Config` until it refreshes `Config`, and it won't refresh anything until it knows the sources. So it gives up and reports a dynamic data source. Desktop has no such problem: it just runs the query and asks for credentials when a new source turns up.
+
+| The source address is… | Refreshes in the Service? |
+|---|---|
+| Literal text in the query | Yes |
+| A Power Query parameter | Yes: the Service reads the parameter's current value |
+| Built from text joined with values from data | No |
+| Read from another query or a table row | No |
+| A fixed base URL, with the varying parts in `RelativePath` / `Query` | Yes (the `Web.Contents` exception, Cause 1) |
+
+## Finding the Query
+
+In Desktop, open **File → Options and settings → Data source settings**. If something can't be listed, you'll see a note that some data sources may not be listed because of hand-authored queries. Then look through your queries for a source function (`Web.Contents`, `Sql.Database`, `File.Contents`, `Excel.Workbook` on a path, `OData.Feed`) whose first argument is anything other than plain text or a parameter. The usual hiding places are custom functions and **Add Column** steps that call a source once per row.
+
+## Cause 1: A URL Built by Joining Text
+
+```powerquery lineNumbers
+let
+    Source = Json.Document(
+        Web.Contents("https://api.example.com/v1/orders?since=" & StartDate)
+    )
+in
+    Source
+```
+
+The full URL only exists once `StartDate` is joined on, so the Service can't see it in advance.
+
+**Fix:** give `Web.Contents` a fixed base URL, and move everything that varies into its `RelativePath` and `Query` options. The Service treats the base URL as the data source and lets the rest change on every call:
+
+```powerquery lineNumbers
+let
+    Source = Json.Document(
+        Web.Contents(
+            "https://api.example.com",
+            [RelativePath = "v1/orders", Query = [since = StartDate]]
+        )
+    )
+in
+    Source
+```
+
+This is the same fix as the Formula.Firewall version of this problem: see [Web.Contents can only accept a literal string](/blog/web-contents-literal-string-parameter-error) for more variations.
+
+## Cause 2: Paging Through an API
+
+```powerquery lineNumbers
+let
+    GetPage = (page as number) =>
+        Json.Document(Web.Contents("https://api.example.com/v1/orders?page=" & Number.ToText(page))),
+    Pages = List.Transform({1..10}, GetPage)
+in
+    Pages
+```
+
+Every page is a different URL built at run time, so each one is a dynamic source. Paging loops and "call this endpoint for every ID" functions are the most common way to hit this error with an API.
+
+**Fix:** the same pattern, inside the function. The base URL stays literal, and only the query string changes per call:
+
+```powerquery lineNumbers
+let
+    GetPage = (page as number) =>
+        Json.Document(
+            Web.Contents(
+                "https://api.example.com",
+                [RelativePath = "v1/orders", Query = [page = Number.ToText(page)]]
+            )
+        ),
+    Pages = List.Transform({1..10}, GetPage)
+in
+    Pages
+```
+
+## Cause 3: Server or Database Names From a Table
+
+```powerquery lineNumbers
+let
+    Config = Table.PromoteHeaders(Csv.Document(File.Contents("C:\Config\databases.csv"))),
+    WithSales = Table.AddColumn(
+        Config,
+        "Sales",
+        each Sql.Database([Server], [Database]){[Schema = "dbo", Item = "Sales"]}[Data]
+    )
+in
+    WithSales
+```
+
+A config table listing which servers to read is tidy in Desktop, and impossible for the Service: the list of sources depends on the contents of a file.
+
+**Fix:** make each source static. For a handful of databases, create one query per database with the server and database as **Power Query parameters** (Home → Manage Parameters), then append the queries. The Service reads parameter values before refresh, and you can change them later in the semantic model's settings without republishing:
+
+```powerquery lineNumbers
+let
+    Source = Sql.Database(ServerName, DatabaseName),
+    Sales = Source{[Schema = "dbo", Item = "Sales"]}[Data]
+in
+    Sales
+```
+
+For many databases on the same server, it's often simpler to have a database administrator create one view that combines them, and connect to that single source.
+
+## Cause 4: File Paths Built Per Row
+
+```powerquery lineNumbers
+let
+    Names = Table.FromList({"Jan.xlsx", "Feb.xlsx", "Mar.xlsx"}, null, {"Name"}),
+    Loaded = Table.AddColumn(
+        Names,
+        "Data",
+        each Excel.Workbook(File.Contents("\\fs01\finance\" & [Name]))
+    )
+in
+    Loaded
+```
+
+Each `File.Contents` call gets a path that's assembled while the query runs.
+
+**Fix:** connect to the **folder** once, with a literal path, then filter to the files you want. `Folder.Files` returns each file's contents in its `Content` column, so no per-row path is ever built:
+
+```powerquery lineNumbers
+let
+    Source = Folder.Files("\\fs01\finance"),
+    Wanted = Table.SelectRows(Source, each List.Contains({"Jan.xlsx", "Feb.xlsx", "Mar.xlsx"}, [Name])),
+    Loaded = Table.AddColumn(Wanted, "Data", each Excel.Workbook([Content]))
+in
+    Loaded
+```
+
+For files in SharePoint or OneDrive, `SharePoint.Files` with a literal site URL does the same job. A folder on a file share still needs an on-premises gateway; see [the gateway is offline error](/blog/gateway-offline-refresh-error) if refresh then fails to reach it.
+
+## Cause 5: A Custom Function That Takes the Whole Address
+
+Even with a tidy query, a custom function like `GetData = (url as text) => Web.Contents(url)` makes every call dynamic, because the function receives a full address. This is usually Cause 1 or 2 hiding one level down, and it's the hardest to spot because the function body looks harmless.
+
+**Fix:** change the function to take only the varying part (an ID, a page number, a date), and build the call inside it with a literal base and `RelativePath` / `Query`, as in Cause 2.
+
+## After the Fix
+
+1. Publish the report again. The semantic model's settings should now list each data source under **Data source credentials**, with no dynamic data source warning.
+2. Enter credentials for any newly listed source, and map it to a gateway connection if it's on-premises.
+3. Run **Refresh now**, then turn on scheduled refresh.
+
+If the next error says the credentials are invalid, the source is now visible but its sign-in isn't set: see [the credentials provided for the data source are invalid](/blog/refresh-credentials-invalid-error).
+
+## Common Mistakes
+
+**Assuming parameters are the problem.** Power Query parameters are the fix, not the cause. The trouble starts when a source address comes from *data*.
+
+**Fixing the main query and missing the function.** If a custom function builds the address, every query that calls it is dynamic. Fix the function.
+
+**Using `Skip test connection` to get past it.** That checkbox is for sources the Service can see but can't test. It does nothing for a source the Service can't see at all.
+
+**Moving the logic to a dataflow and expecting it to go away.** Dataflows refresh in the Service too, under the same rule. The fix is the same pattern there.
+
+## Next Steps
+
+- [Power Query Error: Web.Contents Can Only Accept a Literal String](/blog/web-contents-literal-string-parameter-error)
+- [Refresh in the Power BI Service](/docs/power-bi-service/refresh)
+- [Power BI Refresh Error: The Credentials Provided for the Data Source Are Invalid](/blog/refresh-credentials-invalid-error)
+- [Power BI Refresh Error: The Gateway Is Either Offline or Could Not Be Reached](/blog/gateway-offline-refresh-error)

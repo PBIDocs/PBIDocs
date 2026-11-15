@@ -41,6 +41,8 @@ Web.Contents("https://api.example.com/products/" & productId)
 
 `RelativePath` and the `Query` record option exist specifically because the Service *can* statically parse those — it treats the first argument as the one fixed data source, and everything in `RelativePath`/`Query` as per-call detail layered on top. See [Web.Contents()](/docs/power-query/web-contents#relativepath-why-it-matters-for-the-service) for the full mechanics.
 
+The same rule produces a second message, in the semantic model's settings in the Service: "This dataset includes a dynamic data source", with scheduled refresh unavailable. That one also covers server names, database names, and file paths built from data. See [the dynamic data source error](/blog/dynamic-data-source-refresh-error).
+
 ## Cause 1: Building the URL With String Concatenation
 
 ```powerquery lineNumbers
