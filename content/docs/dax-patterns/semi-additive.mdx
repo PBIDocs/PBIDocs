@@ -1,0 +1,157 @@
+---
+title: "Semi-Additive Measures"
+description: How to total balances, inventory, and headcount in DAX. They add up across products or accounts but not across time, so a month or quarter should show the closing balance, not a sum of snapshots.
+---
+
+# Semi-Additive Measures
+
+Most measures are **additive**: sales for the quarter is the sum of sales for each day in it. A balance isn't. If a warehouse holds 160 units at the end of every week, it doesn't hold 640 units at the end of the month.
+
+Values like this are **semi-additive**: they add up across some dimensions but not across time.
+
+| Value | Adds across | Doesn't add across |
+|---|---|---|
+| Inventory on hand | Products, warehouses | Days, weeks, months |
+| Account balance | Accounts, customers | Time |
+| Headcount | Departments, locations | Time |
+| Open defects, open risks | Projects, categories | Time |
+
+So a month or quarter should usually show the **closing** balance, the value on the last day of the period, while products and warehouses still add up.
+
+---
+
+## The Example Data
+
+An inventory snapshot taken every Friday in March 2026, one row per product:
+
+```text
+Date        Product   Units
+2026-03-13  Widget    120
+2026-03-13  Gadget     80
+2026-03-20  Widget    100
+2026-03-20  Gadget     90
+2026-03-27  Widget     90
+2026-03-27  Gadget     70
+```
+
+`Inventory[Date]` relates to a full calendar `'Date'` table. The base measure is a plain sum, which is right for a single day:
+
+```dax lineNumbers
+Units = SUM ( Inventory[Units] )
+```
+
+In a matrix by month, March is where things go wrong:
+
+| Measure | March shows | Why |
+|---|---|---|
+| `[Units]` | **550** | All three Fridays added together. Wrong. |
+| Closing balance with `LASTDATE` | **(blank)** | March 31 is a Tuesday, with no snapshot |
+| Closing balance with the last snapshot date | **160** | March 27: 90 + 70. Right. |
+| Average balance | **183.3** | (200 + 190 + 160) / 3 |
+
+---
+
+## Closing Balance: The Obvious Version
+
+```dax lineNumbers
+Closing Units (Last Date) =
+CALCULATE ( [Units], LASTDATE ( 'Date'[Date] ) )
+```
+
+`LASTDATE` returns the last date of the period in the **Date table**: March 31. That works when there's a snapshot every day. With weekly or month-end snapshots, the last calendar day often has no row, so the measure returns blank for most months. `CLOSINGBALANCEMONTH`, `CLOSINGBALANCEQUARTER`, and `CLOSINGBALANCEYEAR` behave the same way: they also evaluate on the last calendar day.
+
+## Closing Balance: The Last Date With Data
+
+Use the last date that actually has a snapshot:
+
+```dax lineNumbers
+Closing Units =
+VAR LastSnapshot = MAX ( Inventory[Date] )
+RETURN
+    CALCULATE ( [Units], 'Date'[Date] = LastSnapshot )
+```
+
+```text
+MAX ( Inventory[Date] )        last date with a row, inside the current month: March 27
+'Date'[Date] = LastSnapshot    replace the month's dates with that one day
+```
+
+For March that's 90 + 70 = **160**. For a year or quarter it's the last snapshot in that period, and in a matrix by product each product row still shows its own closing value, so the products add up to the total.
+
+`LASTNONBLANK ( 'Date'[Date], [Units] )` gives the same date and is a common alternative. It tests every date one by one, so `MAX` on the fact table is usually faster.
+
+---
+
+## When Products Stop Reporting at Different Times
+
+The measure above finds **one** last date for the whole filter context. If Gadget's last snapshot in March were on the 20th and Widget's on the 27th, the March total would show only Widget's 90, because Gadget has no row on the 27th.
+
+When each product (or account) can report on its own schedule, find the last date per product and add the results:
+
+```dax lineNumbers
+Closing Units per Product =
+SUMX (
+    VALUES ( Inventory[Product] ),
+    CALCULATE (
+        VAR LastSnapshot = MAX ( Inventory[Date] )
+        RETURN CALCULATE ( [Units], 'Date'[Date] = LastSnapshot )
+    )
+)
+```
+
+The outer `CALCULATE` turns each product into a filter ([context transition](/docs/dax/row-context)), so `MAX ( Inventory[Date] )` finds that product's own last date. Use this only when the schedules really differ: it iterates every product.
+
+---
+
+## Opening Balance
+
+The opening balance of a month is the closing balance of the day before it starts:
+
+```dax lineNumbers
+Opening Units =
+VAR FirstDay = MIN ( 'Date'[Date] )
+VAR LastBefore =
+    CALCULATE ( MAX ( Inventory[Date] ), 'Date'[Date] < FirstDay )
+RETURN
+    CALCULATE ( [Units], 'Date'[Date] = LastBefore )
+```
+
+`'Date'[Date] < FirstDay` replaces the month with every earlier date, and `MAX` finds the last snapshot among them. Opening and closing together give the movement: `[Closing Units] - [Opening Units]`.
+
+## Average Balance
+
+For averages, such as average inventory for a turnover ratio, average the daily balances instead of summing them:
+
+```dax lineNumbers
+Average Units =
+AVERAGEX ( VALUES ( 'Date'[Date] ), [Units] )
+```
+
+`AVERAGEX` evaluates `[Units]` for each date in the period and skips the blanks, so with weekly snapshots it averages the three Fridays: (200 + 190 + 160) / 3 = **183.3**. If the business defines the average over every calendar day, with missing days counted as the previous balance, that's a different calculation: fill the gaps in Power Query first.
+
+---
+
+## Showing the Right Thing on Every Row
+
+A common request is "sum on day rows, closing balance on month rows". The closing-balance measure already does that: on a single day, the last snapshot in that day *is* that day. You don't need `ISINSCOPE` or a separate measure per level.
+
+What you do need is to hide or rename `[Units]` itself, so nobody drags it into a monthly visual and reads 550 as the stock level.
+
+## Common Mistakes
+
+**Using SUM because the numbers look plausible.** A monthly sum of weekly snapshots looks like a real number, just four or five times too big. Check one month by hand.
+
+**LASTDATE with snapshots that skip days.** Blank months, or months that only show data when they end on a weekday. Use the last date with data.
+
+**Taking the last date across all products when they report separately.** The total quietly drops anything that didn't report on the final day.
+
+**Building it in Power Query by keeping the last row per month.** It works for one grain, but then weeks, quarters, and years each need their own table. A measure handles every level.
+
+## Next Steps
+
+- [Time Intelligence](/docs/dax/time-intelligence)
+- [Totals](/docs/dax-patterns/totals)
+- [Running Total](/docs/dax-patterns/running-total)
+- [Date Tables](/docs/modeling/date-tables)
+- [Snapshot Fact Tables](/docs/modeling/fact-tables#snapshot-fact-tables)
+- [Calculation Groups](/docs/modeling/calculation-groups)

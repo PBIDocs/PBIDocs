@@ -6,6 +6,7 @@
     "ranking",
     "percent-of-total",
     "running-total",
+    "semi-additive",
     "evm-metrics",
     "risk-score-heat-map",
     "fmea-rpn-scoring",

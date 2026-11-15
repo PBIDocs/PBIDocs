@@ -15,6 +15,13 @@ const changelog: { date: string; entries: ReactNode[] }[] = [
     date: '2026-11-15',
     entries: [
       <>
+        Two new docs pages from the PL-300 gaps:{' '}
+        <Link href="/docs/dax-patterns/semi-additive">Semi-Additive Measures</Link> (closing, opening, and average
+        balances, including snapshots that skip days) and{' '}
+        <Link href="/docs/modeling/calculation-groups">Calculation Groups</Link> (one PY, YoY, and YTD for every
+        measure, format strings, and the traps).
+      </>,
+      <>
         New: the <Link href="/pl-300">PL-300 study guide</Link>. Every skill in Microsoft&apos;s current exam
         outline mapped to the page that teaches it, and sixteen scenario practice questions, four per skill area.
       </>,

@@ -12,6 +12,7 @@
     "composite-models",
     "date-tables",
     "measures",
+    "calculation-groups",
     "slowly-changing-dimensions",
     "bridge-tables",
     "many-to-many"

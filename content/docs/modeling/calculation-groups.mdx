@@ -1,0 +1,153 @@
+---
+title: "Calculation Groups"
+description: How calculation groups replace dozens of near-identical measures in Power BI. One set of time intelligence items (current, prior year, YoY, YTD) applies to every measure, with SELECTEDMEASURE, format strings, and the traps to avoid.
+---
+
+# Calculation Groups
+
+Ten base measures, each with a prior-year, year-over-year, YoY %, and year-to-date version, is fifty measures. They're all the same five patterns wrapped around a different base measure.
+
+A **calculation group** writes each pattern once. It's a special table with one column, whose rows are **calculation items**. Each item is a DAX expression that modifies whichever measure is being evaluated:
+
+```text
+Without a calculation group          With one
+-------------------------------      ----------------------------------
+Sales, Sales PY, Sales YoY,          Measures:  Sales, Cost, Margin, ...
+Sales YoY %, Sales YTD,              Time Calc: Current, PY, YoY, YoY %, YTD
+Cost, Cost PY, Cost YoY, ...
+Margin, Margin PY, ...               10 measures + 5 items
+50 measures
+```
+
+Put the calculation group's column on a matrix's columns (or in a slicer) and every measure in the visual is shown through each item.
+
+---
+
+## SELECTEDMEASURE: The Placeholder
+
+Inside a calculation item, `SELECTEDMEASURE()` stands for whichever measure the visual is evaluating. A time intelligence group:
+
+```dax lineNumbers
+-- Item: Current
+SELECTEDMEASURE ()
+```
+
+```dax lineNumbers
+-- Item: PY
+CALCULATE ( SELECTEDMEASURE (), SAMEPERIODLASTYEAR ( 'Date'[Date] ) )
+```
+
+```dax lineNumbers
+-- Item: YoY
+VAR CurrentValue = SELECTEDMEASURE ()
+VAR PriorValue = CALCULATE ( SELECTEDMEASURE (), SAMEPERIODLASTYEAR ( 'Date'[Date] ) )
+RETURN
+    IF ( NOT ISBLANK ( PriorValue ), CurrentValue - PriorValue )
+```
+
+```dax lineNumbers
+-- Item: YoY %
+VAR CurrentValue = SELECTEDMEASURE ()
+VAR PriorValue = CALCULATE ( SELECTEDMEASURE (), SAMEPERIODLASTYEAR ( 'Date'[Date] ) )
+RETURN
+    DIVIDE ( CurrentValue - PriorValue, PriorValue )
+```
+
+```dax lineNumbers
+-- Item: YTD
+CALCULATE ( SELECTEDMEASURE (), DATESYTD ( 'Date'[Date] ) )
+```
+
+With `[Sales]` in the visual, the PY item computes `CALCULATE ( [Sales], SAMEPERIODLASTYEAR ( ... ) )`. With `[Cost]`, the same item computes prior-year cost. The time intelligence itself is ordinary DAX: see [Time Intelligence](/docs/dax/time-intelligence), or generate the expressions with the [time intelligence generator](/tools/time-intelligence-generator).
+
+---
+
+## Creating One in Power BI Desktop
+
+1. Open **Model view** and choose **Calculation group** on the ribbon.
+2. Power BI turns on **Discourage implicit measures** for the model if it isn't on already (more on that below), then creates a calculation group with one item.
+3. In the **Model explorer** pane, under **Calculation groups**, rename the group (for example, *Time Calc*) and its column.
+4. Select the item, rename it *Current*, and type its expression in the formula bar.
+5. Right-click **Calculation items** and add the rest.
+6. Set each item's **Ordinal** in the Properties pane to control the order items appear in visuals and slicers.
+
+You can also build calculation groups in Tabular Editor or in TMDL view. They're stored in the model, so they work the same in the Service.
+
+---
+
+## Format Strings per Item
+
+YoY % should display as a percentage even when the measure is currency. Each item can have a **dynamic format string**, an expression that returns the format to use. `SELECTEDMEASUREFORMATSTRING()` returns the measure's own format, so items that don't change units keep it:
+
+```dax lineNumbers
+-- Format string for the YoY % item
+"0.0%"
+```
+
+```dax lineNumbers
+-- Format string for Current, PY, YoY, YTD
+SELECTEDMEASUREFORMATSTRING ()
+```
+
+The format affects display only. For the format codes themselves, see the [format string builder](/tools/format-string-builder).
+
+---
+
+## Leaving Some Measures Alone
+
+A calculation item applies to **every** measure in the visual. That's the point, until it meets a measure where the item makes no sense. YoY % of a measure that's already a percentage gives a percentage of a percentage, and YTD of a "Days Since Last Order" measure is meaningless.
+
+Check which measure is being evaluated and pass it through unchanged:
+
+```dax lineNumbers
+-- Item: YTD
+IF (
+    ISSELECTEDMEASURE ( [Margin %], [Days Since Last Order] ),
+    SELECTEDMEASURE (),
+    CALCULATE ( SELECTEDMEASURE (), DATESYTD ( 'Date'[Date] ) )
+)
+```
+
+`SELECTEDMEASURENAME()` returns the name as text, which is handy for a rule like "every measure whose name ends in %".
+
+---
+
+## Things That Surprise People
+
+**Implicit measures stop working.** A model with a calculation group can't use implicit measures: dragging a numeric column into a visual no longer sums it automatically. Calculation items only modify explicit measures, so create a measure for anything you want to aggregate. That's good practice anyway; see [Measures](/docs/modeling/measures).
+
+**No selection means no item.** If a slicer on the calculation group has nothing selected, or the column isn't in the visual at all, no item applies and measures show their normal value. Use a single-select slicer for a calculation group, so the report never has to apply two items to one number.
+
+**Two groups need a precedence.** With a time group and a currency-conversion group, both apply to the same measure, and each group's **Precedence** property decides the order. "Convert, then YTD" and "YTD, then convert" can give different numbers when exchange rates change during the year. Set precedence deliberately whenever a model has more than one group, and check a known value by hand.
+
+**Base measures with their own time logic.** A measure that already uses `DATESYTD`, combined with the YTD item, gives a year-to-date of a year-to-date. Keep base measures plain, put the time logic in the group, and exclude any exceptions as shown above.
+
+---
+
+## Calculation Groups or Field Parameters?
+
+| | Calculation group | Field parameter |
+|---|---|---|
+| What it changes | **How** a measure is calculated | **Which** measure or column is shown |
+| Typical use | PY, YoY, YTD, currency conversion | "Show Sales / Cost / Margin" switcher |
+| Where it's defined | DAX expressions in the model | A generated calculated table |
+
+They combine well: a field parameter picks the measure, and the calculation group shows it as current, PY, or YoY. See [Field Parameters](/docs/visuals/field-parameters).
+
+## Common Mistakes
+
+**Building the group before the base measures are clean.** Every item multiplies whatever is in the base measure, including its bugs.
+
+**Forgetting the format string on percentage items.** YoY % shows as `$0.12` when the measure is currency.
+
+**Not setting Ordinal.** Items sort alphabetically: Current, PY, YoY, YoY %, YTD only stay in that order by luck.
+
+**Adding a second group without setting Precedence.** The order the groups apply in changes the numbers.
+
+## Next Steps
+
+- [Time Intelligence](/docs/dax/time-intelligence)
+- [Measures](/docs/modeling/measures)
+- [Field Parameters](/docs/visuals/field-parameters)
+- [Semi-Additive Measures](/docs/dax-patterns/semi-additive)
+- [DAX User-Defined Functions](/docs/dax/user-defined-functions), another way to write a pattern once

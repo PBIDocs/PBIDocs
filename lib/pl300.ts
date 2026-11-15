@@ -79,10 +79,10 @@ export const DOMAINS: Domain[] = [
           { text: 'Use the CALCULATE function', links: [l('/docs/dax/calculate', 'CALCULATE'), l('/docs/dax/filter-functions', 'ALL and REMOVEFILTERS'), l('/dax-practice', 'DAX practice')] },
           { text: 'Implement time intelligence measures', links: [l('/docs/dax/time-intelligence', 'Time intelligence'), l('/tools/time-intelligence-generator', 'Time intelligence generator')] },
           { text: 'Use basic statistical functions', links: [l('/docs/dax/iterator', 'Iterator (X) functions')] },
-          { text: 'Create semi-additive measures', links: [] },
+          { text: 'Create semi-additive measures', links: [l('/docs/dax-patterns/semi-additive', 'Semi-additive measures')] },
           { text: 'Create a measure by using quick measures', links: [] },
           { text: 'Create calculated tables or columns', links: [l('/docs/dax/calculated-tables', 'Calculated tables'), l('/docs/dax/calendar-calendarauto', 'CALENDAR')] },
-          { text: 'Create calculation groups', links: [] },
+          { text: 'Create calculation groups', links: [l('/docs/modeling/calculation-groups', 'Calculation groups')] },
         ],
       },
       {
@@ -271,7 +271,7 @@ export const PL300_QUESTIONS: Exercise[] = [
       { text: "CALCULATE ( SUM ( Inventory[Units] ), LASTDATE ( 'Date'[Date] ) )", code: true, correct: true, why: 'LASTDATE keeps only the last date in the current period, so the quarter shows its closing balance while products still add up.' },
       { text: 'AVERAGE ( Inventory[Units] )', code: true, why: 'That averages every row in the quarter, across products and days. It is neither the closing balance nor a total across products.' },
     ],
-    learn: { href: '/docs/dax/time-intelligence', label: 'Time intelligence' },
+    learn: { href: '/docs/dax-patterns/semi-additive', label: 'Semi-additive measures' },
   },
   {
     id: 'pl-cross-filter',
