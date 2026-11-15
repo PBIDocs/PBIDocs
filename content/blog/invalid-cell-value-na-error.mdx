@@ -1,0 +1,111 @@
+---
+title: "DataFormat.Error: Invalid Cell Value '#N/A' in Power Query"
+description: "An Excel source has formula errors in it (#N/A, #DIV/0!, #REF!, #VALUE!), and Power Query brings each one in as an error cell. Sometimes that just blanks a few values on load; sometimes it fails the whole refresh. Here's which, why, and the four ways to handle it."
+date: "2026-11-15"
+tags: ["Power Query", "Troubleshooting"]
+card:
+  label: "Error"
+  text: "DataFormat.Error: Invalid cell value '#N/A'."
+faq:
+  - question: "What does \"DataFormat.Error: Invalid cell value '#N/A'\" mean?"
+    answer: "A cell in the Excel source contains a formula error, here #N/A from a lookup that found no match. Power Query reads it as an error value rather than text, so the cell shows Error in the preview. The same message appears with #DIV/0!, #REF!, #VALUE!, #NAME?, and #NUM!."
+  - question: "Why does the error sometimes fail the whole refresh?"
+    answer: "Error cells only stay contained while nothing evaluates them. A step that has to read the value, such as filtering, sorting, grouping, merging on that column, or using it in a custom column formula, hits the error and fails the whole step. Replace or remove the errors before any step like that."
+  - question: "How do I replace #N/A with null in Power Query?"
+    answer: "Select the column, then Transform, Replace Errors, and leave the value empty or type null. That writes Table.ReplaceErrorValues(Source, {{\"Price\", null}}). Do it early, right after the source and type steps, so later steps never see the error."
+  - question: "Should I fix #N/A in Excel or in Power Query?"
+    answer: "In Excel when you can. Wrapping the lookup in IFNA or IFERROR returns a blank or a label instead of an error, so every consumer of the sheet gets clean data. Handle it in Power Query when you don't control the workbook, or as a safety net in case new errors appear."
+---
+
+The error shows up when you click a cell marked `Error` in the Power Query preview, or as the reason a refresh failed:
+
+```text
+DataFormat.Error: Invalid cell value '#N/A'.
+```
+
+The value in quotes changes with the Excel error behind it: `'#DIV/0!'`, `'#REF!'`, `'#VALUE!'`, `'#NAME?'`, `'#NUM!'`. In every case the source workbook has a formula that failed, and Power Query faithfully reads that failure as an **error value** rather than as text or blank. A lookup column with a few unmatched rows is the classic source: `XLOOKUP` or `VLOOKUP` returns `#N/A` for each one.
+
+## Why It Sometimes Breaks Refresh and Sometimes Doesn't
+
+An error value in Power Query stays inside its cell until something tries to use it. That's why the same workbook can behave two ways:
+
+| What happens to the error cell | Result |
+|---|---|
+| Nothing reads it before load | Refresh succeeds; the model gets a blank, and Desktop warns that some rows had errors |
+| A step reads it (filter, sort, group, merge key, custom column formula) | That step fails, and the refresh fails with this message |
+
+So a query that loaded fine for months can start failing the day someone adds a filter on the price column, or the day a new `#N/A` lands in a column that was already being filtered. To see where errors are right now, turn on **View → Column quality**: every column shows its share of valid, error, and empty cells.
+
+## Fix 1: Stop the Error in Excel
+
+If you own the workbook, this is the best fix, because everyone who uses the sheet benefits:
+
+```text
+=IFNA(XLOOKUP(A2, Prices[SKU], Prices[Price]), "")
+=IFERROR(B2 / C2, "")
+```
+
+`IFNA` catches only the "no match" case, so a real mistake like `#REF!` still shows up. `IFERROR` catches everything, which is convenient and also hides problems you'd want to know about. Prefer `IFNA` for lookups.
+
+## Fix 2: Replace the Errors With Null
+
+When you can't change the source, select the column and use **Transform → Replace Errors**, leaving the value as `null`:
+
+```powerquery lineNumbers
+= Table.ReplaceErrorValues(#"Changed Type", {{"Price", null}})
+```
+
+The rows stay; the bad values become blanks in the model, which totals skip. List more columns in the same step: `{{"Price", null}, {"Discount", 0}}`. Put this step **early**, right after the source and type steps, so no later step ever touches an error.
+
+Only replace with `0` when "no value" genuinely means zero. A missing price isn't a free product, and a zero drags averages down.
+
+## Fix 3: Remove the Rows
+
+If a row with an error is useless anyway, **Home → Remove Rows → Remove Errors** drops it. With a column selected, it only checks that column:
+
+```powerquery lineNumbers
+= Table.RemoveRowsWithErrors(#"Changed Type", {"Price"})
+```
+
+Be careful with this on a fact table: dropped rows don't show up anywhere, and a total that's quietly short is harder to notice than a blank.
+
+## Fix 4: Keep the Problem Visible
+
+Sometimes the right answer is to load the data *and* report the errors, so someone fixes the source. Two ways:
+
+- **Keep Errors.** Duplicate the query, then **Home → Keep Rows → Keep Errors**. Load it as a small "data quality" table and show its row count on a report page.
+- **Capture the error in a column** with `try`, which returns a record describing the outcome instead of failing:
+
+```powerquery lineNumbers
+= Table.AddColumn(
+    #"Changed Type",
+    "Price Issue",
+    each let r = try [Price] in if r[HasError] then r[Error][Message] else null,
+    type text
+)
+```
+
+Then replace the errors in `Price` itself as in Fix 2. You get clean numbers and a column that says exactly which rows had `Invalid cell value '#N/A'`. See [error handling in Power Query](/docs/power-query/error-handling) for `try … otherwise` and `[HasError]`.
+
+## Other Places It Comes From
+
+- **`#REF!` in a whole column** usually means a sheet or range the formulas pointed at was deleted. Replacing errors would hide a broken workbook; fix the source.
+- **The error moving between columns** after an Excel edit is often a lookup range that no longer covers new rows. Excel tables (Ctrl+T) grow automatically; plain ranges don't.
+- **The header row.** If a header cell itself is an error, **Use First Row as Headers** turns it into a column name like `Column3`, and a later step that refers to the real name fails with a different error: [the field or column wasn't found](/blog/power-query-expression-error-field-not-found).
+
+## Common Mistakes
+
+**Replacing errors at the end of the query.** Any step before it that reads the column still fails. Replace early.
+
+**Using IFERROR in Excel for everything.** It turns a broken reference into an innocent-looking blank. Catch the error you expect, `#N/A` with `IFNA`, and let the rest surface.
+
+**Replacing with 0 by habit.** Blank and zero mean different things in totals and averages. Default to `null`.
+
+**Assuming the load warning is harmless.** "Errors in N rows" after load means those values arrived blank in the model. Check which rows before trusting the totals.
+
+## Next Steps
+
+- [Error handling in Power Query](/docs/power-query/error-handling)
+- [Excel.Workbook](/docs/power-query/excel-workbook)
+- [Power Query Error: We Couldn't Convert to Number (or Date)](/blog/couldnt-convert-to-number-date-error)
+- [Power Query Error: We Cannot Apply Operator & to Types Text and Number](/blog/cannot-apply-operator-text-number-error)

@@ -1,0 +1,149 @@
+---
+title: "Power Query Error: We Cannot Apply Operator & to Types Text and Number"
+description: "Power Query never converts types for you: & only joins text, and + only adds numbers. This error means one side of the operator was the wrong type. Here are the five usual causes, from building an ID column to a number column that's secretly text."
+date: "2026-11-15"
+tags: ["Power Query", "Troubleshooting"]
+card:
+  label: "Error"
+  text: "Expression.Error: We cannot apply operator & to types Text and Number."
+faq:
+  - question: "What does \"we cannot apply operator & to types Text and Number\" mean?"
+    answer: "The & operator in Power Query only joins text to text. One side of it was a number, and unlike Excel, Power Query doesn't convert numbers to text automatically. Wrap the number in Text.From or Number.ToText so both sides are text."
+  - question: "How do I concatenate a number and text in Power Query?"
+    answer: "Convert the number first: \"ORD-\" & Text.From([OrderID]). Use Number.ToText([Amount], \"N2\") when you need a specific format, such as two decimal places. Or use Text.Combine({\"ORD-\", Text.From([OrderID])}), which also skips nulls."
+  - question: "Why does joining text with null return null instead of an error?"
+    answer: "In Power Query, any operator applied to null returns null, so \"ORD-\" & null is null, not \"ORD-\". It doesn't raise an error, which makes it easy to miss. Text.Combine skips null values, so it's the safer choice when some parts might be missing."
+  - question: "Why do I get this error on a column that looks like numbers?"
+    answer: "Because the column's values are text that happen to contain digits, usually because the column type was never set or was set to Text. The error message names the types it actually found. Set the column to a number type with Changed Type, or convert in the formula with Number.From."
+---
+
+The full error usually looks like:
+
+```text
+Expression.Error: We cannot apply operator & to types Text and Number.
+Details:
+    Operator=&
+    Left=ORD-
+    Right=1001
+```
+
+The types in the message change (`Text and Date`, `Number and Text`, `+` instead of `&`), but the meaning is always the same. Power Query has two operators that people expect to "just work" across types, and neither does:
+
+| Expression | Excel | Power Query |
+|---|---|---|
+| `"ORD-" & 1001` | `ORD-1001` | Error: Text and Number |
+| `"5" + 3` | `8` | Error: Text and Number |
+| `"ORD-" & null` | `ORD-` | `null`, with no error |
+
+In Power Query, `&` joins text to text (and lists to lists, records to records), and `+` adds numbers (and a duration to a date).
+
+Excel converts quietly. Power Query never does: every value has a type, and an operator either accepts the types it's given or raises this error. The `Details` section tells you the two values it got, which is usually enough to find the step.
+
+## Cause 1: Building a Label or ID From a Number
+
+```powerquery lineNumbers
+= Table.AddColumn(Source, "Order Key", each "ORD-" & [OrderID])
+```
+
+`[OrderID]` is a number, so `&` refuses it.
+
+**Fix:** convert it to text first. `Text.From` handles any type; [Number.ToText](/docs/power-query/number-totext) lets you control the format:
+
+```powerquery lineNumbers
+= Table.AddColumn(Source, "Order Key", each "ORD-" & Text.From([OrderID]), type text)
+
+= Table.AddColumn(Source, "Label", each [Region] & ": " & Number.ToText([Sales], "N0"), type text)
+```
+
+The `type text` at the end sets the new column's type, so it doesn't arrive as **Any** (the ABC123 icon) and cause trouble later.
+
+## Cause 2: Dates and Times in a Text String
+
+```powerquery lineNumbers
+= Table.AddColumn(Source, "Week Label", each "Week of " & [WeekStart])
+```
+
+This one reports `Text and Date`. Dates are their own type in Power Query, not formatted numbers.
+
+**Fix:** format the date as text explicitly:
+
+```powerquery lineNumbers
+= Table.AddColumn(Source, "Week Label", each "Week of " & Date.ToText([WeekStart], "yyyy-MM-dd"), type text)
+```
+
+Use `DateTime.ToText` for date-times. Note the M format codes are case-sensitive: `MM` is month, `mm` is minutes. See [Power Query date functions](/docs/power-query/date-functions).
+
+## Cause 3: A Number Column That's Actually Text
+
+```text
+Expression.Error: We cannot apply operator + to types Text and Number.
+Details:
+    Operator=+
+    Left=12
+    Right=3
+```
+
+`Left=12` looks like a number, but the message says it's `Text`. The column holding it was never converted: it came from a CSV, an Excel sheet, or a web page as text, and the **Changed Type** step was deleted, skipped, or set to Text.
+
+**Fix:** set the column type before doing arithmetic on it, with **Transform → Data Type** or directly:
+
+```powerquery lineNumbers
+= Table.TransformColumnTypes(Source, {{"Qty", Int64.Type}, {"Bonus", Int64.Type}})
+```
+
+If you can't change the column, convert inside the formula: `each Number.From([Qty]) + [Bonus]`. See [Table.TransformColumnTypes](/docs/power-query/table-transformcolumntypes), including its culture argument for numbers written with a comma as the decimal mark.
+
+## Cause 4: Building a URL or File Path From a Number
+
+```powerquery lineNumbers
+Web.Contents("https://api.example.com/orders?page=" & PageNumber)
+```
+
+Same error, inside a source function. Converting with `Number.ToText(PageNumber)` fixes the error, but a URL built this way will then stop scheduled refresh in the Power BI Service. Pass the page through `Query` instead, which takes text and leaves the base URL fixed:
+
+```powerquery lineNumbers
+Web.Contents("https://api.example.com", [RelativePath = "orders", Query = [page = Number.ToText(PageNumber)]])
+```
+
+See [the dynamic data source error](/blog/dynamic-data-source-refresh-error) for why the Service needs the base URL to be literal.
+
+## Cause 5: Joining Several Columns, Some Numeric
+
+```powerquery lineNumbers
+= Table.AddColumn(Source, "Address", each [Street] & ", " & [City] & " " & [ZipCode])
+```
+
+One numeric column in a long chain is enough. Worse, if any part is `null`, the whole result is `null` without an error: `"Main St" & null` is `null`, not `"Main St"`.
+
+**Fix:** use `Text.Combine`, which takes a list of text, skips nulls, and adds the separator for you. Convert any numbers inside the list:
+
+```powerquery lineNumbers
+= Table.AddColumn(
+    Source,
+    "Address",
+    each Text.Combine({[Street], [City], Text.From([ZipCode])}, ", "),
+    type text
+)
+```
+
+`Text.From ( null )` is `null`, which `Text.Combine` then skips, so a missing ZIP code no longer wipes out the whole address. See [Text.Split and Text.Combine](/docs/power-query/text-split-combine).
+
+## Finding the Step
+
+Click through the **Applied Steps** from the top: the first step whose preview shows `Error` in the column is the one. Click an `Error` cell to see the same message with its `Details`. For a column that *should* be numeric, check the icon in its header: **ABC** is text, **1.2** or **123** is a number, and **ABC123** means the type was never set. See [Value.Type and null](/docs/power-query/value-type-null) for checking a value's type in a formula.
+
+## Common Mistakes
+
+**Converting with `Text.From` everywhere to make the error go away.** Fine for labels. Not fine for a column you'll sum later: a text "number" can't be added up in the model. Convert for display, keep the numeric column for math.
+
+**Using `&` with a value that can be null.** No error, just a silently empty result. Use `Text.Combine`, or replace nulls first.
+
+**Forgetting `type text` on the new column.** The column arrives typed as **Any**, loads as text anyway, and the next person to use it gets a surprise. Set the type in `Table.AddColumn`'s fourth argument.
+
+## Next Steps
+
+- [Number.ToText](/docs/power-query/number-totext)
+- [Table.AddColumn](/docs/power-query/table-addcolumn)
+- [Table.TransformColumnTypes](/docs/power-query/table-transformcolumntypes)
+- [Power Query Error: We Cannot Convert a Value of Type List to Type Text](/blog/cannot-convert-list-to-text-error)
+- [Power Query Error: We Couldn't Convert to Number (or Date)](/blog/couldnt-convert-to-number-date-error)

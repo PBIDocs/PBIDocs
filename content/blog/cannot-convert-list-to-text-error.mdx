@@ -1,0 +1,124 @@
+---
+title: "Power Query Error: We Cannot Convert a Value of Type List to Type Text"
+description: "A cell holds a list, record, or table, and something tried to treat it as a single piece of text. It usually comes from JSON, Group By, or a function that returns more than one value. Here are the five usual causes and how to turn each nested value into text."
+date: "2026-11-15"
+tags: ["Power Query", "Troubleshooting"]
+card:
+  label: "Error"
+  text: "Expression.Error: We cannot convert a value of type List to type Text."
+faq:
+  - question: "What does \"we cannot convert a value of type List to type Text\" mean?"
+    answer: "A step expected one text value and got a list instead: a column whose cells show [List], or a function that returned several values. Power Query won't turn a list into text on its own, because it doesn't know how you want the items joined. Use Text.Combine to join them, List.First to take one, or expand the list into rows."
+  - question: "How do I turn a [List] column into text in Power Query?"
+    answer: "Click the expand icon in the column header and choose Extract Values, then pick a delimiter. That writes Table.TransformColumns with Text.Combine. If the list contains numbers, convert each item first: Text.Combine(List.Transform(_, Text.From), \", \")."
+  - question: "What's the difference between [List], [Record], and [Table] in a column?"
+    answer: "They're nested values. [List] is an ordered set of values, like a JSON array. [Record] is a set of named fields, like a JSON object. [Table] is a whole table, which Group By with All Rows and Merge Queries produce. Each needs a different step to flatten: Extract Values or Expand to New Rows for lists, Expand for records and tables."
+  - question: "Why does Changed Type fail on a column with [Record] values?"
+    answer: "Changing a column to Text asks Power Query to convert every cell to text, and a record has no single text form. Expand the record into its fields first, then set the type of the field columns you kept."
+---
+
+The full error usually reads:
+
+```text
+Expression.Error: We cannot convert a value of type List to type Text.
+Details:
+    Value=[List]
+    Type=[Type]
+```
+
+You'll also see `Record` or `Table` in place of `List`. All three are **nested values**: a single cell holding a whole collection, shown in the preview as a clickable `[List]`, `[Record]`, or `[Table]`. Text functions, `&`, and a change to the Text type all need one plain value per cell, and Power Query won't flatten a collection for you, because it can't guess how. Should `{"red", "blue"}` become `"red, blue"`, just `"red"`, or two rows?
+
+So the fix is always to decide that, explicitly.
+
+| The cell shows | It came from | Flatten it with |
+|---|---|---|
+| `[List]` | A JSON array, `Text.Split`, `Table.Column`, `List.Distinct` | Extract Values (join), Expand to New Rows, or `List.First` |
+| `[Record]` | A JSON object, `Record.FromList` | Expand to columns, or pick one field: `[Address][City]` |
+| `[Table]` | Group By with All Rows, Merge Queries, `Folder.Files` + a parser | Expand, or aggregate with `Table.RowCount` and similar |
+
+## Cause 1: A JSON Field That's an Array
+
+An API returns each order with a `tags` array. After converting the JSON to a table, the `tags` column shows `[List]` in every row, and **Changed Type → Text** on it fails with this error.
+
+**Fix:** click the expand icon in the column header and choose **Extract Values…**, then pick a delimiter. It writes:
+
+```powerquery lineNumbers
+= Table.TransformColumns(Orders, {{"tags", each Text.Combine(List.Transform(_, Text.From), ", "), type text}})
+```
+
+`List.Transform(_, Text.From)` matters when the list holds numbers: [Text.Combine](/docs/power-query/text-split-combine) only joins text, so a list of IDs would otherwise fail with the [Text and Number error](/blog/cannot-apply-operator-text-number-error). If you want one row per tag instead, use **Expand to New Rows**.
+
+## Cause 2: A JSON Field That's an Object
+
+```text
+Expression.Error: We cannot convert a value of type Record to type Text.
+```
+
+The same API nests the customer: `"customer": { "id": 17, "city": "Austin" }`. The column shows `[Record]`.
+
+**Fix:** use the expand icon and tick the fields you want, which writes `Table.ExpandRecordColumn`:
+
+```powerquery lineNumbers
+= Table.ExpandRecordColumn(Orders, "customer", {"id", "city"}, {"Customer ID", "Customer City"})
+```
+
+To grab one field without expanding, use field access in a custom column: `each [customer][city]`. See [Json.Document](/docs/power-query/json-document) for flattening a whole response.
+
+## Cause 3: A Function That Returns a List
+
+```powerquery lineNumbers
+= Table.AddColumn(Source, "First Name", each Text.Upper(Text.Split([Full Name], " ")))
+```
+
+[Text.Split](/docs/power-query/text-split-combine) returns a list of words, and `Text.Upper` needs one text value. Other list-returning functions that cause the same thing: `List.Distinct`, `Table.Column`, `Text.ToList`, and a `{…}` list literal.
+
+**Fix:** pick the item you need before passing it on:
+
+```powerquery lineNumbers
+= Table.AddColumn(Source, "First Name", each Text.Upper(List.First(Text.Split([Full Name], " "))), type text)
+```
+
+`List.First`, `List.Last`, or `{0}` (zero-based) each return one item. For the parts before and after a delimiter, `Text.BeforeDelimiter` and `Text.AfterDelimiter` return text directly and skip the list entirely.
+
+## Cause 4: Reading a Whole Column When You Meant One Cell
+
+```powerquery lineNumbers
+let
+    Settings = Excel.CurrentWorkbook(){[Name = "Settings"]}[Content],
+    BaseUrl = Settings[Url],
+    Source = Web.Contents(BaseUrl)
+in
+    Source
+```
+
+`Settings[Url]` is the entire `Url` column, which is a list, even if the table has only one row. `Web.Contents` needs one piece of text.
+
+**Fix:** take the row first, then the field: `Settings{0}[Url]`. The `{0}` picks the first row as a record, and `[Url]` reads one field from it.
+
+(If that URL then varies by data, see [the dynamic data source error](/blog/dynamic-data-source-refresh-error) before publishing.)
+
+## Cause 5: Nested Tables From Group By or Merge
+
+**Group By** with the **All Rows** operation, and **Merge Queries**, both add a column of `[Table]` values. Anything that treats that column as text, including a stray Changed Type step that Power Query added automatically, fails with `type Table to type Text`.
+
+**Fix:** expand the column with the icon in its header, choosing the columns you want, or replace the table with an aggregate in the Group By itself (Count Rows, Sum, Max) if you only needed a number. Then check the **Changed Type** steps after it: an automatic one that runs before the expand will keep failing until it's deleted or moved after. See [Table.Group](/docs/power-query/table-group) and [Merge Queries](/docs/power-query/merge-queries).
+
+## Finding the Step
+
+Click through the **Applied Steps** until a cell in the preview shows `Error`, and click it for the message. If the error mentions a type change, the step before it is usually where the nested column appeared. To see what's inside a `[List]` or `[Record]` without changing anything, click on the white space beside the word (not the word itself): a preview of the contents opens at the bottom of the window.
+
+## Common Mistakes
+
+**Letting Changed Type run on nested columns.** Power Query adds automatic type steps after many operations. If one includes a `[List]` or `[Record]` column, it fails every refresh. Expand first, then set types.
+
+**Joining lists that contain numbers or nulls.** `Text.Combine` needs text. Convert with `List.Transform(_, Text.From)`, which also leaves nulls as nulls for `Text.Combine` to skip.
+
+**Using `Table[Column]` for a single value.** It returns the whole column as a list. For one cell, use `Table{row}[Column]`.
+
+## Next Steps
+
+- [Text.Split and Text.Combine](/docs/power-query/text-split-combine)
+- [Json.Document](/docs/power-query/json-document)
+- [List.Transform](/docs/power-query/list-transform)
+- [Power Query Error: We Cannot Apply Operator & to Types Text and Number](/blog/cannot-apply-operator-text-number-error)
+- [Power Query Error: We Cannot Convert the Value Null to Type Table](/blog/cannot-convert-null-to-type-table-error)

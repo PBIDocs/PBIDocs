@@ -15,6 +15,13 @@ const changelog: { date: string; entries: ReactNode[] }[] = [
     date: '2026-11-15',
     entries: [
       <>
+        Three new Power Query error posts:{' '}
+        <Link href="/blog/cannot-apply-operator-text-number-error">We Cannot Apply Operator &amp; to Types Text and Number</Link>,{' '}
+        <Link href="/blog/cannot-convert-list-to-text-error">We Cannot Convert a Value of Type List to Type Text</Link>, and{' '}
+        <Link href="/blog/invalid-cell-value-na-error">DataFormat.Error: Invalid Cell Value &apos;#N/A&apos;</Link>, the type
+        errors almost everyone meets in their first week of Power Query.
+      </>,
+      <>
         New blog post:{' '}
         <Link href="/blog/dynamic-data-source-refresh-error">
           This Dataset Includes a Dynamic Data Source and Won&apos;t Be Refreshed
