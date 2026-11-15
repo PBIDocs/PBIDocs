@@ -15,6 +15,11 @@ const changelog: { date: string; entries: ReactNode[] }[] = [
     date: '2026-11-15',
     entries: [
       <>
+        New docs page: <Link href="/docs/power-query/reference-vs-duplicate">Reference vs. Duplicate Queries</Link>,
+        with the staging-query pattern for building facts and dimensions from one source, why references
+        don&apos;t make refresh run once, and what Enable load and Include in report refresh do.
+      </>,
+      <>
         New docs page: <Link href="/docs/dax/visual-calculations">Visual Calculations</Link>. RUNNINGSUM,
         MOVINGAVERAGE, PREVIOUS, and COLLAPSEALL worked through on one example, the Axis and Reset parameters, and
         when a measure is still the better choice.

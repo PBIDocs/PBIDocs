@@ -1,0 +1,139 @@
+---
+title: "Reference vs. Duplicate Queries (and Enable Load)"
+description: When to reference a Power Query query and when to duplicate it, what each does to later changes and to refresh, and how Enable load and Include in report refresh decide which queries reach the model. Covers the staging-query pattern for building fact and dimension tables from one source.
+---
+
+# Reference vs. Duplicate Queries
+
+Right-click any query in the Power Query Editor and you get two ways to make another one from it: **Duplicate** and **Reference**. They look alike in the Queries pane and behave very differently afterwards.
+
+| | Duplicate | Reference |
+|---|---|---|
+| The new query starts with | A full copy of every step | One step pointing at the original's output |
+| Later changes to the original | Don't reach the copy | Flow through to it |
+| Depends on the original | No | Yes: delete or break the original and it fails |
+| Typical use | A variation you'll change independently | Several tables built from one cleaned source |
+
+---
+
+## Duplicate: An Independent Copy
+
+**Duplicate** copies the query's M code, every step, into a new query. From then on the two are unrelated. Fix a bug in the original and the duplicate still has it.
+
+Use it when you want a starting point, not a link:
+
+- The same steps against a **different source**: this year's file and last year's, before you combine them.
+- An **experiment**: try a different approach without touching the working query.
+- A query you're about to **change heavily**, where following the original's future changes would get in the way.
+
+## Reference: Built on the Original's Output
+
+**Reference** creates a new query whose only step is the original query's result:
+
+```powerquery lineNumbers
+let
+    Source = #"Sales Raw"
+in
+    Source
+```
+
+Everything you add afterwards starts from whatever `Sales Raw` returns. Change a step in `Sales Raw`, such as a type fix or a new filter, and every query that references it picks up the change on the next refresh.
+
+That's what makes it the right tool for building several tables from one cleaned source.
+
+---
+
+## The Staging Pattern
+
+A sales extract has one row per order line, with product details repeated on every row:
+
+```text
+OrderID  Date        ProductID  ProductName  Category   Qty  Amount
+1001     2026-01-15  P-01       Widget       Hardware   2    200
+1002     2026-01-20  P-02       Gadget       Hardware   1    150
+1003     2026-02-03  P-01       Widget       Hardware   3    300
+```
+
+For a [star schema](/docs/modeling/star-schema) you want a Product dimension and a Sales fact table. Build both from one staging query:
+
+```text
+Sales Raw            source, types, cleanup              Enable load: OFF
+  ├── Product        reference → keep product columns
+  │                  → remove duplicates                 Enable load: ON
+  └── Sales          reference → remove product name
+                     and category                        Enable load: ON
+```
+
+```powerquery lineNumbers
+// Product
+let
+    Source = #"Sales Raw",
+    Columns = Table.SelectColumns(Source, {"ProductID", "ProductName", "Category"}),
+    Products = Table.Distinct(Columns, {"ProductID"})
+in
+    Products
+```
+
+```powerquery lineNumbers
+// Sales
+let
+    Source = #"Sales Raw",
+    Facts = Table.RemoveColumns(Source, {"ProductName", "Category"})
+in
+    Facts
+```
+
+Cleanup done once in `Sales Raw`, such as trimming text or fixing the date type, reaches both tables. See [Table.Distinct](/docs/power-query/table-distinct) for why the distinct step names the key column, and [Fact Tables](/docs/modeling/fact-tables) and [Dimension Tables](/docs/modeling/dimension-tables) for the model side.
+
+To see how queries depend on each other, open **View → Query dependencies**.
+
+---
+
+## Reference Doesn't Mean "Run Once"
+
+A common assumption is that referencing makes refresh faster, because the source is read once and shared. It usually isn't. During refresh, each loaded query is evaluated on its own, and a referenced query's steps can run again for each query that references it. In the staging example, the source file may be read once for `Product` and once for `Sales`.
+
+That's usually fine for files and folding database sources. When the source is slow, such as a large file, an API, or a non-folding transformation, keep the number of referencing queries in check, or do the heavy shaping upstream in a [dataflow](/docs/power-bi-service/dataflows) or the source itself. See [query folding](/docs/power-query/query-folding).
+
+---
+
+## Enable Load: Which Queries Reach the Model
+
+Every query is loaded into the model as a table unless you say otherwise. Staging queries like `Sales Raw` shouldn't be: they'd duplicate the data, take memory, and clutter the field list.
+
+Right-click the query and clear **Enable load**. Its name turns *italic* in the Queries pane. The query still runs whenever a query that references it is refreshed; it just doesn't become a table.
+
+| Setting | Effect |
+|---|---|
+| **Enable load** on | The query becomes a table in the model |
+| **Enable load** off | Connection only: available to other queries, not loaded |
+| **Include in report refresh** off | Desktop's **Refresh** skips the table, so it keeps its last loaded data |
+
+Turning off **Enable load** on a query that's already loaded **removes that table from the model**, along with any relationships and visuals that use it. Power BI warns you first. Measures that refer to it show errors until fixed.
+
+**Include in report refresh** is for tables that rarely change and are slow to load, such as a large historical extract. Use it sparingly: a table that doesn't refresh is easy to forget, and its data quietly falls behind.
+
+---
+
+## Organizing Queries
+
+With staging queries, the Queries pane fills up fast. Right-click and **Move to group** to sort them, for example *Staging*, *Dimensions*, and *Facts*. Groups are for organization only; they don't change how queries run.
+
+## Common Mistakes
+
+**Duplicating when you meant to reference.** Weeks later, a fix to the original doesn't reach the copy, and two tables disagree.
+
+**Referencing when you meant to duplicate.** You change the original for one purpose and break a table that depended on it.
+
+**Loading the staging query.** The model gets a wide table with the same data as the fact table, doubling its size.
+
+**Assuming references cache the source.** Refresh time grows with each query that references a slow source.
+
+**Removing columns in the staging query that a referencing query needs.** The referencing query fails with a [column not found error](/blog/power-query-expression-error-field-not-found).
+
+## Next Steps
+
+- [Power Query Editor](/docs/power-query/editor)
+- [Merge vs. Append](/docs/power-query/merge-vs-append)
+- [Query Folding](/docs/power-query/query-folding)
+- [Star Schema](/docs/modeling/star-schema)
