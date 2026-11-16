@@ -2,7 +2,7 @@
 
 import { useMemo, useState, type ReactNode } from 'react';
 import Link from 'next/link';
-import { ArrowRight, Check, CircleAlert, CircleCheck, Copy, TriangleAlert, Wand2 } from 'lucide-react';
+import { AlignLeft, ArrowRight, Check, CircleAlert, CircleCheck, Copy, TriangleAlert, Wand2 } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { highlightCode } from '@/lib/highlight-code';
 import {
@@ -17,6 +17,17 @@ import {
   type Issue,
   type Separators,
 } from '@/lib/dax-syntax';
+import { formatDax } from '@/lib/dax-format';
+
+// Formatting never runs on a formula with errors, and formatDax itself refuses
+// anything whose tokens would change. A thrown error is a bug: hide the result.
+function safeFormat(text: string, setting: Separators, upper: boolean): string | null {
+  try {
+    return formatDax(text, setting, { upperCaseFunctions: upper });
+  } catch {
+    return null;
+  }
+}
 
 function Segmented<T extends string>({
   value,
@@ -138,6 +149,7 @@ function Annotated({ src, issues }: { src: string; issues: Issue[] }) {
 export function DaxSyntaxChecker() {
   const [text, setText] = useState(EXAMPLES[0].formula);
   const [setting, setSetting] = useState<Separators>('standard');
+  const [upper, setUpper] = useState(true);
 
   const result = useMemo(() => checkDax(text, setting), [text, setting]);
   const fixed = useMemo(() => autoFix(text, result, setting), [text, result, setting]);
@@ -146,6 +158,11 @@ export function DaxSyntaxChecker() {
   const errors = result.issues.filter((i) => i.severity === 'error').length;
   const warnings = result.issues.length - errors;
   const empty = text.trim() === '';
+  const formatted = useMemo(
+    () => (errors === 0 && !empty ? safeFormat(text, setting, upper) : null),
+    [errors, empty, text, setting, upper],
+  );
+  const alreadyFormatted = formatted !== null && formatted === text.trim();
 
   function applyOne(issue: Issue) {
     if (issue.convertSeparators) setText(convertSeparators(text, setting === 'standard' ? 'locale' : 'standard'));
@@ -301,6 +318,48 @@ export function DaxSyntaxChecker() {
                 })}
               </ol>
             </>
+          )}
+
+          {errors === 0 && (
+            <div className="flex flex-col gap-3 rounded-xl border border-fd-border p-5">
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div className="flex flex-col gap-0.5">
+                  <p className="inline-flex items-center gap-1.5 text-sm font-semibold">
+                    <AlignLeft className="size-4" />
+                    Formatted
+                  </p>
+                  <p className="text-sm text-fd-muted-foreground">
+                    {formatted === null
+                      ? "This one can't be formatted safely, so it's left as it is."
+                      : alreadyFormatted
+                        ? 'Already formatted: nothing to change.'
+                        : 'Same formula, laid out to read: one argument per line when a call is long, and VAR and RETURN on their own lines. Formatted in your browser; nothing is sent anywhere.'}
+                  </p>
+                </div>
+                {formatted !== null && <CopyButton text={formatted} />}
+              </div>
+              {formatted !== null && !alreadyFormatted && (
+                <>
+                  <pre className="overflow-x-auto rounded-lg bg-fd-secondary px-4 py-3 text-sm">
+                    <code>{highlightCode(formatted)}</code>
+                  </pre>
+                  <div className="flex flex-wrap items-center gap-4">
+                    <button
+                      type="button"
+                      onClick={() => setText(formatted)}
+                      className="inline-flex w-fit items-center gap-1.5 rounded-md border border-fd-border px-3 py-1.5 text-xs font-medium transition-colors hover:bg-fd-accent"
+                    >
+                      <AlignLeft className="size-3.5" />
+                      Use this in the editor
+                    </button>
+                    <label className="inline-flex items-center gap-2 text-xs text-fd-muted-foreground">
+                      <input type="checkbox" checked={upper} onChange={(e) => setUpper(e.target.checked)} />
+                      Function names in capitals
+                    </label>
+                  </div>
+                </>
+              )}
+            </div>
           )}
 
           {fixed && (

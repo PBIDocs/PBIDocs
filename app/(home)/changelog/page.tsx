@@ -12,6 +12,16 @@ export const metadata: Metadata = {
 
 const changelog: { date: string; entries: ReactNode[] }[] = [
   {
+    date: '2026-11-16',
+    entries: [
+      <>
+        The <Link href="/tools/dax-syntax-checker">DAX Syntax Checker</Link> now formats DAX too: long calls
+        split one argument per line, VAR and RETURN on their own lines, comments kept. It runs in the browser, and
+        it refuses to change anything except spacing and capitals.
+      </>,
+    ],
+  },
+  {
     date: '2026-11-15',
     entries: [
       <>

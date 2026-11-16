@@ -3,9 +3,9 @@ import Link from 'next/link';
 import { DaxSyntaxChecker } from '@/components/tools/dax-syntax-checker';
 
 export const metadata: Metadata = {
-  title: 'DAX Syntax Checker',
+  title: 'DAX Syntax Checker & Formatter',
   description:
-    'Paste a DAX formula to find what causes "The syntax for \'...\' is incorrect": missing or trailing commas, unbalanced parentheses, semicolon separators, smart quotes, unquoted table names, and VAR without RETURN, with one-click fixes.',
+    'Paste a DAX formula to find and fix what causes "The syntax for \'...\' is incorrect": missing or trailing commas, unbalanced parentheses, semicolon separators, smart quotes, unquoted table names, and VAR without RETURN, with one-click fixes, then format it into readable, indented DAX. Runs in your browser: nothing is sent anywhere.',
   alternates: {
     canonical: '/tools/dax-syntax-checker',
   },
@@ -14,11 +14,11 @@ export const metadata: Metadata = {
 export default function DaxSyntaxCheckerPage() {
   return (
     <div className="mx-auto w-full max-w-3xl px-6 py-16 sm:py-24">
-      <h1 className="mb-3 text-4xl font-bold tracking-tight">DAX Syntax Checker</h1>
+      <h1 className="mb-3 text-4xl font-bold tracking-tight">DAX Syntax Checker &amp; Formatter</h1>
       <p className="mb-10 text-lg text-fd-muted-foreground">
         Power BI says &ldquo;The syntax for &lsquo;)&rsquo; is incorrect&rdquo; and points at the wrong character.
         Paste the formula here to see the real mistake marked in place, why it breaks, and a fix you can apply
-        with one click.
+        with one click. Once it&apos;s clean, get it back formatted and readable.
       </p>
 
       <DaxSyntaxChecker />
@@ -34,6 +34,14 @@ export default function DaxSyntaxCheckerPage() {
           from other languages (!=, AND, IN with parentheses), Excel-only functions, and the argument counts of
           common functions. It doesn&apos;t know your model, so it can&apos;t tell whether a table, column, or
           measure name actually exists.
+        </p>
+        <p>
+          <strong className="text-fd-foreground">How it formats:</strong> function calls that fit on a line stay
+          on one line; longer ones put each argument on its own line, indented four spaces. VAR and RETURN get their
+          own lines, operators get spaces, and long conditions break before each &amp;&amp; and ||. Comments are
+          kept. Before showing a result, the formatter re-reads both versions and checks they contain exactly the
+          same code apart from spacing and capitals; if anything else would differ, it leaves the formula alone.
+          Formatting happens in your browser, so formulas from a confidential model never leave your machine.
         </p>
         <p>
           Every cause is explained with examples in{' '}

@@ -30,9 +30,9 @@ export const tools: Tool[] = [
   {
     href: '/tools/dax-syntax-checker',
     group: 'model',
-    title: 'DAX Syntax Checker',
+    title: 'DAX Syntax Checker & Formatter',
     description:
-      'Paste a formula that says "the syntax is incorrect" to see the real mistake marked in place: commas, parentheses, separators, smart quotes, and table names, with one-click fixes.',
+      'Paste a formula that says "the syntax is incorrect" to see the real mistake marked in place, with one-click fixes, then get it back formatted and readable. Runs in your browser.',
     badge: 'Free · unlimited',
     icon: SpellCheck,
     iconName: 'spell-check',
