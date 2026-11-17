@@ -1,0 +1,136 @@
+---
+title: "Finding Patterns: Analyze, Groups, Bins, Clusters & AI Visuals"
+description: The Power BI features that find patterns for you. Explain the increase or decrease, grouping and binning, automatic clusters, the Analytics pane's forecast and anomaly detection, and the Key Influencers and Decomposition Tree visuals, with what each one needs and where it doesn't work.
+---
+
+# Finding Patterns
+
+Most report work is deciding what to show. Power BI also has features that go looking for you: why a number changed, which customers behave alike, what drives an outcome. This page covers them, from the simplest to the most automated, with the conditions each needs.
+
+| Question | Feature |
+|---|---|
+| Why did this bar go up or down? | **Analyze → Explain the increase/decrease** |
+| Can I combine these categories, or put numbers into ranges? | **Groups** and **bins** |
+| Which points on this scatter chart belong together? | **Automatically find clusters** |
+| Where is this trend heading, and which points are unusual? | **Analytics pane**: forecast, anomalies, reference lines |
+| What makes an outcome more likely? | **Key Influencers** visual |
+| Which combination of categories explains this total? | **Decomposition Tree** visual |
+
+---
+
+## Analyze: Explain the Increase or Decrease
+
+Right-click a data point on a bar, column, or line chart and choose **Analyze → Explain the increase** (or decrease). Power BI compares that point with the **previous** one, checks how every other column in the model breaks the change down, and returns the columns whose mix changed most.
+
+The answer comes as a small visual, a waterfall by default, switchable to a scatter, 100% stacked column, or ribbon chart, with a sentence such as *particularly strong sales for Computers*. In edit mode, the **+** adds it to the report as an ordinary visual.
+
+It looks for a **change in contribution**, not the biggest contributor. If 98% of sales are in one country, that country will account for most of any increase, so it's not interesting unless its share changed. A small category going from 1% to 6% of the total is.
+
+**Analyze → Find where this distribution is different** works the same way for a single category instead of a change over time.
+
+### When It's Not Available
+
+The menu item doesn't appear on the **first** data point, which has nothing before it. It also doesn't work with:
+
+- DirectQuery and live connections
+- Models with row-level or object-level security
+- Top N, include/exclude, and measure filters on the visual
+- *Show value as* settings, and non-numeric measures
+- Reports distributed as an app
+
+Treat its answer as a lead to check, not a conclusion. It finds statistical differences in the data you have, not causes.
+
+---
+
+## Groups and Bins
+
+### Groups
+
+Select several data points in a visual with **Ctrl+click**, right-click, and choose **Group → Group**. Power BI creates a new field, named after the original with *(groups)* added, that combines those values into one. Values you didn't group can stay as they are or go into an **Other** group.
+
+You can also right-click any field in the Data pane and choose **New group** to build groups in a dialog, and **Edit groups** to change them later.
+
+Groups are quick, but they're stored in the model as a calculated column with a hard-coded list of values. New values that arrive later aren't in any group. For groupings that matter long-term, such as regions or product families, put a proper column in a [dimension table](/docs/modeling/dimension-tables) instead.
+
+### Bins
+
+For a number or a date, **New group** offers **bins**: equal-sized ranges. Set a **bin size** (for example, 1,000 for order value) or a **number of bins**, and Power BI creates a *(bins)* field you can put on an axis to make a histogram.
+
+You can bin a column, including a calculated column, but **not a measure**. To band a measure's result, such as customers by their total spend, build a [calculated column](/docs/dax/calculated-columns) or use a banding table.
+
+---
+
+## Automatic Clusters
+
+On a **scatter chart** (or a table), open **More options (…) → Automatically find clusters**. Power BI groups the points into clusters of similar values, using the fields in the visual, and adds a new cluster field to the **Legend**. You can choose the number of clusters or let Power BI pick.
+
+Things to know:
+
+- The **Legend** must be empty before you start, or the option isn't offered.
+- It's a Power BI Desktop feature. The cluster field is added to the model, so it isn't available in the Service, or on a live connection to a published semantic model.
+- If the data isn't suitable for clustering, the option may not appear at all.
+
+---
+
+## The Analytics Pane
+
+Select a visual and open the **Analytics** pane (the magnifying glass icon in Visualizations). What it offers depends on the visual:
+
+- **Reference lines:** constant, average, median, percentile, min, and max lines, on most charts.
+- **Error bars:** upper and lower bounds around each point, from fields or percentages.
+- **Forecast:** on a line chart with a continuous date axis. Set the forecast length, the confidence interval, and seasonality.
+- **Find anomalies:** on a line chart with a date axis. Points outside the expected range are marked, with an adjustable sensitivity; selecting one shows possible explanations.
+
+Reference lines are the most useful day to day. For statistical process control, where the limits are calculated from the data, build them as measures: see the [SPC control chart tutorial](/tutorials/build-an-spc-control-chart-dashboard) and the [control chart builder](/tools/control-chart-builder).
+
+---
+
+## Key Influencers
+
+The **Key Influencers** visual answers *what makes this outcome more likely?* Put the outcome in **Analyze** (for example, a customer's rating) and candidate factors in **Explain by** (role, region, subscription type, tenure). Choose the value to explain, such as *Low*.
+
+- The **Key influencers** tab ranks single factors: *Role is Consumer: 2.57× more likely to give a low rating*. Select one to see the comparison behind it.
+- The **Top segments** tab finds combinations, such as *customers over 29 months with more than four support tickets*, and how much more likely the outcome is within them.
+
+For a numeric outcome, such as a price, it asks what makes the value **increase** instead.
+
+What it needs:
+
+- **Enough data.** As a guide, at least 100 rows with the outcome you're explaining, and at least 10 in the comparison group. Small categories won't be called influencers even when their percentages look striking, because there isn't enough data to be confident.
+- **Factors at the same grain as the outcome.** If the outcome is per customer, every factor must be one value per customer. A customer with several devices needs those devices summarized (a count) or pivoted into columns first.
+- **Import mode.** It doesn't support DirectQuery or live connections to Analysis Services.
+
+Like Analyze, it finds associations, not causes. A factor that drives the outcome on its own can drop out when you add a related factor, because the visual weighs them together.
+
+---
+
+## Decomposition Tree
+
+The **Decomposition Tree** breaks one measure down by any number of categories, in whatever order you choose. Put the measure in **Analyze** and the categories in **Explain by**. Select the **+** beside a node to split it by one of them, then keep going: total sales, then by region, then that region by product, and so on.
+
+**AI splits** choose the next category for you. *High value* picks the split that leads to the highest value; *Low value*, the lowest. They're marked with a light bulb. In the visual's analysis settings you can switch them from **Absolute** (the highest value) to **Relative** (the value that stands out most compared with its siblings).
+
+Report authors can **lock** the first levels, so readers can explore below them but not change the path at the top. The tree shows the top 10 values per level.
+
+It's the best of these visuals for root-cause conversations in a meeting: start at the total and follow the biggest branch until the answer is obvious.
+
+---
+
+## Common Mistakes
+
+**Presenting an Analyze result as the reason.** It's a statistical lead. Check it with the business before it goes in a slide.
+
+**Grouping categories with Group when they need a real column.** New values arrive ungrouped, and the report quietly changes.
+
+**Trying to bin a measure.** Bins work on columns. Use a calculated column or a banding table.
+
+**Feeding Key Influencers too little data.** It returns no influencers, or misses real ones. Check the row counts first.
+
+**Using factors at the wrong grain.** Key Influencers will refuse a factor that isn't one value per row of the outcome.
+
+## Next Steps
+
+- [Charts](/docs/visuals/charts)
+- [Drillthrough](/docs/visuals/drillthrough)
+- [Build a Pareto Chart Dashboard](/tutorials/build-a-pareto-chart-dashboard), finding the vital few causes with DAX
+- [Build an SPC Control Chart Dashboard](/tutorials/build-an-spc-control-chart-dashboard)

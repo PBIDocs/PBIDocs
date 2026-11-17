@@ -15,6 +15,11 @@ const changelog: { date: string; entries: ReactNode[] }[] = [
     date: '2026-11-17',
     entries: [
       <>
+        New docs page: <Link href="/docs/visuals/finding-patterns">Finding Patterns</Link>. Explain the
+        increase, groups and bins, automatic clusters, forecasts and anomalies, Key Influencers, and the
+        Decomposition Tree, with what each needs and where it doesn&apos;t work.
+      </>,
+      <>
         New docs page:{' '}
         <Link href="/docs/power-bi-service/sharing-and-permissions">Sharing, Permissions &amp; Endorsement</Link>.
         Sharing an item, Read, Build, Reshare, and Write on semantic models (and why Build isn&apos;t a security

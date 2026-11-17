@@ -138,11 +138,11 @@ export const DOMAINS: Domain[] = [
       {
         name: 'Identify patterns and trends',
         skills: [
-          { text: 'Use the Analyze feature in Power BI', links: [] },
-          { text: 'Use grouping, binning, and clustering', links: [] },
-          { text: 'Use AI visuals', links: [] },
-          { text: 'Use reference lines, error bars, and forecasting', links: [l('/tutorials/build-an-spc-control-chart-dashboard', 'Control chart limits as reference lines')] },
-          { text: 'Detect outliers and anomalies', links: [l('/tools/control-chart-builder', 'SPC control chart builder')] },
+          { text: 'Use the Analyze feature in Power BI', links: [l('/docs/visuals/finding-patterns#analyze-explain-the-increase-or-decrease', 'Explain the increase')] },
+          { text: 'Use grouping, binning, and clustering', links: [l('/docs/visuals/finding-patterns#groups-and-bins', 'Groups and bins'), l('/docs/visuals/finding-patterns#automatic-clusters', 'Clusters')] },
+          { text: 'Use AI visuals', links: [l('/docs/visuals/finding-patterns#key-influencers', 'Key Influencers'), l('/docs/visuals/finding-patterns#decomposition-tree', 'Decomposition Tree')] },
+          { text: 'Use reference lines, error bars, and forecasting', links: [l('/docs/visuals/finding-patterns#the-analytics-pane', 'Analytics pane'), l('/tutorials/build-an-spc-control-chart-dashboard', 'Control chart limits as reference lines')] },
+          { text: 'Detect outliers and anomalies', links: [l('/docs/visuals/finding-patterns#the-analytics-pane', 'Find anomalies'), l('/tools/control-chart-builder', 'SPC control chart builder')] },
           { text: 'Use Copilot to summarize the underlying semantic model', links: [] },
         ],
       },
