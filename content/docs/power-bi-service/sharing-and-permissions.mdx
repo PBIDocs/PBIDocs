@@ -1,0 +1,132 @@
+---
+title: "Sharing, Permissions & Endorsement"
+description: How access works in the Power BI Service beyond workspace roles. Sharing an item, the four semantic model permissions (Read, Build, Reshare, Write) and why Build isn't a security boundary, promoted and certified content, and sensitivity labels.
+---
+
+# Sharing, Permissions & Endorsement
+
+[Workspace roles](/docs/power-bi-service/workspaces) decide who can work inside a workspace. Most people who use a report never get a role. They reach it another way: an app, a shared link, direct access to one report, or permission to build their own reports on someone else's semantic model.
+
+This page covers those other ways in, and two features that help people trust what they find: **endorsement** and **sensitivity labels**.
+
+---
+
+## Four Ways to Give Someone Access
+
+| Method | What they get | Best for |
+|---|---|---|
+| **Workspace role** | Everything in the workspace, at that role's level | The people who build and maintain the content |
+| **App** | A packaged, read-only set of reports with its own navigation | Wide distribution to readers |
+| **Share an item** | One report or dashboard, plus Read on its semantic model | A few people who need one report |
+| **Semantic model permission** | Use of the model itself, for example to build their own reports | Analysts building on a shared, governed model |
+
+For more than a handful of readers, an app is usually the right answer: one place to manage, and readers never see work in progress.
+
+---
+
+## Sharing a Single Item
+
+Open a report and choose **Share**. The dialog creates a link, and you choose who it works for:
+
+- **People in your organization**: anyone in the organization with the link.
+- **People with existing access**: a link to send to people who already have access, granting nothing new.
+- **Specific people**: only the people or groups you name.
+
+Below that are two checkboxes worth reading every time:
+
+- **Allow recipients to share** gives them **Reshare**.
+- **Allow recipients to build content with the data associated with this report** gives them **Build** on the semantic model.
+
+Sharing a report always gives **Read** on the semantic model behind it, because the report can't show anything without it.
+
+To see or remove everything that's been granted on an item, open its **Manage permissions** page: direct access and links are listed separately.
+
+Sharing needs a Power BI Pro or Premium Per User license, and so does viewing shared content, unless the workspace is on a Premium or Fabric capacity that lets free users view.
+
+---
+
+## Semantic Model Permissions
+
+A semantic model has four permissions of its own:
+
+| Permission | Lets someone |
+|---|---|
+| **Read** | Use reports built on the model, and explore its data |
+| **Build** | Build new reports on it, including in other workspaces; use Analyze in Excel; build composite models on it; query it through XMLA; see hidden fields |
+| **Reshare** | Give other people access to the model |
+| **Write** | Republish the model, change most of its settings, and run **Refresh now** |
+
+Only the model's **owner** can set scheduled refresh and data source credentials; see [why refresh credentials fail](/blog/refresh-credentials-invalid-error).
+
+Workspace roles grant these automatically:
+
+| | Admin | Member | Contributor | Viewer |
+|---|---|---|---|---|
+| Read | ✓ | ✓ | ✓ | ✓ |
+| Build | ✓ | ✓ | ✓ | |
+| Reshare | ✓ | ✓ | | |
+| Write | ✓ | ✓ | ✓ | |
+
+Permissions that come from a workspace role can only be changed by changing the role. Admins and Members can grant the others directly, on the model's **Manage permissions** page.
+
+### Build Is Not a Security Boundary
+
+It's tempting to give readers Read without Build and assume they can only see the report. Microsoft is explicit that this shouldn't be relied on: someone with Read can still access and interact with the data in the model. Build mostly controls whether people can **find** the model and **build** new things on it.
+
+To limit which **rows** someone sees, use [row-level security](/docs/power-bi-service/security). RLS applies to people with Read or Build, but not to people with Write, which includes workspace Admins, Members, and Contributors. That's the usual reason [RLS works in Desktop but not in the Service](/blog/rls-works-in-desktop-not-in-service).
+
+### One Model, Many Reports
+
+The pattern these permissions are built for: one governed semantic model in a data workspace, and analysts with **Build** creating their own reports in their own workspaces, connected live to it. Everyone gets the same numbers from the same measures, and the model's owner maintains it in one place.
+
+---
+
+## Endorsement: Promoted and Certified
+
+With hundreds of semantic models in a tenant, people need to know which ones to trust. **Endorsement** adds a badge, and endorsed items are listed first in some places, such as search and the OneLake catalog.
+
+| Badge | Means | Who can apply it |
+|---|---|---|
+| **Promoted** | The creators think it's ready to share and reuse | Anyone with write permission on the item |
+| **Certified** | A reviewer has checked it against the organization's standards | Only reviewers named by a Fabric administrator |
+| **Master data** | The authoritative source for a kind of data, such as the customer list | Only people named by a Fabric administrator; data items only |
+
+Set it in the item's **Settings → Endorsement**. Certification and master data only exist if an administrator has turned them on; anyone can **request** certification, which goes to the reviewers. Dashboards can't be endorsed.
+
+Promotion costs nothing and tells people "use this one". Certification only means something if the organization has a real review process behind it.
+
+---
+
+## Sensitivity Labels
+
+**Sensitivity labels** such as *Public*, *General*, *Confidential*, and *Highly Confidential* come from **Microsoft Purview Information Protection**, the same labels used on Word and Outlook documents. Your organization defines them; Power BI applies them.
+
+- **Applying one:** in Desktop, from the **Sensitivity** button on the Home ribbon; in the Service, from the item's settings or header. It needs a Pro or PPU license and the Purview licensing your organization has set up.
+- **It shows everywhere:** the label appears on the report, dashboard, or model, so readers know how to treat what they're looking at.
+- **It flows downstream:** label a semantic model and the reports and dashboards built on it inherit the label. A new item created from a labeled one starts with that label. A semantic model can also inherit a label from a labeled data source.
+- **It travels with exports:** export to Excel, PDF, or PowerPoint, Analyze in Excel, and downloading the .pbix all keep the label, and any encryption it carries. Export to CSV doesn't.
+- **Policies can enforce it:** a *default* label policy applies a label automatically, and a *mandatory* label policy stops people saving content without one.
+
+What a label **doesn't** do: by itself, it doesn't change who can open the item in Power BI. Access in the Service still comes from roles, apps, sharing, and permissions. Labels add protection when data leaves (encrypted exports and .pbix files), and through Purview protection policies your administrators may configure.
+
+---
+
+## Common Mistakes
+
+**Sharing report by report to a large audience.** Access ends up scattered across dozens of links. Use an app.
+
+**Ticking "Allow recipients to build content" without thinking.** It gives Build on the whole model, not just the report.
+
+**Treating "no Build" as data security.** Use row-level security for that.
+
+**Certifying without a review process.** A badge that means nothing teaches people to ignore badges.
+
+**Expecting a Confidential label to block access in the Service.** Labels classify and protect exports; access is still controlled by permissions.
+
+## Next Steps
+
+- [Workspaces](/docs/power-bi-service/workspaces)
+- [Row-Level Security](/docs/power-bi-service/security)
+- [RLS Role Matrix](/docs/governance/rls-matrix)
+- [Deployment Pipelines](/docs/power-bi-service/deployment-pipelines)
+- [PL-300 Study Guide](/pl-300)

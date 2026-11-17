@@ -12,6 +12,17 @@ export const metadata: Metadata = {
 
 const changelog: { date: string; entries: ReactNode[] }[] = [
   {
+    date: '2026-11-17',
+    entries: [
+      <>
+        New docs page:{' '}
+        <Link href="/docs/power-bi-service/sharing-and-permissions">Sharing, Permissions &amp; Endorsement</Link>.
+        Sharing an item, Read, Build, Reshare, and Write on semantic models (and why Build isn&apos;t a security
+        boundary), promoted and certified content, and sensitivity labels.
+      </>,
+    ],
+  },
+  {
     date: '2026-11-16',
     entries: [
       <>
