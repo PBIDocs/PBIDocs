@@ -363,3 +363,27 @@ figure.shiki[data-wrap] pre {
     transition: none !important;
   }
 }
+
+/* Mobile header (home layout, below lg): theme switch beside search and the
+   menu button, with room between the icons. Fumadocs renders the title,
+   nav.children (our .pbi-mobile-theme), the link list, and then its mobile
+   group (.ms-auto.lg:hidden: search + menu toggle). `order` moves the switch
+   to just before that group, whatever the link list does at tablet widths. */
+@media (width < 64rem) {
+  #nd-nav .pbi-mobile-theme {
+    order: 1;
+    margin-inline-start: auto;
+    display: flex;
+    align-items: center;
+  }
+  #nd-nav .ms-auto.lg\:hidden {
+    order: 2;
+    margin-inline-start: 0.5rem;
+    gap: 0.625rem;
+  }
+  /* The same switch also sits at the bottom of the opened menu: hide that
+     copy now that the header has one. */
+  #nd-nav [data-theme-toggle]:not(.pbi-theme-btn) {
+    display: none;
+  }
+}
