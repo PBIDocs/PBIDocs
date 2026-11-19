@@ -97,7 +97,7 @@ export function PracticeModel() {
       </h2>
       <p className="mb-4 text-sm text-fd-muted-foreground">
         Every exercise runs against these tables, so you can check any answer by hand. Sales relates to Product on
-        Product, and to a full 2025–2026 Date table on Date. <code className="font-mono">[Total Sales]</code> is{' '}
+        Product, and to a full 2025–2026 Date table on Date, with Year, Month (the month name), and Month Number columns. <code className="font-mono">[Total Sales]</code> is{' '}
         <code className="font-mono">SUM ( Sales[Amount] )</code>.
       </p>
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_auto]">

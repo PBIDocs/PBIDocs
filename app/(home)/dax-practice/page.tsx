@@ -6,7 +6,7 @@ import { EXERCISES } from '@/lib/dax-exercises';
 
 export const metadata: Metadata = {
   title: 'DAX Practice Exercises',
-  description: `${EXERCISES.length} free DAX exercises with instant answers: filter context, CALCULATE, KEEPFILTERS, time intelligence, and real bugs to fix. Every question runs on one small model you can check by hand, and every answer explains why.`,
+  description: `${EXERCISES.length} free DAX exercises with instant answers: filter context, CALCULATE, ALLSELECTED, iterators and RANKX, time intelligence, and real bugs to fix. Every question runs on one small model you can check by hand, and every answer explains why.`,
   alternates: {
     canonical: '/dax-practice',
   },

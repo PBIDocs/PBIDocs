@@ -15,6 +15,11 @@ const changelog: { date: string; entries: ReactNode[] }[] = [
     date: '2026-11-19',
     entries: [
       <>
+        The <Link href="/dax-practice">DAX practice exercises</Link> grow from 13 to 30, with a new Iterators
+        &amp; ranking group (context transition, RANKX, MAXX over month names) and more filter context, time
+        intelligence, and fix-the-bug questions.
+      </>,
+      <>
         New docs page: <Link href="/docs/ai-power-bi/copilot">Copilot in Power BI</Link>, covering what it needs
         (a paid capacity, not just a Pro license), the narrative visual, summarizing a semantic model, and preparing
         a model for it. With it, the <Link href="/pl-300">PL-300 study guide</Link> now covers every skill in the
