@@ -1,0 +1,162 @@
+---
+title: "Power BI Totals Don't Add Up: Why the Total Row Is Wrong (and How to Fix It)"
+description: "The rows in a table or matrix are right, but the total isn't their sum: it's blank, too big, or too small. The total row doesn't add the rows up; it calculates the measure again for everything. Here's when that goes wrong, when it's actually right, and the SUMX fix."
+date: "2026-11-19"
+tags: ["DAX", "Troubleshooting"]
+card:
+  label: "Symptom"
+  text: "Every row in the table is right. The total underneath isn't the sum of them, and nobody can explain the number."
+faq:
+  - question: "Why doesn't the total in my Power BI table equal the sum of the rows?"
+    answer: "Power BI never adds up the rows to get the total. It evaluates the measure again in the total's filter context, which covers every row at once. If the measure does something that only makes sense for one row, such as reading a single price or testing a threshold, the total gets a different answer from the sum of the rows."
+  - question: "How do I make a measure's total equal the sum of its rows?"
+    answer: "Wrap it in SUMX over the column the rows are grouped by: SUMX ( VALUES ( Product[Product] ), [Your Measure] ). On each row there's one product, so nothing changes; on the total, SUMX evaluates the measure once per product and adds the results."
+  - question: "Is the total ever right when it doesn't match the sum of the rows?"
+    answer: "Often. A distinct count, an average, or a ratio shouldn't add up: the total number of customers isn't the sum of customers per product if some customers bought several products. Decide what the total should mean before you change it."
+  - question: "Why is my total row blank?"
+    answer: "Usually because the measure uses SELECTEDVALUE, HASONEVALUE, or VALUES to read a single value, such as one price. On the total row there are several values, so SELECTEDVALUE returns BLANK, and anything multiplied by BLANK is BLANK."
+---
+
+A table visual has one row per product and a measure that looks fine on every row. Then you look at the total, and it's blank, or bigger than the rows added together, or smaller.
+
+It isn't a rounding problem and it isn't a bug in Power BI. It comes from one rule that surprises almost everyone:
+
+> **The total row doesn't add up the rows.** It calculates the measure again, once, with the filters of the total: every product at once.
+
+For most measures, that gives the same answer as adding the rows: the total of `SUM ( Sales[Amount] )` across all products is the sum of each product's amount. For measures that do something per row, such as read a single value, test a condition, or count distinct items, it doesn't.
+
+## The Example
+
+Three products, with the quantities sold and their prices. Sales are 1,000, 450, and 150, so 1,600 in all:
+
+| Product | Qty sold | Price | Sales | Orders |
+|---|---|---|---|---|
+| Widget | 10 | 100 | 1,000 | 4 |
+| Gadget | 3 | 150 | 450 | 2 |
+| Gizmo | 3 | 50 | 150 | 2 |
+| **Total** | **16** | | **1,600** | **8** |
+
+Qty and the orders are in the `Sales` table; Price is on `Product`. `[Total Sales]` is `SUM ( Sales[Amount] )`.
+
+---
+
+## Cause 1: The Measure Reads One Value
+
+```dax lineNumbers
+Revenue =
+SUM ( Sales[Qty] ) * SELECTEDVALUE ( Product[Price] )
+```
+
+| Product | Revenue |
+|---|---|
+| Widget | 1,000 |
+| Gadget | 450 |
+| Gizmo | 150 |
+| **Total** | **(blank)** |
+
+On each row there's one product and one price, so it works. On the total row there are three prices, `SELECTEDVALUE` returns BLANK, and 16 × BLANK is BLANK.
+
+Swap `SELECTEDVALUE` for `MAX` to "fix" the blank and it gets worse: the total becomes 16 × 150, the highest price, so **2,400**. That's a number nobody can trace, and the hardest kind of wrong to notice.
+
+**Fix:** calculate at the level where the multiplication is valid, one order at a time, and let the total add those up:
+
+```dax lineNumbers
+Revenue =
+SUMX ( Sales, Sales[Qty] * RELATED ( Product[Price] ) )
+```
+
+Now the total is 1,600. See [SUMX](/docs/dax/sumx) and [RELATED](/docs/dax/related).
+
+## Cause 2: A Condition Tested Once
+
+A 10% bonus on any product that sold more than 400:
+
+```dax lineNumbers
+Bonus =
+IF ( [Total Sales] > 400, [Total Sales] * 0.1 )
+```
+
+| Product | Sales | Bonus |
+|---|---|---|
+| Widget | 1,000 | 100 |
+| Gadget | 450 | 45 |
+| Gizmo | 150 | (blank) |
+| **Total** | **1,600** | **160** |
+
+The rows add up to 145. But the total row tests the condition once, on total sales of 1,600, which is over 400, and pays 10% of all of it, including Gizmo's 150. The same happens with any `IF`, `SWITCH`, or threshold: the total tests the total.
+
+**Fix:** evaluate the measure per product, then add:
+
+```dax lineNumbers
+Bonus Total =
+SUMX ( VALUES ( Product[Product] ), [Bonus] )
+```
+
+On a product row, `VALUES ( Product[Product] )` holds one product, so the result doesn't change. On the total row, `SUMX` evaluates `[Bonus]` for each of the three products, each in its own context ([context transition](/docs/dax/row-context)), and adds them: 145.
+
+Iterate over the column the visual groups by. If the bonus is decided per product per region, iterate over both, for example with `SUMMARIZE ( Sales, Product[Product], Sales[Region] )`.
+
+---
+
+## When the Total Is Right After All
+
+Not every total that differs from the sum of the rows is a mistake. Check these before you change anything.
+
+### Distinct Counts
+
+```dax lineNumbers
+Regions Sold = DISTINCTCOUNT ( Sales[Region] )
+```
+
+Widget sold in 2 regions, Gadget in 1, Gizmo in 2. The rows add up to 5, but the total shows **2**, because there are only two regions. That's correct: the total answers "how many regions did we sell in?", and adding the rows would count North three times. The same goes for customer counts: a customer who bought two products is one customer.
+
+### Averages and Ratios
+
+```dax lineNumbers
+Avg Order Value = DIVIDE ( [Total Sales], COUNTROWS ( Sales ) )
+```
+
+| Product | Avg Order Value |
+|---|---|
+| Widget | 250 |
+| Gadget | 225 |
+| Gizmo | 75 |
+| **Total** | **200** |
+
+The rows add up to 550, which means nothing, and their simple average is 183.3. The total, 1,600 / 8 orders = **200**, is the real average order value, weighted by how many orders each product had. Percentages, margins, and rates behave the same way, and their totals are usually right as they are.
+
+The test: **what question should the total row answer?** If it's "the sum of the rows", use `SUMX`. If it's "the same calculation for everything", the measure is probably already right.
+
+---
+
+## Other Ways to Handle the Total
+
+- **Hide a meaningless total.** If a total makes no sense, such as a rank or a "latest status", show nothing on it. `IF ( ISINSCOPE ( Product[Product] ), [Measure] )` returns the measure on product rows and blank on the total. `ISINSCOPE` is clearer than `HASONEVALUE` here, because a slicer can also leave one value in context.
+- **Turn the total off.** In the formatting pane, under **Totals** (table) or **Row subtotals** and **Column subtotals** (matrix), when no single total is meaningful.
+- **Change the total in the visual.** Tables and matrices can now change what their total row shows without DAX, using [visual calculations](/docs/dax/visual-calculations). That's quick for one visual; a measure fixed with `SUMX` is right everywhere it's used.
+
+## Subtotals Too
+
+Everything here applies to subtotals in a matrix as well. A subtotal for a year, a region, or a category re-evaluates the measure for that whole group. A year-to-date measure on a year subtotal shows the full year, not the sum of twelve monthly year-to-date values. If a subtotal looks wrong, ask the same question: what should this row answer?
+
+## Common Mistakes
+
+**Replacing SELECTEDVALUE with MAX or MIN.** The blank goes away and a wrong number takes its place.
+
+**Fixing a distinct count with SUMX.** You'll get 5 regions when there are 2. Some totals shouldn't add up.
+
+**Iterating over the wrong column.** `SUMX ( VALUES ( Product[Category] ), [Bonus] )` tests the bonus per category, not per product. Iterate over what the business rule is decided on.
+
+**Checking only the rows.** Add the total row to every new table while you test a measure. It's the fastest way to catch a measure that only works one row at a time.
+
+## Test Yourself
+
+The [DAX practice exercises](/dax-practice) include this exact problem, and a dozen more where the answer depends on filter context. Try the *Fix the bug* group.
+
+## Next Steps
+
+- [SUMX](/docs/dax/sumx)
+- [Iterator Functions](/docs/dax/iterator)
+- [Row Context and Context Transition](/docs/dax/row-context)
+- [SELECTEDVALUE](/docs/dax/selectedvalue)
+- [Totals (grand totals and percent of total)](/docs/dax-patterns/totals)

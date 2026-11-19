@@ -181,7 +181,7 @@ const CORE: Exercise[] = [
       { text: '1,100', correct: true, why: 'On the 2025 row the filter context is the whole year, so YTD runs to 31 December 2025: 1,100.' },
       { text: 'BLANK', why: 'TOTALYTD works at any level of the date table, including a year subtotal.' },
     ],
-    learn: { href: '/docs/dax-patterns/totals', label: 'Why totals don\'t add up' },
+    learn: { href: '/blog/totals-dont-add-up', label: 'Why totals don\'t add up' },
   },
   {
     id: 'sply-no-sales',
@@ -495,7 +495,7 @@ const MORE: Exercise[] = [
       { text: 'BLANK', correct: true, why: 'On the total row there are three prices, so SELECTEDVALUE returns BLANK, and 16 × BLANK is BLANK. Use SUMX ( Sales, Sales[Qty] * RELATED ( Product[Price] ) ), which works per order and totals correctly.' },
       { text: '4,800', why: 'That would be 16 × the sum of the prices (300). SELECTEDVALUE never adds values; with more than one, it gives up.' },
     ],
-    learn: { href: '/docs/dax-patterns/totals', label: 'Why totals don\'t add up' },
+    learn: { href: '/blog/totals-dont-add-up', label: 'Why totals don\'t add up' },
   },
 ];
 

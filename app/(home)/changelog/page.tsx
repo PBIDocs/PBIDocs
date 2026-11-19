@@ -15,6 +15,12 @@ const changelog: { date: string; entries: ReactNode[] }[] = [
     date: '2026-11-19',
     entries: [
       <>
+        New blog post: <Link href="/blog/totals-dont-add-up">Power BI Totals Don&apos;t Add Up</Link>, on why the
+        total row re-evaluates the measure instead of adding the rows, the two usual causes, when a different
+        total is actually right, and the SUMX fix. Also new on the homepage: a block for DAX practice and the PL-300
+        guide.
+      </>,
+      <>
         The <Link href="/dax-practice">DAX practice exercises</Link> grow from 13 to 30, with a new Iterators
         &amp; ranking group (context transition, RANKX, MAXX over month names) and more filter context, time
         intelligence, and fix-the-bug questions.
