@@ -26,6 +26,8 @@ import {
   ChartLine,
   ChartColumnDecreasing,
   ChartScatter,
+  Dumbbell,
+  GraduationCap,
 } from 'lucide-react';
 import { NewsletterForm } from '@/components/newsletter-form';
 import { HeroSearch } from '@/components/hero-search';
@@ -34,6 +36,8 @@ import { FunctionTicker } from '@/components/function-ticker';
 import { FreeStatsMatrix } from '@/components/free-stats-matrix';
 import { DaxBuilderTeaser } from '@/components/dax-builder-teaser';
 import { tools } from '@/lib/tools';
+import { EXERCISES, LEVELS } from '@/lib/dax-exercises';
+import { DOMAINS, PL300_QUESTIONS } from '@/lib/pl300';
 import { DividePlayground } from '@/components/divide-playground';
 import { LookupValueAnatomyDiagram } from '@/components/lookupvalue-anatomy-diagram';
 import { RiskMatrixGrid } from '@/components/risk-matrix-anatomy-diagram';
@@ -336,6 +340,67 @@ export default function HomePage() {
             </div>
           </div>
         </SpotlightCard>
+      </section>
+
+      {/* Practise & prepare */}
+      <section className="mt-10 w-full max-w-5xl">
+        <div className="grid gap-6 md:grid-cols-2">
+          <SpotlightCard className="rounded-2xl border border-fd-border bg-fd-card/40">
+            <div className="flex h-full flex-col p-8 text-left">
+              <span className="mb-4 inline-flex w-fit items-center gap-1.5 rounded-full bg-fd-primary/10 px-3 py-1 text-xs font-semibold text-fd-primary">
+                <Dumbbell className="size-3.5" />
+                DAX practice
+              </span>
+              <h2 className="mb-3 text-2xl font-bold tracking-tight">Do you know what this returns?</h2>
+              <p className="mb-4 text-fd-muted-foreground">
+                {EXERCISES.length} questions on one small model you can check by hand: filter context, iterators,
+                time intelligence, and real bugs to fix. Every answer explains why.
+              </p>
+              <div className="mb-5 rounded-lg border border-fd-border bg-fd-background p-4">
+                <p className="mb-2 text-xs text-fd-muted-foreground">A table with one row per product:</p>
+                <code className="block font-mono text-sm">Sales Rank = RANKX ( Product, [Total Sales] )</code>
+                <p className="mt-2 text-sm font-medium">What does the second-best product&apos;s row show?</p>
+              </div>
+              <p className="mb-5 text-xs text-fd-muted-foreground">{LEVELS.join(' · ')}</p>
+              <Link
+                href="/dax-practice#rankx-no-all"
+                className="mt-auto inline-flex w-fit items-center gap-1.5 rounded-lg bg-fd-primary px-5 py-2.5 text-sm font-semibold text-fd-primary-foreground hover:bg-fd-primary/90"
+              >
+                Find out, then try the rest
+                <ArrowRight className="size-4" />
+              </Link>
+            </div>
+          </SpotlightCard>
+          <SpotlightCard className="rounded-2xl border border-fd-border bg-fd-card/40">
+            <div className="flex h-full flex-col p-8 text-left">
+              <span className="mb-4 inline-flex w-fit items-center gap-1.5 rounded-full bg-fd-primary/10 px-3 py-1 text-xs font-semibold text-fd-primary">
+                <GraduationCap className="size-3.5" />
+                PL-300 exam
+              </span>
+              <h2 className="mb-3 text-2xl font-bold tracking-tight">A free PL-300 study guide</h2>
+              <p className="mb-4 text-fd-muted-foreground">
+                Every skill in Microsoft&apos;s exam outline, all{' '}
+                {DOMAINS.reduce((n, d) => n + d.areas.reduce((m, a) => m + a.skills.length, 0), 0)}, linked to a
+                page that teaches it, plus {PL300_QUESTIONS.length} scenario questions in the exam&apos;s style.
+              </p>
+              <div className="mb-5 grid grid-cols-2 gap-2">
+                {DOMAINS.map((d) => (
+                  <div key={d.id} className="rounded-lg border border-fd-border bg-fd-background px-3 py-2">
+                    <p className="text-sm font-bold tabular-nums">{d.weight}</p>
+                    <p className="text-xs text-fd-muted-foreground">{d.name}</p>
+                  </div>
+                ))}
+              </div>
+              <Link
+                href="/pl-300"
+                className="mt-auto inline-flex w-fit items-center gap-1.5 rounded-lg border border-fd-border px-5 py-2.5 text-sm font-semibold hover:bg-fd-muted"
+              >
+                Open the study guide
+                <ArrowRight className="size-4" />
+              </Link>
+            </div>
+          </SpotlightCard>
+        </div>
       </section>
 
       {/* Free Tools */}
