@@ -1,0 +1,121 @@
+---
+title: "Paginated Reports, Export Settings & Automatic Page Refresh"
+description: Three settings that decide how a report reaches people. When to build a paginated report instead of a Power BI report, how to control what readers can export (and the row limits), and how automatic page refresh keeps a DirectQuery report current.
+---
+
+# Paginated Reports, Export & Page Refresh
+
+A Power BI report is built for the screen: interactive, filtered, and summarized. Three features cover what happens beyond that: printing every row (**paginated reports**), taking the data elsewhere (**export**), and keeping a page current without anyone pressing refresh (**automatic page refresh**).
+
+---
+
+## Paginated Reports
+
+A **paginated report** is a fixed-layout document that runs to as many pages as the data needs. Put a 10,000-row table in a Power BI report and you get a scroll bar; print it, and you get only the rows you could see. In a paginated report, the same table prints every row, with headers repeated on each page.
+
+| | Power BI report | Paginated report |
+|---|---|---|
+| Built for | Exploring on screen | Printing, PDF, and email |
+| Long tables | Scroll inside the visual | Flow across as many pages as needed |
+| Layout | Responsive canvas | Exact, page by page |
+| Authoring tool | Power BI Desktop | **Power BI Report Builder** (free) |
+| File | .pbix | .rdl |
+| Data | One semantic model | Several data sources, including semantic models |
+
+**Choose a paginated report when** the output is a document: invoices (one per page), statements, regulatory filings, a detailed list that someone has to print or sign, or any report where every row must appear.
+
+**Choose a Power BI report when** people need to slice, filter, and drill. Most reports are this kind; paginated reports are for the cases where the page itself matters.
+
+What to know:
+
+- They're built in **Power BI Report Builder**, a free download, and published to the Service. Reports built for SQL Server Reporting Services (2016 and later) can be uploaded too.
+- **Licensing** follows the same rules as Power BI reports: a free license publishes to *My workspace*; Pro or Premium Per User publishes to shared workspaces, with at least the Contributor role. Using a semantic model as the source needs **Build** permission on it; see [semantic model permissions](/docs/power-bi-service/sharing-and-permissions#semantic-model-permissions).
+- On-premises sources go through a [gateway](/docs/governance/gateway-refresh), as for any other report.
+- Readers can export them to PDF, accessible PDF, Excel, Word, PowerPoint, CSV, XML, and MHTML, and **subscribe** to receive a PDF by email.
+- They can't be pinned to dashboards.
+
+---
+
+## Export Settings
+
+Readers can export the data behind a visual from **More options (…) → Export data**. Report authors control how much they can take.
+
+### The Report Setting
+
+In Power BI Desktop: **File → Options and settings → Options → Current file → Report settings → Export data**. You can also change it in the Service. The choices:
+
+| Setting | Readers can export |
+|---|---|
+| Summarized data only | What the visual shows, aggregated as in the visual |
+| Summarized and underlying data | Also the detail rows behind it |
+| No data | Nothing |
+
+A Power BI administrator's tenant settings override the report setting: if export is turned off for the organization, the report setting can't turn it back on. Revisit older reports after changing your policy, because the setting is stored per report.
+
+### Summarized vs. Underlying Data
+
+- **Summarized data** exports the data the visual uses, with its filters and aggregation. For a visual with a hierarchy, it exports every level, not just the one on screen. For a matrix, **Data with current layout** keeps the matrix shape in Excel.
+- **Underlying data** removes the aggregation and exports the detail rows, along with other columns from the same tables. It may need **Build** permission on the semantic model, and it doesn't work when the tables have no unique key or the visual has *Show items with no data* turned on.
+
+### Formats and Limits
+
+In Power BI Desktop, export is to CSV only. In the Service:
+
+| Format | Up to |
+|---|---|
+| Excel (.xlsx) with a live connection | 500,000 rows |
+| Excel (.xlsx) | 150,000 rows |
+| CSV | 30,000 rows |
+
+The Excel formats carry the report's or semantic model's [sensitivity label](/docs/power-bi-service/sharing-and-permissions#sensitivity-labels); CSV doesn't, and it has no total rows. Row-level security applies to exports: readers only get the rows they can see.
+
+If people regularly need more than 150,000 rows, export isn't the right tool. Give them **Analyze in Excel**, a paginated report, or Build permission on the model.
+
+---
+
+## Automatic Page Refresh
+
+**Automatic page refresh** re-queries a page's visuals on a schedule, so a monitoring report stays current while it's open. It's a page setting: open **Format page → Page refresh**.
+
+### Only for DirectQuery
+
+The **Page refresh** card only appears when the report uses a **DirectQuery** source (it also works with some live connections, Direct Lake, and composite models that include DirectQuery). It isn't available for **Import** models, because there's nothing to re-query until the model refreshes. Import reports do update while open after a semantic model refresh, but only for users with Write permission. See [DirectQuery vs. Import](/docs/modeling/storage-modes).
+
+### Two Types
+
+- **Fixed interval** re-runs every visual's query at a set interval. The default is 30 minutes; in Desktop it can be as short as one second.
+- **Change detection** runs one measure on a schedule and refreshes the visuals only when its value changes, for example a count of order IDs. That's one query per check instead of one per visual per viewer. A model can have one change detection measure.
+
+### Limits in the Service
+
+| Workspace | Fixed interval | Change detection |
+|---|---|---|
+| Shared capacity (Pro) | Minimum 30 minutes | Not available |
+| Premium, Fabric, or Premium Per User | Down to the minimum the capacity admin sets (default 5 minutes) | Available, if the admin allows it (default minimum 5 seconds) |
+
+The capacity administrator can turn either type off, or raise the minimum, for everything on the capacity.
+
+### Choosing an Interval
+
+Match the interval to how often new data actually arrives: refreshing every second against data that lands every 20 minutes only adds load. If the queries take longer than the interval, Power BI waits for them to finish, so the real refresh rate is slower than the setting. Check query times with Performance Analyzer; see [performance optimization](/docs/dax/performance). Auto-refresh queries bypass the cache and run at a lower priority than interactive ones.
+
+---
+
+## Common Mistakes
+
+**Building a paginated report for an interactive need.** If people want to filter and drill, give them a Power BI report.
+
+**Leaving underlying-data export on by default.** Decide per report whether readers need detail rows.
+
+**Promising a 200,000-row Excel export.** The limit is 150,000 rows for a standard Excel export, and less for wide tables.
+
+**Looking for Page refresh on an Import report.** It isn't there. Use scheduled refresh, or switch the fast-moving table to DirectQuery.
+
+**Setting a one-second refresh on a slow source.** Every open copy of the report queries the source at that rate.
+
+## Next Steps
+
+- [Sharing, Permissions & Endorsement](/docs/power-bi-service/sharing-and-permissions)
+- [Refresh](/docs/power-bi-service/refresh)
+- [DirectQuery vs. Import](/docs/modeling/storage-modes)
+- [Dashboards](/docs/power-bi-service/dashboards)

@@ -8,6 +8,7 @@
     "dataflows",
     "deployment-pipelines",
     "security",
-    "sharing-and-permissions"
+    "sharing-and-permissions",
+    "report-delivery"
   ]
 }

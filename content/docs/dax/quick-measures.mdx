@@ -1,0 +1,88 @@
+---
+title: "Quick Measures"
+description: How Power BI's quick measures build common DAX for you, from year-over-year change to running totals, what they're good for, how to read and clean up the DAX they write, and where they don't work.
+---
+
+# Quick Measures
+
+A **quick measure** writes a DAX measure for you from a short dialog: pick a calculation, drop in a field or two, and Power BI generates the formula. The result is an ordinary measure. You can open it, read it, edit it, and use it in any visual.
+
+They're useful in two ways: to get a common calculation working quickly, and to **learn DAX** by seeing how Power BI writes one.
+
+---
+
+## Creating One
+
+1. In the **Data** pane, right-click any table (or select **…** next to it) and choose **New quick measure**. You can also start from the dropdown next to a field in a visual's field well.
+2. In **Select a calculation**, choose what you want, such as **Year-over-year change**.
+3. Drag fields into the boxes the calculation asks for: usually a **Base value** (a measure or a column to aggregate) and sometimes a **Category**, **Date**, or **Filter**.
+4. Select **OK**. The new measure appears in the Data pane and its DAX in the formula bar.
+
+## What's Available
+
+| Group | Calculations |
+|---|---|
+| **Aggregate per category** | Average, variance, max, min, and weighted average per category |
+| **Filters** | Filtered value, difference and percentage difference from a filtered value, sales from new customers |
+| **Time intelligence** | Year-, quarter-, and month-to-date totals; year-over-year, quarter-over-quarter, and month-over-month change; rolling average |
+| **Totals** | Running total; total for a category with or without filters applied |
+| **Mathematical operations** | Addition, subtraction, multiplication, division, percentage difference, correlation coefficient |
+| **Text** | Star rating, concatenated list of values |
+
+---
+
+## Read the DAX It Writes
+
+Select the quick measure in the Data pane and its formula appears in the formula bar. That's the real value of quick measures: a working example built on **your** tables and columns.
+
+Generated formulas tend to be verbose: long variable names, extra checks, and a name like *Total Sales YoY%* that you'll probably want to change. A sensible routine:
+
+1. Create the quick measure and check the numbers in a visual.
+2. **Rename** it to match your naming convention.
+3. Paste the DAX into the [DAX formatter](/tools/dax-syntax-checker) to lay it out readably, and read it through.
+4. Simplify where you can. Year-over-year change, for example, comes down to the pattern in [Time Intelligence](/docs/dax/time-intelligence):
+
+```dax lineNumbers
+Sales YoY % =
+VAR CurrentSales = [Total Sales]
+VAR PriorSales =
+    CALCULATE ( [Total Sales], SAMEPERIODLASTYEAR ( 'Date'[Date] ) )
+RETURN
+    DIVIDE ( CurrentSales - PriorSales, PriorSales )
+```
+
+Once a measure is created, nothing links it back to the dialog. It's just DAX, so edit it like any other measure.
+
+---
+
+## Where They Don't Work
+
+- **You must be able to change the model.** Quick measures aren't offered on most live connections, with the exception of some Analysis Services connections, where only the calculations that server version supports appear.
+- **No time intelligence in DirectQuery.** The time intelligence quick measures aren't available in DirectQuery mode.
+- **Commas only.** The generated DAX uses commas as argument separators. If Power BI Desktop runs in a language that uses commas as the decimal separator, quick measures don't work properly.
+- **Time intelligence needs a date table.** Use a proper [date table](/docs/modeling/date-tables), marked as a date table, for the time intelligence calculations.
+
+## Quick Measures, Copilot, or Writing It Yourself?
+
+| | Quick measures | Copilot or an AI assistant | Writing it |
+|---|---|---|---|
+| Covers | A fixed list of common patterns | Almost anything you can describe | Anything |
+| Reliability | Tested patterns | Check every result | As good as your DAX |
+| Teaches you | The pattern for your own model | Sometimes | Most |
+
+For anything outside the list, the [time intelligence generator](/tools/time-intelligence-generator) writes a full set of period measures for a date table, and the [DAX practice exercises](/dax-practice) test whether you can predict what a measure returns.
+
+## Common Mistakes
+
+**Leaving the generated name.** *Total Sales YoY%* next to *Sales Growth %* confuses everyone. Rename it.
+
+**Building on implicit measures.** Dropping a raw column into Base value works, but a proper base measure such as `[Total Sales]` keeps the logic in one place. See [Measures](/docs/dax/measures).
+
+**Never reading the formula.** A quick measure you don't understand is one you can't fix when the numbers look wrong.
+
+## Next Steps
+
+- [Measures](/docs/dax/measures)
+- [CALCULATE](/docs/dax/calculate)
+- [Time Intelligence](/docs/dax/time-intelligence)
+- [DAX Syntax Checker & Formatter](/tools/dax-syntax-checker)

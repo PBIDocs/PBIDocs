@@ -12,6 +12,17 @@ export const metadata: Metadata = {
 
 const changelog: { date: string; entries: ReactNode[] }[] = [
   {
+    date: '2026-11-19',
+    entries: [
+      <>
+        Two new docs pages: <Link href="/docs/dax/quick-measures">Quick Measures</Link>, and{' '}
+        <Link href="/docs/power-bi-service/report-delivery">Paginated Reports, Export &amp; Page Refresh</Link>{' '}
+        (when a paginated report is the right tool, export settings and row limits, and automatic page refresh for
+        DirectQuery).
+      </>,
+    ],
+  },
+  {
     date: '2026-11-17',
     entries: [
       <>

@@ -7,6 +7,7 @@
     "basics",
     "variables",
     "measures",
+    "quick-measures",
     "calculated-columns",
     "calculated-tables",
     "row-context",

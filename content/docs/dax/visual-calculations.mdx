@@ -137,7 +137,7 @@ To show only `% of Total`, the visual still needs `[Sales]` for the formula to u
 - **Not reusable.** A visual calculation can't be copied to another visual. Business logic that several visuals need belongs in a measure.
 - **No filtering or sorting by a visual calculation**, and no changing its aggregation.
 - **No dynamic format strings.** Use the formatting pane's data format instead.
-- **Exports leave them out.** Exported data doesn't include visual calculation results.
+- **Exports may leave them out.** Exporting *underlying* data never includes visual calculation results. For summarized exports, Microsoft's own documentation currently disagrees with itself, so test an export before promising one.
 - **Some places don't support them:** pinning to dashboards, Publish to web, custom visuals, slicers, and AI visuals such as Key Influencers and the Decomposition Tree.
 
 Microsoft is still extending visual calculations, so check the [current limitations](https://learn.microsoft.com/en-us/power-bi/transform-model/desktop-visual-calculations-overview) before building a report around one.
