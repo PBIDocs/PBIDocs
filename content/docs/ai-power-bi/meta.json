@@ -3,6 +3,7 @@
   "icon": "Sparkles",
   "pages": [
     "introduction",
+    "copilot",
     "dax-with-ai",
     "power-query-with-ai",
     "model-advisor",

@@ -1,0 +1,123 @@
+---
+title: "Copilot in Power BI"
+description: What Microsoft's Copilot does inside Power BI, what it needs (a paid Fabric or Premium capacity, not just a Pro license), and how to use it well. Covers the narrative visual, summarizing a semantic model, building report pages, DAX queries, and preparing a model so Copilot's answers hold up.
+---
+
+# Copilot in Power BI
+
+**Copilot** is Microsoft's built-in AI assistant for Power BI. It works from your report and semantic model: it can summarize a report, answer questions about the data, draft report pages, write DAX queries, and describe a model you didn't build.
+
+The rest of this section covers using general AI assistants alongside Power BI. This page is about Copilot itself.
+
+<Callout type="warn">
+Copilot changes quickly. This page reflects Microsoft's documentation as of November 2026. Check [Microsoft's Copilot overview](https://learn.microsoft.com/en-us/power-bi/create-reports/copilot-introduction) for the current state before you rely on a detail.
+</Callout>
+
+---
+
+## What It Needs
+
+Copilot isn't included with a Power BI Pro or Premium Per User license on its own. It needs:
+
+| Requirement | Detail |
+|---|---|
+| **Capacity** | A paid Fabric capacity (F2 or higher) or Power BI Premium (P1 or higher). Trial capacities aren't supported. |
+| **Tenant setting** | *Users can use Copilot and other features powered by Azure OpenAI* must be on. It's on by default, but an administrator can turn it off. |
+| **Region** | The capacity must be in a supported region. Outside the US and EU data boundaries, Copilot is off unless an administrator allows data to be processed outside the region. |
+
+Then, by experience:
+
+- **In Power BI Desktop:** you need write access to a workspace on such a capacity, where you'd publish the report.
+- **In the Service:** the report must be in a workspace on such a capacity. Reading a Copilot summary needs read access; adding a narrative visual or generating report pages needs edit access to the report or Build permission on the semantic model.
+
+Copilot usage is billed against the capacity, so an administrator can see and limit how much it uses.
+
+---
+
+## What It Does
+
+| For | Feature | Where |
+|---|---|---|
+| Readers | Summarize a report or answer a question about it | The **Copilot pane** on the right of a report |
+| Authors | Draft a report page, or suggest content for one | Copilot pane, in edit mode or Desktop |
+| Authors | **Narrative visual**: a written summary that lives on the page | Visualizations pane → **Narrative** |
+| Authors | **Summarize the semantic model** | Copilot pane |
+| Authors | Write and explain DAX queries | **DAX query view** |
+| Model authors | Draft descriptions for measures (preview) | Measure properties, in Model view |
+
+Microsoft announced in November 2026 that the **standalone** Copilot (the full-screen experience in Power BI's left navigation) and **app-scoped** Copilot in workspace apps are retiring. Copilot inside reports, which is everything in the table above, isn't affected.
+
+---
+
+## The Narrative Visual
+
+The **narrative visual** writes a short summary of the report and keeps it on the page, so every reader sees the headline without asking for it.
+
+1. In the **Visualizations** pane, select **Narrative**. Where Copilot is available, it opens in Copilot mode.
+2. Choose what to summarize: the whole report, particular pages, or particular visuals.
+3. Pick a suggested prompt or write your own, such as *summarize sales against target in three bullet points*, and select **Create**.
+4. Read the result. Footnotes link each statement to the visual it came from; select one to highlight that visual.
+
+What to know before relying on it:
+
+- **It summarizes the canvas, not the model.** It works from the data in the selected visuals, so clear visual titles and axis labels matter more than usual.
+- **It doesn't update on its own.** When a reader changes a slicer or filter, they select the visual's **refresh** button to get a new summary.
+- **You can't edit the text directly.** Change it with prompts. For full control, copy the text into the classic, non-Copilot narrative and edit it there.
+- **Not every visual is supported.** Key Influencers, for example, isn't summarized.
+- **Authoring it needs write access to the report.** Readers without it can still ask for a summary in the Copilot pane.
+
+---
+
+## Summarize the Semantic Model
+
+Opening someone else's semantic model, with forty tables and three hundred measures, is where Copilot earns its place. Ask it in the Copilot pane to **summarize the model**, and it describes the main tables, what they appear to hold, and how they relate.
+
+Treat the summary as a map, not documentation. It infers meaning from names, so a measure called `M_Rev_Adj2` gets a guess. Check the parts that matter against the model itself, starting with the relationships in Model view and the measures that feed the main report.
+
+The same applies to the measure descriptions Copilot can draft: they're a starting point for someone who understands the measure to correct and keep.
+
+---
+
+## Building Pages and Writing DAX
+
+- **Report pages:** describe the page you want, such as *a page showing sales by region and month, with the top 10 products*, and Copilot drafts it with visuals you can then change. *Suggest content* proposes pages based on the model. Both are fastest when the model has clear names.
+- **DAX queries:** in **DAX query view**, Copilot can write a query from a description, or explain an existing one. Run the query and check the result before you reuse its logic in a measure.
+
+AI-written DAX goes wrong in predictable ways: the wrong filter context, the wrong date column, a plausible measure name that doesn't exist. The [DAX syntax checker and formatter](/tools/dax-syntax-checker) catches syntax problems and lays the code out so you can read it, and [DAX with AI](/docs/ai-power-bi/dax-with-ai) covers reviewing AI-written formulas.
+
+---
+
+## Preparing a Model for Copilot
+
+Copilot reads the model the way a new analyst would: by its names. The same work that makes a model easy for people makes Copilot more accurate.
+
+- **Name things in business language.** *Total Sales*, not `SUM_Amt`. *Customer*, not `DimCust_v2`.
+- **Write descriptions** on tables, columns, and the measures people ask about.
+- **Hide technical columns**: keys, sort-order helpers, staging fields.
+- **Use a clean star schema** with one clear date table. See [star schema](/docs/modeling/star-schema) and [date tables](/docs/modeling/date-tables).
+- **Have one measure per business concept.** Three near-identical revenue measures give Copilot three ways to answer.
+
+Microsoft's [guidance on preparing data for AI](https://learn.microsoft.com/en-us/power-bi/create-reports/copilot-prepare-data-ai) covers the model-level settings that steer Copilot further.
+
+## Checking What It Says
+
+- **Compare against a visual.** If Copilot gives a number, find it in the report. If you can't, don't use it.
+- **Watch for general knowledge.** When a question isn't about the model's data, Copilot can answer from the language model's general knowledge instead. That answer isn't from your data.
+- **Repeated prompts can return a cached answer.** The same prompt on an unchanged model within 24 hours returns the same response. Rephrase or refresh the model if you expect something new.
+
+## Common Mistakes
+
+**Expecting Copilot with a Pro license.** It needs a paid Fabric or Premium capacity.
+
+**Publishing a narrative visual nobody re-checks.** Its text comes from the visuals on the page; if they change, read the summary again.
+
+**Pointing Copilot at an unprepared model.** Cryptic names produce confident, wrong answers.
+
+**Treating a model summary as documentation.** It's an informed guess from names and relationships.
+
+## Next Steps
+
+- [AI-Assisted Power BI](/docs/ai-power-bi/introduction)
+- [DAX with AI](/docs/ai-power-bi/dax-with-ai)
+- [Report Design with AI](/docs/ai-power-bi/report-design)
+- [Sharing, Permissions & Endorsement](/docs/power-bi-service/sharing-and-permissions)

@@ -63,8 +63,17 @@ export default function Pl300Page() {
             before you book, in case it has changed, and take Microsoft&apos;s free practice assessment linked from it.
           </li>
           <li>
-            PBIDocs covers {covered} of the {allSkills.length} skills so far. Skills marked{' '}
-            <em>not covered here yet</em> are best studied on Microsoft Learn.
+            {covered === allSkills.length ? (
+              <>
+                Every one of the {allSkills.length} skills links to at least one PBIDocs page. For the Service and
+                Copilot features, which change most often, check Microsoft Learn for anything released since.
+              </>
+            ) : (
+              <>
+                PBIDocs covers {covered} of the {allSkills.length} skills so far. Skills marked{' '}
+                <em>not covered here yet</em> are best studied on Microsoft Learn.
+              </>
+            )}
           </li>
         </ul>
         <p className="text-xs">PBIDocs is independent and not affiliated with Microsoft.</p>

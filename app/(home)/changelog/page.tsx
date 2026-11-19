@@ -15,6 +15,12 @@ const changelog: { date: string; entries: ReactNode[] }[] = [
     date: '2026-11-19',
     entries: [
       <>
+        New docs page: <Link href="/docs/ai-power-bi/copilot">Copilot in Power BI</Link>, covering what it needs
+        (a paid capacity, not just a Pro license), the narrative visual, summarizing a semantic model, and preparing
+        a model for it. With it, the <Link href="/pl-300">PL-300 study guide</Link> now covers every skill in the
+        exam outline.
+      </>,
+      <>
         Two new docs pages: <Link href="/docs/dax/quick-measures">Quick Measures</Link>, and{' '}
         <Link href="/docs/power-bi-service/report-delivery">Paginated Reports, Export &amp; Page Refresh</Link>{' '}
         (when a paginated report is the right tool, export settings and row limits, and automatic page refresh for
