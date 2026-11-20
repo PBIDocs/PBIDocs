@@ -76,7 +76,7 @@ Turning limits off (or raising them) in Desktop makes the error go away locally,
 
 ### Optimizing DAX Before Checking Cardinality
 
-A measure can be written as efficiently as possible and still exceed resources if it's forced to operate over a column with extremely high cardinality. Checking column cardinality (via **View > Performance Analyzer**, or simply the column's distinct count) is worth doing before assuming the DAX itself is the problem.
+A measure can be written as efficiently as possible and still exceed resources if it's forced to operate over a column with extremely high cardinality. Checking column cardinality (with VertiPaq Analyzer, for example in DAX Studio, or simply a `DISTINCTCOUNT` of the column) is worth doing before assuming the DAX itself is the problem. Performance Analyzer shows how long each visual takes, which tells you *which* visual to look at.
 
 ### Filtering the Report Instead of the Visual
 

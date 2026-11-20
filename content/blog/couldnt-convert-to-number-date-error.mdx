@@ -113,23 +113,24 @@ N/A       <- this row fails the whole conversion
 
 ## Cause 4: Hidden Whitespace or Non-Breaking Spaces
 
-Data that's passed through a PDF export, a copy-paste from a web page, or certain legacy systems can carry non-breaking space characters or trailing whitespace that look identical to a normal space — or nothing at all — but aren't.
+Data that's passed through a PDF export, a copy-paste from a web page, or certain legacy systems can carry characters that look like a normal space, or like nothing at all, but aren't. The most common is a **non-breaking space** used as a thousands separator, which is standard in French and several other locales:
 
 ```text
-"1234 "   (trailing space, invisible)
-"1234"    (clean)
+"1 234,56"   (the gap is a non-breaking space, U+00A0)
 
-Look identical. Only one converts.
+Looks like a number with a space. Under most locales it doesn't convert.
 ```
 
-**Fix:** `Text.Trim` before the type conversion — but note plain `Text.Trim` doesn't always catch a non-breaking space (`Unicode 00A0`), which sometimes needs an explicit replace first.
+**Fix:** remove the non-breaking space before converting, then convert with the locale the data was written in, so the comma is read as the decimal separator:
 
 ```powerquery lineNumbers
 #"Cleaned" = Table.TransformColumns(
-    Source, {{"Amount", each Text.Trim(Text.Replace(_, "#(00A0)", " "))}}
+    Source, {{"Amount", each Text.Trim(Text.Replace(_, "#(00A0)", ""))}}
 ),
-#"Changed Type" = Table.TransformColumnTypes(#"Cleaned", {{"Amount", type number}})
+#"Changed Type" = Table.TransformColumnTypes(#"Cleaned", {{"Amount", type number}}, "fr-FR")
 ```
+
+`#(00A0)` is how M writes the non-breaking space character. `Text.Trim` also removes ordinary leading and trailing spaces while you're at it.
 
 See [M Language](/docs/power-query/m-language#core-data-types) for more on M's text and type functions.
 

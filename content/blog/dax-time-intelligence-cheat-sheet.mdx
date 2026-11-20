@@ -69,7 +69,7 @@ RETURN
     DIVIDE(CurrentSales - PriorSales, PriorSales)
 ```
 
-Always use `DIVIDE()` here, not `/` — it returns blank instead of an error when the prior period has no sales.
+Always use `DIVIDE()` here, not `/` — it returns blank when the prior period has no sales, where `/` would return infinity.
 
 ## First and Last Dates in a Period
 
@@ -88,7 +88,7 @@ CALCULATE(
 )
 ```
 
-Common for "point in time" measures like inventory or account balances, where summing across a period is wrong and only the value on the last day of the period is meaningful.
+Common for "point in time" measures like inventory or account balances, where summing across a period is wrong and only the value on the last day of the period is meaningful. `LASTDATE` takes the last **calendar** day, which is often a day with no snapshot; see [Semi-Additive Measures](/docs/dax-patterns/semi-additive) for the version that uses the last date with data.
 
 ## Date Range Filters Without Time Intelligence Functions
 

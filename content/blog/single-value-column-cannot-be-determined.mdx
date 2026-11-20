@@ -42,29 +42,20 @@ Good Measure =
 SUM(FactSales[SalesAmount]) * 1.1
 ```
 
-## Why It Often "Works" Until Someone Adds a Total Row
+## It Doesn't Matter How Many Rows Are Filtered
 
-This is the version that actually confuses people, because the measure can look completely fine for a while.
+A common belief is that this kind of measure works on detail rows and only breaks on a total. It doesn't work anywhere:
 
 ```dax lineNumbers
 Unit Price =
 FactSales[SalesAmount] / FactSales[Quantity]
 ```
 
-Dropped into a table visual with `ProductKey` on rows, this can appear to work — Power BI evaluates the measure once per visible row, and at the individual product level there genuinely is only one `SalesAmount` and one `Quantity` value involved, so DAX can resolve it without complaint.
+Even in a table where a row's filter leaves exactly one sale, this fails. DAX doesn't look at how many rows are in the filter context and pick the only one. A bare column reference needs a **row context**, a current row that an iterator or a calculated column provides, and a measure doesn't have one.
 
-```text
-Table visual, one row per product:
-ProductKey | SalesAmount | Quantity | Unit Price
-1001       | 500         | 10       | 50            <- looks fine
+(A measure that *does* work on every row and then shows a wrong or blank total is a different problem, usually `SELECTEDVALUE` or an `IF` that only makes sense per row. See [Power BI totals don't add up](/blog/totals-dont-add-up).)
 
-Add a Total row:
-Total      | 50,000      | 850      | ERROR          <- breaks here
-```
-
-The moment a subtotal or grand total row is added, the measure has to evaluate across many products at once — many `SalesAmount` values, many `Quantity` values — and the same formula that "worked" now has nothing to collapse them with.
-
-**Fix:** the same as above — aggregate both sides explicitly, and use `DIVIDE()` instead of `/` so a zero-quantity row returns blank instead of an error.
+**Fix:** aggregate both sides explicitly, and use `DIVIDE()` instead of `/` so a zero quantity returns blank instead of infinity.
 
 ```dax lineNumbers
 Unit Price =
@@ -120,7 +111,7 @@ The error names the column, but in a longer measure it helps to check systematic
 
 ## Common Mistakes
 
-**Testing only at the detail level.** A measure like the unit price example above can pass every manual check if it's only ever tested in a table with one row per key — always check it with a total/subtotal visible before considering it done.
+**Expecting a row-by-row calculation from a measure.** If the logic is "for each sale, divide amount by quantity, then add up", that's an iterator: `SUMX ( FactSales, FactSales[SalesAmount] / FactSales[Quantity] )`. Inside `SUMX`, the bare column references are fine because there's a current row.
 
 **Reaching for SELECTEDVALUE as a blanket fix.** `SELECTEDVALUE()` resolves this specific error by returning a fallback when multiple values are present, but it's meant for genuinely single-value scenarios (a slicer selection, a title). Using it to silence this error on a column that should be summed just replaces a clear error with a wrong number. See [SELECTEDVALUE](/docs/dax/selectedvalue) for where it actually belongs.
 

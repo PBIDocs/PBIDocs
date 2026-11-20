@@ -1,6 +1,6 @@
 ---
 title: "Power Query Error: We Cannot Convert the Value Null to Type Table"
-description: "This error means a step expected a table but received null instead — usually from a filter that matched nothing, a failed merge, or a source that returned nothing this time. Here's how to find which, and the fix for each."
+description: "A step that needs a table was handed null instead. Power Query doesn't produce that null on its own: filters and merges return empty tables, not null. It almost always comes from a fallback or a custom function that returns null. Here's how to find it and what to return instead."
 date: "2026-08-28"
 tags: ["Power Query", "Troubleshooting"]
 card:
@@ -8,80 +8,112 @@ card:
   text: "Expression.Error: We cannot convert the value null to type Table."
 faq:
   - question: "What does \"We cannot convert the value null to type Table\" mean?"
-    answer: "A step further down the query expects a table as its input, but the step before it produced null instead — usually because a filter matched zero rows, a merge found no matching key, or a data source genuinely returned nothing for this refresh."
-  - question: "Why would a filter or merge return null instead of an empty table?"
-    answer: "A filter like Table.SelectRows normally returns an empty table (0 rows), not null, when nothing matches — this error usually points further upstream, to a source step, a Table.SelectRows({[Name=\"Sheet1\"]}) style record-access, or a custom function that can genuinely return null under some condition."
-  - question: "How do I find which step is actually producing null?"
-    answer: "Click backward through Applied Steps checking the preview at each one — the last step showing real data, immediately followed by the step showing the error, identifies exactly where null is being introduced."
+    answer: "A function that needs a table, such as Table.SelectRows, Table.Combine, or Table.RowCount, received null. Something earlier produced null where a table was expected, usually a try ... otherwise null fallback or a custom function that returns null for some inputs."
+  - question: "Does a filter that matches nothing return null?"
+    answer: "No. Table.SelectRows returns an empty table with the same columns when nothing matches, and a left outer merge gives unmatched rows an empty nested table. Neither causes this error."
+  - question: "What should a function return instead of null when it finds nothing?"
+    answer: "An empty table with the columns later steps expect, for example #table(type table [Name = text, Amount = number], {}). Then appends, expands, and column references keep working."
 ---
 
-The full error usually reads:
+The error reads:
 
 ```text
 Expression.Error: We cannot convert the value null to type Table.
+Details:
+    Value=
+    Type=[Type]
 ```
 
-It names the type mismatch precisely, but not *why* a table became `null` in the first place — that part always requires tracing back through the query.
+A function that only works on tables was given `null`. Almost every `Table.*` function does this when handed null: `Table.SelectRows`, `Table.RowCount`, `Table.Combine`, `Table.AddColumn`, and the rest.
 
-## Step One: Find Exactly Where null Appears
+The useful thing to know is where null **doesn't** come from:
 
-Click backward through **Applied Steps**, checking the preview at each one. The step immediately after the last one still showing real data is the one producing `null`.
+| Situation | Result |
+|---|---|
+| A filter that matches no rows | An **empty table**, not null |
+| A left outer merge with no match for a row | An **empty nested table**, not null |
+| Navigating to a sheet or table that doesn't exist | A different error: [the key didn't match any rows](/blog/key-didnt-match-any-rows-error) |
 
-```text
-Source          -> real data
-Filtered Rows   -> real data
-Merged Queries  -> ERROR here    <- null is being introduced at this step
-```
+So when you see this error, look for code that deliberately produces null: usually a fallback, a conditional, or a custom function.
 
-## Cause 1: Accessing a Record Field That Isn't There
+## Find the Step
+
+Select each step in **Applied Steps** in turn. The error appears on the step that **receives** the null, but the cause is whatever produced it, often a step or two earlier, or inside a function the step calls. Check the step that the failing one refers to: if its preview shows `null` instead of a table, that's the one to fix.
+
+---
+
+## Cause 1: A Fallback That Returns null
+
+A step written to survive a missing source returns null when it does:
 
 ```powerquery lineNumbers
-Source{[Name="Sheet1"]}[Data]
+Data = try Source{[Item = "Sales", Kind = "Sheet"]}[Data] otherwise null,
+Filtered = Table.SelectRows(Data, each [Amount] > 0)
 ```
 
-This is the standard pattern for pulling a named sheet out of an Excel workbook — and it's the single most common source of this exact error. If the sheet was renamed, deleted, or simply doesn't exist in this particular file, `Source{[Name="Sheet1"]}` returns `null` instead of erroring immediately, and the `[Data]` access on the next line is where the null-to-table conversion actually fails.
+When the sheet exists, `Data` is a table. When it doesn't, `Data` is null, and the next step fails with this error, which hides the real problem: the sheet is missing.
 
-**Fix:** confirm the sheet name matches exactly (case-sensitive), or make the lookup resilient to a missing sheet:
+**Fix:** decide what should happen when the source is missing. Either let it fail with a clear message:
 
 ```powerquery lineNumbers
-#"Sheet Content" = try Source{[Name="Sheet1"]}[Data] otherwise #table({}, {})
+Data = try Source{[Item = "Sales", Kind = "Sheet"]}[Data]
+    otherwise error "The Sales sheet is missing from this workbook."
 ```
 
-## Cause 2: A Merge That Matched Nothing, Then Expanded
+or return an empty table with the expected columns, so the rest of the query runs and produces no rows:
 
 ```powerquery lineNumbers
-#"Merged Queries" = Table.NestedJoin(
-    Source, {"CustomerID"}, Customers, {"CustomerID"}, "CustomerDetails", JoinKind.Inner
-),
-#"Expanded" = Table.ExpandTableColumn(#"Merged Queries", "CustomerDetails", {"Name"})
+Data = try Source{[Item = "Sales", Kind = "Sheet"]}[Data]
+    otherwise #table(type table [Date = date, Amount = number], {})
 ```
 
-With `JoinKind.Inner`, rows with no match are dropped entirely rather than producing `null` — but a **Left Outer** join keeps the unmatched row with `null` in the nested table column, and *that* null is what fails during the subsequent expand step. See [Merge Queries](/docs/power-query/merge-queries) for how the different join kinds handle unmatched rows.
+## Cause 2: A Custom Function That Returns null for Some Inputs
 
-**Fix:** confirm which join kind is actually being used, and whether unmatched rows are expected — if they are, the expand step needs its own null-handling rather than assuming every row has a match.
-
-## Cause 3: A Custom Function That Returns null Under Some Condition
+A function called once per row, or once per file, that returns null when it finds nothing:
 
 ```powerquery lineNumbers
-#"Added Custom" = Table.AddColumn(
-    Source, "RelatedData", each GetRelatedTable([ID])
-)
+GetOrders = (customerId as text) =>
+    let
+        Rows = Table.SelectRows(AllOrders, each [CustomerID] = customerId)
+    in
+        if Table.IsEmpty(Rows) then null else Rows
 ```
 
-If `GetRelatedTable` is a custom function that returns `null` for some inputs (an ID with no matching data, an API call that returns nothing), a later step trying to use that column as a table fails with exactly this error, potentially only for specific rows rather than the whole query.
+Then a later step combines the results, and the first null stops it:
 
-**Fix:** have the function return an empty table (`#table({}, {})`) instead of `null` for the "nothing found" case, so downstream steps always receive a table regardless.
+```powerquery lineNumbers
+Combined = Table.Combine(Table.Column(WithOrders, "Orders"))
+```
+
+**Fix:** return an empty table instead of null. Here, just return `Rows`: it's already an empty table with the right columns when nothing matches. In general, a function that returns a table should **always** return a table.
+
+## Cause 3: A Function Parameter That Receives null
+
+A function declared with `(t as table) => ...` and invoked with a column that has empty cells receives null for those rows, and fails as soon as it treats the parameter as a table. This often happens after a step that leaves some cells empty, such as an expand where a nested value was missing.
+
+**Fix:** filter out the null rows before invoking the function, `Table.SelectRows(Source, each [Data] <> null)`, or handle null inside the function and return an empty table.
+
+---
+
+## Make Empty Results Look Like Real Ones
+
+The pattern behind all three fixes: when there's nothing to return, return an **empty table with the same columns** rather than null or `#table({}, {})`. A table with no columns can still break a later step that refers to a column by name. Building it with a typed column list keeps everything after it working:
+
+```powerquery lineNumbers
+Empty = #table(type table [CustomerID = text, OrderDate = date, Amount = number], {})
+```
 
 ## Common Mistakes
 
-**Fixing the symptom at the failing step instead of the actual source of null.** Wrapping the failing step in `try...otherwise` masks the error, but the actual cause — a renamed sheet, an unexpected join result, a function that can return null — is still there and will keep needing this same workaround. See [Error Handling in Power Query](/docs/power-query/error-handling) for when catching an error is the right call versus a way of avoiding the real fix.
+**Blaming a filter or a merge.** They return empty tables, not null. Look for a fallback or a function.
 
-**Assuming a filter (Table.SelectRows) is the source of null.** It almost never is — a filter matching zero rows returns an empty *table*, not `null`. This error much more often points to a record-field access (`{[Name=...]}`), a merge, or a custom function, not a plain filter step.
+**Wrapping the failing step in try ... otherwise.** The error moves somewhere else, and the real cause, often a missing source, stays hidden.
 
-**Not checking whether the underlying source itself changed.** If the failing step reads directly from a source (a specific sheet name, a specific file), confirm the source hasn't been restructured before assuming the Power Query logic itself needs to change.
+**Returning #table({}, {}).** It avoids this error and then fails one step later, when something refers to a column that doesn't exist.
 
 ## Next Steps
 
-- [Table.SelectRows()](/docs/power-query/table-selectrows)
 - [Error Handling in Power Query](/docs/power-query/error-handling)
-- [Merge Queries](/docs/power-query/merge-queries)
+- [Custom Functions in Power Query M](/docs/power-query/custom-functions)
+- [Table.SelectRows()](/docs/power-query/table-selectrows)
+- [Power Query Error: The Key Didn't Match Any Rows in the Table](/blog/key-didnt-match-any-rows-error)

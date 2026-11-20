@@ -107,7 +107,7 @@ Baking every endpoint into a full literal URL means the Power BI Service sees ea
 
 ### Not Handling Formula.Firewall When Combining With Other Sources
 
-Passing a value from another query or source into `Web.Contents()` per row (inside a custom column, for example) is exactly the cross-source pattern that triggers a privacy-level error — see [Formula.Firewall and Privacy Level Errors](/blog/formula-firewall-privacy-level-error) for why, and the fix.
+Passing a value from another query or source into `Web.Contents()` per row (inside a custom column, for example) is the cross-source pattern that triggers the Formula.Firewall error — see [the Formula.Firewall error](/blog/formula-firewall-privacy-level-error) for why, and how to restructure the queries.
 
 ---
 
@@ -129,6 +129,6 @@ Continue learning Power Query:
 - [M Function Reference](/docs/power-query/functions)
 - [Json.Document()](/docs/power-query/json-document) — parsing the response this usually feeds into
 
-Getting a "Formula.Firewall" error combining this with another source? See [Formula.Firewall and Privacy Level Errors](/blog/formula-firewall-privacy-level-error).
+Getting a "Formula.Firewall" error combining this with another source? See [the Formula.Firewall error](/blog/formula-firewall-privacy-level-error).
 
-Getting "Web.Contents can only accept a literal string as the first parameter"? See [that error explained](/blog/web-contents-literal-string-parameter-error) for the RelativePath fix.
+Scheduled refresh turned off because the dataset "includes a dynamic data source"? See [Web.Contents with a dynamic URL](/blog/web-contents-literal-string-parameter-error) for the RelativePath fix.

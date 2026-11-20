@@ -64,12 +64,12 @@ Adding grouping, a higher-level date hierarchy, or a top-N filter usually resolv
 
 ```text
 MdxScript(Model) (5, 22) Calculation error in measure 'FactSales'[Unit Price]:
-Cannot convert value '0' of type Number to type True/False.
+Cannot convert value 'N/A' of type Text to type Number.
 ```
 
 The visual itself is fine — a measure it depends on is throwing an error, and it only surfaces when the visual actually tries to render (rather than when the measure was first written), because that's the first time it's evaluated against real data in that combination of filters.
 
-**Fix:** open the measure named in the details and fix the underlying formula error. A divide-by-zero is the most common version of this — see [A Single Value for Column Cannot Be Determined](/blog/single-value-column-cannot-be-determined) for a related DAX error with the same "worked until it didn't" pattern, and always use `DIVIDE()` instead of `/` for exactly this reason.
+**Fix:** open the measure named in the details and fix the formula. Common versions: text that can't be converted to a number (as above), a function that returns a table where a single value was expected ([that error explained](/blog/table-of-multiple-values-supplied-error)), and comparing values of different types ([that one explained](/blog/dax-comparison-operations-do-not-support-error)). Dividing by zero isn't one of them: in DAX, `/` by zero returns infinity rather than an error, which is still a reason to use `DIVIDE()`.
 
 ## Cause 3: A DirectQuery Connection or Gateway Failure
 
@@ -84,11 +84,10 @@ or a timeout / credential-related message naming the data source directly. This 
 ## Cause 4: An Ambiguous or Broken Relationship Path
 
 ```text
-The results might contain incorrect values because the relationship
-'FactSales'[CustomerKey]-'DimCustomer'[CustomerKey] is inactive.
+Can't determine relationships between the fields.
 ```
 
-or a message about circular or ambiguous relationships. This means the model's relationships don't give the query engine a single unambiguous path to resolve the visual's fields — usually multiple active paths between the same two tables, or a relationship that's inactive but needed by this specific visual without a `USERELATIONSHIP()` to activate it.
+This means the visual uses fields from tables that the model's active relationships don't connect, so Power BI can't work out how one should filter the other. Usually the relationship is missing, or it exists but is inactive and the visual's measure doesn't activate it with `USERELATIONSHIP()`.
 
 **Fix:** check **Model view** for the relationship named in the error. If it's intentionally inactive, the measure needs `USERELATIONSHIP()` to use it — see [CALCULATE](/docs/dax/calculate#userelationship) for the pattern. If there are genuinely multiple active paths, only one relationship between two tables can be active at a time; the others need to be inactive or the model needs restructuring — see [You Can't Create a Direct Active Relationship Between These Tables](/blog/direct-active-relationship-ambiguity-error) for the two real fixes.
 

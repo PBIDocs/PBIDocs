@@ -8,7 +8,7 @@ card:
   text: "DAX comparison operations do not support comparing values of type Text with values of type Boolean."
 faq:
   - question: "What does \"DAX comparison operations do not support comparing values of type X with values of type Y\" mean?"
-    answer: "It means an expression compared two values of genuinely different data types — most often a number or BLANK() on one side and a text string on the other — and DAX couldn't implicitly convert between them the way it can for some other type pairs."
+    answer: "It means an expression compared two values of genuinely different data types, most often a number on one side and a text string on the other, and DAX couldn't convert between them. BLANK() isn't the problem: it compares safely with any type."
   - question: "Why does comparing to an empty string cause this, but comparing to BLANK() doesn't?"
     answer: "An empty string \"\" is text data. BLANK() is DAX's own representation of a missing value and compares safely against numbers, dates, and other types. Carrying over the Excel habit of using \"\" for \"nothing\" is the single most common cause of this error in DAX."
   - question: "Can IF() return different data types in its two branches?"

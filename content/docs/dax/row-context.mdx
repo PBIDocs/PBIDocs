@@ -398,5 +398,5 @@ Now that you understand both contexts, you're ready to learn the most important 
 - [Time Intelligence](/docs/dax/time-intelligence)
 - [EARLIER](/docs/dax/earlier) — reaching back to an outer row context when a calculated column nests a second one.
 
-Wrapped a column reference in `CALCULATE()` inside `FILTER()` and got a "True/False expression" error? Row context already gives direct column access — see [that error explained](/blog/calculate-true-false-expression-error).
+Got a "True/False expression" error after putting a measure in a `CALCULATE` filter argument? Wrap the condition in `FILTER()` over the rows you mean, so the measure is evaluated per row through context transition — see [that error explained](/blog/calculate-true-false-expression-error).
 

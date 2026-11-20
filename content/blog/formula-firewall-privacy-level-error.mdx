@@ -1,114 +1,140 @@
 ---
-title: "Power Query Error: Formula.Firewall and Privacy Level Errors"
-description: "\"Formula.Firewall: Query references other queries or steps, so it may not directly access a data source\" comes from Power Query's privacy level checks, not a bug in the query. Here's what triggers it and how to fix it properly."
+title: "Power Query Error: Formula.Firewall (Rebuild This Data Combination)"
+description: "Formula.Firewall comes in two versions. \"References other queries or steps, so it may not directly access a data source\" is about how the query is structured; \"privacy levels which cannot be used together\" is about privacy levels. Here's how to tell them apart and fix each one properly."
 date: "2026-08-20"
 tags: ["Power Query", "Troubleshooting"]
 card:
   label: "Error"
-  text: "Formula.Firewall: Query 'Orders' (step 'Added Custom') references other queries or steps, so it may not directly access a data source."
+  text: "Formula.Firewall: Query 'Orders' (step 'Added Custom') references other queries or steps, so it may not directly access a data source. Please rebuild this data combination."
 faq:
   - question: "What does Formula.Firewall mean in Power Query?"
-    answer: "It means Power Query's privacy level checks blocked a step from combining data across more than one source, because it can't confirm the combination is safe."
-  - question: "How do I fix Formula.Firewall in Power BI?"
-    answer: "Set explicit privacy levels for every data source involved (File > Options and Settings > Data Source Settings), and check whether a custom column or function is calling another query per row."
+    answer: "Power Query's data privacy firewall stopped a query because it couldn't guarantee that data from one source wouldn't be sent to another. There are two versions of the message: one about the query's structure (a step that both reads a data source and uses another query) and one about privacy levels that can't be combined."
+  - question: "How do I fix \"references other queries or steps, so it may not directly access a data source\"?"
+    answer: "Restructure so that no single step both reads a data source and uses the result of another query. Usually that means giving each source its own query, and doing the combining (merge, lookup, or filter) in a query that only references those queries. Setting privacy levels doesn't fix this version."
+  - question: "How do I fix \"privacy levels which cannot be used together\"?"
+    answer: "Set accurate privacy levels on each source in Data source settings. Sources that are both Organizational, or both Public, can be combined; Private data can't be combined with other sources."
   - question: "Should I just turn on \"Always ignore Privacy Level settings\"?"
-    answer: "Only if every source involved is genuinely trusted at the same level — it disables the protection entirely rather than fixing the underlying combination."
+    answer: "Only for sources you fully trust, and only knowing what it does: it turns the firewall off in Desktop. Test scheduled refresh in the Service before relying on it, because privacy levels there are set per data source with its credentials."
 ---
 
-The full error usually reads:
+The firewall error comes in two versions, and they need different fixes:
 
 ```text
-Formula.Firewall: Query 'Orders' (step 'Added Custom') references
-other queries or steps, so it may not directly access a data source.
-Please rebuild this data combination.
+Formula.Firewall: Query 'Orders' (step 'Added Custom') references other queries or steps,
+so it may not directly access a data source. Please rebuild this data combination.
 ```
-
-This isn't a syntax error or a bug in the query — it's Power Query's **Formula Firewall** refusing to combine data from more than one source until it knows whether that's actually safe. Combining a private/organizational source with a public one (an internal database and a public web API, for example) can leak data from one into the other; the firewall blocks it by default rather than guessing.
-
-## Why This Exists
-
-Every data source in Power Query has a **privacy level** — Public, Organizational, or Private — set the first time it's connected to. When a query's steps end up needing to send data from one source *into* a call against a different source, Power Query checks whether the privacy levels involved allow that combination.
 
 ```text
-Query pulls from Source A (Private)
-        |
-        | a step sends a value from Source A into a call against Source B (Public)
-        |
-Formula Firewall: is this combination allowed?
-        |
-        +-- Privacy levels compatible -> proceeds
-        +-- Privacy levels conflict, unset, or ambiguous -> Formula.Firewall error
+Formula.Firewall: Query 'Orders' (step 'Merged Queries') is accessing data sources that have
+privacy levels which cannot be used together. Please rebuild this data combination.
 ```
 
-## Cause 1: Privacy Levels Were Never Set
+Both come from Power Query's **data privacy firewall**, which exists to stop data from one source leaking into a request to another: a customer list from your database ending up in the URL of a call to a public web API, for example. The first message is about **how the query is built**. The second is about **privacy levels**. Read which one you have before changing anything.
 
-The most common cause. The first time a data source is connected, Power BI usually prompts for a privacy level — but if that prompt was dismissed, skipped, or the source was added programmatically, Power Query has no privacy level to reason about and errs on the side of blocking the combination.
+---
 
-**Fix:** set them explicitly. In Power BI Desktop: **File > Options and Settings > Data Source Settings**, select the source, **Edit Permissions**, and set a **Privacy Level**. Do this for every source involved in the query, not just the one named in the error.
+## How the Firewall Sees a Query
 
-## Cause 2: A Step References a Query From Inside a Per-Row Function
+When the firewall is on, Power Query splits your queries into **partitions**: groups of steps, as small as a single step. Then it applies one rule, described in Microsoft's [data privacy firewall documentation](https://learn.microsoft.com/en-us/power-query/dataprivacyfirewall):
 
-This is the version that actually confuses people, because the query "looks" like it only uses one source. It happens when a custom column or function calls out to another query *per row*, and that other query pulls from a different source.
+> A partition may **either** access compatible data sources, **or** reference other partitions, **but not both.**
+
+When a partition references another, the firewall acts as the gatekeeper for the data passing between them, checking privacy levels on the way. It can't do that if the same partition is also calling a data source directly, so it refuses: that's the first message.
+
+---
+
+## Version 1: "References Other Queries or Steps"
+
+This is a structure problem. Some step reads a data source **and** uses another query's output in the same place. The classic case is a lookup per row:
 
 ```powerquery lineNumbers
-#"Added Custom" = Table.AddColumn(
-    Orders, "ExchangeRate",
-    each GetRate([Currency])
-    // GetRate is a separate query wrapping Web.Contents —
-    // this runs it once per row, with a value from Orders fed into it
-)
+// Query: Orders
+let
+    Source = Sql.Database("sql01", "Sales"),
+    Orders = Source{[Schema = "dbo", Item = "Orders"]}[Data],
+    #"Added Custom" = Table.AddColumn(Orders, "Rate", each GetRate([Currency]))
+in
+    #"Added Custom"
 ```
 
-Each row's call effectively sends a value from `Orders` into a call against whatever source `GetRate` connects to — exactly the cross-source pattern the firewall exists to catch, even though nothing about the M code looks unusual at a glance.
+`GetRate` is another query, a function that calls a currency API with `Web.Contents`. The `Orders` query reads SQL Server directly and, in the same step chain, calls `GetRate` with values from that data. That's both, so the firewall stops it.
 
-**Fix:** pull what's needed out of the per-row call. If `GetRate` only depends on a small set of distinct currency codes, calculate the rates once as their own table first, then merge it in — rather than invoking a separate-source function on every row.
+Other common shapes:
+
+- A filter that uses a value from another query: `Table.SelectRows(Source, each [Region] = SelectedRegion)` where `SelectedRegion` comes from a table in Excel.
+- A file path or URL built from another query's output: `Excel.Workbook(File.Contents(FolderQuery{0}[Path]))`.
+- A merge between a source step and another query inside the same query.
+
+**Setting privacy levels doesn't fix this version.** The query has to be restructured.
+
+### Fix: Separate Reading From Combining
+
+Give each source its own query, and do the combining in a query that only **references** other queries:
 
 ```powerquery lineNumbers
-Rates = Table.Distinct(Table.SelectColumns(Orders, {"Currency"})),
-#"Rates Table" = Table.AddColumn(Rates, "ExchangeRate", each GetRate([Currency])),
-#"Merged" = Table.NestedJoin(Orders, {"Currency"}, #"Rates Table", {"Currency"}, "RateData", JoinKind.LeftOuter)
+// Query: Orders (reads SQL only)
+let
+    Source = Sql.Database("sql01", "Sales"),
+    Orders = Source{[Schema = "dbo", Item = "Orders"]}[Data]
+in
+    Orders
 ```
 
-This still calls `GetRate` once per distinct currency, but it's no longer a per-row cross-source call buried inside `Orders` itself — see [Merge Queries](/docs/power-query/merge-queries) for the merge pattern used here.
-
-## Cause 3: Mismatched Privacy Levels Between Sources
-
-Sometimes privacy levels *are* set, but set inconsistently — one source marked Private, another marked Public, combined in a way Power Query's rules don't allow regardless of what the query actually does with the data.
-
-```text
-Source A: Private        Source B: Public
-        \                    /
-         combined in a query
-                |
-        Formula.Firewall (Private + Public combination not permitted)
+```powerquery lineNumbers
+// Query: Rates (reads the API only, for a fixed list of currencies)
+let
+    Currencies = {"EUR", "GBP", "JPY"},
+    AsTable = Table.FromList(Currencies, Splitter.SplitByNothing(), {"Currency"}),
+    WithRate = Table.AddColumn(AsTable, "Rate", each GetRate([Currency]))
+in
+    WithRate
 ```
 
-**Fix:** align the privacy levels to reflect reality. If both sources genuinely belong to the same trust boundary (e.g., two internal systems), setting both to **Organizational** is usually the accurate fix — not defaulting everything to Public just to make the error disappear.
-
-## The "Ignore Privacy Levels" Setting — Use With Real Caution
-
-Power BI Desktop has an option (**File > Options and Settings > Options > Privacy** > *"Always ignore Privacy Level settings"*) that suppresses this check entirely.
-
-```text
-"Combine data according to Privacy Level settings" (default) -> firewall enforced
-"Always ignore Privacy Level settings"                        -> firewall disabled entirely
+```powerquery lineNumbers
+// Query: Orders with Rates (references only, reads no source itself)
+let
+    Merged = Table.NestedJoin(Orders, {"Currency"}, Rates, {"Currency"}, "R", JoinKind.LeftOuter),
+    Expanded = Table.ExpandTableColumn(Merged, "R", {"Rate"})
+in
+    Expanded
 ```
 
-This does make the error go away, but it removes the protection that stops private data from being sent to a public source through query combination — it's a real setting for a real reason, not just an annoying default. Reserve it for cases where every source involved is genuinely trusted at the same level, not as a first response to this error.
+The rate lookup no longer depends on the Orders data, and the final query only references other queries. Turn off **Enable load** on the two staging queries; see [Reference vs. Duplicate Queries](/docs/power-query/reference-vs-duplicate).
+
+If the values really must come from the other source, for example the list of currencies is only known from Orders, the alternative is the opposite: put every source access in **one** query, so it's a single partition. Inline the steps rather than referencing a separate query.
+
+---
+
+## Version 2: "Privacy Levels Which Cannot Be Used Together"
+
+This one **is** about privacy levels. Each source has one: **Public**, **Organizational**, **Private**, or unset. Sources combined in the same partition must be compatible: **both Public, or both Organizational**. Private data can't be combined with other sources.
+
+**Fix:** set accurate levels. In Power BI Desktop: **File → Options and settings → Data source settings**, select each source, **Edit Permissions**, and set the **Privacy Level**. Two internal systems are usually both **Organizational**. Don't mark internal data **Public** to make the error go away: that tells Power Query it's safe to send that data anywhere.
+
+In the Power BI Service, privacy levels are set per data source along with its credentials, in the semantic model's settings or on the gateway connection. Check them there too if refresh fails only after publishing.
+
+---
+
+## "Always Ignore Privacy Level Settings"
+
+Power BI Desktop has an option, **File → Options and settings → Options → Current file → Privacy → Always ignore Privacy Level settings** (it also appears under Global). It turns the firewall off, which makes both messages disappear and can also make combining queries faster.
+
+Use it only when every source is trusted. And test scheduled refresh in the Service before relying on it: there, privacy levels are set per data source with its credentials, so a report that only works with the firewall off in Desktop may behave differently after publishing.
 
 ## Common Mistakes
 
-**Reaching for "Ignore Privacy Levels" before understanding why the error fired.** It's the fastest fix and often the wrong one — it silences the check rather than addressing whether the data combination is actually safe.
+**Changing privacy levels to fix the "references other queries" version.** It's a structure problem; privacy levels don't touch it.
 
-**Not setting privacy levels for every source in the query, only the one named in the error.** The error names one query/step, but the conflict is between two (or more) sources — the fix usually needs attention on both sides.
+**Marking everything Public.** It silences version 2 by declaring confidential data safe to share.
 
-**Assuming this is a bug because the query "worked before."** It's common for this to appear after a seemingly unrelated change — a new column, a new merge, a refactored custom function — because that change is what introduced the first genuine cross-source dependency. See [Query Folding](/docs/power-query/query-folding#what-breaks-folding) for a related class of "worked yesterday, breaks today" Power Query surprises.
+**Assuming the query is broken because it worked yesterday.** A new merge, filter, or custom column is often the first step that combines two partitions.
+
+**Fixing one query and moving on.** The error names one step, but every query that mixes reading and combining the same way will hit it.
 
 ## Next Steps
 
+- [Reference vs. Duplicate Queries](/docs/power-query/reference-vs-duplicate)
 - [Merge Queries](/docs/power-query/merge-queries)
-- [M Language](/docs/power-query/m-language)
-- [Query Folding](/docs/power-query/query-folding)
-- [Power Query Editor](/docs/power-query/editor)
 - [Web.Contents](/docs/power-query/web-contents)
-- [Web.Contents Can Only Accept a Literal String as the First Parameter](/blog/web-contents-literal-string-parameter-error)
+- [Power BI Web.Contents With a Dynamic URL Won't Refresh](/blog/web-contents-literal-string-parameter-error)
+- [Power BI: This Dataset Includes a Dynamic Data Source](/blog/dynamic-data-source-refresh-error)

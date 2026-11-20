@@ -8,7 +8,7 @@ card:
   text: "Last week: refresh in 8 seconds. This week: refresh in 6 minutes."
 faq:
   - question: "Why did my Power Query refresh suddenly get slower without me changing anything major?"
-    answer: "A small step — a custom column, a rename, a Table.Buffer — likely broke query folding somewhere in the chain, forcing everything after it to run locally against the full dataset instead of at the source."
+    answer: "A small step, such as an index column, a custom column using a function the source doesn't support, or Table.Buffer, likely broke query folding somewhere in the chain, forcing everything after it to run locally against the full dataset instead of at the source."
   - question: "How do I know if a query is folding?"
     answer: "Right-click any step in Applied Steps and check whether \"View Native Query\" is available. If it's grayed out, folding has already stopped by that step or an earlier one."
   - question: "Does the order of steps really affect performance?"
@@ -40,6 +40,8 @@ Renamed Columns -> still grayed out (nothing after a break can fold again)
 
 Work backward from the last step, checking each one, until the option is available again — that's the exact boundary where folding broke.
 
+One caveat: some connectors fold without offering **View Native Query**, so a grayed-out option isn't proof on its own. Newer versions of Power BI Desktop also show a **query folding indicator** beside each step in Applied Steps, which is the quicker check where it's available.
+
 ## Cause 1: A New Step Was Added in the Wrong Position
 
 The most common cause of a query that "used to be fast." Adding a new step doesn't insert it at the end of a logical plan — it inserts it exactly where Applied Steps shows it, and everything downstream inherits whatever folding state that step leaves behind.
@@ -53,18 +55,15 @@ After:   Source -> Filter (folds) -> Added Custom Column (doesn't fold) -> Selec
 
 **Fix:** move steps that can't fold (custom columns, complex conditional logic) as late in the sequence as possible — after filtering and column selection, not before. See [Ordering Steps to Preserve Folding](/docs/power-query/query-folding#ordering-steps-to-preserve-folding).
 
-## Cause 2: A Custom Column With Row-by-Row Logic
+## Cause 2: A Step the Source Can't Translate
 
-`Table.AddColumn` with an `each` expression referencing M functions that have no equivalent in the source's native query language can't be translated back — the entire step, and everything after it, has to run locally.
+A step folds only if Power Query can translate it into the source's language. Simple conditional columns and many text functions do translate for SQL Server (`Text.Contains` becomes a `LIKE`, for example), so don't assume a custom column breaks folding: check. Steps that reliably don't fold include an **index column**:
 
 ```powerquery lineNumbers
-#"Added Custom" = Table.AddColumn(
-    Source, "Flag",
-    each if Text.Contains([Notes], "urgent") then "Y" else "N"
-)
+#"Added Index" = Table.AddIndexColumn(Source, "Index", 1, 1)
 ```
 
-This is often unavoidable — not every transformation has a source-side equivalent — but it's worth knowing it's the trade being made, and placing it as late as possible so it affects the smallest number of rows and downstream steps.
+and custom columns that call functions with no source equivalent, or your own custom functions. When a step like that is unavoidable, place it as late as possible, after the filters and column selection, so the source still does that work.
 
 ## Cause 3: Table.Buffer in the Wrong Spot
 

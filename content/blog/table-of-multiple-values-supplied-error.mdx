@@ -62,7 +62,7 @@ Has Discounted Sales =
 IF(FILTER(FactSales, FactSales[Discount] > 0), "Yes", "No")
 ```
 
-`IF()`'s first argument needs a single boolean. `FILTER()` returns a table — every matching row, not a yes/no answer. If the filter happens to match exactly one row, DAX's single-row coercion papers over the mistake; the instant it matches more than one (which, for "any discounted sale," is normal), the error appears.
+`IF()`'s first argument needs a single boolean. `FILTER()` returns a table — every matching row, not a yes/no answer. And because `FILTER(FactSales, ...)` returns every column of `FactSales`, DAX can't convert it to a single value even when only one row matches: the one-row conversion only works for a single column. Depending on the case, the message is this one or *the expression refers to multiple columns*.
 
 **Fix:** ask for a count or a boolean condition directly, instead of the filtered rows themselves.
 
@@ -78,7 +78,7 @@ Customer Order Count =
 RELATEDTABLE(Orders)
 ```
 
-`RELATEDTABLE()` always returns a table — every row on the "many" side of a relationship — even in a context (like a calculated column on the "one" side) where it's tempting to treat it as "the customer's orders" as if that resolved to something scalar. It never does on its own.
+`RELATEDTABLE()` always returns a table — every row and column on the "many" side of a relationship — even in a context (like a calculated column on the "one" side) where it's tempting to treat it as "the customer's orders" as if that resolved to something scalar. It never does on its own: with all of `Orders`' columns, there's no single value to convert to.
 
 **Fix:** wrap it in an aggregator that actually reduces the table to one number.
 

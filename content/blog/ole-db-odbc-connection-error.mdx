@@ -12,7 +12,7 @@ faq:
   - question: "Why does a connection work in Power BI Desktop but fail in the Service?"
     answer: "Desktop typically connects directly using the signed-in user's own credentials or drivers installed locally. The Service refreshes through a gateway, which needs its own driver installation and its own configured credentials — a mismatch between the two is the most common cause of a Desktop-works, Service-fails pattern."
   - question: "How do I fix a 32-bit/64-bit ODBC driver mismatch?"
-    answer: "Check the bitness of both Power BI Desktop (or the gateway) and the installed ODBC driver in the Windows ODBC Data Source Administrator — both need to match. It's common to have only a 32-bit driver installed when the application connecting to it is 64-bit, or vice versa."
+    answer: "Current Power BI Desktop and the on-premises data gateway are both 64-bit, so they need the 64-bit ODBC driver. Check in the 64-bit ODBC Data Source Administrator that the driver is installed there; having only the 32-bit driver is a common cause."
   - question: "Does a timeout error mean the database is too slow?"
     answer: "Not necessarily. It can mean the query itself is too complex or unfiltered, that the ODBC driver's own timeout setting is too low for a legitimately long-running query, or that a firewall or network path is dropping the connection before the database responds at all."
 ---

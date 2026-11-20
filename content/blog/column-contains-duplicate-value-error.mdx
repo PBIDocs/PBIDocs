@@ -117,11 +117,23 @@ CustomerKey | CustomerName
 **Fix:** `Table.Distinct()` on the full row (not just the key) removes exact duplicates safely. If the duplicate rows have *different* values for the same key (not exact duplicates), that's actually [Cause 1](#cause-1-the-table-isnt-actually-a-dimension-table-yet) or a data quality issue that needs a decision about which row is authoritative — usually the most recent one:
 
 ```powerquery lineNumbers
-#"Sorted Rows" = Table.Sort(Source, {{"LastModified", Order.Descending}}),
+#"Sorted Rows" = Table.Buffer(Table.Sort(Source, {{"LastModified", Order.Descending}})),
 #"Removed Duplicates" = Table.Distinct(#"Sorted Rows", {"CustomerKey"})
 ```
 
-`Table.Distinct` keeps the *first* row it encounters per key, which is why sorting by most-recent-first beforehand matters.
+`Table.Distinct` keeps the first row it meets per key, which is why sorting most-recent-first matters, and why the sort is wrapped in `Table.Buffer`. Without it, Power Query doesn't guarantee that the sort order survives into `Table.Distinct` (especially when the steps fold to a database), and it can keep an older row. See [Table.Buffer](/docs/power-query/table-buffer).
+
+---
+
+## Cause 5: Values That Differ Only in Capitals
+
+Power Query compares text **case-sensitively**; the data model doesn't. So `"abc"` and `"ABC"` are two distinct keys in Power Query, survive `Table.Distinct`, and load as the same value in the model, which then reports a duplicate. The Group By check above won't find them either, because it's case-sensitive too.
+
+**Fix:** make case consistent before removing duplicates, for example with **Transform → Format → UPPERCASE** on the key column, or remove duplicates ignoring case:
+
+```powerquery lineNumbers
+#"Removed Duplicates" = Table.Distinct(Source, {"ProductKey", Comparer.OrdinalIgnoreCase})
+```
 
 ---
 

@@ -64,7 +64,7 @@ Actual:   USERPRINCIPALNAME() = "jsmith@company.onmicrosoft.com"
 Mapping table has one, function returns the other -> no match, no rows
 ```
 
-**Fix:** confirm the actual UPN value (Entra ID admin center, or `SELECTEDVALUE(USERPRINCIPALNAME())` in a test measure) rather than assuming it matches the email address people use day to day. See [Dynamic Row-Level Security](/docs/power-bi-service/security#dynamic-row-level-security) and [Dynamic RLS with a Mapping Table](/docs/power-bi-service/security#dynamic-rls-with-a-mapping-table).
+**Fix:** confirm the actual UPN value (Entra ID admin center, or a test measure `Who Am I = USERPRINCIPALNAME()` shown in a card while signed in as the user) rather than assuming it matches the email address people use day to day. See [Dynamic Row-Level Security](/docs/power-bi-service/security#dynamic-row-level-security) and [Dynamic RLS with a Mapping Table](/docs/power-bi-service/security#dynamic-rls-with-a-mapping-table).
 
 ## Cause 4: Testing as an Admin Without Realizing It
 

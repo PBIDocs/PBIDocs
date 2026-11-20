@@ -467,7 +467,7 @@ Continue building your DAX skills:
 
 Want all the filter-modifying functions side by side? See the [DAX CALCULATE Modifiers Cheat Sheet](/blog/dax-calculate-modifiers-cheat-sheet).
 
-Got "a function 'CALCULATE' has been used in a True/False expression"? That's from nesting CALCULATE directly inside a boolean filter condition — see [that error explained](/blog/calculate-true-false-expression-error) for why context transition makes that specific nesting circular.
+Got "a function 'PLACEHOLDER' (or 'CALCULATE') has been used in a True/False expression"? A filter argument like `[Total Sales] > 200` uses a measure in the shortcut condition form, which isn't allowed — see [that error explained](/blog/calculate-true-false-expression-error) for the FILTER and variable fixes.
 
 Got "You can't create a direct active relationship between these tables" while building the model `USERELATIONSHIP()` needs? See [that error explained](/blog/direct-active-relationship-ambiguity-error) for the two real fixes.
 

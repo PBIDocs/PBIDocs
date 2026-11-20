@@ -75,13 +75,16 @@ Full Name =
 `CONCATENATE()` rarely earns its keep over `&` since it caps out at two arguments — chaining several `&`s reads just as clearly and isn't limited. `CONCATENATEX()` is the one that actually does something `&` can't: turning a whole table's worth of per-row values into one delimited string.
 
 ```dax lineNumbers
-Products in Order =
+Products Selected =
 CONCATENATEX(
-    RELATEDTABLE(FactOrderLines),
+    VALUES(DimProduct[ProductName]),
     DimProduct[ProductName],
-    ", "
+    ", ",
+    DimProduct[ProductName], ASC
 )
 ```
+
+As a measure, this lists the products in the current filter context, in alphabetical order, ready for a dynamic title.
 
 ## Replacing Text
 
@@ -108,7 +111,7 @@ FORMAT([Total Sales], "$#,##0.00")
 |---|---|
 | `"$#,##0.00"` | `$1,234.50` |
 | `"0.0%"` (on `0.5`) | `50.0%` |
-| `"General Date"` (on a date) | The system's short date format |
+| `"General Date"` (on a date) | The short date, plus the time if there is one |
 
 `FORMAT()` always returns text, not a number — useful for a display string in a card or a concatenated title, wrong for anything that still needs to be summed, compared, or sorted numerically afterward. To change how a measure *displays* while keeping it a number, use a custom format string instead; the [Format String Builder](/tools/format-string-builder) writes and previews one.
 

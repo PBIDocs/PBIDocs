@@ -15,6 +15,17 @@ const changelog: { date: string; entries: ReactNode[] }[] = [
     date: '2026-11-20',
     entries: [
       <>
+        Accuracy review of every blog post from August to October. Rewrote five whose diagnosis was wrong:{' '}
+        <Link href="/blog/formula-firewall-privacy-level-error">Formula.Firewall</Link> (the &quot;references other
+        queries&quot; version is about query structure, not privacy levels),{' '}
+        <Link href="/blog/web-contents-literal-string-parameter-error">Web.Contents with a dynamic URL</Link>,{' '}
+        <Link href="/blog/cannot-convert-null-to-type-table-error">null to type Table</Link>,{' '}
+        <Link href="/blog/calculate-true-false-expression-error">CALCULATE in a True/False expression</Link>, and{' '}
+        <Link href="/blog/direct-active-relationship-ambiguity-error">direct active relationship</Link>. Corrected
+        sections in eleven more, including single value for column, duplicate values (case and Table.Buffer),
+        not enough memory, and the keyboard shortcuts sheet.
+      </>,
+      <>
         Rewrote <Link href="/blog/key-didnt-match-any-rows-error">The Key Didn&apos;t Match Any Rows in the Table</Link>.
         It&apos;s a Power Query navigation error (a renamed sheet, a moved SharePoint file, a changed schema), not a
         LOOKUPVALUE one as the earlier version said. The genuine LOOKUPVALUE advice moved to a new{' '}

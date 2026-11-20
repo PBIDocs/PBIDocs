@@ -9,8 +9,8 @@ card:
 faq:
   - question: "Why does Power BI Desktop run out of memory during refresh?"
     answer: "Almost always because a query is pulling more raw, unaggregated rows or columns into memory than the available RAM can hold at once — often due to missing filters, unnecessary columns, or a Table.Buffer call on a large table."
-  - question: "Does switching to 64-bit Power BI Desktop fix memory errors?"
-    answer: "Often, yes, if the current install is 32-bit — 32-bit processes are capped at roughly 2-4 GB of addressable memory regardless of how much RAM the machine has, while 64-bit Desktop can use far more."
+  - question: "Could a 32-bit version of Power BI Desktop be the cause?"
+    answer: "Only on a very old install. Microsoft stopped releasing 32-bit Power BI Desktop in 2023, and current versions are 64-bit only. If you're still on a 32-bit build, updating removes its 2 to 4 GB memory ceiling."
   - question: "Should I use Table.Buffer to fix a memory error?"
     answer: "No — Table.Buffer forces a table to be fully materialized in memory, which uses more memory, not less. It solves a different problem (stabilizing a volatile source), not memory pressure."
   - question: "Is DirectQuery a fix for memory errors during refresh?"
@@ -59,16 +59,11 @@ Memory usage far exceeds available RAM
 
 **Fix:** filter rows and remove columns that aren't needed for analysis *before* loading, not after — ideally in a way that folds back to the source (see [Query Folding](/docs/power-query/query-folding)) so the filtering happens at the source, not after already pulling everything into Power Query.
 
-## Cause 2: 32-Bit Power BI Desktop
+## Cause 2: A Very Old 32-Bit Install
 
-32-bit processes are limited to roughly 2-4 GB of addressable memory no matter how much physical RAM the machine has — a limit that has nothing to do with the actual data volume.
+Microsoft stopped releasing 32-bit Power BI Desktop in 2023, so current versions are 64-bit only. On an old 32-bit install, though, the process can only use roughly 2 to 4 GB of memory, however much RAM the machine has.
 
-```text
-Machine RAM: 32 GB
-32-bit Power BI Desktop: still capped around 2-4 GB usable
-```
-
-**Fix:** check **File > Help > About Power BI Desktop** for the current bitness, and install the 64-bit version if it isn't already in use — this alone resolves a large share of memory errors on machines that otherwise have plenty of RAM.
+**Fix:** check **Help → About** in Power BI Desktop, and update to the current version if it's an old build.
 
 ## Cause 3: Table.Buffer on a Large Table
 
@@ -88,11 +83,11 @@ Every query open in the Power Query Editor holds a data preview in memory. Worki
 
 ## Common Mistakes
 
-**Assuming the machine needs more RAM before checking Desktop's bitness.** A 32-bit install caps usable memory regardless of physical RAM — check this before concluding the fix requires new hardware.
+**Assuming the machine needs more RAM before checking the model.** Unneeded columns, high-cardinality text, and auto date/time tables often account for more memory than the rows themselves.
 
 **Adding Table.Buffer as a general "make it more reliable" habit.** It solves source volatility, not performance or memory, and applying it broadly on large tables actively works against the memory problem being diagnosed here.
 
-**Filtering after the type conversion step instead of before.** A filter added late in a query only reduces what's *displayed* in the editor preview at that step — everything before it has already been pulled through in full. Filtering early (and in a way that folds to the source) is what actually reduces memory pressure.
+**Filtering late, after a step that stops folding.** A late filter still reduces what's loaded, but if folding has already stopped before it, every row is first read from the source and processed in Power Query. Filter early, while the step still folds, so the source sends only the rows you need.
 
 ## Next Steps
 
