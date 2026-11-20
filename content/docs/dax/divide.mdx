@@ -29,7 +29,7 @@ Total Sales = 500,000  -> Profit Margin = 0.24
 Total Sales = 0        -> Profit Margin = BLANK (not an error)
 ```
 
-The equivalent written with the `/` operator errors out the entire visual the moment any row or subtotal has a zero or blank denominator:
+The equivalent written with the `/` operator doesn't fail. It returns something worse: a value that looks like a number.
 
 ```dax lineNumbers
 Profit Margin (Unsafe) =
@@ -37,7 +37,8 @@ Profit Margin (Unsafe) =
 ```
 
 ```text
-Total Sales = 0  -> "Can't divide by zero" — the whole visual breaks, not just that one value
+Total Profit = 120,000, Total Sales = 0  -> Infinity
+Total Profit = 0,       Total Sales = 0  -> NaN (not a number)
 ```
 
 ---
@@ -62,11 +63,11 @@ A chart that needs a real zero bar (rather than a gap in the axis) is the most c
 
 ## Why Not Just Use `/`?
 
-`/` is fine for a calculation where the denominator is mathematically guaranteed never to be zero or blank — inside a fixed conversion constant, for example. The moment a denominator comes from data (a measure, a column, an aggregation that could legitimately be empty for some filter combination), `/` is one edge case away from breaking a report.
+`/` is fine for a calculation where the denominator is mathematically guaranteed never to be zero or blank — inside a fixed conversion constant, for example. The moment a denominator comes from data (a measure, a column, an aggregation that could legitimately be empty for some filter combination), `/` is one edge case away from showing **Infinity** or **NaN** in a report, or quietly distorting a total or an average that includes it.
 
 ```text
-/ (division operator):  fast to type, breaks the visual on a zero/blank denominator
-DIVIDE():                one extra argument, handles zero/blank cleanly every time
+/ (division operator):  fast to type, returns Infinity or NaN on a zero/blank denominator
+DIVIDE():                one extra argument, returns BLANK (or your fallback) instead
 ```
 
 `DIVIDE()` also has a minor performance edge over wrapping `/` in a manual `IF(denominator = 0, ...)` check, since it's a single optimized operation rather than an extra conditional evaluated on every row.
@@ -77,7 +78,7 @@ DIVIDE():                one extra argument, handles zero/blank cleanly every ti
 
 ### Still Reaching for `/` in Report-Facing Measures
 
-The habit of typing `/` is hard to break, but any measure a report visual will actually display should default to `DIVIDE()` — the cost of being wrong (a broken visual) is much higher than the cost of typing a few extra characters.
+The habit of typing `/` is hard to break, but any measure a report visual will actually display should default to `DIVIDE()` — the cost of being wrong (Infinity in a card, or a distorted total) is much higher than the cost of typing a few extra characters.
 
 ### Assuming DIVIDE Returns 0 by Default
 

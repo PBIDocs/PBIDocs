@@ -38,10 +38,13 @@ ISBLANK([Total Sales])         // TRUE only when Total Sales is genuinely blank
 
 DAX's comparison operators (`=`, `<`, `>`, and the rest) automatically convert `BLANK()` to `0` for a numeric comparison before comparing — so `BLANK() = 0` evaluates to `TRUE`. `ISBLANK()` doesn't do this conversion; it specifically tests whether the value is `BLANK()`, and returns `FALSE` for a real, actual `0`.
 
-These two checks answer different questions, and it's easy to reach for the wrong one:
+DAX also has a **strict equality** operator, `==`, which doesn't convert: `BLANK() == 0` is `FALSE`, and `[Total Sales] == 0` is `TRUE` only for a real zero.
+
+These checks answer different questions, and it's easy to reach for the wrong one:
 
 ```text
 ISBLANK(value)   -> "is this genuinely missing?"
+value == 0       -> "is this an actual zero?" (blank doesn't count)
 value = 0        -> "is this missing, OR an actual zero?" (can't tell which)
 ```
 
@@ -73,7 +76,7 @@ As covered above — a plain `= 0` comparison silently also matches a real zero,
 
 ### Forgetting Comparisons Convert BLANK() Automatically
 
-Any numeric comparison against a measure that can return `BLANK()` — not just `= 0`, but `< 0`, `> 100`, and so on — treats that blank as `0` first. A filter like `[Margin] < 0` also catches every row where `[Margin]` is blank, which may or may not be the intended set of rows.
+Any numeric comparison against a measure that can return `BLANK()` — not just `= 0`, but `< 0`, `> 100`, and so on — treats that blank as `0` first. A test like `[Margin] <= 0` also catches every row where `[Margin]` is blank, and `[Margin] < 10` does too, which may or may not be the intended set of rows. (`[Margin] < 0` doesn't: blank becomes 0, and 0 isn't less than 0.)
 
 ---
 

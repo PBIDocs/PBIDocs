@@ -34,17 +34,18 @@ This returns a table — every row of `DimProduct` where `Category` equals `"Bik
 
 ## CALCULATETABLE() vs. CALCULATE()
 
-`CALCULATE()` and `CALCULATETABLE()` modify filter context identically. The real difference is about the first argument's type, not the filtering behavior:
+`CALCULATE()` and `CALCULATETABLE()` modify filter context identically. The difference is what they return: `CALCULATE()` always returns a **single value**, `CALCULATETABLE()` always returns a **table**.
 
 ```dax lineNumbers
-CALCULATE(VALUES(DimProduct[Category]), ...)        -- returns a table (CALCULATE adapts to its argument)
-CALCULATETABLE(VALUES(DimProduct[Category]), ...)   -- also returns a table (identical result here)
+CALCULATE(SUM(FactSales[SalesAmount]), ...)         -- a single value
+CALCULATETABLE(VALUES(DimProduct[Category]), ...)   -- a table of categories
 
-CALCULATE(SUM(FactSales[SalesAmount]), ...)         -- returns a scalar
-CALCULATETABLE(SUM(FactSales[SalesAmount]), ...)    -- errors — SUM() returns a scalar, not a table
+CALCULATE(VALUES(DimProduct[Category]), ...)        -- works only if exactly one category remains;
+                                                    -- otherwise "a table of multiple values was supplied"
+CALCULATETABLE(SUM(FactSales[SalesAmount]), ...)    -- error: SUM() returns a value, not a table
 ```
 
-`CALCULATE()`'s return type matches whatever its first argument returns — a scalar expression gives back a scalar, a table expression gives back a table. `CALCULATETABLE()` only accepts the second case; passing it a scalar expression is a genuine error, not a silent conversion.
+Give `CALCULATE()` a table and DAX can only use it if the table has exactly one row and one column, which it converts to that single value. For anything else, a table result needs `CALCULATETABLE()`.
 
 <CalculateVsCalculateTablePlayground />
 
@@ -99,9 +100,9 @@ CALCULATETABLE(
 
 `SUM()` returns a single number, not a table — `CALCULATETABLE()` requires its first argument to actually evaluate to a table, and errors here rather than silently wrapping the scalar in a one-row table. [CALCULATE()](/docs/dax/calculate) is the right function for a scalar aggregation like this one.
 
-### Assuming CALCULATE() Can't Return a Table
+### Using CALCULATE() Where a Table Is Needed
 
-The reverse misconception is just as common: assuming `CALCULATE()` only ever returns scalars, and reaching for `CALCULATETABLE()` purely out of habit even in places where `CALCULATE()` would return the exact same table. Both are valid when the first argument is already a table expression — `CALCULATETABLE()` is the clearer choice for readability, not because `CALCULATE()` is incapable of the same result.
+`CALCULATE()` returns a single value. A `VAR` meant to hold a filtered table, or a filter argument built from one, needs `CALCULATETABLE()`. Using `CALCULATE()` there works only by accident, while exactly one value remains, and fails with [a table of multiple values was supplied](/blog/table-of-multiple-values-supplied-error) as soon as more do.
 
 ### Using CALCULATETABLE() Where a Measure Is Actually Needed
 
@@ -111,7 +112,7 @@ A calculated table is evaluated once per refresh, not dynamically per filter con
 
 ## Best Practices
 
-- Use `CALCULATETABLE()` when the intent is explicitly "this step produces a table" — defining a calculated table, or capturing an intermediate `VAR` — even in cases where `CALCULATE()` would technically work identically.
+- Use `CALCULATETABLE()` whenever a step produces a table — defining a calculated table, or capturing an intermediate `VAR` — and `CALCULATE()` when it produces a single value.
 - Keep the first argument to `CALCULATETABLE()` unambiguously a table expression (a bare table reference, `VALUES()`, `FILTER()`, `SUMMARIZE()`, and similar), never an aggregation function.
 - Combine with `VAR` to name the captured table meaningfully, rather than nesting `CALCULATETABLE()` calls directly inside each other.
 

@@ -30,7 +30,7 @@ OrderID | Discount
 COUNTROWS(FactSales) -> 3
 ```
 
-Every row counts, including the one with a blank `Discount` — `COUNTROWS()` doesn't look at any specific column at all.
+Every row counts, including the one with a blank `Discount` — `COUNTROWS()` doesn't look at any specific column at all. One detail: over an empty table, `COUNTROWS()` returns BLANK, not 0.
 
 ---
 
@@ -39,8 +39,8 @@ Every row counts, including the one with a blank `Discount` — `COUNTROWS()` do
 | Function | Counts |
 |---|---|
 | `COUNTROWS(Table)` | Every row in the table |
-| `COUNT(Column)` | Rows where that column contains a number |
-| `COUNTA(Column)` | Rows where that column contains any non-blank value |
+| `COUNT(Column)` | Rows where that column isn't blank (numbers, dates, or text) |
+| `COUNTA(Column)` | The same, and also counts TRUE/FALSE values |
 
 ```text
 Same FactSales table as above:

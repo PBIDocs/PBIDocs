@@ -27,19 +27,19 @@ With no relationship issues, both return the same count — every distinct value
 
 ## The Referential Integrity Blank Row
 
-If `DimProduct[Category]` sits on the "one" side of a relationship, and the fact table on the "many" side has a row whose foreign key doesn't match any row in `DimProduct` (a referential integrity violation — a `Category` value in `FactSales` that simply doesn't exist in `DimProduct`), `VALUES()` adds an **extra blank row** to its result to account for that unmatched fact data. `DISTINCT()` never does this.
+If `DimProduct` sits on the "one" side of a relationship, and the fact table on the "many" side has a row whose key doesn't match any row in `DimProduct` (a referential integrity violation — a `ProductKey` in `FactSales` that simply doesn't exist in `DimProduct`), Power BI adds a blank row to `DimProduct` for that unmatched data. `VALUES()` on any column of `DimProduct` then includes an **extra blank value**. `DISTINCT()` never does.
 
 <ValuesDistinctPlayground />
 
 ```text
 DimProduct[Category]: Electronics, Furniture, Apparel
-FactSales has a row with Category = "Gadgets"   <- not in DimProduct at all
+FactSales has a row with ProductKey = 9999      <- no such product in DimProduct
 
 COUNTROWS(VALUES(DimProduct[Category]))    -> 4   (3 real categories + 1 blank row)
 COUNTROWS(DISTINCT(DimProduct[Category]))  -> 3   (3 real categories, no blank row)
 ```
 
-This is exactly why a matrix visual with a dimension column on rows can show an unexpected `(Blank)` row: it's not a blank cell hiding somewhere in the data, it's `VALUES()` (which is what most visuals use internally to populate rows) flagging fact rows that don't have anywhere real to belong.
+This is exactly why a matrix visual with a dimension column on rows can show an unexpected `(Blank)` row: it's not a blank cell hiding somewhere in the data, it's the blank row Power BI added for fact rows that don't have anywhere real to belong. Visuals show it the same way `VALUES()` does.
 
 ---
 

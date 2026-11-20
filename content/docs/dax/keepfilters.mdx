@@ -33,13 +33,13 @@ This is the documented, correct default behavior of `CALCULATE()` — not a bug 
 CALCULATE(SUM(Sales[Amount]), KEEPFILTERS(Sales[Category] = "Furniture"))
 ```
 
-Wrapping the condition in `KEEPFILTERS()` makes it combine with the existing filter using `AND`, instead of overwriting it. With the visual still filtered to `Electronics`, this now asks for rows that are **both** `Electronics` and `Furniture` at once — impossible for a single-valued `Category` column — so the result is `0` (technically `BLANK()`, since no rows satisfy both conditions), not the plain Furniture total.
+Wrapping the condition in `KEEPFILTERS()` makes it combine with the existing filter using `AND`, instead of overwriting it. With the visual still filtered to `Electronics`, this now asks for rows that are **both** `Electronics` and `Furniture` at once — impossible for a single-valued `Category` column — so the result is `BLANK()`, since no rows satisfy both conditions, not the plain Furniture total.
 
 ```text
 Visual filtered to: Category = Electronics
 
 CALCULATE(..., Category = "Furniture")                -> 300  (Furniture's own total; replaced Electronics)
-CALCULATE(..., KEEPFILTERS(Category = "Furniture"))    -> 0    (Electronics AND Furniture -> no matching rows)
+CALCULATE(..., KEEPFILTERS(Category = "Furniture"))    -> BLANK (Electronics AND Furniture -> no matching rows)
 ```
 
 ---

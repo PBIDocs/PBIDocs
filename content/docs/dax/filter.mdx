@@ -173,17 +173,15 @@ CALCULATE(
 )
 ```
 
-However, more complex conditions require FILTER.
+Simple conditions on columns don't need `FILTER()`, even comparisons and several columns from the same table: `CALCULATE([Total Sales], FactSales[SalesAmount] > 1000)` works as it is.
 
-Examples include:
+`FILTER()` is needed when the condition:
 
-- Sales greater than a threshold
-- Multiple conditions
-- Dynamic comparisons
-- Date ranges
-- Ranking calculations
+- Uses a **measure**, such as customers whose `[Total Sales]` is over 1,000
+- Compares columns from **different tables**
+- Needs to keep the existing filters on the table, rather than replace them
 
-FILTER provides the flexibility needed for these advanced scenarios.
+FILTER provides the flexibility needed for these scenarios.
 
 ---
 
@@ -374,7 +372,7 @@ CALCULATE(
 )
 ```
 
-This is cleaner and typically performs better than:
+This is cleaner and typically performs better than the version below. The two also behave differently: the simple form *replaces* any existing filter on `Category`, while `FILTER(DimProduct, ...)` iterates only the products already visible, so it *keeps* the existing filters on `DimProduct`.
 
 ```dax lineNumbers
 Bike Sales =

@@ -16,10 +16,13 @@ IFERROR(value, value_if_error)
 ## Catching a Real Error
 
 ```dax lineNumbers
-IFERROR([Total Sales] / 0, "N/A")
+Code Number =
+IFERROR(VALUE(Product[Code]), BLANK())
 ```
 
-Dividing by the literal `0` with the raw `/` operator produces a genuine DAX error — without `IFERROR()`, that error can break the entire visual. Wrapped in `IFERROR()`, the error is caught and `"N/A"` is returned instead.
+`VALUE("A-17")` can't convert text to a number, which is a genuine DAX error: in a calculated column it fails the whole column, and in a measure it breaks the visual. Wrapped in `IFERROR()`, the error is caught and the fallback is returned instead.
+
+(Dividing by zero is **not** an error in DAX: `10 / 0` returns Infinity, so `IFERROR()` doesn't catch it. Use [DIVIDE()](/docs/dax/divide) for that.)
 
 <IfErrorPlayground />
 
@@ -34,8 +37,9 @@ IFERROR(SUM(Sales[Amount]), "N/A")
 If the current filter context has zero matching rows, `SUM()` returns `BLANK()` — not an error. `IFERROR()` only intercepts genuine errors, so this passes the `BLANK()` straight through unchanged; the `"N/A"` fallback is never used, even though the result looks just as "empty" to a viewer as an error would.
 
 ```text
-[Total Sales] / 0                          -> Error: division by zero
-IFERROR([Total Sales] / 0, "N/A")          -> "N/A"          (caught)
+VALUE("A-17")                              -> Error: can't convert to a number
+IFERROR(VALUE("A-17"), BLANK())            -> BLANK          (caught)
+[Total Sales] / 0                          -> Infinity       (not an error, so not caught)
 
 SUM(Sales[Amount])   with 0 matching rows  -> BLANK()
 IFERROR(SUM(Sales[Amount]), "N/A")         -> BLANK()        (not caught -- blank isn't an error)
@@ -65,8 +69,8 @@ Catching every error with a generic fallback can hide a real modeling or formula
 
 ## Best Practices
 
-- Reach for `IFERROR()` specifically for expressions that can genuinely error (a raw `/` operator, a type-mismatch-prone calculation) — not as a catch-all for anything that might look empty.
-- Use `DIVIDE()` instead of `/` to prevent a division error in the first place, rather than catching it after the fact.
+- Reach for `IFERROR()` specifically for expressions that can genuinely error (a text-to-number conversion, a type-mismatch-prone calculation) — not as a catch-all for anything that might look empty.
+- Use `DIVIDE()` instead of `/` to avoid Infinity and NaN results; `IFERROR()` can't catch those, because they aren't errors.
 - Use `ISBLANK()` or `COALESCE()` when the actual goal is converting a blank result to a specific fallback — `IFERROR()` doesn't do this.
 
 ---

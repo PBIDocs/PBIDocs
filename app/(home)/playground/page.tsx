@@ -91,7 +91,7 @@ const daxPlaygrounds: PlaygroundEntry[] = [
   {
     fn: 'IFERROR()',
     href: '/docs/dax/iferror#try-it-live',
-    pitch: 'Watch IFERROR catch a real error, then pass a BLANK() straight through untouched.',
+    pitch: 'Watch IFERROR catch a real error, then miss divide-by-zero (it returns Infinity, not an error) and pass BLANK() straight through.',
   },
   {
     fn: 'ALL() vs ALLSELECTED()',

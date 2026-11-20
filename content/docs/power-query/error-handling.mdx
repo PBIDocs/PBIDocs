@@ -100,10 +100,10 @@ This pattern — keeping the full `try` record instead of collapsing it with `ot
 ### Using try...otherwise to Hide a Problem Instead of Fixing It
 
 ```powerquery lineNumbers
-each try [Amount] / [Quantity] otherwise 0
+each try Number.From([Amount]) otherwise 0
 ```
 
-This silently turns every divide-by-zero into `0`, which may or may not be the right business answer — a `0` sales-per-unit figure looks like a real, low number in a chart, not like "this row had no quantity recorded." If the fallback value itself needs to communicate "something was wrong here," a text flag or a separate boolean column communicates that more honestly than a plausible-looking number.
+This silently turns every amount that couldn't be read, such as `"N/A"` or `"tbc"`, into `0`, which may or may not be the right business answer — a `0` looks like a real, low number in a chart, not like "this row had a value nobody could read." (Note that dividing by zero isn't an error in M either: `10 / 0` returns infinity, so `try` wouldn't catch it.) If the fallback value itself needs to communicate "something was wrong here," a text flag or a separate boolean column communicates that more honestly than a plausible-looking number.
 
 ### Wrapping an Entire Step Instead of Just the Risky Expression
 

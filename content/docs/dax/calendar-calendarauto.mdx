@@ -26,7 +26,7 @@ Explicit start and end dates — the range is exactly what's written, nothing mo
 
 ## CALENDARAUTO(): Scans Every Date Column in the Model
 
-`CALENDARAUTO()` takes no date arguments at all — instead, it scans **every column of type date or datetime in every table in the entire model**, and returns a range spanning the earliest date and the latest date found *anywhere*, not just in the fact table the date table is meant to support.
+`CALENDARAUTO()` takes no date arguments at all — instead, it scans **every date or datetime column in every table in the model** (except calculated columns and calculated tables), finds the earliest and latest dates *anywhere*, not just in the fact table the date table is meant to support, and expands them to **whole years**: from 1 January of the earliest year to 31 December of the latest. The optional argument shifts those years to a fiscal year ending in a given month.
 
 <CalendarAutoPlayground />
 
@@ -36,7 +36,7 @@ A table that has nothing to do with sales reporting — an audit log with a `Cre
 Sales[OrderDate]:      2024-01-01 to 2026-06-30   <- what the report actually needs
 AuditLog[CreatedDate]: 1900-01-01 to 2026-08-01   <- unrelated table, has a legacy default date
 
-CALENDARAUTO() -> 1900-01-01 to 2026-08-01   <- the whole model's range, not just Sales
+CALENDARAUTO() -> 1900-01-01 to 2026-12-31   <- the whole model's range, expanded to whole years
 ```
 
 ---

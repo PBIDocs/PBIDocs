@@ -60,15 +60,17 @@ SUMX(FactSales, FactSales[Quantity] * FactSales[UnitPrice])
 
 ## Using a Measure Inside SUMX
 
-The expression can reference other measures, not just columns — useful when the per-row logic itself already exists as a reusable measure.
+The expression can reference other measures, not just columns:
 
 ```dax lineNumbers
-Total Profit =
+Profit From Profitable Customers =
 SUMX(
-    FactSales,
-    FactSales[Quantity] * (FactSales[UnitPrice] - FactSales[UnitCost])
+    VALUES(DimCustomer[CustomerKey]),
+    IF([Total Profit] > 0, [Total Profit])
 )
 ```
+
+`SUMX` walks the customers in the current filter context, and each `[Total Profit]` is evaluated for that one customer, because a measure reference turns the current row into a filter ([context transition](/docs/dax/row-context)). Customers with a loss are skipped, and the rest are added up. Iterate over a small column like this one; iterating a measure over every row of a large fact table is slow.
 
 See [Iterators](/docs/dax/iterator#how-sumx-works) for how row context and iteration interact more generally, and [Row Context](/docs/dax/row-context) for what "each row" actually means underneath an iterator.
 

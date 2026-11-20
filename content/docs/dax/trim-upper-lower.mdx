@@ -27,7 +27,7 @@ UPPER("active") -> "ACTIVE"
 LOWER("ACTIVE") -> "active"
 ```
 
-These behave exactly as expected, and exactly like their Power Query counterparts — the only real subtlety with case conversion is using it for comparison rather than display, covered below.
+These behave exactly as expected, and exactly like their Power Query counterparts. The subtlety is comparison, covered below: DAX and Power Query treat case differently.
 
 ---
 
@@ -57,11 +57,13 @@ Text.Trim(...)  -> "Widget   Sales"   (14 chars, all 3 internal spaces survive)
 
 ## UPPER() / LOWER() for Comparison, Not Just Display
 
+DAX text comparisons are **case-insensitive**: `"Active" = "ACTIVE"` is `TRUE`, so `LOWER()` isn't needed to compare in DAX. Power Query is the opposite: its comparisons are case-sensitive, and that's where normalizing case before a merge or a filter matters. When you do need a case-sensitive check in DAX, use `EXACT()`:
+
 ```dax lineNumbers
-Status Match = LOWER([Status]) = "active"
+Exact Code Match = EXACT([Code], "ABC-01")
 ```
 
-DAX text comparisons are case-sensitive by default, same as Power Query — converting both sides to a consistent case before comparing is the standard fix.
+`UPPER()` and `LOWER()` in DAX are mainly for display, such as a consistent label in a title.
 
 ---
 
@@ -75,9 +77,9 @@ Porting a value cleaned with `Text.Trim()` in Power Query into a DAX calculated 
 
 The reverse mistake: assuming Power Query already normalized internal spacing because a value "went through Text.Trim()" — it didn't touch anything except the two ends.
 
-### Overwriting Original Case When Only Comparison Needed It
+### Converting Case to Compare in DAX
 
-Applying `UPPER()` or `LOWER()` directly to a calculated column meant for display permanently destroys the original casing — convert case only inside the comparison expression itself if the original value still needs to display normally.
+Adding `LOWER()` to both sides of a DAX comparison changes nothing, because DAX already ignores case. If two values that differ only in case need to be treated as *different*, use `EXACT()`. And remember the model stores `"North"` and `"north"` as one value anyway.
 
 ---
 
@@ -85,7 +87,7 @@ Applying `UPPER()` or `LOWER()` directly to a calculated column meant for displa
 
 - Use `TRIM()` when internal double-spacing genuinely needs cleaning up, not just leading/trailing whitespace.
 - Don't assume a value is already fully cleaned just because it passed through the other language's trim function — the two aren't equivalent.
-- Convert case only inside a comparison expression (`LOWER([Status]) = "active"`), not as a standing transformation, when the original casing still needs to display.
+- Don't convert case to compare in DAX; it already ignores case. Normalize case in Power Query, where comparisons and merges are case-sensitive.
 
 ---
 

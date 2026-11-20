@@ -51,7 +51,7 @@ Optimizing DAX on a visual whose slowness is actually rendering-related (too man
 
 ## Common Cause: Iterators Over Large Tables
 
-Iterator functions (`SUMX()`, `AVERAGEX()`, `FILTER()`) evaluate an expression once per row, which scales with table size in a way simple aggregations don't.
+Iterator functions (`SUMX()`, `AVERAGEX()`, `FILTER()`) evaluate an expression once per row. A simple expression like the one below is usually handed to the fast storage engine and runs well even on large tables. Iterators get expensive when the per-row expression calls measures, `IF` logic, or `RELATED` chains that force row-by-row work in the formula engine.
 
 ```dax lineNumbers
 Slow:
@@ -68,7 +68,7 @@ Total Margin =
 SUM(FactSales[MarginAmount])
 ```
 
-Where possible, compute a value once in Power Query or as a column at load time, rather than recomputing it per row on every query. See [Iterators](/docs/dax/iterator) for more on how these functions work.
+Pre-computing a column at load time can help when the per-row logic is complex, at the cost of a bigger model. For a simple multiplication, measure both versions in Performance Analyzer before changing anything. See [Iterators](/docs/dax/iterator) for more on how these functions work.
 
 ---
 

@@ -15,6 +15,16 @@ const changelog: { date: string; entries: ReactNode[] }[] = [
     date: '2026-11-20',
     entries: [
       <>
+        Accuracy review of the core docs, part 2: 29 DAX function pages. The biggest correction: dividing by zero
+        with <code>/</code> doesn&apos;t raise an error in DAX, it returns Infinity (or NaN), so{' '}
+        <Link href="/docs/dax/divide">DIVIDE()</Link> and <Link href="/docs/dax/iferror">IFERROR()</Link> were
+        rewritten (IFERROR&apos;s live example now shows all three cases). Also fixed: CALCULATE never returns a
+        table (<Link href="/docs/dax/calculatetable">CALCULATETABLE</Link>), DAX text comparison is
+        case-insensitive (<Link href="/docs/dax/trim-upper-lower">TRIM, UPPER &amp; LOWER</Link>),{' '}
+        <Link href="/docs/dax/related">RELATED</Link> follows a chain of relationships, and smaller fixes to
+        FILTER, IF, BLANK vs 0, CALENDARAUTO, COUNTROWS, SUMX, VALUES, KEEPFILTERS, and performance.
+      </>,
+      <>
         Accuracy review of the core docs, part 1 (15 pages). Corrected{' '}
         <Link href="/docs/power-bi-service/security">Row-Level Security</Link> (readers in no role see no data, not
         all of it; how a mapping table&apos;s filter actually reaches the model),{' '}

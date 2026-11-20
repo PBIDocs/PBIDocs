@@ -114,7 +114,7 @@ This always divides by West region sales specifically, even if the report is cur
 
 ## Why DIVIDE() Instead of /
 
-`DIVIDE()` handles division by zero gracefully, returning blank instead of an error.
+`DIVIDE()` handles division by zero gracefully, returning blank instead of the Infinity or NaN that `/` returns.
 
 ```dax lineNumbers
 Safe:   DIVIDE([Total Sales], [Grand Total])
@@ -158,7 +158,7 @@ Forgetting to remove filters from the denominator (with `ALL()` or `ALLEXCEPT()`
 
 ### Using / Instead of DIVIDE()
 
-The raw division operator errors on divide-by-zero, which can silently break an otherwise-working visual whenever a filter combination produces an empty group.
+The raw division operator returns Infinity (or NaN for 0 / 0) when the denominator is zero, which shows up as a nonsense value in an otherwise-working visual whenever a filter combination produces an empty group.
 
 ### Forgetting Percentage Formatting
 

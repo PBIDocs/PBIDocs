@@ -7,7 +7,7 @@ description: Learn how DAX's LEFT, RIGHT, and MID extract a substring by positio
 
 These three functions extract a portion of a text value based on position and length — the DAX equivalents of Power Query's [Text.Start(), Text.End() & Text.Middle()](/docs/power-query/text-substring-functions), with one important difference in how positions are counted.
 
-```powerquery lineNumbers
+```dax lineNumbers
 LEFT(text, [num_chars])
 RIGHT(text, [num_chars])
 MID(text, start_num, num_chars)
@@ -17,7 +17,7 @@ MID(text, start_num, num_chars)
 
 ## LEFT() and RIGHT()
 
-```powerquery lineNumbers
+```dax lineNumbers
 LEFT("INV-2026-0042", 3)
 RIGHT("INV-2026-0042", 4)
 ```
@@ -33,7 +33,7 @@ Both count from the respective end of the string — `LEFT` from the beginning, 
 
 ## MID(): One-Indexed Starting Position
 
-```powerquery lineNumbers
+```dax lineNumbers
 MID("INV-2026-0042", 5, 4)
 ```
 

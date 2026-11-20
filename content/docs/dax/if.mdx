@@ -113,7 +113,7 @@ More than two or three nested `IF()` calls is a strong signal to switch to `SWIT
 Status = IF([Total Sales] = BLANK(), "No Sales", "Has Sales")
 ```
 
-This works but `ISBLANK([Total Sales])` is clearer and is the idiomatic way to test for blank specifically, rather than an equality comparison against `BLANK()`.
+This doesn't do quite what it says: `=` treats BLANK as 0, so a customer with a genuine `0` in sales also shows "No Sales". `ISBLANK([Total Sales])` tests for blank only. See [BLANK() vs 0](/docs/dax/blank-vs-zero).
 
 ### Returning Inconsistent Types
 
@@ -128,7 +128,7 @@ Returning a number in one branch and text in the other forces an implicit type c
 ## Best Practices
 
 - Keep `IF()` to genuinely binary conditions; move to `SWITCH()` once there are more than two or three outcomes.
-- Use `ISBLANK()` to test for blank specifically, rather than comparing to `BLANK()` with `=`.
+- Use `ISBLANK()` to test for blank specifically; comparing to `BLANK()` with `=` also matches 0.
 - Return the same data type from both branches to avoid implicit conversion surprises.
 
 ---

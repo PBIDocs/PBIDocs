@@ -89,25 +89,27 @@ This is useful when a visual or another calculation needs the category available
 
 ---
 
-## RELATEDTABLE Inside a Measure
+## RELATEDTABLE Needs a Current Row
 
-`RELATEDTABLE()` is more commonly used inside a measure, from the "one" side of a relationship, to aggregate the related "many" rows.
+Like `RELATED()`, `RELATEDTABLE()` works from a current row: in a calculated column, or inside an iterator. In a measure, use it inside an iterator over the "one" side:
 
 ```dax lineNumbers
-Products in Category =
-CALCULATE(
-    DISTINCTCOUNT(FactSales[ProductKey]),
-    RELATEDTABLE(FactSales)
+Customers With 3+ Orders =
+COUNTROWS(
+    FILTER(
+        DimCustomer,
+        COUNTROWS(RELATEDTABLE(FactSales)) >= 3
+    )
 )
 ```
 
-Evaluated per category row, this counts the distinct products sold within that category.
+`FILTER` walks the customers, and for each one `RELATEDTABLE(FactSales)` returns that customer's sales.
 
 ---
 
 ## Requires an Existing Relationship
 
-Neither function works without an existing, active relationship connecting the two tables.
+Both functions need an active relationship (or a chain of them) connecting the two tables.
 
 ```text
 DimProduct           FactSales
@@ -117,7 +119,7 @@ DimProduct           FactSales
     RELATED() / RELATEDTABLE() can now cross it
 ```
 
-If the relationship is missing, inactive, or filtered out by `USERELATIONSHIP()` pointing elsewhere, both functions return blank instead of the expected value. See [USERELATIONSHIP](/docs/dax/userelationship) for working with inactive relationships.
+If there's no active relationship to follow, the formula fails with an error saying the column doesn't have a relationship to any table available in the current context. When the relationship exists but a fact row's key has no match on the other side, `RELATED()` returns blank for that row. See [USERELATIONSHIP](/docs/dax/userelationship) for working with inactive relationships.
 
 <RelatedTablePlayground />
 
@@ -125,9 +127,9 @@ If the relationship is missing, inactive, or filtered out by `USERELATIONSHIP()`
 
 ## Common Mistakes
 
-### Using RELATED Across Multiple Relationship Hops
+### Thinking RELATED Only Crosses One Relationship
 
-`RELATED()` follows exactly one relationship. Pulling a value across two hops — fact table to dimension to another related dimension — needs a `RELATED()` on an intermediate calculated column, or a direct relationship, not a single call spanning both.
+`RELATED()` follows a whole **chain** of many-to-one relationships. From `FactSales`, `RELATED(DimCategory[CategoryName])` works when `FactSales` relates to `DimProduct` and `DimProduct` relates to `DimCategory`. There's no need for an intermediate calculated column on `DimProduct`.
 
 ### Forgetting RELATEDTABLE Returns a Table
 
@@ -135,7 +137,7 @@ Using `RELATEDTABLE()` directly where a single value is expected produces an err
 
 ### Expecting RELATED to Work From the One Side
 
-`RELATED()` only pulls from one to many. Trying to use it on a dimension table's column to reach a fact table returns an error, since a dimension row doesn't correspond to a single fact row — that's what `RELATEDTABLE()` is for.
+`RELATED()` only pulls from one to many. Trying to use it from a dimension table to reach a fact table's column returns an error, since a dimension row doesn't correspond to a single fact row — that's what `RELATEDTABLE()` is for.
 
 ---
 
@@ -143,7 +145,7 @@ Using `RELATEDTABLE()` directly where a single value is expected produces an err
 
 - Use `RELATED()` in calculated columns when a dimension attribute genuinely needs to live directly on the fact table, not as a substitute for a working relationship.
 - Wrap `RELATEDTABLE()` in an aggregation function; it's a table function, not a scalar one.
-- Confirm the relationship is active before relying on either function — an inactive relationship silently returns blank rather than erroring.
+- Confirm the relationship is active before relying on either function — without an active relationship, the formula errors.
 - Prefer a direct relationship and native filter propagation over `RELATED()`/`RELATEDTABLE()` when the same result can be achieved without a calculated column.
 
 ---
