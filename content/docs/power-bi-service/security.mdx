@@ -116,7 +116,19 @@ The role filter expression on `DimUser`:
 
 `[Email] = USERPRINCIPALNAME()`
 
-Because `DimUser` filters `DimStore`, which filters `FactSales`, the security rule propagates through the whole model automatically.
+For that filter to reach `DimStore`, it has to flow from `DimUser` **into** `DimStore`. But a mapping table usually sits on the *many* side of that relationship (one region, many users), and filters flow from the one side to the many side by default. So the relationship needs **Both** cross-filter direction, and in its properties, **Apply security filter in both directions** ticked. Without that, the role filters `DimUser` and nothing else.
+
+A simpler pattern needs no relationship at all. Put the role on `DimStore` and look the user's regions up directly:
+
+```dax lineNumbers
+[Region]
+    IN CALCULATETABLE (
+        VALUES ( DimUser[Region] ),
+        DimUser[Email] = USERPRINCIPALNAME ()
+    )
+```
+
+From `DimStore`, the filter reaches `FactSales` through the normal one-to-many relationship.
 
 ---
 
@@ -148,17 +160,7 @@ Power BI Desktop lets you preview a role before publishing.
 
 Use **Modeling > View As** and select a role to see the report exactly as a user assigned to that role would.
 
-For dynamic RLS, `USERPRINCIPALNAME()` returns an empty value in Desktop preview unless a specific user is entered, so test with:
-
-```dax lineNumbers
-"alice@company.com" = LOOKUPVALUE(
-    DimUser[Email],
-    DimUser[Email],
-    "alice@company.com"
-)
-```
-
-or use the **Other user** option in the View As dialog to simulate a specific email.
+For dynamic RLS, use the **Other user** option in the View As dialog and enter an email such as `alice@company.com`. `USERPRINCIPALNAME()` then returns that address, so you see exactly what Alice would.
 
 ---
 
@@ -222,7 +224,7 @@ Unexpected bidirectional relationships can cause RLS to restrict more (or less) 
 
 ### Forgetting to Assign Users
 
-A role with a correct DAX filter still allows unrestricted access to anyone not assigned to it. Roles only apply to the users explicitly added to them.
+Once a model has roles, a report reader who isn't in any role can't see the data at all: visuals show an error instead of numbers. So a forgotten assignment shows up as "it's broken for me", not as someone seeing too much. (Workspace Admins, Members, and Contributors are the exception: they see everything, as above.)
 
 ### Testing as an Admin
 

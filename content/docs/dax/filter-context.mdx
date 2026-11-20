@@ -1,6 +1,6 @@
 ﻿---
 title: "Filter Context"
-description: Power BI documentation.
+description: "What filter context is in DAX, where it comes from (slicers, visuals, relationships, and CALCULATE), and why the same measure returns different results in different places."
 ---
 
 # Filter Context
@@ -73,11 +73,11 @@ If no filters exist:
 |---|---:|
 | Bikes | $150,000 |
 | Accessories | $80,000 |
-| Clothing | $40,000 |
+| Clothing | $270,000 |
 
 The measure returns:
 
-`$270,000`
+`$500,000`
 
 Now suppose the report is filtered to:
 
@@ -132,7 +132,7 @@ Product Category      Total Sales
 
 Bikes                 $150,000
 Accessories            $80,000
-Clothing               $40,000
+Clothing              $270,000
 ```
 
 Although only one measure is used:
@@ -249,7 +249,7 @@ Example:
 |---|---:|
 | Bikes | $150,000 |
 | Accessories | $80,000 |
-| Clothing | $40,000 |
+| Clothing | $270,000 |
 
 Power BI executes the same measure three separate times.
 
@@ -383,7 +383,7 @@ CALCULATE(
 )
 ```
 
-Regardless of the report filters, this measure always evaluates sales for the **Bikes** category.
+Whatever category the report is filtered to, this measure evaluates sales for the **Bikes** category. Filters on other columns still apply.
 
 Understanding how `CALCULATE()` changes filter context is one of the most important DAX skills.
 

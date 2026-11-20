@@ -1,6 +1,6 @@
 ---
 title: "Row-Level Security Works in Desktop But Not in the Power BI Service"
-description: "RLS filters correctly when testing with \"View as Roles\" in Desktop, then shows everyone all the data once published. Here's why that happens, and the four usual causes."
+description: "RLS filters correctly when testing with \"View as Roles\" in Desktop, then after publishing a user sees all the data, or none of it. Here's which causes produce which symptom, and how to test RLS properly in the Service."
 date: "2026-08-25"
 tags: ["Power BI Service", "Governance", "Troubleshooting"]
 card:
@@ -12,7 +12,7 @@ faq:
   - question: "Why can I see all the data even though I'm assigned to a restricted role?"
     answer: "Anyone with Admin, Member, or Contributor access to the workspace bypasses Row-Level Security entirely — RLS only applies to people accessing the report as a Viewer. This is the single most common cause of \"RLS isn't working.\""
   - question: "Do I need to assign users to a role separately after defining it in Desktop?"
-    answer: "Yes. Defining a role and its DAX filter in Desktop only creates the role — no one is actually a member of it until you explicitly add users or security groups under the dataset's Security settings in the Service."
+    answer: "Yes. Defining a role and its DAX filter in Desktop only creates the role. No one is a member until you add users or security groups under the semantic model's Security settings in the Service, and until then, report readers who aren't in any role can't see the data at all."
   - question: "Why doesn't USERPRINCIPALNAME() match the user I expect?"
     answer: "USERPRINCIPALNAME() returns the exact identity Entra ID assigned, which isn't always the same as someone's email address or alias — organizations with multiple domains or email aliases are the most common place this mismatch shows up."
 ---
@@ -26,6 +26,13 @@ Power BI Service:   Same report, real user -> sees all the data
 
 This is one of the most common Row-Level Security surprises, and it's rarely a bug in the DAX filter itself — the filter already proved itself correct in Desktop. The gap is almost always in what happens *after* publishing, which Desktop's testing tool doesn't exercise at all.
 
+There are two symptoms, and they point to different causes:
+
+| What the user sees | Usual cause |
+|---|---|
+| **All the data** | Their workspace role (Cause 1), or you're testing as yourself (Cause 4) |
+| **No data, or an error in every visual** | They aren't in any role (Cause 2), or their identity doesn't match the mapping table (Cause 3) |
+
 ## Cause 1: The User Has Workspace Access Above Viewer
 
 By far the most common cause. RLS only applies to someone accessing a report as a **Viewer** — anyone with **Admin**, **Member**, or **Contributor** access to the workspace sees all the data, regardless of any role they're also assigned to, because that level of access already implies they could open the dataset directly and remove the filter themselves.
@@ -37,18 +44,20 @@ Workspace role: Viewer                        -> RLS enforced
 
 **Fix:** for an actual test, use an account whose *only* access is Viewer (or share via an app, which enforces Viewer-level access regardless of the underlying workspace roles). Testing with your own account while you're a Member or Admin of the workspace will never show RLS in effect, no matter how correct the DAX filter is.
 
-## Cause 2: No One Was Actually Assigned to the Role
+## Cause 2: The User Isn't in Any Role
 
 Defining a role and its filter expression in Desktop creates the role — it does not put anyone in it. That's a separate step, done in the Service, after publishing.
+
+Once a model has roles, a Viewer who isn't in any of them can't see the data: visuals show an error rather than numbers. So this cause produces "I see nothing", never "I see everything".
 
 ```text
 Desktop: Role "Regional Manager" created, DAX filter attached
         |
         | publish
         |
-Service: Dataset Settings > Security > "Regional Manager" -> members: (empty)
+Service: Semantic model settings > Security > "Regional Manager" -> members: (empty)
         |
-        | no one assigned -> role never applies to anyone
+        | no one assigned -> Viewers see no data at all
 ```
 
 **Fix:** in the Service, go to the dataset's **Security** settings, select the role, and explicitly add the users or security groups who should be members. See [Assigning Users to Roles](/docs/power-bi-service/security#assigning-users-to-roles).

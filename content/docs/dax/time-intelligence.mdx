@@ -71,7 +71,7 @@ The Date table should span the entire reporting period—even if there are no sa
 
 ## Mark as Date Table
 
-Power BI requires a dedicated Date table for many Time Intelligence functions.
+Mark your Date table as a date table. It matters most when the relationship to the fact table uses a non-date key, such as a number like `20260315`: without the mark, time intelligence functions don't reliably clear the existing date filters, and results come out wrong. With a relationship on a real date column it works either way, but marking is still good practice, and it tells Power BI not to build its own hidden date tables for that table.
 
 To mark a table as a Date table:
 

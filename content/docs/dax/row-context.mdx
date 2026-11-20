@@ -1,6 +1,6 @@
 ﻿---
 title: "Row Context"
-description: Power BI documentation.
+description: "What row context is in DAX, where calculated columns and iterators create it, how it differs from filter context, and how CALCULATE turns it into filters (context transition)."
 ---
 
 # Row Context
@@ -192,27 +192,20 @@ Without row context, DAX would not know which product to retrieve.
 
 ## Multiple Row Contexts
 
-Iterator functions can create nested row contexts.
-
-Example:
+Iterators can be nested, and then two row contexts are active at once:
 
 ```dax lineNumbers
+Sales by Product =
 SUMX(
-    FactSales,
-    FactSales[Quantity] *
-    FactSales[Unit Price]
+    DimProduct,
+    SUMX(
+        RELATEDTABLE(FactSales),
+        FactSales[Quantity] * FactSales[Unit Price]
+    )
 )
 ```
 
-For every row in **FactSales**:
-
-- Read `Quantity`
-- Read `Unit Price`
-- Multiply them together
-
-After every row has been evaluated, the results are added together.
-
-This is why iterator functions are generally more flexible than simple aggregation functions.
+The outer `SUMX` walks the products; for each one, the inner `SUMX` walks that product's sales (`RELATEDTABLE` follows the relationship from the current product). Inside the inner expression, `FactSales[...]` refers to the current sale and `DimProduct[...]` would refer to the current product. Nested iterators are powerful, and on large tables they can also be slow, so use them when the calculation genuinely works at two levels.
 
 ---
 
@@ -333,7 +326,7 @@ Understanding when each context exists makes DAX much easier to understand.
 | Feature | Row Context | Filter Context |
 |---|---|---|
 | Created by Calculated Columns | ✅ | ❌ |
-| Created by Measures | ❌ | ✅ |
+| Used by Measures | ❌ | ✅ (measures are evaluated in it) |
 | Created by Iterator Functions | ✅ | ❌ |
 | Created by Report Filters | ❌ | ✅ |
 | Created by Slicers | ❌ | ✅ |

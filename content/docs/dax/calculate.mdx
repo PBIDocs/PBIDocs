@@ -1,6 +1,6 @@
 ﻿---
-title: "Calculate"
-description: Power BI documentation.
+title: "CALCULATE"
+description: "How CALCULATE changes filter context in DAX: adding, replacing, and removing filters, KEEPFILTERS, context transition, USERELATIONSHIP, and CROSSFILTER, with examples."
 ---
 
 # CALCULATE
@@ -55,7 +55,7 @@ CALCULATE(
 )
 ```
 
-Regardless of the report filters, this measure evaluates sales only for products in the **Bikes** category.
+Whatever category the report is filtered to, this measure evaluates sales for the **Bikes** category. Filters on other columns, such as region, date, or even product subcategory, still apply.
 
 ---
 
@@ -209,7 +209,7 @@ The denominator removes the product filter to calculate the overall total.
 Example:
 
 ```dax lineNumbers
-Total Sales =
+Total Sales (All Products) =
 CALCULATE(
     [Total Sales],
     REMOVEFILTERS(DimProduct)

@@ -15,6 +15,15 @@ const changelog: { date: string; entries: ReactNode[] }[] = [
     date: '2026-11-20',
     entries: [
       <>
+        Accuracy review of the core docs, part 1 (15 pages). Corrected{' '}
+        <Link href="/docs/power-bi-service/security">Row-Level Security</Link> (readers in no role see no data, not
+        all of it; how a mapping table&apos;s filter actually reaches the model),{' '}
+        <Link href="/docs/power-bi-service/workspaces">Workspaces</Link> (paginated reports work on Pro),{' '}
+        <Link href="/docs/modeling/storage-modes">storage modes</Link> (the 1 GB and 1-million-row limits),
+        and smaller fixes to CALCULATE, filter context, row context, relationships, and time intelligence. Sixteen
+        core pages also got real titles and descriptions in place of a placeholder.
+      </>,
+      <>
         Accuracy review of every blog post from August to October. Rewrote five whose diagnosis was wrong:{' '}
         <Link href="/blog/formula-firewall-privacy-level-error">Formula.Firewall</Link> (the &quot;references other
         queries&quot; version is about query structure, not privacy levels),{' '}

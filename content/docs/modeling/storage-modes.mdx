@@ -43,7 +43,7 @@ Characteristics:
 - Very fast query performance
 - Full DAX and modeling feature support
 - Data is only as current as the last refresh
-- Model size is limited by available memory
+- Model size is limited: on shared capacity (Pro), a semantic model can be at most 1 GB; Premium and Fabric capacities allow far more
 
 Import is the default and recommended mode for most reports.
 
@@ -64,7 +64,7 @@ Source Database
 Characteristics:
 
 - Data is always current, with no refresh needed
-- No practical limit on data volume, since nothing is imported
+- No import size limit, since nothing is copied, but a single query that returns more than 1 million rows from the source fails
 - Query performance depends entirely on the source system
 - Some DAX functions and modeling features are restricted
 
@@ -225,9 +225,9 @@ Before publishing a DirectQuery or composite model:
 
 ---
 
-## A Third Option for OneLake Data: Direct Lake
+## Another Option for OneLake Data: Direct Lake
 
-If the source data lives in Microsoft Fabric's OneLake, a fourth storage mode is available: Direct Lake, which reads Delta tables directly from OneLake without a copy step and without querying a live source on every request. See [Direct Lake Mode](/docs/fabric/direct-lake) for how it works and when it falls back to DirectQuery-like behavior.
+If the source data lives in Microsoft Fabric's OneLake, another storage mode is available: Direct Lake, which reads Delta tables directly from OneLake without a copy step and without querying a live source on every request. See [Direct Lake Mode](/docs/fabric/direct-lake) for how it works and when it falls back to DirectQuery-like behavior.
 
 ---
 

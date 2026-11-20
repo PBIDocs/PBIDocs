@@ -365,8 +365,8 @@ Example:
 | Category | Sales | Percent of Total |
 |---|---:|---:|
 | Bikes | $150,000 | 30% |
-| Clothing | $100,000 | 20% |
-| Accessories | $250,000 | 50% |
+| Accessories | $80,000 | 16% |
+| Clothing | $270,000 | 54% |
 
 ---
 
@@ -397,7 +397,7 @@ The most common mistakes include:
 - Using `ALL()` when `ALLSELECTED()` is required.
 - Removing more filters than intended.
 - Forgetting that `ALL(Table)` removes every filter on the table.
-- Applying `ALL()` outside of `CALCULATE()`.
+- Expecting `ALL()` to remove filters when it's used as a table, in `FILTER()` or `RANKX()`. There it returns all the rows, which is useful, but it only *removes filters* as a `CALCULATE()` filter argument.
 - Expecting `ALLSELECTED()` to ignore slicers.
 
 Understanding which filters remain active is the key to writing correct DAX.

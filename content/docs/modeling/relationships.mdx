@@ -1,6 +1,6 @@
 ﻿---
 title: "Relationships"
-description: Power BI documentation.
+description: "How Power BI relationships work: one-to-many, one-to-one, and many-to-many cardinality, filter direction, active and inactive relationships, and the mistakes to avoid."
 ---
 
 # Relationships
@@ -112,7 +112,7 @@ Cardinality describes how rows match between tables.
 
 Power BI supports:
 
-## One-to-Many (1:*)
+### One-to-Many (1:*)
 
 Most common relationship.
 
@@ -130,7 +130,7 @@ One customer can have many sales transactions.
 
 ---
 
-## One-to-One (1:1)
+### One-to-One (1:1)
 
 Both tables contain unique values.
 
@@ -148,23 +148,19 @@ This is less common in analytical models.
 
 ---
 
-## Many-to-Many (*:*)
+### Many-to-Many (*:*)
 
-Both tables contain duplicate values.
+The key column has repeated values on **both** sides.
 
-Example:
+Example: a budget table set by category, related to the product table on `Category`. A budget row exists per category, and the product table has many products per category, so neither side is unique:
 
 ```text
-Customers
-
-Customer A
-Customer B
-
-
-Products
-
-Product A
-Product B
+Budget                     DimProduct
+Category | Budget          Product  | Category
+---------|-------          ---------|---------
+Bikes    | 200,000         Tire A   | Bikes
+Clothing |  90,000         Tire B   | Bikes
+                           Jersey   | Clothing
 ```
 
 Many-to-many relationships can create:
@@ -376,17 +372,14 @@ can create calculation problems.
 
 ### Multiple Filter Paths
 
-Example:
+Two active routes between the same tables make filters ambiguous:
 
 ```text
-DimCustomer
-      |
-FactSales
-      |
-DimProduct
+FactSales --> DimStore --> DimRegion       (route 1, through Store)
+FactSales --------------> DimRegion        (route 2, direct)
 ```
 
-plus another path between tables can create ambiguity.
+Power BI won't make the second route active. Bidirectional relationships are the usual way extra routes appear. See [You can't create a direct active relationship](/blog/direct-active-relationship-ambiguity-error).
 
 ---
 
