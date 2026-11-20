@@ -94,6 +94,23 @@ This returns `0` instead of blank for any product missing from `PriceList`.
 
 <LookupValuePlayground />
 
+### When It Returns Blank Unexpectedly
+
+If a value you can see in both tables comes back blank, the two keys aren't really equal. Find which keys have no match first, with a temporary calculated column on the table doing the lookup:
+
+```dax lineNumbers
+Key Exists =
+CONTAINS ( PriceList, PriceList[ProductKey], FactSales[ProductKey] )
+```
+
+Filter a table visual to `FALSE` and you have the exact list. Then check:
+
+- **Invisible characters.** A non-breaking space or a line break copied from another system makes two keys that look identical different. Clean the key column in Power Query before it loads: **Transform → Format → Clean**, then **Trim**. See [Text.Trim](/docs/power-query/text-trim-upper-lower).
+- **Different types.** A text key compared with a number key doesn't return blank; it fails with an error. See [comparing values of type Text with values of type Integer](/blog/dax-comparison-operations-do-not-support-error), and give both columns the same type in Power Query.
+- **The key really is missing.** New products that aren't in the price list yet. Decide what the result should be and use the alternate result argument, as above.
+
+Case isn't the problem: DAX compares text without regard to case, so `"abc"` matches `"ABC"`.
+
 ---
 
 ## LOOKUPVALUE vs. RELATED
@@ -153,4 +170,4 @@ Continue learning DAX functions:
 - [SELECTEDVALUE](/docs/dax/selectedvalue)
 - [Relationships](/docs/modeling/relationships)
 
-Getting a "key didn't match any rows" error? See [The Key Didn't Match Any Rows in the Table](/blog/key-didnt-match-any-rows-error) for the four usual causes.
+Seeing "The key didn't match any rows in the table"? That one isn't from `LOOKUPVALUE()`: it's a Power Query navigation error. See [The Key Didn't Match Any Rows in the Table](/blog/key-didnt-match-any-rows-error).

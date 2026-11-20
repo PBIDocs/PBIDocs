@@ -1,160 +1,143 @@
 ---
-title: "Power BI Error: The Key Didn't Match Any Rows in the Table"
-description: "\"The key didn't match any rows in the table\" comes from LOOKUPVALUE finding zero matches, not too many. Here's how to find why, and the four usual causes."
-date: "2026-08-14"
-tags: ["DAX", "Troubleshooting"]
+title: "Power Query Error: The Key Didn't Match Any Rows in the Table"
+description: "Refresh fails with Expression.Error: The key didn't match any rows in the table. A navigation step is looking for a sheet, table, or file by name, and it isn't there anymore. Here's how to see what is there, the five usual causes, and how to write the step so it doesn't break again."
+date: "2026-11-20"
+tags: ["Power Query", "Troubleshooting"]
 card:
   label: "Error"
-  text: "The key didn't match any rows in the table"
+  text: "Expression.Error: The key didn't match any rows in the table."
+faq:
+  - question: "What does \"The key didn't match any rows in the table\" mean in Power Query?"
+    answer: "A step looked up one row of a table by its key, such as the sheet named Sales in an Excel workbook or the table dbo.Orders in a database, and no row had that key. Almost always the sheet, table, or file was renamed, moved, or deleted after the query was built."
+  - question: "Is this error from LOOKUPVALUE?"
+    answer: "No. It's a Power Query error, raised during refresh. DAX's LOOKUPVALUE doesn't raise it: when nothing matches, LOOKUPVALUE returns BLANK, or the alternate result you give it."
+  - question: "How do I fix the key didn't match any rows error after renaming an Excel sheet?"
+    answer: "Open the query, select the Navigation step, and change the sheet name in the formula, for example Source{[Item=\"Sales\",Kind=\"Sheet\"]} to the new name. Select the Source step first to see the exact names that exist, including capitals."
+  - question: "Why does it work in Desktop but fail in the Power BI Service?"
+    answer: "The Service uses its own stored credentials. If that account can't see the file, folder, or table, the item isn't in the list the query searches, and the lookup fails with this error. Check the data source credentials and the account's permissions on the source."
 ---
 
-The full error reads:
+The full error usually looks like this:
 
 ```text
-The key didn't match any rows in the table
+Expression.Error: The key didn't match any rows in the table.
+Details:
+    Key=
+        Item=Sales
+        Kind=Sheet
+    Table=[Table]
 ```
 
-This is the opposite problem from a [duplicate value error](/blog/column-contains-duplicate-value-error). That one means `LOOKUPVALUE()` (or a relationship) found *too many* matching rows. This one means it found *zero* — the search value you gave it doesn't exist anywhere in the target column.
+It comes from Power Query, during refresh or when you open the query. (It isn't a DAX error: [LOOKUPVALUE](/docs/dax/lookupvalue) returns BLANK when nothing matches.)
 
-```dax lineNumbers
-Product Category =
-LOOKUPVALUE(
-    DimProduct[Category],
-    DimProduct[ProductKey], FactSales[ProductKey]
-)
-```
-
-If some `ProductKey` in `FactSales` has no matching row in `DimProduct`, this measure throws that exact error for those rows.
-
----
-
-## Step One: Find Which Values Are Actually Missing
-
-Before guessing at a cause, find the specific values that don't match. A quick way: build a calculated column that checks membership directly.
-
-```dax lineNumbers
-Key Exists =
-CONTAINS(DimProduct, DimProduct[ProductKey], FactSales[ProductKey])
-```
-
-Filter this to `FALSE` in a table visual alongside `FactSales[ProductKey]`, and you have the exact list of keys causing the problem — the starting point for figuring out which of the causes below actually applies.
-
----
-
-## Cause 1: A Data Type Mismatch
-
-The single most common cause. If `FactSales[ProductKey]` is text and `DimProduct[ProductKey]` is a whole number (or vice versa), `LOOKUPVALUE()` won't match them even when the underlying values "look" the same.
-
-```text
-FactSales[ProductKey] = "1001"   (text)
-DimProduct[ProductKey] = 1001    (whole number)
-
-LOOKUPVALUE searching for "1001" in a column of numbers -> no match
-```
-
-**Fix:** make both columns the same type before the relationship or lookup is built — usually in Power Query, on whichever side came in with the wrong type.
+When you connect to an Excel workbook, a database, or a SharePoint folder and pick an item in the Navigator, Power Query writes a step that finds that item **by name** in a list of everything available:
 
 ```powerquery lineNumbers
-#"Changed Type" = Table.TransformColumnTypes(
-    Source,
-    {{"ProductKey", Int64.Type}}
-)
+let
+    Source = Excel.Workbook(File.Contents("C:\Data\Sales.xlsx"), null, true),
+    Sales_Sheet = Source{[Item = "Sales", Kind = "Sheet"]}[Data]
+in
+    Sales_Sheet
 ```
+
+`Source{[Item = "Sales", Kind = "Sheet"]}` means "the row of `Source` whose Item is *Sales* and whose Kind is *Sheet*". The `Details` part of the error shows exactly that key. If no row matches, you get this error.
+
+## First: Look at What's Actually There
+
+Open the query in the Power Query Editor and select the **Source** step, the one before the failing step. The preview shows the table being searched: every sheet and table in the workbook, every table in the database, every file in the folder. Compare its names with the key in the error, character by character.
+
+The difference is usually obvious once you're looking at both. The causes below are the ones it tends to be.
 
 ---
 
-## Cause 2: Trailing Whitespace or Case Differences
+## Cause 1: A Sheet or Table Was Renamed
 
-For text keys specifically, invisible whitespace or inconsistent casing breaks an exact match even though the values look identical in a visual.
+Someone renamed the sheet *Sales* to *Sales 2026*, or *Sheet1* to *Data*. The query still asks for the old name.
 
-```text
-FactSales[SKU] = "AB-1001 "   (trailing space)
-DimProduct[SKU] = "AB-1001"
+**Fix:** select the navigation step and change the name in its formula, or select the **gear** next to the step to pick the item again from the Navigator.
 
-Look identical when displayed. Not equal to LOOKUPVALUE.
-```
+**Prevent it:** in Excel, format the data as a **table** (Ctrl+T) with a meaningful name and connect to that (`Kind = "Table"`). Table names change far less often than sheet names, and a table grows with new rows automatically. See [Excel.Workbook](/docs/power-query/excel-workbook).
 
-**Fix:** clean both sides with `Text.Trim` (and `Text.Upper`/`Text.Lower` if casing is inconsistent) in Power Query before the values are used as keys — see [M Language](/docs/power-query/m-language) for these functions.
+## Cause 2: Different Capitals
+
+Power Query compares text **case-sensitively**. A sheet renamed from *Sales* to *SALES* no longer matches `Item = "Sales"`, though it looks the same to a person. This is different from DAX, where text comparisons ignore case.
+
+**Fix:** match the name exactly as it appears in the Source step.
+
+## Cause 3: A Database Table Was Renamed or Moved
+
+For SQL Server and similar sources, the key includes the schema:
 
 ```powerquery lineNumbers
-#"Trimmed Text" = Table.TransformColumns(
-    Source,
-    {{"SKU", Text.Trim}}
-)
+Orders = Source{[Schema = "dbo", Item = "Orders"]}[Data]
 ```
+
+If the table moved to another schema (`sales.Orders`), was renamed, or was replaced by a view with a different name, the key no longer matches.
+
+**Fix:** update the schema and name, or ask whoever changed the database what the object is called now. See [Sql.Database](/docs/power-query/sql-database).
+
+## Cause 4: A File Was Moved in SharePoint or a Folder
+
+With **SharePoint folder** and **Folder** sources, the navigation key often includes the file's folder path:
+
+```powerquery lineNumbers
+File = Source{[Name = "Sales.xlsx", #"Folder Path" = "https://contoso.sharepoint.com/sites/Finance/Shared Documents/Reports/"]}[Content]
+```
+
+Move the file into a subfolder, or rename the folder it's in, and the key stops matching even though the file name is the same.
+
+**Fix:** find the file by name instead of by name and path:
+
+```powerquery lineNumbers
+File = Table.SelectRows(Source, each [Name] = "Sales.xlsx"){0}[Content]
+```
+
+This finds *Sales.xlsx* wherever it is in the site. If two files share the name, it takes the first, so filter on part of the path too if that can happen.
+
+## Cause 5: The Service Can't See the Item
+
+The query works in Power BI Desktop and fails only on scheduled refresh. Desktop signs in as you; the Service uses its own stored credentials. If that account doesn't have access to the file, folder, or table, the item simply isn't in the list the query searches, and the lookup fails with the same error.
+
+**Fix:** check which account the semantic model's data source credentials use, and that it can open the item. See [the credentials error explained](/blog/refresh-credentials-invalid-error).
 
 ---
 
-## Cause 3: The Value Genuinely Doesn't Exist Yet
+## Make the Error Say What's Missing
 
-Sometimes it's not a data quality bug — the fact table legitimately references something the dimension table doesn't have. A product was discontinued and removed from `DimProduct`, but historical `FactSales` rows still reference its old key. Or a new product started selling before the dimension table's daily refresh caught up.
+The default message names the key but not the file, and it surfaces deep in a refresh log. A navigation step written to check first fails with a message anyone can act on:
 
-```text
-FactSales (2024-2026, includes discontinued products)
-DimProduct (current catalog only, discontinued products removed)
-
-ProductKey 1001 sold in 2024, but DimProduct no longer has it
+```powerquery lineNumbers
+let
+    Source = Excel.Workbook(File.Contents("C:\Data\Sales.xlsx"), null, true),
+    Matches = Table.SelectRows(Source, each [Kind] = "Table" and [Name] = "SalesData"),
+    Result =
+        if Table.IsEmpty(Matches)
+        then error "Table 'SalesData' wasn't found in Sales.xlsx. Was it renamed?"
+        else Matches{0}[Data]
+in
+    Result
 ```
 
-**Fix:** this is a referential integrity gap, not a formula bug. Either keep discontinued/historical members in the dimension table (with a flag like `IsActive = FALSE` instead of deleting the row), or add a placeholder row for exactly this case:
+Without the check, `Matches{0}` on an empty table fails with a different error, *There weren't enough elements in the enumeration to complete the operation*. See [error handling in Power Query](/docs/power-query/error-handling) for `error` and `try ... otherwise`.
 
-```text
-DimProduct
-ProductKey | ProductName
-1001       | Trail Runner Tire
-1002       | Commuter Helmet
--1         | Unknown Product      <- catches orphaned keys
-```
+## Don't "Fix" It by Position
 
-See [Dimension Tables](/docs/modeling/dimension-tables) for why dimension tables are built to be the complete, authoritative list a fact table can always join against.
-
----
-
-## Cause 4: A Default Value Was Never Set
-
-Independent of fixing the underlying data, `LOOKUPVALUE()` has an optional final argument specifically for this situation — a value to return instead of erroring when nothing matches.
-
-```dax lineNumbers
-Product Category =
-LOOKUPVALUE(
-    DimProduct[Category],
-    DimProduct[ProductKey], FactSales[ProductKey],
-    "Unknown"
-)
-```
-
-This doesn't fix *why* the key is missing, but it stops one bad row from breaking the entire calculation while the underlying cause gets investigated. See [LOOKUPVALUE](/docs/dax/lookupvalue) for the full syntax.
-
----
+Replacing the name with a position, `Source{0}[Data]`, makes the error go away: it takes whatever the first sheet is. Then someone adds a sheet at the front of the workbook, and the report quietly loads the wrong data with no error at all. A failed refresh is better than a wrong one.
 
 ## Common Mistakes
 
-### Adding a Default Value Without Investigating Why
+**Debugging the DAX.** The error comes from a Power Query step, so the report's measures aren't involved.
 
-`LOOKUPVALUE(..., "Unknown")` makes the error go away, but if the missing keys represent a real data quality problem (like Cause 3), silently defaulting to "Unknown" can hide it indefinitely instead of fixing it.
+**Fixing only the navigation step.** If the new sheet has different column names, the next step fails with [the column wasn't found](/blog/power-query-expression-error-field-not-found). Check the steps after it.
 
-### Assuming It's Always a Relationship Problem
+**Building on a sheet that users rename.** Connect to a named Excel table, or agree that the source file's layout is fixed.
 
-This specific error comes from `LOOKUPVALUE()` and similar functions evaluated directly — not from a standard modeled relationship, which handles unmatched keys differently (rows just don't appear, or appear under a blank member, rather than throwing this error). Don't go looking in Model view for a broken relationship when the actual cause is a DAX formula.
-
-### Fixing the Symptom on Only One Side
-
-A type or whitespace mismatch usually needs fixing wherever the *bad* data originates, not just patching the lookup formula — otherwise the same mismatch reappears the next time new data loads.
-
----
-
-## Checklist
-
-- The specific missing keys have been identified (via a membership check), not just guessed at.
-- Data types match exactly between the two columns being compared.
-- Text keys are trimmed and case-normalized before being used as lookup keys.
-- If the value is legitimately absent from the dimension table, that's addressed as a modeling decision (keep historical rows, or add a placeholder), not just papered over with a default.
-
----
+**Looking only in Desktop.** If refresh fails only in the Service, the cause is the Service's credentials or access, not the query.
 
 ## Next Steps
 
-- [LOOKUPVALUE](/docs/dax/lookupvalue)
-- [Column Contains a Duplicate Value](/blog/column-contains-duplicate-value-error)
-- [Dimension Tables](/docs/modeling/dimension-tables)
-- [M Language](/docs/power-query/m-language)
+- [Excel.Workbook](/docs/power-query/excel-workbook)
+- [Sql.Database](/docs/power-query/sql-database)
+- [Error Handling in Power Query](/docs/power-query/error-handling)
+- [Power Query Error: The Field or Column Wasn't Found](/blog/power-query-expression-error-field-not-found)
+- [Power BI: This Dataset Includes a Dynamic Data Source](/blog/dynamic-data-source-refresh-error)

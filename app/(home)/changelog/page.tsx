@@ -12,6 +12,22 @@ export const metadata: Metadata = {
 
 const changelog: { date: string; entries: ReactNode[] }[] = [
   {
+    date: '2026-11-20',
+    entries: [
+      <>
+        Rewrote <Link href="/blog/key-didnt-match-any-rows-error">The Key Didn&apos;t Match Any Rows in the Table</Link>.
+        It&apos;s a Power Query navigation error (a renamed sheet, a moved SharePoint file, a changed schema), not a
+        LOOKUPVALUE one as the earlier version said. The genuine LOOKUPVALUE advice moved to a new{' '}
+        <Link href="/docs/dax/lookupvalue#when-it-returns-blank-unexpectedly">when it returns blank</Link> section.
+      </>,
+      <>
+        <Link href="/blog/fix-circular-dependency-dax">How to Fix a Circular Dependency Error</Link> now covers the
+        two causes people hit most: two calculated columns that both use CALCULATE, and a calculated table built with
+        VALUES that&apos;s related back to its source.
+      </>,
+    ],
+  },
+  {
     date: '2026-11-19',
     entries: [
       <>

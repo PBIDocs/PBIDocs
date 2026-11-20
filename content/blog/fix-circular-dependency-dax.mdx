@@ -1,6 +1,6 @@
 ---
 title: "How to Fix a Circular Dependency Error in DAX"
-description: "\"A circular dependency was detected\" usually comes from a calculated column, not a measure. Here's how to find the cycle and break it."
+description: "\"A circular dependency was detected\" comes from calculated columns and tables, not measures: columns that reference each other, two columns that both use CALCULATE, or a calculated table built with VALUES and related back to its source. Here's how to find the cycle and break it."
 date: "2026-08-10"
 tags: ["DAX", "Troubleshooting"]
 card:
@@ -86,6 +86,69 @@ DimProduct[TargetMargin]
 ```
 
 **Fix:** the same principle applies — one side needs to be the actual source, computed from raw data, and the other side reads from it. It can't be circular in both directions. See [RELATED & RELATEDTABLE](/docs/dax/related) for how these functions cross relationships.
+
+## Two Calculated Columns That Both Use CALCULATE
+
+This one catches people out because neither column mentions the other. On a `Sales` table, a column with each customer's total sales works fine:
+
+```dax lineNumbers
+Customer Total =
+CALCULATE ( SUM ( Sales[Amount] ), ALLEXCEPT ( Sales, Sales[Customer] ) )
+```
+
+Add a second column built the same way, and Power BI reports a circular dependency between them:
+
+```dax lineNumbers
+Customer Orders =
+CALCULATE ( COUNTROWS ( Sales ), ALLEXCEPT ( Sales, Sales[Customer] ) )
+```
+
+The reason is **context transition**. `CALCULATE` in a calculated column turns the current row into a filter, and that filter covers **every column of the table**, including the other calculated column. So *Customer Total* depends on *Customer Orders*, and *Customer Orders* depends on *Customer Total*. `ALLEXCEPT` doesn't help, because the dependency comes from the context transition, not from which filters survive it. See [row context and context transition](/docs/dax/row-context).
+
+It mostly happens on fact tables and other tables without a key. On a dimension table used on the one side of a relationship, Power BI can identify each row by its key, and the problem usually doesn't arise.
+
+**Fix:** filter on the column you actually mean, with no context transition:
+
+```dax lineNumbers
+Customer Total =
+VAR ThisCustomer = Sales[Customer]
+RETURN
+    SUMX ( FILTER ( Sales, Sales[Customer] = ThisCustomer ), Sales[Amount] )
+```
+
+```dax lineNumbers
+Customer Orders =
+VAR ThisCustomer = Sales[Customer]
+RETURN
+    COUNTROWS ( FILTER ( Sales, Sales[Customer] = ThisCustomer ) )
+```
+
+Each column now depends only on the columns it names. Better still, ask whether these need to be columns at all: as measures, or as columns on a Customer dimension table, the problem doesn't exist.
+
+## A Calculated Table Related Back to Its Source
+
+A quick way to build a customer list is a calculated table:
+
+```dax lineNumbers
+Customers = VALUES ( Sales[Customer] )
+```
+
+It works until you create a relationship from `Customers[Customer]` back to `Sales[Customer]`. Then Power BI reports a circular dependency.
+
+`VALUES`, and `ALL` on a column, include the extra blank row that Power BI adds when a relationship has values on the many side with no match on the one side. So the table's contents depend on the relationships of `Sales`, including the one you're creating from it.
+
+**Fix:** use `DISTINCT`, which never includes that blank row:
+
+```dax lineNumbers
+Customers = DISTINCT ( Sales[Customer] )
+```
+
+`ALLNOBLANKROW ( Sales[Customer] )` works too. For a real dimension, build it in Power Query instead; see [Reference vs. Duplicate Queries](/docs/power-query/reference-vs-duplicate) for building a dimension from a fact table there.
+
+## Other Places It Comes From
+
+- **Sorting by a calculated column built from the column it sorts.** A `RANKX` sort key that ranks the same labels it sorts creates a loop. See [the Sort by Column error](/blog/sort-by-column-more-than-one-value-error).
+- **A calculated table that reads a calculated column which reads the calculated table.** Same principle as a relationship loop: decide which one is the source.
 
 ## Why This Doesn't Happen With Measures
 
