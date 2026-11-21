@@ -191,7 +191,8 @@ export function BridgeTableAnatomyDiagram() {
             </span>{' '}
             and <span className="font-mono">DimAccount</span> never connect directly. Filtering either dimension
             flows through the bridge, one clean hop at a time, instead of relying on an ambiguous direct many:many
-            relationship.
+            relationship. The hop from the bridge up to the second dimension runs against the default direction, so
+            that relationship needs cross-filter direction Both (or CROSSFILTER in the measure).
           </p>
         </div>
       </div>

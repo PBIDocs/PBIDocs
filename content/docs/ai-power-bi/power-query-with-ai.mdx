@@ -49,7 +49,7 @@ Here's the step: Table.ExpandTableColumn(Merged, "NewColumn", {"CustomerID"})
 What's causing it, and how do I fix it?"
 ```
 
-This particular error usually means the merged column was renamed or the join produced no matches — a good answer should walk through both possibilities.
+This particular error usually means `CustomerID` isn't a column of the table that was merged in (it was renamed or removed upstream, or has different capitalisation), or the nested column isn't really called `NewColumn`. A good answer should walk through both. (A merge that finds no matches doesn't cause it: expanding empty nested tables still works and just gives nulls.)
 
 ### Optimizing for Query Folding
 

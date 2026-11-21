@@ -81,6 +81,8 @@ FactSales (DirectQuery, SQL Server)
 
 Power BI issues separate queries to each source and combines the results locally. This works well when the "many" side of the relationship is filtered down first — badly when it isn't.
 
+A relationship between tables from different source groups is a **limited relationship** (shown with a broken line in Model view). It behaves differently from a normal one: unmatched rows don't get the usual blank row (they simply drop out, like an inner join), and `RELATED()` can't follow it. Measures that count "unknown" members, or calculated columns that use RELATED across the boundary, need rethinking.
+
 ---
 
 ## Limiting Relationship Direction
@@ -151,7 +153,7 @@ A relationship between two sources is not free the way a same-database relations
 
 ### Leaving Shared Dimensions in DirectQuery
 
-If a dimension table used to relate two different sources is itself in DirectQuery, every cross-source query pays for three round trips instead of two. Dual or Import mode on the shared dimension avoids this.
+If a dimension table used to relate two different sources is itself in DirectQuery, every query that touches it has to go back to its source as well, adding another round trip and making the relationships around it limited. Dual mode on the shared dimension lets Power BI answer from memory or push the join down, whichever fits the query.
 
 ### Enabling Bidirectional Filtering by Default
 

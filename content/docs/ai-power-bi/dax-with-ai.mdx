@@ -24,7 +24,7 @@ DIVIDE(
 )"
 ```
 
-A good explanation should call out the `CALCULATE` context transition, what `SAMEPERIODLASTYEAR` shifts, and why `DIVIDE` is used instead of `/`.
+A good explanation should call out how `CALCULATE` replaces the date filter with the same period last year (what `SAMEPERIODLASTYEAR` shifts), and why `DIVIDE` is used instead of `/`.
 
 ### Drafting New Measures
 
@@ -44,13 +44,13 @@ Pasting the measure, the error message (or the wrong result), and a short descri
 
 ```text
 Prompt:
-"This measure returns BLANK for every row instead of a percentage.
+"This measure shows Infinity on some rows of my table.
 What's wrong?
 
 Margin % = [Gross Margin] / [Total Sales]"
 ```
 
-In this example, the fix is almost always to use `DIVIDE()` instead of `/`, so blank or zero denominators don't propagate as errors — a good AI response should catch that immediately.
+Dividing by zero with `/` in DAX doesn't raise an error: it returns Infinity (or NaN for 0 / 0). The fix is `DIVIDE()`, which returns blank instead. A good AI response should catch that immediately; one that says "/ by zero throws an error" is repeating a common myth, which is itself a useful signal to check its other claims.
 
 ### Improving Performance
 

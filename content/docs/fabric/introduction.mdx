@@ -29,7 +29,7 @@ OneLake is Fabric's built-in data lake — every workspace gets a OneLake locati
 OneLake
      |
      +-- Lakehouse writes Delta tables
-     +-- Warehouse reads/writes the same Delta tables
+     +-- Warehouse writes its own Delta tables, and can query the Lakehouse's
      +-- Power BI reads the same Delta tables directly
      |
      no separate export/import step between workloads
@@ -86,7 +86,7 @@ DirectQuery:  Source -> queried live every time -> fresh, but slower
 Direct Lake:  OneLake Delta tables -> read directly, no copy step -> fast and current
 ```
 
-Direct Lake gets Import-like query speed without a separate refresh cycle, because there's no copy being made — Power BI reads the same Delta files the Lakehouse or Warehouse already produced.
+Direct Lake gets Import-like query speed without a heavy refresh cycle, because there's no copy being made — Power BI reads the same Delta files the Lakehouse or Warehouse already produced. Its "refresh" just points the model at the latest table version, takes seconds, and by default happens automatically.
 
 ---
 

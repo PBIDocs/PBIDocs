@@ -10,7 +10,7 @@ description: How Power BI JSON theme files are structured, what to check for acc
 ```text
 theme.json
      |
-     applied via Format pane > Themes > Browse for themes
+     applied via View > Themes > Browse for themes
      |
      every visual in the report picks up its colors from one file
 ```
@@ -62,7 +62,7 @@ Beyond the base palette, a theme can set defaults for specific visual types via 
 
 ## Accessible Color Palettes
 
-`dataColors` is worth checking for contrast and colorblind-safety before it becomes the standard for every report in the organization, the same way [text contrast](/docs/power-bi-service/security) matters for readability elsewhere.
+`dataColors` is worth checking for contrast and colorblind-safety before it becomes the standard for every report in the organization, the same way [text contrast](/docs/visuals/report-layout) matters for readability elsewhere.
 
 ```text
 Palette check
@@ -90,7 +90,7 @@ theme.json (checked into the same repo as .pbip files)
      one file, applied the same way everywhere
 ```
 
-Keeping the theme file in source control alongside report files means a color or font change is a single commit, not a manual update repeated across every report.
+Keeping the theme file in source control means there's one agreed version to apply. Note that each report stores its own copy of the theme when you import it, so editing `theme.json` doesn't change existing reports by itself: each report has to re-import the new version (**View > Themes > Browse for themes** again). Keeping the file in one place makes that a routine step rather than a hunt for the latest copy.
 
 ---
 

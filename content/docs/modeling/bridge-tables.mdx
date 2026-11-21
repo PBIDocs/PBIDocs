@@ -83,6 +83,8 @@ FactRevenue
 
 Selecting a salesperson filters the bridge table down to that salesperson's rows, which in turn filters the accounts — and any fact table connected to those accounts — down to a matching set.
 
+The middle step runs against a relationship's default direction. Filters normally flow from the one side to the many side, so `DimSalesperson` filters the bridge without help, but the bridge (many) filtering `DimAccount` (one) needs that relationship's cross-filter direction set to **Both**, or `CROSSFILTER(..., BOTH)` in the measures that need it. Without it, choosing a salesperson leaves every account, and all the revenue, in place.
+
 ---
 
 ## A Second Common Case: Products in Multiple Categories
@@ -107,17 +109,19 @@ Product 1001 belongs to two categories. Filtering by `CategoryKey = 11` returns 
 
 ## Bridge Tables and Double-Counting
 
-Because a single fact row can be reachable through more than one bridge row, a naive `SUM` can double-count if the fact table sits behind the bridge rather than in front of it.
+Within any one filter context, a fact row is either included or not, so a measure never counts the same sale twice. What surprises people is the totals across rows:
 
 ```text
-FactRevenue (one row per sale)
-      |
-BridgeSalespersonAccount (many rows per account)
-      |
-DimAccount
+Account 100 revenue: 1,000   (covered by salespeople 1 and 2)
+
+Salesperson 1  | 1,000
+Salesperson 2  | 1,000
+Total          | 1,000   <- not 2,000
 ```
 
-If revenue is placed on the many side of the bridge, the same revenue row can be counted once per matching bridge row. Keep the fact table upstream of the bridge — filtered by it, not joined through it as if it were another dimension — to avoid this.
+Account 100's revenue appears in full under both salespeople, and once in the total. That's correct for a many-to-many relationship, not a bug: each salesperson really did cover that revenue. If the business wants credit *split* instead, store an allocation percentage on the bridge row and compute the measure with `SUMX` over the bridge, multiplying each account's revenue by its share.
+
+The genuine double-counting mistake is summing a value that's stored on the bridge itself, or using `COUNTROWS` over the bridge as if each row were one entity: those count once per pairing.
 
 ---
 
@@ -125,16 +129,20 @@ If revenue is placed on the many side of the bridge, the same revenue row can be
 
 - Keep bridge tables narrow: just the keys needed to connect both sides, plus attributes specific to the relationship.
 - Give bridge tables a clear name that states what they connect, like `BridgeSalespersonAccount` or `BridgeProductCategory`.
-- Watch for double-counting when a fact table sits on the many side of a bridge relationship — validate totals against a known-correct number.
+- Set the bridge-to-dimension relationship's cross-filter direction deliberately (Both, or CROSSFILTER in measures), and validate totals against a known-correct number.
 - Prefer a bridge table over a native many-to-many relationship whenever the relationship itself carries attributes, or more than two tables are involved.
 
 ---
 
 ## Common Mistakes
 
-### Putting a Fact Table on the Many Side of a Bridge
+### Forgetting the Bridge-to-Dimension Filter Direction
 
-This can silently double-count measures whenever a single fact row is reachable through more than one bridge row.
+With the bridge-to-`DimAccount` relationship left single-direction, a salesperson filter stops at the bridge, and every row shows the full, unfiltered revenue. Set that relationship to **Both** (or use `CROSSFILTER` in the measure), and test with a known salesperson.
+
+### Expecting Rows to Add Up to the Total
+
+Per-salesperson revenue across a bridge adds up to more than the grand total whenever accounts are shared. Explain it on the report, or split credit with an allocation column, rather than "fixing" the total.
 
 ### Making the Bridge Table Too Wide
 
@@ -149,7 +157,7 @@ Many-to-many patterns are one of the easier places to introduce silent double-co
 ## Bridge Table Checklist
 
 - The bridge table contains only keys and relationship-specific attributes.
-- Both relationships to the bridge table are one-to-many, not many-to-many.
+- Both relationships to the bridge table are one-to-many, and the one that must filter "upstream" (bridge to dimension) is set to Both or handled with CROSSFILTER.
 - Measures passing through the bridge have been validated against a known-correct total.
 - The bridge table's name clearly states which two tables it connects.
 

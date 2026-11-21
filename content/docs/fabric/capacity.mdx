@@ -37,7 +37,7 @@ F64 is commonly treated as roughly equivalent to the old Power BI Premium P1 SKU
 
 ## Smoothing and Bursting
 
-Fabric doesn't charge every operation at face value the instant it runs. Background operations (like scheduled refreshes or Spark jobs) are smoothed over a 24-hour window, and interactive operations get short-term burst capacity beyond the SKU's baseline.
+Fabric doesn't charge every operation at face value the instant it runs. An operation can briefly use more than the SKU's baseline (bursting), and its cost is then spread out over time (smoothing): background operations, like scheduled refreshes or Spark jobs, over 24 hours; interactive operations, like report queries, over a few minutes.
 
 ```text
 Background operation (e.g. a large refresh)
@@ -46,7 +46,7 @@ Background operation (e.g. a large refresh)
         |
 Interactive operation (e.g. a user opening a report)
         |
-        | can briefly burst above baseline capacity for responsiveness
+        | cost smoothed over a few minutes
 ```
 
 This is why a single heavy job doesn't necessarily throttle the capacity outright — but sustained, consistent overuse across many operations will.
@@ -55,43 +55,46 @@ This is why a single heavy job doesn't necessarily throttle the capacity outrigh
 
 ## Throttling
 
-When a capacity is consistently over its available Capacity Units, Fabric throttles it — starting with delaying background operations, and escalating to rejecting interactive requests if the overage continues.
+When smoothed usage runs ahead of what the capacity can pay back, Fabric throttles it in stages, measured by how many minutes of future capacity are already used up (the carry-forward). Interactive requests are hit first; background jobs last.
 
 ```text
 Capacity usage over time
         |
-        | briefly over -> smoothed, minimal impact
+        | up to 10 minutes of future capacity used -> no throttling
         |
-        | consistently over -> background operations delayed
+        | 10 to 60 minutes -> interactive requests delayed 20 seconds
         |
-        | still over -> interactive operations rejected
+        | 60 minutes to 24 hours -> interactive requests rejected
+        |
+        | over 24 hours -> all requests rejected, including background
 ```
 
-Throttling is the practical signal that a capacity is undersized for its assigned workloads, not just a temporary spike worth ignoring.
+Throttling is the practical signal that a capacity is undersized for its assigned workloads, not just a temporary spike worth ignoring. See Microsoft's [Fabric throttling policy](https://learn.microsoft.com/fabric/enterprise/throttling) for the details and exceptions.
 
 ---
 
-## Autoscale and Pausing
+## Resizing, Pausing, and Spark Autoscale Billing
 
 Capacity doesn't have to run at a fixed size all the time.
 
 ```text
-Autoscale  — automatically increases capacity size temporarily during sustained overage
-Pause      — stops billing entirely for a capacity that isn't in active use
+Resize     — change the F SKU up or down in the Azure portal; takes effect in minutes
+Pause      — stops billing for a capacity that isn't in use (outstanding smoothed usage is billed when you pause)
+Autoscale Billing for Spark — runs Spark jobs on pay-as-you-go compute instead of the capacity
 ```
 
-Pausing a development or test capacity outside of working hours, and relying on autoscale for a production capacity with unpredictable peak load, are both common ways to avoid paying for headroom that sits idle most of the time.
+Unlike Power BI Premium, F SKUs don't automatically grow under load. Pausing a development or test capacity outside working hours, resizing ahead of known peaks, and moving heavy Spark work to Autoscale Billing for Spark are the usual ways to avoid paying for headroom that sits idle most of the time.
 
 ---
 
 ## Migrating from Power BI Premium
 
-Power BI Premium (P SKUs) is being phased out in favor of Fabric capacity (F SKUs). Existing Premium capacities can be migrated to an equivalent Fabric capacity from the admin portal, generally without needing to rebuild workspaces or content.
+Power BI Premium (P SKUs) is being phased out in favor of Fabric capacity (F SKUs). Moving means buying an equivalent F SKU in Azure and reassigning the Premium capacity's workspaces to it (in the admin portal or each workspace's settings), without rebuilding any content.
 
 ```text
 Power BI Premium (P1, P2, P3, ...)
         |
-        | admin portal migration
+        | buy an F SKU, reassign workspaces
         |
 Fabric Capacity (F64, F128, F256, ...)
 ```
@@ -102,7 +105,7 @@ Workspaces assigned to the old Premium capacity carry over to the new Fabric cap
 
 ## Monitoring Usage
 
-The Fabric Capacity Metrics app, installed from the admin portal, shows Capacity Unit consumption broken out by workspace, item, and operation type (background vs. interactive), which is the main tool for understanding what's actually driving a capacity's usage.
+The Microsoft Fabric Capacity Metrics app (a template app a capacity admin installs), shows Capacity Unit consumption broken out by workspace, item, and operation type (background vs. interactive), which is the main tool for understanding what's actually driving a capacity's usage.
 
 ```text
 Fabric Capacity Metrics app
@@ -121,7 +124,7 @@ Reviewing this regularly is what turns "the capacity feels slow" into a specific
 
 - Size capacity based on actual measured usage from the Capacity Metrics app, not a guess extrapolated from Premium sizing alone.
 - Pause non-production capacities outside of active working hours.
-- Use autoscale for production capacities with unpredictable peaks, rather than permanently over-provisioning a fixed size to cover worst case.
+- Resize ahead of known peaks, and consider Autoscale Billing for Spark for heavy, bursty Spark work, rather than permanently over-provisioning a fixed size to cover the worst case.
 - Review the Capacity Metrics app regularly, not just when something is already noticeably slow.
 
 ---
@@ -146,7 +149,7 @@ Guessing which workload is causing throttling, instead of checking the Capacity 
 
 - Capacity size is based on measured usage, reviewed periodically.
 - Non-production capacities are paused when not in active use.
-- Autoscale is enabled for production capacities with unpredictable peak load.
+- There's a plan for peaks (resizing, or Autoscale Billing for Spark), since F SKUs don't grow automatically.
 - The Capacity Metrics app is checked regularly, not only after a slowdown is reported.
 
 ---

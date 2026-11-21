@@ -65,7 +65,7 @@ BridgeSalespersonAccount (many)
 DimAccount (one)
 ```
 
-Every relationship in the bridge design is one-to-many, which Power BI filters more predictably than a native many-to-many join. See [Bridge Tables](/docs/modeling/bridge-tables) for the full pattern.
+Every relationship in the bridge design is one-to-many, which Power BI filters more predictably than a native many-to-many join. One of them has to filter against its default direction (from the bridge to the second dimension), so it needs cross-filter direction **Both** or `CROSSFILTER()` in the measure. See [Bridge Tables](/docs/modeling/bridge-tables#how-filtering-flows-through-a-bridge-table) for the full pattern.
 
 ---
 

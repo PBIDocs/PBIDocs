@@ -15,6 +15,17 @@ const changelog: { date: string; entries: ReactNode[] }[] = [
     date: '2026-11-21',
     entries: [
       <>
+        Accuracy review of the visuals, Fabric, governance, AI, getting-started, Service, and modeling pages (20
+        corrected). Biggest fixes: <Link href="/docs/modeling/bridge-tables">bridge tables</Link> need the
+        bridge-to-dimension relationship set to Both, and per-row totals adding up to more than the grand total is
+        expected, not double-counting; <Link href="/docs/fabric/capacity">Fabric capacity</Link> throttles
+        interactive requests first, and F SKUs don&apos;t autoscale; <Link href="/docs/fabric/direct-lake">Direct
+        Lake</Link> reframes automatically by default; Free users can view capacity content only on F64 or larger (
+        <Link href="/docs/getting-started/power-bi-overview">Power BI Overview</Link>); and Q&amp;A is retiring in
+        December 2026. Also: cross-source relationships in composite models are limited relationships, a theme file
+        has to be re-imported to update a report, and Report Server needs its own Desktop build.
+      </>,
+      <>
         Accuracy review of the remaining DAX function and DAX pattern pages (32 pages, 10 corrected). Fixed
         formulas that would fail or mislead:{' '}
         <Link href="/docs/dax-patterns/running-total">Running Total</Link>&apos;s within-year version referenced a

@@ -82,13 +82,15 @@ A common pattern uses a pipeline's Copy activity to land raw data quickly, then 
 
 ## How This Differs from Power BI Dataflows (Gen1)
 
-Fabric's Dataflows Gen2 is a successor to the dataflows already available directly in the Power BI Service — see [Dataflows](/docs/power-bi-service/dataflows) for that earlier version. The core Power Query experience is the same; the main differences are where the output lands (OneLake, as a queryable Delta table, rather than a Power BI-only dataset format) and Gen2's tighter integration with Pipelines as an orchestration step.
+Fabric's Dataflows Gen2 is a successor to the dataflows already available directly in the Power BI Service — see [Dataflows](/docs/power-bi-service/dataflows) for that earlier version. The core Power Query experience is the same; the main differences are where the output lands (a Delta table in OneLake, or another destination you choose, rather than files in a dataflow's own storage) and Gen2's tighter integration with Pipelines as an orchestration step.
 
 ```text
 Dataflow Gen1 (Power BI Service)     Dataflow Gen2 (Fabric)
         |                                    |
-Output: Power BI-only              Output: Delta table in OneLake,
-        dataset format                      readable by any Fabric workload
+Output: CDM folder files in        Output: Delta table in OneLake,
+        Power BI storage (or your           readable by any Fabric workload
+        own ADLS Gen2), read mainly
+        by Power BI
 ```
 
 ---

@@ -84,13 +84,13 @@ Each column in the aggregation table is mapped to a summarization type and the d
 ```text
 Aggregation Column      | Summarization | Detail Table Column
 -------------------------|----------------|----------------------
-Month                    | GroupBy        | FactSales[DateKey]
+YearMonth                | GroupBy        | DimDate[YearMonth]
 ProductKey                | GroupBy        | FactSales[ProductKey]
 Total Sales               | Sum            | FactSales[SalesAmount]
 Transaction Count          | Count          | FactSales[TransactionID]
 ```
 
-`GroupBy` columns define the aggregation's grain; `Sum`/`Count`/etc. columns define what gets pre-calculated.
+`GroupBy` columns define the aggregation's grain; `Sum`/`Count`/etc. columns define what gets pre-calculated. A GroupBy column maps to the column queries group by at that grain: for a monthly table that's a month column in the date dimension, not the fact table's daily `DateKey`, which would claim a grain the table doesn't have. Queries hit the aggregation when they group by that column (or columns above it in the same dimension, through relationships).
 
 ---
 
@@ -103,7 +103,7 @@ AggSalesByMonth: Import
 FactSales:       DirectQuery
 ```
 
-This is the same Import/DirectQuery split used in composite models generally — the aggregation just adds a specific, pre-summarized shortcut on top.
+This is the same Import/DirectQuery split used in composite models generally — the aggregation just adds a specific, pre-summarized shortcut on top. The dimension tables both of them relate to should be **Dual**: a relationship between an Import aggregation and a DirectQuery-only dimension is limited, and queries through it won't hit the aggregation.
 
 ---
 

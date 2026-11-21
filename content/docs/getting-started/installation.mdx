@@ -43,8 +43,8 @@ Power BI Desktop is Windows-only.
 | Requirement | Minimum |
 |---|---|
 | OS | Windows 10 or later (64-bit) |
-| RAM | 4 GB (8 GB+ recommended for larger models) |
-| .NET | .NET Framework requirements are handled automatically by the installer |
+| RAM | 2 GB available; 4 GB or more recommended (more for larger models) |
+| .NET | .NET Framework 4.7.2 or later, plus the Microsoft Edge WebView2 runtime |
 
 Mac users run Power BI Desktop through a Windows virtual machine, or build reports entirely through the browser-based Power BI Service instead.
 
@@ -52,10 +52,10 @@ Mac users run Power BI Desktop through a Windows virtual machine, or build repor
 
 ## Signing In
 
-Power BI Desktop and the Service both require a Microsoft account tied to a Power BI license (often included with a Microsoft 365 subscription, or purchased separately).
+Power BI Desktop runs without signing in; signing in is needed to publish, or to use features that talk to the Service. The Service needs a **work or school** account (Microsoft Entra ID). Personal Microsoft accounts like outlook.com or gmail.com addresses can't sign up for the Service. Paid licenses (Pro, PPU) are often part of a Microsoft 365 plan, or bought separately.
 
 ```text
-Microsoft Account
+Work or school account
        |
        | sign in
        |
@@ -110,7 +110,7 @@ Power BI Desktop
 Report Server (on-premises)
 ```
 
-Report Server requires a separate license from standard Power BI Pro, and supports a more limited feature set than the cloud Service — some newer visuals and AI features are cloud-only.
+Report Server is licensed through Power BI Premium or SQL Server Enterprise Edition with Software Assurance, not through Pro, and supports a more limited feature set than the cloud Service — some newer visuals and AI features are cloud-only. It also needs its own Desktop build, **Power BI Desktop optimized for Report Server**, which updates a few times a year rather than monthly; reports saved in the regular Desktop can't be published to it.
 
 ---
 

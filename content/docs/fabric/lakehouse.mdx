@@ -85,7 +85,9 @@ SQL Analytics Endpoint
 T-SQL clients, Power BI (DirectQuery / Direct Lake)
 ```
 
-This is what lets a BI tool, or a analyst who only knows SQL, work with Lakehouse data without touching Spark at all.
+This is what lets a BI tool, or an analyst who only knows SQL, work with Lakehouse data without touching Spark at all.
+
+The endpoint's view of the tables is synced from the Lakehouse in the background, so a table a notebook has just written can take a short while to appear or update there. If a SQL query or a Direct Lake model on the endpoint shows stale data right after a load, give it a moment, or trigger a metadata refresh of the endpoint, before assuming the load failed.
 
 ---
 

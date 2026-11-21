@@ -65,7 +65,7 @@ Consistent color use across a report helps readers recognize the same category e
 Every chart in the report
 ```
 
-Power BI supports theme-based coloring, so a single color palette can apply automatically across all visuals.
+A report theme gives every visual the same palette, but it doesn't pin a category to a color: colors are assigned from the palette as each visual draws its series, so "West" can still land on different colors in different charts. For categories that matter, set the color explicitly in each visual (or check that they line up).
 
 ---
 
@@ -158,7 +158,7 @@ Power BI's **Format > Align** and **Distribute** tools (with multiple visuals se
 
 ### Inconsistent Colors Across Visuals
 
-If "West" is blue on one chart and green on another, readers have to relearn the color mapping on every visual. A shared theme prevents this.
+If "West" is blue on one chart and green on another, readers have to relearn the color mapping on every visual. A shared theme helps, but check the key categories visual by visual and set their colors explicitly where they drift.
 
 ### Truncated Axes That Mislead
 

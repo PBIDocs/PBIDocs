@@ -28,7 +28,7 @@ Power BI
 | Premium Per User (PPU) | Power users needing Premium features individually | Everyone viewing PPU content also needs a PPU license |
 | Premium / Fabric Capacity | Organization-wide, capacity-based | Licensed by capacity (SKU), not per user |
 
-Most individuals start on Free or Pro. Larger organizations typically move important workspaces to Premium or Fabric capacity, which removes per-user licensing friction for report *viewers* (though report *creators* still generally need Pro or PPU).
+Most individuals start on Free or Pro. Larger organizations typically move important workspaces to Premium or Fabric capacity (F64 or larger for this), which removes per-user licensing friction for report *viewers* (though report *creators* still need Pro or PPU).
 
 ---
 
@@ -48,7 +48,7 @@ Pro
   | can consume Pro content shared by others
 ```
 
-A Free license is enough to learn Power BI Desktop and build personal reports. Collaborating with a team requires Pro (or a workspace hosted on Premium/Fabric capacity, which can let Free users view content).
+A Free license is enough to learn Power BI Desktop and build personal reports. Collaborating with a team requires Pro (or a workspace on Premium or F64-or-larger Fabric capacity, which lets Free users view content).
 
 ---
 
@@ -64,7 +64,7 @@ Capacity (e.g. F64)
 Multiple workspaces
 ```
 
-This unlocks features unavailable on shared/Pro-only capacity: larger dataset sizes, more frequent refresh, paginated reports, and dataflows — while also letting users with only a Free license view content in a Premium-backed workspace.
+This unlocks features unavailable on shared/Pro-only capacity: larger semantic models, more frequent refresh (up to 48 a day instead of 8), XMLA write access, and the Fabric workloads. (Paginated reports and Gen1 dataflows work on Pro too.) On a Premium P SKU or a Fabric capacity of **F64 or larger**, users with only a Free license can view content in its workspaces. Smaller F SKUs (F2 to F32) still need every viewer to have Pro or PPU.
 
 ---
 
@@ -79,9 +79,13 @@ Microsoft Fabric
    |
    +-- Data Factory (data integration)
    |
-   +-- Synapse Data Engineering (big data processing)
+   +-- Data Engineering (Lakehouse, Spark)
    |
-   +-- Synapse Data Science (ML/AI)
+   +-- Data Warehouse (T-SQL)
+   |
+   +-- Data Science (ML/AI)
+   |
+   +-- Real-Time Intelligence (streaming, KQL)
    |
    +-- OneLake (unified data storage)
 ```

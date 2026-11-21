@@ -49,12 +49,12 @@ Created from the workspace's **New > Dataflow** option, using the same Power Que
 
 ## Referencing a Dataflow from Desktop
 
-Once published, a dataflow's tables appear as a data source in Power BI Desktop, under **Power Platform Dataflows**.
+Once published, a dataflow's tables appear as a data source in Power BI Desktop, under **Get Data > Dataflows**.
 
 ```text
 Power BI Desktop
        |
-       | Get Data > Power Platform Dataflows
+       | Get Data > Dataflows
        |
 Dataflow Table
        |
@@ -85,9 +85,9 @@ Scheduling the dataflow refresh to complete before dependent dataset refreshes a
 
 ---
 
-## Linked vs. Computed Entities
+## Linked vs. Computed Tables
 
-A **linked entity** references another dataflow's table without copying or transforming it further.
+A **linked table** (called a linked *entity* in older documentation) references another dataflow's table without copying or transforming it further.
 
 ```text
 Dataflow A: CleanedSales
@@ -97,7 +97,7 @@ Dataflow A: CleanedSales
 Dataflow B: uses CleanedSales as-is
 ```
 
-A **computed entity** takes a linked entity and applies additional transformations, without re-touching the original source.
+A **computed table** (formerly computed entity) takes a linked table and applies additional transformations, without re-touching the original source.
 
 ```text
 Dataflow A: CleanedSales
@@ -107,7 +107,7 @@ Dataflow A: CleanedSales
 Dataflow B: CleanedSalesByRegion (computed)
 ```
 
-Computed entities require Premium or Fabric capacity, since the transformation runs inside the Power BI Service rather than against the original source.
+Computed tables require Premium or Fabric capacity, since the transformation runs inside the Power BI Service against stored dataflow output rather than against the original source.
 
 ---
 
@@ -171,7 +171,7 @@ Before relying on a dataflow in production:
 
 ## A Newer Alternative: Dataflows Gen2
 
-Microsoft Fabric offers a successor to this feature, Dataflows Gen2, which uses the same Power Query Editor but lands its output as a Delta table in OneLake instead of a Power BI-only dataset format — making it readable by any Fabric workload, not just Power BI datasets. See [Data Factory](/docs/fabric/data-factory) for how it fits alongside Fabric Pipelines.
+Microsoft Fabric offers a successor to this feature, Dataflows Gen2, which uses the same Power Query Editor but lands its output as a Delta table in OneLake (or another destination you choose) instead of in the dataflow's own storage — making it readable by any Fabric workload, not just Power BI datasets. See [Data Factory](/docs/fabric/data-factory) for how it fits alongside Fabric Pipelines.
 
 ---
 
