@@ -52,7 +52,19 @@ Source = Sql.Database(
 )
 ```
 
-Passing a hand-written `Query` through the **Advanced Options** dialog runs exactly that SQL — but it also becomes the entire query as far as [query folding](/docs/power-query/query-folding) is concerned. Every M step added *after* this point runs locally against the query's result set, since Power Query has no way to fold additional M transformations back into a SQL string it didn't generate itself.
+Passing a hand-written `Query` through the **Advanced Options** dialog runs exactly that SQL — but by default it also becomes the end of [query folding](/docs/power-query/query-folding). Every M step added *after* this point runs locally against the query's result set.
+
+The exception is `Value.NativeQuery()` with folding switched on, which lets later steps fold on top of your SQL by wrapping it as a subquery:
+
+```powerquery lineNumbers
+Source = Sql.Database("sqlserver01", "SalesDB"),
+Result = Value.NativeQuery(
+    Source,
+    "SELECT CustomerID, Amount FROM Sales",
+    null,
+    [EnableFolding = true]
+)
+```
 
 ```text
 Sql.Database with native query
@@ -60,6 +72,7 @@ Sql.Database with native query
         | any Table.SelectRows / Table.Group added after this
         |
 runs locally, does NOT get pushed back into SQL Server
+(unless the query uses Value.NativeQuery with EnableFolding = true)
 ```
 
 This is the opposite tradeoff of connecting through the standard navigator and building up M steps normally — that path keeps folding all the way through, as long as each individual step is foldable. A native query is the right call when the SQL itself needs to do something M's folding can't express (a specific execution hint, a stored procedure call) — not a shortcut to avoid learning the M side.
@@ -72,7 +85,7 @@ This is the opposite tradeoff of connecting through the standard navigator and b
 |---|---|---|
 | Data freshness | As of last scheduled refresh | Live, every query hits the database |
 | Performance | Fast in-report (data is local) | Depends entirely on source query speed |
-| Row count | Practical limit in the millions, not billions | Effectively unlimited — source does the work |
+| Size limit | Model size and memory (1 GB per model on Pro, more on Premium/Fabric capacity) | No model-size limit, but a single query can return at most 1 million rows to Power BI |
 | Refresh load | One heavy pull per scheduled refresh | Continuous, per-visual query load on the source |
 
 A reasonable rule of thumb: Import unless there's a specific reason not to — near-real-time freshness requirements, a source too large to reasonably import, or a compliance reason data can't leave the source system. DirectQuery trades import's simplicity and report-time speed for freshness, and shifts performance risk onto the source database being queried repeatedly, often by many concurrent report viewers.

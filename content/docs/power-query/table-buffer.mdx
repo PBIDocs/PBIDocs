@@ -50,6 +50,7 @@ See [Query Folding](/docs/power-query/query-folding#what-breaks-folding) for why
 ## When It's Actually Worth Using
 
 - A source with genuine side effects or volatility (an API that returns different data on each call, a function using `DateTime.LocalNow()` internally) that needs to return one consistent result for the rest of the query.
+- Holding a sort order before `Table.Distinct()` or `Table.FirstN()`: without a buffer, Power Query doesn't guarantee the sorted order survives into the next step, so "keep the first row per key" can keep the wrong one. See [Table.Distinct()](/docs/power-query/table-distinct#column-order-matters--the-first-match-wins).
 - A small reference/lookup table used repeatedly inside a per-row function, where re-evaluating it on every row would be wasteful.
 - Debugging: buffering a step makes its output deterministic for the rest of the query, useful when tracking down a bug that seems to depend on evaluation order.
 

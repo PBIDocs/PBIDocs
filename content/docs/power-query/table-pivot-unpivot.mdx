@@ -73,10 +73,10 @@ A new column added next month IS unpivoted automatically
 ```powerquery lineNumbers
 Table.Pivot(
     table as table,
-    pivotColumn as list,
-    attributeColumn as any,
-    valueColumn as any,
-    aggregationFunction as nullable function
+    pivotValues as list,
+    attributeColumn as text,
+    valueColumn as text,
+    optional aggregationFunction as nullable function
 ) as table
 ```
 
@@ -102,7 +102,7 @@ West   | Jan   | 50      <- duplicate Region+Month combination
 Pivoted, West/Jan cell = List.Sum({100, 50}) = 150
 ```
 
-Without an aggregation function (or with `null` passed explicitly), Power Query still requires *some* resolution for duplicates — omitting it isn't a shortcut, just an implicit "pick one arbitrarily" that produces inconsistent results depending on row order.
+Without an aggregation function, duplicates make the step fail with **"There were too many elements in the enumeration to complete the operation."** It doesn't pick one of the values for you. In the Editor, the Pivot dialog's **Advanced options** choose the function; "Don't Aggregate" leaves it out, which only works when every combination is unique.
 
 ---
 
@@ -118,7 +118,7 @@ As covered above — on any source where new columns can appear over time (a new
 
 ### Pivoting Without Checking for Duplicate Keys First
 
-If duplicates aren't expected but exist due to a data quality issue upstream, `Table.Pivot()` will still run — silently aggregating them per whatever function was supplied, masking a problem that would have been obvious as an error in a stricter tool.
+If duplicates aren't expected but exist due to a data quality issue upstream, a `Table.Pivot()` with an aggregation function still runs, silently summing (or counting) them and masking the problem. Without one, the same duplicates surface as the "too many elements" error. Check that the key columns are unique before relying on either.
 
 ---
 

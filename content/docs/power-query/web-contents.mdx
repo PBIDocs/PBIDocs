@@ -60,7 +60,9 @@ Source = Json.Document(
 )
 ```
 
-Splitting the URL into a base (`https://api.example.com`) and a `RelativePath` looks equivalent to writing the full URL directly, but it isn't — the Power BI Service's data source credentials are matched against the **base URL only**. A query with the full URL baked in for every different endpoint registers as a separate data source per endpoint; using `RelativePath` keeps every call to the same API registered under one data source, with one set of credentials.
+Splitting the URL into a base (`https://api.example.com`) and a `RelativePath` gives the same request, but it matters once the report is published. Before a scheduled refresh, the Power BI Service works out each data source from the query text, without running it. A fixed base URL as the first argument is something it can read. A URL built from other values (a page number, a date, a value from another query) can't be known until the query runs, so the Service reports a **dynamic data source** and won't schedule refresh.
+
+Keep the first argument a fixed text value, and put everything that varies into `RelativePath` and `Query`. Credentials are then set once for that base URL.
 
 ---
 
@@ -75,7 +77,7 @@ Source = Json.Document(
 )
 ```
 
-For anything beyond a public, unauthenticated endpoint, credentials typically belong in **Data Source Settings** (Web API / Anonymous / API Key credential types) rather than hard-coded directly in the query — hard-coding a key here means it travels with the query text itself, including into version control if the .pbix is stored there.
+For anything beyond a public, unauthenticated endpoint, credentials typically belong in **Data Source Settings** (Anonymous, Basic, Web API key, or Organizational account) rather than hard-coded directly in the query — hard-coding a key here means it travels with the query text itself, including into version control if the .pbix is stored there.
 
 ---
 
@@ -101,9 +103,9 @@ Useful for an API where a 404 is a meaningful, expected response (e.g., "no data
 
 `"https://api.example.com/products?category=" & category` works until `category` contains a space, an `&`, or another character that needs URL encoding — the `Query` record option handles this automatically.
 
-### Using the Full URL Instead of RelativePath
+### Building the URL Dynamically Instead of Using RelativePath
 
-Baking every endpoint into a full literal URL means the Power BI Service sees each one as a separate data source needing its own credentials — a query that calls ten different endpoints on the same API ends up needing ten credential entries instead of one.
+`Web.Contents("https://api.example.com/data?page=" & Text.From(page))` works in Desktop, then can't be scheduled in the Service, because the data source isn't known until the query runs. Keep the base URL fixed and move the variable parts into `RelativePath` and `Query`. See [Web.Contents with a dynamic URL](/blog/web-contents-literal-string-parameter-error).
 
 ### Not Handling Formula.Firewall When Combining With Other Sources
 
@@ -114,7 +116,7 @@ Passing a value from another query or source into `Web.Contents()` per row (insi
 ## Best Practices
 
 - Use the `Query` record option for query parameters, never manual string concatenation.
-- Split the URL into a base and `RelativePath` so the Service registers one data source per API, not one per endpoint.
+- Keep the first argument a fixed base URL and put the varying parts in `RelativePath` and `Query`, so scheduled refresh works in the Service.
 - Keep credentials in Data Source Settings, not hard-coded into the query text.
 - Use `ManualStatusHandling` only for response codes that are genuinely expected and meaningful, not to silently swallow real failures.
 

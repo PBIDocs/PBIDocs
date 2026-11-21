@@ -1,6 +1,6 @@
 ---
 title: "Excel.Workbook()"
-description: Learn how Excel.Workbook reads sheets and named tables from an Excel file, the difference between accessing a Sheet vs a Table, and why a renamed sheet breaks a query with no obvious error at the point of the actual change.
+description: Learn how Excel.Workbook reads sheets and named tables from an Excel file, the difference between accessing a Sheet vs a Table, and the error a renamed sheet produces.
 ---
 
 # Excel.Workbook()
@@ -52,7 +52,7 @@ Source{[Item="SalesData", Kind="Table"]}[Data]   -- defined Table, more reliable
 Source{[Name="Sheet1"]}[Data]
 ```
 
-If "Sheet1" is later renamed, deleted, or the workbook is replaced with a differently-structured version, this record-access step doesn't error where the mistake actually is — it returns `null`, which then fails at whatever step tries to use `[Data]` as a table. See [We Cannot Convert the Value Null to Type Table](/blog/cannot-convert-null-to-type-table-error) for exactly this failure mode and the fix.
+If "Sheet1" is later renamed or deleted, this lookup finds no matching row and the step fails with **"Expression.Error: The key didn't match any rows in the table."** The fix is to point the step at the sheet's new name. See [The Key Didn't Match Any Rows in the Table](/blog/key-didnt-match-any-rows-error) for how to read the error's Details and make the lookup sturdier.
 
 This is the single most common source of a "worked for months, then broke" Excel-based query: nothing in the M code changed, but the source workbook's sheet name did.
 
@@ -99,4 +99,4 @@ Source = Excel.Workbook(File.Contents("Sales.xlsx"))
 - [Table.TransformColumnTypes()](/docs/power-query/table-transformcolumntypes)
 - [Csv.Document()](/docs/power-query/csv-document)
 
-Getting "We cannot convert the value null to type Table" after a workbook change? See [that error explained](/blog/cannot-convert-null-to-type-table-error) — a renamed or missing sheet is the most common cause.
+Getting "The key didn't match any rows in the table" after a workbook change? See [that error explained](/blog/key-didnt-match-any-rows-error) — a renamed or missing sheet is the most common cause.

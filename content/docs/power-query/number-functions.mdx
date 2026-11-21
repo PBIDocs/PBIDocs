@@ -1,17 +1,22 @@
 ---
 title: "Number.Round(), Number.RoundUp() & Number.RoundDown()"
-description: Learn how Number.Round, Number.RoundUp, and Number.RoundDown differ, why "round up" doesn't mean what it sounds like for negative numbers, and how negative digits round to the left of the decimal point.
+description: Learn how Number.Round, Number.RoundUp, and Number.RoundDown differ, why Number.Round(2.5) returns 2, why Power Query's RoundUp is not Excel's ROUNDUP for negative numbers, and how negative digits round to the left of the decimal point.
 ---
 
 # Number.Round(), Number.RoundUp() & Number.RoundDown()
 
-These three round a number, but not the same way — `Number.Round()` rounds to the nearest value, while `Number.RoundUp()` and `Number.RoundDown()` always move a fractional value away from or toward zero, regardless of how close it already is.
+These three round a number, but not the same way. `Number.Round()` rounds to the nearest value. `Number.RoundUp()` and `Number.RoundDown()` always move in a fixed direction: up toward positive infinity, or down toward negative infinity, however close the value already is.
+
+Two of their behaviours differ from Excel and DAX, and both catch people out: ties round to **even** by default, and `RoundUp` on a negative number moves **toward** zero.
 
 ```powerquery lineNumbers
-Number.Round(number as number, optional digits as nullable number, optional roundingMode as nullable number) as number
-Number.RoundUp(number as number, optional digits as nullable number) as number
-Number.RoundDown(number as number, optional digits as nullable number) as number
+Number.Round(number as nullable number, optional digits as nullable number, optional roundingMode as nullable number) as nullable number
+Number.RoundUp(number as nullable number, optional digits as nullable number) as nullable number
+Number.RoundDown(number as nullable number, optional digits as nullable number) as nullable number
+Number.RoundAwayFromZero(number as nullable number, optional digits as nullable number) as nullable number
 ```
+
+All of them return `null` for a `null` input rather than erroring.
 
 ---
 
@@ -29,55 +34,74 @@ Number.Round(3.14159, 2)
 
 ---
 
-## "Up" Means Away From Zero, Not Toward Positive Infinity
+## Number.Round Breaks Ties to Even
+
+When a value sits exactly halfway, `Number.Round()` doesn't round it up. By default it picks the nearest **even** number (`RoundingMode.ToEven`, also called banker's rounding).
 
 ```powerquery lineNumbers
-Number.RoundUp(2.1, 0)
-Number.RoundUp(-2.1, 0)
+Number.Round(2.5)
+Number.Round(3.5)
+Number.Round(-2.5)
 ```
 
 ```text
-Number.RoundUp(2.1, 0)  -> 3
-Number.RoundUp(-2.1, 0) -> -3    <- not -2
+Number.Round(2.5)  -> 2     <- not 3
+Number.Round(3.5)  -> 4
+Number.Round(-2.5) -> -2
 ```
 
-This is the single most common surprise with these functions. `RoundUp` doesn't mean "toward positive infinity" (that would make `-2.1` round to `-2`) — it means "away from zero," so a negative value gets *more* negative. `RoundDown` is the mirror image: it always moves toward zero.
+Excel's `ROUND()` and DAX's `ROUND()` both round half away from zero, so the same value can round differently in Power Query and in a measure. To get the Excel behaviour in M, pass a rounding mode:
 
 ```powerquery lineNumbers
-Number.RoundDown(2.9, 0)
-Number.RoundDown(-2.9, 0)
+Number.Round(2.5, 0, RoundingMode.AwayFromZero)   // 3
+```
+
+| Rounding mode | What happens on an exact tie |
+|---|---|
+| `RoundingMode.ToEven` (default) | Round to the nearest even number |
+| `RoundingMode.AwayFromZero` | Round away from zero (Excel and DAX `ROUND`) |
+| `RoundingMode.TowardZero` | Round toward zero |
+| `RoundingMode.Up` | Round up |
+| `RoundingMode.Down` | Round down |
+
+The mode only matters for ties: `Number.Round(2.6)` is `3` under every mode.
+
+---
+
+## RoundUp Means Toward Positive Infinity
+
+`Number.RoundUp()` returns the next highest number, which makes it a ceiling function. `Number.RoundDown()` is a floor.
+
+```powerquery lineNumbers
+Number.RoundUp(2.1)
+Number.RoundUp(-2.1)
+Number.RoundDown(2.9)
+Number.RoundDown(-2.9)
 ```
 
 ```text
-Number.RoundDown(2.9, 0)  -> 2
-Number.RoundDown(-2.9, 0) -> -2   <- not -3
+Number.RoundUp(2.1)    -> 3
+Number.RoundUp(-2.1)   -> -2    <- toward zero, not -3
+Number.RoundDown(2.9)  -> 2
+Number.RoundDown(-2.9) -> -3    <- away from zero, not -2
+```
+
+For positive numbers this matches Excel's `ROUNDUP()` and `ROUNDDOWN()`. For negative numbers it's the opposite: Excel's and DAX's `ROUNDUP(-2.1, 0)` return `-3`, because they round away from zero. The M function that does that is `Number.RoundAwayFromZero()`:
+
+```text
+Number.RoundAwayFromZero(-2.1) -> -3
+Number.RoundAwayFromZero(2.1)  -> 3
 ```
 
 <NumberRoundPlayground />
 
-Try a negative number with both functions — the direction each one moves is fixed (always away from zero for RoundUp, always toward zero for RoundDown), not dependent on which integer is numerically closer.
-
----
-
-## Number.Round Rounds Half Away From Zero
-
-Without a `roundingMode`, `Number.Round()` breaks an exact halfway tie by rounding away from zero — the same convention Excel's `ROUND()` uses.
-
-```powerquery lineNumbers
-Number.Round(2.5, 0)
-Number.Round(-2.5, 0)
-```
-
-```text
-Number.Round(2.5, 0)  -> 3
-Number.Round(-2.5, 0) -> -3
-```
+Try a negative number such as `-2.1`, then a tie such as `2.5`. RoundUp and RoundDown always move the same direction on the number line, whatever the sign.
 
 ---
 
 ## Negative Digits Round to the Left of the Decimal Point
 
-The `digits` argument isn't limited to positive values — a negative digit count rounds to the nearest ten, hundred, thousand, and so on, instead of to a decimal place.
+The `digits` argument isn't limited to positive values. A negative digit count rounds to the nearest ten, hundred, thousand, and so on, instead of to a decimal place.
 
 ```powerquery lineNumbers
 Number.Round(1234, -2)
@@ -94,15 +118,19 @@ digits = -2  -> nearest 100
 digits = -3  -> nearest 1000
 ```
 
-This is the feature most people don't know exists — reaching for a manual `divide, round, multiply back` pattern to round to the nearest hundred works, but `Number.Round(value, -2)` does the identical thing directly.
+A manual divide, round, and multiply-back pattern works too, but `Number.Round(value, -2)` does the same thing directly.
 
 ---
 
 ## Common Mistakes
 
-### Assuming RoundUp Means "Toward Positive Infinity"
+### Expecting 2.5 to Round to 3
 
-As covered above — `Number.RoundUp(-2.1, 0)` returns `-3`, not `-2`. If the goal is genuinely "always round toward positive infinity" (a true ceiling, regardless of sign), `RoundUp`/`RoundDown` aren't the right tool; that behavior needs an explicit sign check.
+`Number.Round(2.5)` returns `2`. If totals rounded in Power Query don't match the same values rounded in Excel or in a DAX measure, the default tie-breaking is the usual reason. Pass `RoundingMode.AwayFromZero` when the result has to match.
+
+### Using RoundUp Where Excel's ROUNDUP Was Meant
+
+Formulas ported from Excel often turn `ROUNDUP` into `Number.RoundUp`. That's identical for positive values and wrong for negative ones: `Number.RoundUp(-2.1)` is `-2`, while `ROUNDUP(-2.1, 0)` is `-3`. Use `Number.RoundAwayFromZero` to keep Excel's behaviour.
 
 ### Manually Rounding to Hundreds or Thousands
 
@@ -110,19 +138,19 @@ As covered above — `Number.RoundUp(-2.1, 0)` returns `-3`, not `-2`. If the go
 Number.Round(value / 100, 0) * 100
 ```
 
-This works, but `Number.Round(value, -2)` does the same rounding in one call, without the intermediate division and multiplication.
+This works, but `Number.Round(value, -2)` does the same rounding in one call.
 
 ### Forgetting digits Defaults to Whole Numbers
 
-`Number.Round(3.14159)` with no second argument returns `3`, not `3.14159` unrounded — omitting `digits` doesn't mean "don't round," it means "round to 0 decimal places."
+`Number.Round(3.14159)` with no second argument returns `3`. Omitting `digits` doesn't mean "don't round"; it means "round to 0 decimal places".
 
 ---
 
 ## Best Practices
 
-- Reach for `Number.Round()` for normal nearest-value rounding; reserve `RoundUp`/`RoundDown` for when the direction genuinely needs to be fixed regardless of the value's sign.
-- Use a negative `digits` value to round to tens, hundreds, or thousands directly, instead of a manual divide/round/multiply pattern.
-- Don't assume `RoundUp` behaves like a mathematical ceiling function on negative numbers — it doesn't.
+- Use `Number.Round()` for nearest-value rounding, and decide on the tie-breaking mode deliberately when the numbers must match Excel or DAX.
+- Use `Number.RoundUp`/`Number.RoundDown` when you want a ceiling or floor, and `Number.RoundAwayFromZero` when you want Excel's `ROUNDUP` behaviour.
+- Use a negative `digits` value to round to tens, hundreds, or thousands directly.
 
 ---
 
@@ -130,5 +158,5 @@ This works, but `Number.Round(value, -2)` does the same rounding in one call, wi
 
 - [M Language](/docs/power-query/m-language)
 - [Table.TransformColumnTypes()](/docs/power-query/table-transformcolumntypes)
-- [Number.ToText()](/docs/power-query/number-totext) — formatting a number for display, including the "P" percent gotcha
+- [Number.ToText()](/docs/power-query/number-totext): formatting a number for display, including the "P" percent gotcha
 - [M Function Reference](/docs/power-query/functions)

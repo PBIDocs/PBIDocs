@@ -11,8 +11,8 @@ description: Learn how Table.TransformColumns applies a function to every value 
 Table.TransformColumns(
     table as table,
     transformOperations as list,
-    defaultTransformation as nullable function,
-    missingField as nullable number
+    optional defaultTransformation as nullable function,
+    optional missingField as nullable number
 ) as table
 ```
 
@@ -56,11 +56,11 @@ Each column in the list gets its own transformation, applied independently — `
 ## Bare Function Reference vs. each _
 
 ```text
-{"Name", Text.Trim}                    <- bare reference: Text.Trim takes exactly one argument
+{"Name", Text.Trim}                    <- bare reference: the value is the only argument needed
 {"Amount", each Number.Round(_, 2)}    <- each _: needed when extra arguments are required
 ```
 
-A function that takes exactly one argument (the value being transformed) can be passed directly by name. Anything needing additional fixed arguments needs the `each _` form, where `_` stands for the current value.
+A function whose only required argument is the value being transformed can be passed directly by name. Anything needing additional fixed arguments needs the `each _` form, where `_` stands for the current value.
 
 ---
 
@@ -85,7 +85,7 @@ Trying to combine two columns into a new one with `Table.TransformColumns` doesn
 {"Name", Text.Trim()}
 ```
 
-This is a syntax error — `Text.Trim()` calls the function immediately with no arguments, rather than passing the function itself for `Table.TransformColumns` to call later, once per value. The bare name `Text.Trim` (no parentheses) is what's needed.
+This fails with an error that 0 arguments were passed to a function expecting at least 1. `Text.Trim()` calls the function immediately with no arguments, rather than passing the function itself for `Table.TransformColumns` to call later, once per value. The bare name `Text.Trim` (no parentheses) is what's needed.
 
 ### Using the Wrong Column Name
 
@@ -93,7 +93,7 @@ This is a syntax error — `Text.Trim()` calls the function immediately with no 
 Table.TransformColumns(Source, {{"name", Text.Trim}})
 ```
 
-Column names are case-sensitive — `"name"` and `"Name"` are different references. This produces a "column not found" error naming the exact (wrong) string used.
+Column names are case-sensitive — `"name"` and `"Name"` are different references. This fails with "The column 'name' of the table wasn't found", naming the exact (wrong) string used.
 
 <TableTransformColumnsPlayground />
 
@@ -103,7 +103,7 @@ Column names are case-sensitive — `"name"` and `"Name"` are different referenc
 {"Amount", Number.From}
 ```
 
-Converting text to a number doesn't automatically make Power Query treat the column's declared type as numeric afterward — a **Changed Type** step (or the optional fourth argument in some cases) is usually still needed, since `Table.TransformColumns` transforms values, not the column's type metadata.
+Converting text to numbers doesn't change the column's declared type: it stays `any`, because `Table.TransformColumns` transforms values, not the column's type metadata. Either add a **Changed Type** step, or give the type as a third item in the transformation: `{"Amount", Number.From, type number}`.
 
 ### Passing a Function That Doesn't Handle Every Existing Value
 

@@ -154,23 +154,23 @@ Editing this script directly — renaming a step, inserting a line, changing a f
 
 ### Adding Error Handling the UI Doesn't Expose
 
-Some things are only practical to add directly in Advanced Editor, because there's no ribbon button for them. Wrapping a step in `try...otherwise` is a common example — it lets a query keep running even if one value fails to convert, instead of the whole refresh erroring out.
+Some things are only practical to add directly in Advanced Editor, because there's no ribbon button for them. Wrapping a conversion in `try...otherwise` is a common example: it decides what happens to a value that fails to convert, instead of leaving an error in the cell.
 
 Starting from a UI-built query:
 
 ```powerquery lineNumbers
 let
-    Source = Csv.Document(File.Contents("orders.csv")),
+    Source = Table.PromoteHeaders(Csv.Document(File.Contents("orders.csv"))),
     #"Changed Type" = Table.TransformColumnTypes(Source, {{"OrderDate", type date}})
 in
     #"Changed Type"
 ```
 
-If a handful of rows have a malformed date, `#"Changed Type"` errors on those rows, and the query fails entirely. Editing that line directly in Advanced Editor to add `try...otherwise` changes the outcome from a hard failure to a handled one:
+If a handful of rows have a malformed date, those cells become errors. The table still loads, but the bad cells arrive empty, and the only sign is an "errors" count in the load dialog that's easy to dismiss. Editing that line directly in Advanced Editor to add `try...otherwise` makes the handling deliberate:
 
 ```powerquery lineNumbers
 let
-    Source = Csv.Document(File.Contents("orders.csv")),
+    Source = Table.PromoteHeaders(Csv.Document(File.Contents("orders.csv"))),
     #"Changed Type" = Table.TransformColumns(
         Source,
         {{"OrderDate", each try Date.From(_) otherwise null, type date}}
@@ -179,7 +179,7 @@ in
     #"Changed Type"
 ```
 
-Now a bad date becomes `null` instead of an error, and the refresh completes with the rest of the data intact. There's no equivalent checkbox for this in the ribbon — it only exists as a direct edit to the M.
+Now a bad date becomes `null` by design rather than by accident, and the step shows no errors. The same pattern can substitute a placeholder date or flag the row instead. There's no equivalent checkbox for this in the ribbon (the closest is **Replace Errors**, which adds a separate step) — the inline form is a direct edit to the M.
 
 See [Error Handling in Power Query](/docs/power-query/error-handling) for the full pattern — including `try` without `otherwise`, checking `[HasError]`, and when catching the error is the wrong fix.
 

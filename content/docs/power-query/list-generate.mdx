@@ -50,7 +50,7 @@ Each argument is itself a function (note the `() =>` and `each` syntax) — `ini
 )
 ```
 
-A manual alternative to `{#date(2026,1,1) .. #date(2026,12,31)}` list syntax, useful when the step size isn't a simple day-by-day increment, or when the stopping condition depends on something more complex than a fixed end date.
+For a plain day-by-day range, `List.Dates(#date(2026, 1, 1), 365, #duration(1, 0, 0, 0))` is simpler (the `..` range syntax works for numbers, not dates). `List.Generate` earns its place when the step isn't a fixed duration (month ends, business days) or when the stopping condition is more complex than a known count.
 
 ---
 
@@ -83,16 +83,23 @@ Each step's record carries forward everything the next step needs — the same p
 The most common real-world use: an API that returns results one page at a time, where the next request depends on something from the previous response (a `nextPageToken`, or simply incrementing a page number until an empty result comes back).
 
 ```powerquery lineNumbers
-#"All Pages" = List.Generate(
-    () => [page = 1, result = Json.Document(Web.Contents("https://api.example.com/data?page=1"))],
-    each List.Count([result]) > 0,
-    each [
-        page = [page] + 1,
-        result = Json.Document(Web.Contents("https://api.example.com/data?page=" & Text.From([page] + 1)))
-    ],
-    each [result]
-)
+#"All Pages" = let
+    GetPage = (n as number) => Json.Document(
+        Web.Contents(
+            "https://api.example.com",
+            [RelativePath = "data", Query = [page = Text.From(n)]]
+        )
+    )
+in
+    List.Generate(
+        () => [page = 1, result = GetPage(1)],
+        each List.Count([result]) > 0,
+        each [page = [page] + 1, result = GetPage([page] + 1)],
+        each [result]
+    )
 ```
+
+The page number goes in the `Query` option, not concatenated onto the URL. A URL built by concatenation works in Desktop, but the Service can't schedule refresh for it (see [Web.Contents](/docs/power-query/web-contents#relativepath-why-it-matters-for-the-service)).
 
 The optional fourth argument (`selector`) picks what actually ends up in the final list — here, just the `result` field from each step's record, not the page number used to track progress. See [Web.Contents](/docs/power-query/web-contents) for the connector this pattern is built on.
 

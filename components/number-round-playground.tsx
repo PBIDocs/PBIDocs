@@ -8,34 +8,47 @@ import { AskAiInlineButton } from '@/components/ask-ai-inline-button';
 import { buildAskAiPrompt } from '@/lib/ask-ai-events';
 
 // digits >= 0: round to that many decimal places. digits < 0: round to the
-// nearest 10^-digits (hundreds, thousands, ...) by shifting the decimal
-// point before and after -- same idea Number.Round(value, -2) documents.
-//
-// Deliberately not JS's native Math.round(): it breaks an exact tie by
-// rounding toward positive infinity (Math.round(-2.5) === -2), which
-// contradicts the page's own documented "round half away from zero"
-// behavior (Number.Round(-2.5, 0) -> -3). floor(x+0.5)/ceil(x-0.5) instead
-// breaks the tie away from zero on both sides, matching that documented
-// behavior rather than JS's built-in convention.
-function roundTo(value: number, digits: number): number {
+// nearest 10^-digits (hundreds, thousands, ...) by shifting the decimal point.
+// The scaled value is snapped to 9 decimals first so float noise
+// (2.675 * 100 = 267.49999...) doesn't turn an exact tie into a non-tie.
+function scale(value: number, digits: number): [number, number] {
   const factor = Math.pow(10, digits);
-  const scaled = value * factor;
-  const rounded = value >= 0 ? Math.floor(scaled + 0.5) : Math.ceil(scaled - 0.5);
+  return [Number((value * factor).toFixed(9)), factor];
+}
+
+function isExactTie(value: number, digits: number): boolean {
+  const [scaled] = scale(value, digits);
+  return Math.abs(scaled - Math.trunc(scaled)) === 0.5;
+}
+
+// Number.Round's default: RoundingMode.ToEven (banker's rounding) on an exact tie.
+function roundToEven(value: number, digits: number): number {
+  const [scaled, factor] = scale(value, digits);
+  const floor = Math.floor(scaled);
+  const diff = scaled - floor;
+  let rounded: number;
+  if (diff > 0.5) rounded = floor + 1;
+  else if (diff < 0.5) rounded = floor;
+  else rounded = floor % 2 === 0 ? floor : floor + 1;
   return rounded / factor;
 }
 
+// Number.RoundUp: the next highest number (a ceiling, toward +infinity).
 function roundUp(value: number, digits: number): number {
-  const factor = Math.pow(10, digits);
-  const scaled = value * factor;
-  const away = value >= 0 ? Math.ceil(scaled) : Math.floor(scaled);
-  return away / factor;
+  const [scaled, factor] = scale(value, digits);
+  return Math.ceil(scaled) / factor;
 }
 
+// Number.RoundDown: the next lowest number (a floor, toward -infinity).
 function roundDown(value: number, digits: number): number {
-  const factor = Math.pow(10, digits);
-  const scaled = value * factor;
-  const toward = value >= 0 ? Math.floor(scaled) : Math.ceil(scaled);
-  return toward / factor;
+  const [scaled, factor] = scale(value, digits);
+  return Math.floor(scaled) / factor;
+}
+
+// Number.RoundAwayFromZero: positives up, negatives down (what Excel's ROUNDUP does).
+function roundAwayFromZero(value: number, digits: number): number {
+  const [scaled, factor] = scale(value, digits);
+  return (scaled >= 0 ? Math.ceil(scaled) : Math.floor(scaled)) / factor;
 }
 
 function formatResult(n: number): string {
@@ -51,11 +64,13 @@ export function NumberRoundPlayground() {
   const digitsNum = Number.parseInt(digits, 10);
   const inputsAreValid = !Number.isNaN(valueNum) && !Number.isNaN(digitsNum);
 
-  const roundResult = inputsAreValid ? roundTo(valueNum, digitsNum) : null;
+  const roundResult = inputsAreValid ? roundToEven(valueNum, digitsNum) : null;
   const upResult = inputsAreValid ? roundUp(valueNum, digitsNum) : null;
   const downResult = inputsAreValid ? roundDown(valueNum, digitsNum) : null;
+  const awayResult = inputsAreValid ? roundAwayFromZero(valueNum, digitsNum) : null;
+  const isTie = inputsAreValid && isExactTie(valueNum, digitsNum);
 
-  const formula = `Number.Round(${value}, ${digits})\nNumber.RoundUp(${value}, ${digits})\nNumber.RoundDown(${value}, ${digits})`;
+  const formula = `Number.Round(${value}, ${digits})\nNumber.RoundUp(${value}, ${digits})\nNumber.RoundDown(${value}, ${digits})\nNumber.RoundAwayFromZero(${value}, ${digits})`;
 
   return (
     <div id="try-it-live" className="not-prose my-6 rounded-xl border border-fd-border bg-fd-secondary/30 p-5">
@@ -94,7 +109,7 @@ export function NumberRoundPlayground() {
         {highlightCode(formula)}
       </pre>
 
-      <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-3">
+      <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
         <div className="rounded-lg border border-fd-border bg-fd-background p-3">
           <p className="text-xs text-fd-muted-foreground">Round</p>
           <p className="font-mono text-lg font-semibold text-fd-primary">
@@ -113,23 +128,35 @@ export function NumberRoundPlayground() {
             {downResult !== null ? formatResult(downResult) : '—'}
           </p>
         </div>
+        <div className="rounded-lg border border-fd-border bg-fd-background p-3">
+          <p className="text-xs text-fd-muted-foreground">RoundAwayFromZero</p>
+          <p className="font-mono text-lg font-semibold text-fd-primary">
+            {awayResult !== null ? formatResult(awayResult) : '—'}
+          </p>
+        </div>
       </div>
 
       <div className="mt-3 flex flex-wrap items-center gap-2 text-sm">
         {!inputsAreValid && (
           <span className="text-xs text-fd-muted-foreground">— enter a number and a whole number of digits</span>
         )}
-        {inputsAreValid && valueNum < 0 && upResult !== null && downResult !== null && (
+        {isTie && roundResult !== null && (
           <span className="text-xs text-fd-muted-foreground">
-            — RoundUp moved further from zero ({formatResult(upResult)}), RoundDown moved closer to
-            zero ({formatResult(downResult)}) — &quot;up&quot; means away from zero, not toward +∞
+            — an exact tie: Round went to the even neighbour ({formatResult(roundResult)}), not away from
+            zero as Excel and DAX ROUND would
+          </span>
+        )}
+        {inputsAreValid && !isTie && valueNum < 0 && upResult !== null && awayResult !== null && (
+          <span className="text-xs text-fd-muted-foreground">
+            — RoundUp moved toward +∞ ({formatResult(upResult)}), which for a negative number means toward
+            zero. Excel&apos;s ROUNDUP matches RoundAwayFromZero ({formatResult(awayResult)}) instead
           </span>
         )}
         <AskAiInlineButton
           prompt={buildAskAiPrompt(
             'Explain why this Power Query M code returns the results shown:\n\n```\n',
             formula,
-            `\n\`\`\`\nRound: ${roundResult !== null ? formatResult(roundResult) : 'invalid'}, RoundUp: ${upResult !== null ? formatResult(upResult) : 'invalid'}, RoundDown: ${downResult !== null ? formatResult(downResult) : 'invalid'}`,
+            `\n\`\`\`\nRound: ${roundResult !== null ? formatResult(roundResult) : 'invalid'}, RoundUp: ${upResult !== null ? formatResult(upResult) : 'invalid'}, RoundDown: ${downResult !== null ? formatResult(downResult) : 'invalid'}, RoundAwayFromZero: ${awayResult !== null ? formatResult(awayResult) : 'invalid'}`,
           )}
         />
       </div>

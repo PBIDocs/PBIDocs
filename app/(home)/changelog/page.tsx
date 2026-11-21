@@ -12,6 +12,25 @@ export const metadata: Metadata = {
 
 const changelog: { date: string; entries: ReactNode[] }[] = [
   {
+    date: '2026-11-21',
+    entries: [
+      <>
+        Accuracy review of the Power Query docs (45 pages, 20 corrected). The biggest fix:{' '}
+        <Link href="/docs/power-query/number-functions">Number.Round</Link> breaks ties to even by default, so{' '}
+        <code>Number.Round(2.5)</code> is 2, and <code>Number.RoundUp(-2.1)</code> is -2, not -3 as in Excel; the
+        page and its live example were rewritten, and now include <code>Number.RoundAwayFromZero</code>. Also
+        corrected: <Link href="/docs/power-query/text-split-combine">Text.Combine</Link> skips nulls rather than
+        erroring, <Link href="/docs/power-query/json-document">Table.FromRecords</Link> errors on a missing field
+        unless you pass <code>MissingField.UseNull</code>,{' '}
+        <Link href="/docs/power-query/table-pivot-unpivot">Table.Pivot</Link> with duplicates and no aggregation
+        raises an error, a renamed sheet raises &quot;key didn&apos;t match any rows&quot; in{' '}
+        <Link href="/docs/power-query/excel-workbook">Excel.Workbook</Link>, and a sort before{' '}
+        <Link href="/docs/power-query/table-distinct">Table.Distinct</Link> needs Table.Buffer. Smaller fixes to
+        Web.Contents, List.Generate, dates, merges, query folding, Sql.Database, and the Editor.
+      </>,
+    ],
+  },
+  {
     date: '2026-11-20',
     entries: [
       <>

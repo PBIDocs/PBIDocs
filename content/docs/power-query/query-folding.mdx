@@ -95,7 +95,7 @@ Step
       +-- No  -> folding stopped earlier
 ```
 
-If the option is greyed out, folding has already stopped by that step — everything from there onward runs locally in Power Query instead of at the source.
+If the option is greyed out, folding has usually stopped by that step, and everything from there onward runs locally. It's a good first check, not a proof: some connectors fold without being able to show a native query. The step **folding indicators** (in Power Query Online and dataflows) and [Query Diagnostics](https://learn.microsoft.com/en-us/power-query/query-diagnostics) give a more reliable answer.
 
 ---
 
@@ -133,7 +133,7 @@ Worse order:
 Custom Column -> Filter -> Remove Columns -> Group By
 ```
 
-In the second example, folding stops at the custom column, so the filter and group-by that follow run locally even though they could have folded.
+In the second example, if the custom column can't fold, folding stops there, and the filter and group-by that follow run locally even though they could have folded. (Simple arithmetic like `[Quantity] * [Price]` usually does fold; it's custom logic with no SQL equivalent that stops it.)
 
 <QueryFoldingOrderPlayground />
 
@@ -163,7 +163,7 @@ For large source tables, the difference between folding and not folding can turn
 
 ### Adding Custom Columns Too Early
 
-A custom column added before filtering forces every later step, including the filter, to run locally instead of at the source.
+A custom column that can't fold, added before filtering, forces every later step, including the filter, to run locally instead of at the source.
 
 ### Assuming All Sources Fold
 

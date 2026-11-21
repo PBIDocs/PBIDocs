@@ -48,8 +48,8 @@ AddTax = (amount as number) as number => amount * 1.08
 `as number` after a parameter name declares its expected type; `as number` after the parameter list declares the function's return type. Neither is required — an untyped function still works — but typing catches a wrong-type call immediately with a clear error, instead of letting a type mismatch surface confusingly several steps later.
 
 ```powerquery lineNumbers
-AddTax(100)        -- 108
-AddTax("100")      -- error: "100" is not a number
+AddTax(100)        // 108
+AddTax("100")      // error: "100" is not a number
 ```
 
 ---
@@ -133,7 +133,7 @@ List.Transform({1, 2, 3}, Square(_))
 
 ### Forgetting a Function Value Can't Be Displayed Directly
 
-Returning a function itself as a query's result (rather than calling it) shows as `[Function]` in the preview grid, not an error — a common source of "why is my query blank" confusion when a step accidentally produces a function instead of invoking it.
+A query whose result is a function (rather than the result of calling one) shows the **Enter Parameters** / **Invoke** pane instead of a data preview. In a table, a column that accidentally holds functions shows `Function` in every cell. Both mean a step produced the function instead of calling it.
 
 ### Not Typing Parameters, Then Debugging a Confusing Downstream Error
 

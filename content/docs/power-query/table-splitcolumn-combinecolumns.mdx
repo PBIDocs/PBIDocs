@@ -68,7 +68,7 @@ Unlike the missing-parts case, what happens with *extra* parts isn't a single fi
 "Alice", "Chen"           -> "Alice Chen"
 ```
 
-Unlike splitting, combining is always deterministic — every row produces exactly one merged value, regardless of what the source columns contain. A `null` value in one of the source columns becomes an empty string in the merged result rather than propagating as `null` or causing an error.
+Unlike splitting, combining always produces exactly one merged value per row. A `null` in one of the source columns doesn't make the result `null` or raise an error; the text combiners leave it out, so `"Alice"` and `null` combine to `"Alice"`.
 
 ---
 
@@ -82,9 +82,9 @@ As covered above — a shorter-than-expected value doesn't shift columns or erro
 
 Since this behavior depends on the splitter configuration rather than a single fixed rule, it's worth testing directly against a row with more delimiters than expected before trusting the result across a full dataset.
 
-### Forgetting Table.CombineColumns Turns null Into an Empty String
+### Forgetting Table.CombineColumns Quietly Drops null
 
-A `null` in one of the source columns doesn't make the combined result `null` — it contributes nothing (an empty string) to that position, which can look like a legitimate value was combined when one was actually missing.
+A `null` in one of the source columns doesn't make the combined result `null`; it simply contributes nothing. The merged value can look complete when one of its parts was actually missing, so check the source columns for `null` first if that matters.
 
 ---
 

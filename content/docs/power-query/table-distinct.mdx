@@ -42,11 +42,13 @@ This is the part that catches people: `Table.Distinct()` scoped to `{"CustomerID
 Because the row that's kept is whichever occurs first in the table, the result of a column-scoped `Table.Distinct()` depends on the table's current row order. Sorting the table (with [Table.Sort()](/docs/power-query/table-sort)) before deduping is the way to control *which* row's values get kept, rather than leaving it to whatever order the data happened to arrive in.
 
 ```powerquery lineNumbers
-#"Sorted Rows" = Table.Sort(Source, {{"LastUpdated", Order.Descending}}),
+#"Sorted Rows" = Table.Buffer(Table.Sort(Source, {{"LastUpdated", Order.Descending}})),
 #"Removed Duplicates" = Table.Distinct(#"Sorted Rows", {"CustomerID"})
 ```
 
 Sorting by a "most recent" column first, then deduping, is the usual fix when the goal is "keep the latest record per customer" rather than "keep whichever record happened to load first."
+
+The `Table.Buffer()` around the sort matters. Without it, Power Query doesn't promise to keep the sort order when it evaluates the next step (and against a database the two steps can fold into one query), so `Table.Distinct()` can still keep an arbitrary row. Buffering fixes the sorted order in memory first. See [Table.Buffer()](/docs/power-query/table-buffer#when-its-actually-worth-using).
 
 ---
 
@@ -60,6 +62,10 @@ It doesn't reconcile, combine, or flag a conflict — it silently keeps the firs
 
 Since the kept row is whichever comes first, a column-scoped `Table.Distinct()` without a preceding sort produces a result that depends on the current, possibly arbitrary, row order — sort first if which specific row survives actually matters.
 
+### Expecting It to Ignore Case
+
+`Table.Distinct()` compares text case-sensitively, so `"ABC"` and `"abc"` survive as two rows. The model's columns compare case-insensitively, so those two "distinct" keys become duplicates once loaded, which is a common cause of [the "column contains a duplicate value" relationship error](/blog/column-contains-duplicate-value-error). Normalise the case first (`Text.Upper`), or pass a comparer such as `Comparer.OrdinalIgnoreCase` in the equation criteria, as shown for [List.Distinct()](/docs/power-query/list-distinct-contains#the-fix-comparerordinalignorecase).
+
 ### Using Table.Distinct() When the Real Goal Is Aggregation
 
 If the actual goal is combining information across the "duplicate" rows (the most recent value, the sum of some column, and so on), [Table.Group()](/docs/power-query/table-group) is usually the right tool — `Table.Distinct()` can only keep one whole row, never merge values from several.
@@ -68,7 +74,7 @@ If the actual goal is combining information across the "duplicate" rows (the mos
 
 ## Best Practices
 
-- Sort by whatever determines "which row wins" before a column-scoped `Table.Distinct()`, don't rely on incoming row order.
+- Sort by whatever determines "which row wins" before a column-scoped `Table.Distinct()`, and wrap that sort in `Table.Buffer()` so the order holds.
 - Reach for `Table.Group()` instead when the real goal is combining values across rows, not just picking one.
 - Double-check whether any non-key columns actually vary across what a scoped `Table.Distinct()` treats as duplicates — if they do, confirm the data loss is intentional.
 

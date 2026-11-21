@@ -95,7 +95,7 @@ CustomerID | Amount
 99         | 50        <- CustomerID 99 doesn't exist in Customers
 ```
 
-No columns are added — a Left Anti merge is a filter, not an enrichment, and typically doesn't need expanding.
+The merge still adds its nested-table column, but every nested table is empty, since these rows found no match. A Left Anti merge is a filter, not an enrichment: remove that column rather than expanding it.
 
 ---
 
@@ -156,6 +156,10 @@ Produces duplicated rows and inflated totals downstream, often without any obvio
 ### Choosing the Wrong Join Kind
 
 Using Inner when Left Outer was intended silently drops any base-table row that didn't find a match, which can understate totals just as easily as fan-out overstates them.
+
+### Keys That Differ Only by Case or Spaces
+
+Merge keys match exactly: `"ABC"` doesn't match `"abc"`, and `"ABC "` with a trailing space doesn't match `"ABC"`. Rows that should have matched come back empty (or vanish under Inner). Clean both key columns with `Text.Trim` and a consistent case before merging, or use fuzzy matching for genuinely messy keys.
 
 ### Expanding Every Column "Just in Case"
 

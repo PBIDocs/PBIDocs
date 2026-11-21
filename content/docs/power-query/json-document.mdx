@@ -81,7 +81,15 @@ JSON doesn't require every object in an array to have the same fields — a real
 {"id": 2, "name": "Gadget"}                    <- no "color" field at all
 ```
 
-`Table.FromRecords()` handles this without erroring — missing fields become `null` in the resulting column — but a stricter fixed-column-list call (`Table.FromRecords(Source, {"id", "name", "color"})`) is worth using explicitly when the exact expected shape matters, rather than letting the table's columns be whatever happened to appear across all records.
+By default, `Table.FromRecords()` takes its columns from the records and expects every record to have them. A record missing a field fails with an error that the field wasn't found. To accept the gaps, list the columns you expect and pass `MissingField.UseNull`, so a missing field becomes `null`:
+
+```powerquery lineNumbers
+#"Converted to Table" = Table.FromRecords(
+    Source, {"id", "name", "color"}, MissingField.UseNull
+)
+```
+
+Naming the columns also pins the table's shape, rather than letting it depend on which fields the records happened to contain.
 
 ---
 
@@ -93,7 +101,7 @@ As covered above — the most common error here is a type mismatch from calling 
 
 ### Assuming Every Record Has the Same Schema
 
-An API that's evolved over time, or that omits null/empty fields entirely rather than sending them explicitly, produces inconsistent records — `Table.FromRecords()` without an explicit column list can end up with a different column set than expected if the sample used while building the query happened to have every field present.
+An API that's evolved over time, or that omits null/empty fields entirely rather than sending them explicitly, produces inconsistent records. A query built against a sample where every field was present can start failing on refresh once a record arrives without one. An explicit column list with `MissingField.UseNull` handles both cases.
 
 ### Not Handling a JSON Response That's Sometimes an Error Object Instead
 

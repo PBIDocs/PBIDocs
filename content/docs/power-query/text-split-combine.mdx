@@ -1,6 +1,6 @@
 ---
 title: "Text.Split() & Text.Combine()"
-description: Learn how Text.Split breaks a text value into a list by delimiter, how Text.Combine joins one back together, and the mistakes that come from consecutive delimiters and mismatched null handling.
+description: Learn how Text.Split breaks a text value into a list by delimiter, how Text.Combine joins one back together, and the mistakes that come from consecutive delimiters and how nulls are skipped.
 ---
 
 # Text.Split() & Text.Combine()
@@ -61,12 +61,13 @@ The separator argument is optional — omitting it concatenates with no separato
 ### Assuming a Fixed Number of Parts
 
 ```powerquery lineNumbers
+Text.Split("A-B", "-")
 Text.Split("A-B-C-D", "-")
 ```
 
 ```text
-"A-B" -> {"A", "B"}              (2 parts)
-"A-B-C-D" -> {"A", "B", "C", "D"}  (4 parts)
+"A-B"     -> {"A", "B"}              (2 parts)
+"A-B-C-D" -> {"A", "B", "C", "D"}    (4 parts)
 ```
 
 `Text.Split()` returns however many parts the delimiter actually produces — a downstream step assuming exactly 2 or 3 elements breaks silently or errors the moment a row has a different number of delimiters than expected. `Table.SplitColumn()` with a fixed column-name list has the same issue: extra parts get dropped, and missing parts leave `null` in the unfilled columns.
@@ -87,13 +88,15 @@ A double delimiter (from a source with genuinely missing values in a delimited f
 
 Try typing two separators back to back, or changing how many appear — the item count and the empty-string chips update live instead of just being described.
 
-### Combining a List That Contains null
+### Expecting null to Error, or to Leave a Gap
 
 ```powerquery lineNumbers
 Text.Combine({"A", null, "B"}, ", ")
 ```
 
-This errors — `Text.Combine()` requires every list element to be text, and `null` isn't text. A list built from a column that can contain blanks needs those `null` values converted to `""` first, typically via `List.Transform(theList, each if _ = null then "" else _)`.
+This doesn't error: `Text.Combine()` skips `null` items, so the result is `"A, B"`. That's usually what you want, but it means the output gives no sign that a value was missing. If a missing value should still take up a slot, replace it first: `List.Transform(theList, each _ ?? "")` gives `"A, , B"`.
+
+What *does* error is a non-text item, such as a number: `Text.Combine({"A", 1})` fails because `1` isn't text. Convert those with `Text.From` first. See [Expression.Error: We cannot convert a value of type List to type Text](/blog/cannot-convert-list-to-text-error) for the related list-to-text error.
 
 ### Forgetting the Separator Is Optional, Not Automatic
 

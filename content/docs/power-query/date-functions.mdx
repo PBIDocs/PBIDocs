@@ -105,7 +105,7 @@ Duration.TotalHours — total span expressed as hours (a decimal, not just whole
 each [CloseDate] - [OpenDate] > 5
 ```
 
-Comparing a `duration` value directly against a plain number like `5` doesn't produce the comparison intended — the duration needs to be converted first (`Duration.Days(...)` or `Duration.TotalDays(...)`) before comparing against a plain number.
+This fails with an error that the `>` operator can't be applied to a Duration and a Number. Convert the duration first: `Duration.Days([CloseDate] - [OpenDate]) > 5`, or compare against a duration: `[CloseDate] - [OpenDate] > #duration(5, 0, 0, 0)`.
 
 ### Using Duration.Hours Instead of Duration.TotalHours
 
@@ -121,7 +121,7 @@ The month-end clamping behavior above means a rolling "same day next month" calc
 each [OrderDate] = #date(2026, 1, 15)
 ```
 
-If `[OrderDate]` is actually typed as `datetime` (carrying a time component, even if displayed as midnight), comparing it against a plain `#date(...)` value can fail to match rows where the time component is anything other than exactly midnight. `DateTime.Date([OrderDate]) = #date(2026, 1, 15)` strips the time component explicitly before comparing.
+If `[OrderDate]` is actually a `datetime`, this matches **no rows at all**, not even ones at exactly midnight: in M, `=` between a datetime and a date is simply `false`, with no error to warn you. `DateTime.Date([OrderDate]) = #date(2026, 1, 15)` converts it to a date before comparing.
 
 ---
 

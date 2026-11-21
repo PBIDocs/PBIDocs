@@ -99,10 +99,10 @@ See [List.Generate()](/docs/power-query/list-generate) for the sequence-building
 ### Getting the Accumulator's Argument Order Backwards
 
 ```powerquery lineNumbers
-(current, state) => state + current
+List.Accumulate({"a", "b", "c"}, "", (current, state) => state & current)
 ```
 
-The first argument is always the running **state**, the second is the **current list item** — swapping them silently produces wrong results rather than an error, since both are usually the same type and the expression can still evaluate without complaint.
+The first argument is always the running **state** and the second is the **current list item**, whatever you name them. Here the names are swapped, so `state & current` actually computes `item & runningText`, and the result is `"cba"` instead of `"abc"`. No error appears. With addition the swap would go unnoticed, because `a + b` equals `b + a`; with anything order-sensitive it silently gives the wrong answer.
 
 <ListAccumulatePlayground />
 
