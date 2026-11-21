@@ -65,7 +65,7 @@ export function TodayNowPlayground() {
       <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
         <div className="rounded-lg border border-fd-border bg-fd-background p-3">
           <p className="mb-1 text-xs font-semibold text-fd-muted-foreground">Calculated column</p>
-          <div className="font-mono text-sm">{highlightCode('DaysSinceOrder = TODAY() - [OrderDate]')}</div>
+          <div className="font-mono text-sm">{highlightCode('DaysSinceOrder = DATEDIFF([OrderDate], TODAY(), DAY)')}</div>
           <p className="mt-2 font-mono text-lg font-semibold text-fd-primary">{calcColumnResult}</p>
           <p className="mt-1 text-xs text-fd-muted-foreground">
             baked in at the last refresh ({REFRESH_DATE}) — stays exactly this value no matter how many days pass,
@@ -79,7 +79,7 @@ export function TodayNowPlayground() {
           )}
         >
           <p className="mb-1 text-xs font-semibold text-fd-muted-foreground">Measure</p>
-          <div className="font-mono text-sm">{highlightCode('[Days Since Order] := TODAY() - MIN(Sales[OrderDate])')}</div>
+          <div className="font-mono text-sm">{highlightCode('Days Since Order = DATEDIFF(MIN(Sales[OrderDate]), TODAY(), DAY)')}</div>
           <p
             className={cn(
               'mt-1 font-mono text-lg font-semibold',

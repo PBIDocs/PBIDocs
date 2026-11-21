@@ -211,7 +211,7 @@ export function RunningTotalAnatomyDiagram() {
           <Badge n="4" className="mt-0.5 bg-emerald-500" />
           <p>
             <span className="font-mono text-emerald-600 dark:text-emerald-400">
-              {'&& DimDate[Year] = MAX(DimDate[Year])'}
+              {'&& YEAR(DimDate[Date]) = YEAR(MAX(DimDate[Date]))'}
             </span>{' '}
             — a second condition that rejects earlier years too. The staircase restarts in January, so {name(CURRENT)}{' '}
             keeps only {yearKept.map((i) => MONTHS[i].label).join(' + ')} = {fmtK(totalFor(CURRENT, keepWithinYear))}{' '}
