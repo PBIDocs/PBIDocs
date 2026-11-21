@@ -15,6 +15,17 @@ const changelog: { date: string; entries: ReactNode[] }[] = [
     date: '2026-11-21',
     entries: [
       <>
+        Accuracy review of the remaining DAX function and DAX pattern pages (32 pages, 10 corrected). Fixed
+        formulas that would fail or mislead:{' '}
+        <Link href="/docs/dax-patterns/running-total">Running Total</Link>&apos;s within-year version referenced a
+        column FILTER couldn&apos;t see, and its by-rank version showed each product&apos;s own sales;{' '}
+        <Link href="/docs/dax/crossfilter">CROSSFILTER</Link>&apos;s direction is <code>ONEWAY</code>, not
+        ONEDIRECTION; and <Link href="/docs/dax/today-now">TODAY() - a date</Link> gives a date/time, not a day
+        count. Also: DAX <Link href="/docs/dax/union">UNION</Link> keeps duplicates, USERELATIONSHIP can&apos;t be
+        used on a table with RLS, plain division by zero returns Infinity on the Totals page too, and clearer
+        notes on SPI, MTTR, EARLIER, and DATEDIFF.
+      </>,
+      <>
         Accuracy review of the Power Query docs (45 pages, 20 corrected). The biggest fix:{' '}
         <Link href="/docs/power-query/number-functions">Number.Round</Link> breaks ties to even by default, so{' '}
         <code>Number.Round(2.5)</code> is 2, and <code>Number.RoundUp(-2.1)</code> is -2, not -3 as in Excel; the

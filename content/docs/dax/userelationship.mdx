@@ -97,7 +97,11 @@ Each measure that needs the inactive relationship needs its own `USERELATIONSHIP
 
 ### Combining Conflicting Relationships in One CALCULATE
 
-Trying to activate two relationships between the same two tables inside one `CALCULATE()` produces an error — only one can be active for a given pair of tables at a time, even temporarily.
+Only one relationship between a given pair of tables can be active at a time, even temporarily. Activating two of them in the same `CALCULATE()` won't filter by both dates at once; if you need "shipped and due in this period", filter one date through the relationship and the other with an explicit condition.
+
+### Using It on a Table With Row-Level Security
+
+Microsoft's documentation notes that `USERELATIONSHIP()` can't be used when row-level security is defined for the table the measure is in. If a measure works for you and errors for a role-filtered viewer, this is the place to look; separate date tables per role avoid the problem.
 
 ### Building a Whole Model Around Inactive Relationships
 

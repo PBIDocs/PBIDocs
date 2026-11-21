@@ -17,8 +17,10 @@ NOW()
 ## Calculated Columns: Frozen at Refresh Time
 
 ```dax lineNumbers
-DaysSinceOrder = TODAY() - [OrderDate]
+DaysSinceOrder = DATEDIFF([OrderDate], TODAY(), DAY)
 ```
+
+(`DATEDIFF` rather than `TODAY() - [OrderDate]`: subtracting two dates in DAX gives a date/time value, so the column shows as a date near 1900 until you change its data type to a whole number.)
 
 A calculated column is computed once, during data refresh, and the result is physically stored in the model — same as any other column. `TODAY()` inside it gets evaluated exactly once, at that refresh, and the stored result doesn't change again until the next refresh actually runs.
 
@@ -31,7 +33,7 @@ Five days after a refresh with no new refresh run, a `DaysSinceOrder` calculated
 ## Measures: Re-Evaluated Every Time the Report Is Viewed
 
 ```dax lineNumbers
-Days Since Order := TODAY() - MIN(Sales[OrderDate])
+Days Since Order = DATEDIFF(MIN(Sales[OrderDate]), TODAY(), DAY)
 ```
 
 A measure isn't stored — it's calculated at query time, every time a visual renders or a user interacts with the report. `TODAY()` inside a measure reflects the actual current date at that exact moment, regardless of when the underlying data was last refreshed.
@@ -68,7 +70,7 @@ Beyond *when* it's evaluated, `TODAY()`/`NOW()` also reflect whichever machine a
 ## Best Practices
 
 - Use a measure, not a calculated column, whenever a value genuinely needs to reflect the literal current date every time the report is viewed.
-- If a `TODAY()`-based calculated column is required (for query-folding or performance reasons in a very large model, for instance), treat its value as "as of the last refresh," and refresh often enough that staleness doesn't matter for the use case.
+- If a `TODAY()`-based calculated column is required (to use it as a slicer or a relationship key, for instance, which a measure can't be), treat its value as "as of the last refresh," and refresh often enough that staleness doesn't matter for the use case.
 - Document which refresh schedule a `TODAY()`-based calculated column depends on, since its apparent "bugginess" is usually just an unrefreshed model, not a formula error.
 
 ---

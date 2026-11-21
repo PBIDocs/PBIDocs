@@ -50,7 +50,7 @@ DATEDIFF(..., QUARTER) -> 1  (Q4 -> Q1)
 DATEDIFF(..., YEAR)    -> 1  (2025 -> 2026)
 ```
 
-A single day, right at year-end, registers as crossing a month boundary, a quarter boundary, *and* a year boundary simultaneously — all three return `1` for a 1-day gap, while a 90-day gap that stays entirely within one quarter returns `0` for all three.
+A single day, right at year-end, registers as crossing a month boundary, a quarter boundary, *and* a year boundary simultaneously — all three return `1` for a 1-day gap. Meanwhile January 1 to March 31, an 89-day gap inside one quarter, returns `0` for `QUARTER` and `YEAR` (and `2` for `MONTH`).
 
 ---
 

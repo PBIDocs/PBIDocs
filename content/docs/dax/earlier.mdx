@@ -58,14 +58,16 @@ SalesAmount = 900  -> 0 rows have more -> Rank 1
 
 ---
 
-## The Modern Alternative: Just Use a Measure
+## The Modern Alternative: RANKX or VAR
 
-The example above is a calculated column doing what [RANKX](/docs/dax/rankx) already does, as a measure, without any nested row context to manage:
+The example above is a calculated column doing what [RANKX](/docs/dax/rankx) already does, without any nested row context to manage. As a calculated column on the same table:
 
 ```dax lineNumbers
 Sales Rank =
-RANKX(ALL(FactSales), [Total Sales])
+RANKX(FactSales, FactSales[SalesAmount])
 ```
+
+If what you actually want is to rank products or customers in a visual, rather than individual sales rows, a measure such as `RANKX(ALL(DimProduct), [Total Sales])` is the better fit.
 
 For genuinely one-off cases where a calculated column really is the right tool (not every ranking-shaped problem is), `VAR` typically replaces `EARLIER()` more clearly when the outer value is captured before entering the nested expression:
 
@@ -106,7 +108,7 @@ This is exactly the kind of nested-context bookkeeping that makes `EARLIER()` ha
 
 ### Reaching for EARLIER Inside a Measure
 
-`EARLIER()` requires a genuine outer row context to reach back to — a measure has no row context of its own by default, so `EARLIER()` inside a measure almost always means the calculation was designed for a calculated column, or should be rewritten as an iterator/`CALCULATE()`-based measure instead.
+`EARLIER()` requires a genuine outer row context to reach back to. A measure has no row context of its own, so `EARLIER()` there fails with an error that the earlier row context doesn't exist (unless an iterator inside the measure has created one). Seeing it in a measure almost always means the calculation was designed for a calculated column, or should be rewritten as an iterator/`CALCULATE()`-based measure instead.
 
 ### Not Realizing VAR Solves the Same Problem More Clearly
 

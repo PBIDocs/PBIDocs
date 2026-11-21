@@ -41,6 +41,17 @@ Result:
 
 ---
 
+## UNION() Keeps Duplicate Rows
+
+Unlike SQL's `UNION`, DAX's `UNION()` doesn't remove duplicates: it behaves like SQL's `UNION ALL`. A row present in both tables appears twice in the result. Wrap it in `DISTINCT()` when you want each row once:
+
+```dax lineNumbers
+All Customers =
+DISTINCT(UNION(OnlineCustomers, StoreCustomers))
+```
+
+---
+
 ## EXCEPT() and INTERSECT() Share the Same Rule
 
 ```dax lineNumbers

@@ -145,7 +145,7 @@ Using `ALL(FactSales)` when only one column's filter needed to be ignored remove
 
 ### Dividing by Zero
 
-`Sales % of Total` using plain division can error when the grand total is zero. Use `DIVIDE()`, which returns blank instead of an error by default.
+`Sales % of Total` using plain division doesn't error when the grand total is zero: it returns Infinity (or NaN for 0 / 0), which shows up as "Infinity" or "NaN" in a visual. Use `DIVIDE()`, which returns blank instead by default.
 
 ---
 

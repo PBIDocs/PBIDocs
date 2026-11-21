@@ -120,15 +120,15 @@ Which formula fits depends on *why* the program is over or under — a one-time 
 
 ### Computing EV as a Single Program-Wide Percentage
 
-`EV` needs to be earned per task (or per work package) and then summed — `Tasks[BAC] * Tasks[PercentComplete]`, aggregated with `SUMX`. Multiplying the *total* `BAC` by one blended, program-wide percent-complete produces a materially different (and usually more optimistic) number than summing each task's own earned value.
+`EV` needs to be earned per task (or per work package) and then summed — `Tasks[BAC] * Tasks[PercentComplete]`, aggregated with `SUMX`. Multiplying the *total* `BAC` by one blended, program-wide percent-complete gives a different number from summing each task's own earned value whenever tasks differ in size: a big task half done and a small task finished don't average to "75% complete".
 
 ### Treating a Single EAC Formula as Definitive
 
 `EAC = BAC / CPI` is a starting point for a conversation, not a certainty — see the formula variants above. Reporting it without stating which assumption it makes can overstate how precise the forecast actually is.
 
-### Confusing SPI With Percent of the Calendar Elapsed
+### Reading SPI as a Measure of Time
 
-`SPI` measures work completed against work planned, not time elapsed against total duration. A program can be exactly on schedule by the calendar and still show a poor `SPI` if the wrong tasks were prioritized first.
+`SPI` compares the *value* of work completed with the value planned, not dates. Two consequences catch people out: at completion `EV` reaches `BAC` and so does `PV`, so `SPI` drifts back to 1.0 on a program that finished months late; and work done ahead of plan on non-critical tasks can hold `SPI` near 1.0 while the critical path slips. Check the schedule itself (or a time-based measure) alongside it.
 
 ---
 

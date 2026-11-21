@@ -41,6 +41,8 @@ FILTER(
 
 `MAX(DimDate[Date])` picks up the current row's date from context. `FILTER()` keeps every date less than or equal to it. `ALL()` makes sure the comparison set isn't limited to whatever's already been filtered.
 
+This relies on `DimDate` being [marked as a date table](/docs/modeling/date-tables). Then a filter on `DimDate[Date]` also clears the visual's filters on other `DimDate` columns, such as Month or Year. On an unmarked table, a Month column on the visual keeps its own filter, and every row shows just that month; use `ALL(DimDate)` in place of `ALL(DimDate[Date])` there.
+
 <RunningTotalAnatomyDiagram />
 
 ---
@@ -54,11 +56,13 @@ Running Total by Rank =
 CALCULATE(
     [Total Sales],
     FILTER(
-        ALL(DimProduct[SalesRank]),
+        ALL(DimProduct),
         DimProduct[SalesRank] <= MAX(DimProduct[SalesRank])
     )
 )
 ```
+
+`ALL(DimProduct)`, not just `ALL(DimProduct[SalesRank])`: in a visual listing product names, the name column's own filter would otherwise survive, and each row would show only its own sales. `SalesRank` here is a stored column (for example a calculated column using `RANKX`).
 
 Useful for cumulative charts like "what percentage of total sales come from the top N products" (a Pareto / 80-20 analysis).
 
@@ -70,15 +74,19 @@ Restarting the running total for each group (like each year) combines the patter
 
 ```dax lineNumbers
 Running Total Within Year =
-CALCULATE(
-    [Total Sales],
-    FILTER(
-        ALL(DimDate[Date]),
-        DimDate[Date] <= MAX(DimDate[Date]) &&
-        DimDate[Year] = MAX(DimDate[Year])
+VAR CurrentDate = MAX(DimDate[Date])
+RETURN
+    CALCULATE(
+        [Total Sales],
+        FILTER(
+            ALL(DimDate[Date]),
+            DimDate[Date] <= CurrentDate &&
+            YEAR(DimDate[Date]) = YEAR(CurrentDate)
+        )
     )
-)
 ```
+
+The year test uses `YEAR(DimDate[Date])` because `FILTER()` is iterating a one-column table: a reference to `DimDate[Year]` inside it would fail, since that column isn't part of the rows being iterated.
 
 ```text
 Year | Month     | Sales   | Running Total

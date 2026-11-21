@@ -11,7 +11,7 @@ A standard one-to-many relationship filters in one direction only: from the "one
 CROSSFILTER(<column1>, <column2>, <direction>)
 ```
 
-`<direction>` is one of `NONE`, `ONEDIRECTION`, or `BOTH`.
+`<direction>` is one of `NONE`, `ONEWAY`, or `BOTH`. (There are also `ONEWAY_LEFTFILTERSRIGHT` and `ONEWAY_RIGHTFILTERSLEFT`, which pick the single direction explicitly; they matter mainly for one-to-one relationships.)
 
 ---
 
@@ -49,14 +49,14 @@ CALCULATE(COUNTROWS(DimProduct), CROSSFILTER(...,BOTH), FactSales[Promotion]="Ye
 
 ---
 
-## The Other Directions: NONE and ONEDIRECTION
+## The Other Directions: NONE and ONEWAY
 
 ```text
 CROSSFILTER(..., NONE)          -- disables the relationship's filtering entirely, in either direction
-CROSSFILTER(..., ONEDIRECTION)  -- restores the relationship to its normal single-direction behavior
+CROSSFILTER(..., ONEWAY)        -- single direction: the one side filters the many side
 ```
 
-`NONE` is useful when a calculation specifically needs to ignore a relationship altogether for one measure, without changing the relationship itself in the model. `ONEDIRECTION` is mostly useful for explicitly restoring the default inside a calculation that's already inside a context where the direction was changed some other way.
+`NONE` is useful when a calculation specifically needs to ignore a relationship altogether for one measure, without changing the relationship itself in the model. `ONEWAY` is mostly useful on a relationship that's bidirectional in the model, to switch that back to single direction for one calculation.
 
 ---
 

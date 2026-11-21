@@ -60,7 +60,7 @@ Repair Hours =
 DATEDIFF(FactFailureEvents[FailureStart], FactFailureEvents[RepairComplete], HOUR)
 ```
 
-`RELATED()` pulls the asset's `CommissionedDate` across the relationship for that first-failure case — see [RELATED & RELATEDTABLE](/docs/dax/related) — and `DATEDIFF()` with `HOUR` turns the gap into a plain number. Notice there's no dedicated date table anywhere in this pattern: both columns work directly off the two timestamp columns already on the fact table.
+`RELATED()` pulls the asset's `CommissionedDate` across the relationship for that first-failure case — see [RELATED & RELATEDTABLE](/docs/dax/related) — and `DATEDIFF()` with `HOUR` turns the gap into a plain number. `DATEDIFF` counts hour *boundaries* crossed ([see DATEDIFF](/docs/dax/datediff)), so 10:59 to 11:01 counts as 1 hour. That's fine for failures that last hours or days; for minute-level precision use `(FactFailureEvents[RepairComplete] - FactFailureEvents[FailureStart]) * 24` instead. Notice there's no dedicated date table anywhere in this pattern: both columns work directly off the two timestamp columns already on the fact table.
 
 ---
 
@@ -98,14 +98,14 @@ Every division uses [DIVIDE()](/docs/dax/divide), never `/` — with only a hand
 
 ## Common Mistakes
 
-### Averaging Repair Time Instead of Summing First
+### Letting AVERAGE Decide the Denominator
 
 ```dax lineNumbers
-MTTR (Wrong) =
+MTTR (Average) =
 AVERAGE(FactFailureEvents[Repair Hours])
 ```
 
-This happens to match `DIVIDE([Total Repair Hours], [Total Failures])` at the grand-total level, but breaks the moment `MTTR` needs to combine with other filtered totals — a weighted view blending multiple assets, for instance. Building it from explicit sums keeps it consistent with `MTBF`, which can't be expressed as a plain `AVERAGE()` at all (there's no single "uptime" column to average without first computing it per event).
+This gives the same answer as `DIVIDE([Total Repair Hours], [Total Failures])` in any filter context, as long as every failure has a repair time. They part ways when some don't, such as a failure that is still open: `AVERAGE()` skips the blank, while `COUNTROWS()` still counts the failure. Building MTTR from explicit sums makes that choice visible, and keeps it consistent with MTBF, which has to be built the same way.
 
 ### Forgetting the First Failure Needs a Fallback
 
@@ -121,7 +121,7 @@ An asset with one recorded failure can produce a large, real-looking `MTBF` numb
 
 - Compute uptime as a calculated column per event, scoped to the *same asset's* previous repair — never a fixed calendar period shared across assets.
 - Always give the first failure per asset an explicit fallback (commissioning date, or install date) instead of letting it go blank.
-- Build `MTBF` and `MTTR` from summed totals divided by failure count, not `AVERAGE()`, so they stay consistent with each other and with any further filtering.
+- Build `MTBF` and `MTTR` from summed totals divided by failure count, so both use the same, explicit denominator.
 - Surface failure count alongside `MTBF`/`MTTR` on the report, so a figure built from too little data doesn't get read the same as one built from a real history.
 
 ---
