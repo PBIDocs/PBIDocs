@@ -236,6 +236,75 @@ See [Charts](/docs/visuals/charts) and [Tables](/docs/visuals/tables) for config
 
 ---
 
+## Step 6: Add Earned Schedule
+
+`SPI` of 0.64 says the program is behind, and `SV` says by $137K. Neither says by how many *days*, and the program manager will be asked exactly that. Earned Schedule answers it with the model you already have: find the date on the baseline S-curve where planned value equals today's `EV`.
+
+```dax lineNumbers
+ES Date =
+VAR EarnedValue = [EV (Earned Value)]
+VAR Curve =
+    ADDCOLUMNS(ALL(DimDate[Date]), "@PV", [PV (Planned Value)])
+VAR LastDate =
+    MAXX(FILTER(Curve, [@PV] <= EarnedValue), DimDate[Date])
+VAR PVAtLast =
+    MAXX(FILTER(Curve, DimDate[Date] = LastDate), [@PV])
+VAR PVNext =
+    MAXX(FILTER(Curve, DimDate[Date] = LastDate + 1), [@PV])
+RETURN
+    LastDate
+        + IF(
+            ISBLANK(PVNext),
+            0,
+            DIVIDE(EarnedValue - PVAtLast, PVNext - PVAtLast, 0)
+        )
+
+Project Start =
+MIN(Tasks[PlannedStart])
+
+Planned Finish =
+MAX(Tasks[PlannedEnd])
+
+ES (Days) =
+CONVERT([ES Date] - [Project Start], DOUBLE)
+
+AT (Days) =
+CONVERT(MAX(DimDate[Date]) - [Project Start], DOUBLE)
+
+SPI(t) =
+DIVIDE([ES (Days)], [AT (Days)])
+
+SV(t) (Days) =
+[ES (Days)] - [AT (Days)]
+
+IEAC(t) (Days) =
+DIVIDE(CONVERT([Planned Finish] - [Project Start], DOUBLE), [SPI(t)])
+
+Forecast Finish =
+[Project Start] + [IEAC(t) (Days)]
+```
+
+`Curve` evaluates the PV measure for every date in the calendar (`ALL` ignores the status-date slicer, and the measure reference gives each row its own date), and `ES Date` is the last date whose planned value hasn't passed today's `EV`, plus a fraction of the next day. Format `ES Date` and `Forecast Finish` as dates. `CONVERT(..., DOUBLE)` turns date differences into plain numbers of days.
+
+With the status date on May 15:
+
+```text
+EV = $241,500, which the plan expected by April 3-4    -> ES = 92.6 days
+Status date May 15                                     -> AT = 134 days
+
+SPI(t) = 92.6 / 134 = 0.69
+SV(t)  = 92.6 - 134 = -41 days
+Forecast finish = 211 / 0.69 = 305 days -> November 2, 2026 (plan: July 31)
+```
+
+Add `SPI(t)`, `SV(t) (Days)`, and `Forecast Finish` as cards next to `CPI` and `SPI`. The headline changes from "$137K behind" to "about six weeks behind, heading for early November", which is the version people act on.
+
+<EarnedScheduleDiagram inTutorial />
+
+`SPI(t)` matters most late in a program. If this one finishes everything on October 31, `SPI` will read a perfect 1.00 (every planned dollar is earned), while `SPI(t)` still reads 0.70 and `SV(t)` −92 days. See [Earned Schedule](/docs/dax-patterns/earned-schedule) for the pattern on its own.
+
+---
+
 ## Common Mistakes
 
 ### Computing EV as a Single Program-Wide Percentage
@@ -244,7 +313,7 @@ Multiplying total program budget by an overall "percent complete" produces a num
 
 ### Reading SPI as a Measure of Time
 
-`SPI` compares the *value* of work completed with the value planned, not dates. At completion `EV` reaches `BAC` and so does `PV`, so `SPI` drifts back to 1.0 even on a program that finished months late; and work done early on non-critical tasks can hold `SPI` up while the critical path slips. Check the schedule itself alongside it.
+`SPI` compares the *value* of work completed with the value planned, not dates. At completion `EV` reaches `BAC` and so does `PV`, so `SPI` drifts back to 1.0 even on a program that finished months late; and work done early on non-critical tasks can hold `SPI` up while the critical path slips. Report `SPI(t)` from Step 6 alongside it, and check the schedule itself.
 
 ### Leaving the Status Date Unset
 
@@ -264,6 +333,7 @@ Without a date filter, `MAX(DimDate[Date])` returns the last day of the calendar
 - `EV` and `AC` are computed per task then summed — never as a single program-wide percentage.
 - A status-date slicer sets `MAX(DimDate[Date])` for the cards and table, so `PV` and `SPI` are as of the reporting date, not the end of the calendar.
 - `CPI`, `SPI`, and `EAC` have been sanity-checked against the underlying `BAC`/`EV`/`AC`/`PV` numbers, not just trusted at face value.
+- `SPI(t)` and `SV(t)` are reported alongside `SPI`, with `ES Date` checked by hand against the two PV values that bracket today's `EV`.
 
 ---
 

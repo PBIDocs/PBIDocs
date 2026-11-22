@@ -8,6 +8,7 @@
     "running-total",
     "semi-additive",
     "evm-metrics",
+    "earned-schedule",
     "risk-score-heat-map",
     "fmea-rpn-scoring",
     "coverage-verification",

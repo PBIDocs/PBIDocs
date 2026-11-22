@@ -89,6 +89,7 @@ import { CompositeModelAnatomyDiagram } from './composite-model-anatomy-diagram'
 import { AggregationAnatomyDiagram } from './aggregation-anatomy-diagram';
 import { CalculateAnatomyDiagram } from './calculate-anatomy-diagram';
 import { EvmAnatomyDiagram } from './evm-anatomy-diagram';
+import { EarnedScheduleDiagram } from './earned-schedule-diagram';
 import { SumXAnatomyDiagram } from './sumx-anatomy-diagram';
 import { FilterAnatomyDiagram } from './filter-anatomy-diagram';
 import { ContextTransitionAnatomyDiagram } from './context-transition-anatomy-diagram';
@@ -204,6 +205,7 @@ export function getMDXComponents(components?: MDXComponents) {
     AggregationAnatomyDiagram,
     CalculateAnatomyDiagram,
     EvmAnatomyDiagram,
+    EarnedScheduleDiagram,
     SumXAnatomyDiagram,
     FilterAnatomyDiagram,
     ContextTransitionAnatomyDiagram,

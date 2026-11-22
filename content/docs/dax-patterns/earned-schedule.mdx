@@ -1,0 +1,165 @@
+---
+title: "Earned Schedule (SPI(t) and Forecast Finish)"
+description: "A DAX pattern for Earned Schedule: find the date your earned value was planned for, then get SPI(t), schedule variance in days, and a forecast finish date — the schedule metric that doesn't drift back to 1.0 on a late program."
+---
+
+# Earned Schedule (SPI(t) and Forecast Finish)
+
+Classic [EVM](/docs/dax-patterns/evm-metrics) measures schedule performance in money: `SPI = EV / PV`, and schedule variance in dollars. That has two well-known problems. "$137K behind schedule" doesn't say how *late* anything is. And near the end of a program, every planned dollar is due, so `PV` reaches `BAC`; once the work is finished `EV` reaches `BAC` too, and `SPI` returns to 1.0, even on a program that finished months late.
+
+Earned Schedule, introduced by Walt Lipke in 2003, fixes both by measuring schedule in time. Instead of comparing today's `EV` with today's `PV`, it asks: **on what date was the plan supposed to have earned this much?**
+
+```text
+ES   Earned Schedule  - the date the baseline planned to reach today's EV
+AT   Actual Time      - today, the status date
+PD   Planned Duration - baseline start to planned finish
+
+SPI(t)   = ES / AT            schedule efficiency, in time
+SV(t)    = ES - AT            days ahead (+) or behind (-)
+IEAC(t)  = PD / SPI(t)        forecast duration at the current pace
+```
+
+<EarnedScheduleDiagram />
+
+---
+
+## What You Need
+
+The same two things the [EVM dashboard tutorial](/tutorials/build-an-evm-dashboard) already has:
+
+- A **time-phased PV measure**: planned value as of whatever date is in context. The tutorial's `PV (Planned Value)` measure reads `MAX(DimDate[Date])` from a disconnected date table, so evaluating it on each date traces the baseline S-curve.
+- An **EV measure** for the status date.
+
+No new tables are needed.
+
+---
+
+## Finding the Earned Schedule Date
+
+```dax lineNumbers
+ES Date =
+VAR EarnedValue = [EV (Earned Value)]
+VAR Curve =
+    ADDCOLUMNS(ALL(DimDate[Date]), "@PV", [PV (Planned Value)])
+VAR LastDate =
+    MAXX(FILTER(Curve, [@PV] <= EarnedValue), DimDate[Date])
+VAR PVAtLast =
+    MAXX(FILTER(Curve, DimDate[Date] = LastDate), [@PV])
+VAR PVNext =
+    MAXX(FILTER(Curve, DimDate[Date] = LastDate + 1), [@PV])
+RETURN
+    LastDate
+        + IF(
+            ISBLANK(PVNext),
+            0,
+            DIVIDE(EarnedValue - PVAtLast, PVNext - PVAtLast, 0)
+        )
+```
+
+How it works:
+
+- `Curve` evaluates the PV measure once for every date in the calendar. `ALL(DimDate[Date])` ignores the status-date slicer, and because `[PV (Planned Value)]` is a measure, each row gets [context transition](/docs/dax/calculate#context-transition): its own date becomes the filter, so `MAX(DimDate[Date])` inside the PV measure returns that row's date.
+- `LastDate` is the last date whose planned value doesn't exceed today's `EV`. The PV curve never goes down, so that's the point where the plan "was" when it had earned this much.
+- The last two lines interpolate within the next day, so ES isn't stuck on whole days. This is the standard Earned Schedule formula, `ES = C + (EV − PV_C) / (PV_C+1 − PV_C)`, with daily periods.
+
+On the tutorial's data, `EV` is $241,500. The plan had earned $239,013 by April 3 and $243,226 by April 4, so `ES Date` is April 3 plus 0.59 of a day.
+
+---
+
+## SPI(t), SV(t), and the Forecast Finish
+
+```dax lineNumbers
+Project Start =
+MIN(Tasks[PlannedStart])
+
+Planned Finish =
+MAX(Tasks[PlannedEnd])
+
+ES (Days) =
+CONVERT([ES Date] - [Project Start], DOUBLE)
+
+AT (Days) =
+CONVERT(MAX(DimDate[Date]) - [Project Start], DOUBLE)
+
+SPI(t) =
+DIVIDE([ES (Days)], [AT (Days)])
+
+SV(t) (Days) =
+[ES (Days)] - [AT (Days)]
+
+IEAC(t) (Days) =
+DIVIDE(CONVERT([Planned Finish] - [Project Start], DOUBLE), [SPI(t)])
+
+Forecast Finish =
+[Project Start] + [IEAC(t) (Days)]
+```
+
+`CONVERT(..., DOUBLE)` matters: subtracting two dates in DAX gives a date/time value, not a number of days, so without it `ES (Days)` would display as a date in 1900. See [TODAY() & NOW()](/docs/dax/today-now) for the same gotcha. Format `ES Date` and `Forecast Finish` as dates.
+
+`AT (Days)` reads the status date the same way the PV measure does, from `MAX(DimDate[Date])`, so it needs the same status-date slicer.
+
+| Measure | Tutorial value (May 15) |
+|---|---|
+| `SPI` (money) | 0.64 |
+| `ES (Days)` | 92.6 (about April 4) |
+| `AT (Days)` | 134 |
+| `SPI(t)` | 0.69 |
+| `SV(t) (Days)` | −41 |
+| `IEAC(t) (Days)` | 305, against a 211-day plan |
+| `Forecast Finish` | November 2, 2026, against July 31 |
+
+---
+
+## Why SPI(t) Doesn't Drift Back to 1.0
+
+Run the tutorial program forward to a late finish: everything done on October 31, three months after the July 31 plan.
+
+```text
+At completion:  EV = BAC = $525,000    PV = BAC = $525,000
+
+SPI     = EV / PV    = 1.00            looks perfect
+SPI(t)  = ES / AT    = 211 / 303 = 0.70
+SV(t)   = ES - AT    = -92 days        the actual delay
+```
+
+Once the planned finish date has passed, `PV` is stuck at `BAC`, so money-based `SPI` can only climb back toward 1.0 as the remaining work gets done. `ES` can never exceed the planned duration, but `AT` keeps growing, so `SPI(t)` keeps reporting the delay all the way to the end.
+
+---
+
+## Common Mistakes
+
+### Computing ES From PV at Month Ends Without Interpolating
+
+With monthly status, it's tempting to report ES as "the last month whose PV we've passed." That rounds every result down by up to a month. Interpolate between the two periods either side, as `ES Date` does; on the tutorial's data, interpolating between the March 31 and April 30 month-end values gives the same 92.6 days as the daily curve.
+
+### Letting the Status-Date Slicer Filter the Curve
+
+The curve has to cover the whole baseline, not just the dates up to the status date. That's what `ALL(DimDate[Date])` is for. Filtering the curve to dates before the status date gives the right answer only while you're behind schedule, and caps ES at today if you're ahead.
+
+### Using a Baseline That Keeps Moving
+
+ES measures progress against the baseline PV curve. If the baseline is re-planned every month, ES measures progress against the latest re-plan, and a program can stay "on schedule" forever. Keep the baseline fixed, and treat a re-baseline as a deliberate, recorded event.
+
+### Treating IEAC(t) as a Commitment
+
+`PD / SPI(t)` assumes the schedule efficiency so far continues unchanged, just as `BAC / CPI` does for cost. It's an early warning, not a plan. For a finish-date range that accounts for task uncertainty and merge points, see [Monte Carlo schedule risk](/tutorials/build-a-schedule-risk-monte-carlo-dashboard).
+
+---
+
+## Best Practices
+
+- Report `SPI(t)` and `SV(t) (Days)` alongside `SPI` and `SV`, especially in the last third of a program, when money-based SPI stops being informative.
+- Keep the PV curve on a fixed baseline, and evaluate it over the whole calendar with `ALL`, not just up to the status date.
+- Format `SV(t)` as days and `Forecast Finish` as a date: schedule answers are more useful in schedule units.
+- Check `ES Date` by hand once: find the two dates whose PV brackets today's EV, and confirm ES lands between them.
+
+---
+
+## Next Steps
+
+- [EVM Calculator](/tools/evm-calculator) — paste your cumulative PV baseline and status date to get ES, SPI(t), and a forecast finish, plus these measures as DAX
+- [Build an EVM Dashboard](/tutorials/build-an-evm-dashboard#step-6-add-earned-schedule) — the full model these measures run on
+- [Earned Value Management (EVM) Metrics](/docs/dax-patterns/evm-metrics)
+- [Build a Monte Carlo Schedule Risk Dashboard](/tutorials/build-a-schedule-risk-monte-carlo-dashboard)
+- [ADDCOLUMNS() vs SELECTCOLUMNS()](/docs/dax/addcolumns-selectcolumns)
+- [CALCULATE and context transition](/docs/dax/calculate#context-transition)

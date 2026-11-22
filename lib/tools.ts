@@ -83,7 +83,7 @@ export const tools: Tool[] = [
     area: 'project',
     title: 'EVM Calculator',
     description:
-      'BAC, PV, EV, and AC in; CPI, SPI, EAC, ETC, VAC, and TCPI out, with a plain-English status, three EAC methods compared, and the DAX.',
+      'BAC, PV, EV, and AC in; CPI, SPI, EAC, ETC, VAC, and TCPI out, plus Earned Schedule: SPI(t), days behind, and a forecast finish date. With the DAX.',
     badge: 'Free · unlimited',
     icon: Gauge,
     iconName: 'gauge',

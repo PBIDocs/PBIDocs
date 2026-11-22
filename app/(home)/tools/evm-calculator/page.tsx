@@ -5,7 +5,7 @@ import { EvmCalculator } from '@/components/tools/evm-calculator';
 export const metadata: Metadata = {
   title: 'Earned Value (EVM) Calculator',
   description:
-    'Enter BAC, PV, EV, and AC to get CPI, SPI, cost and schedule variance, EAC, ETC, VAC, and TCPI, with a plain-English status, three EAC methods compared, and the matching DAX measures.',
+    'Enter BAC, PV, EV, and AC to get CPI, SPI, cost and schedule variance, EAC, ETC, VAC, and TCPI, plus Earned Schedule (SPI(t), schedule variance in days, forecast finish), with the matching DAX measures.',
   alternates: {
     canonical: '/tools/evm-calculator',
   },
@@ -31,7 +31,8 @@ export default function EvmCalculatorPage() {
         <p>
           <strong className="text-fd-foreground">One snapshot isn&apos;t a trend.</strong> CPI and
           SPI are most useful tracked period over period, and SPI drifts back toward 1.0 near the
-          end of any program as the remaining planned work runs out, even a late one. The{' '}
+          end of any program as the remaining planned work runs out, even a late one. That&apos;s
+          what the Earned Schedule section is for: SPI(t) keeps reporting the delay. The{' '}
           <Link href="/tutorials/build-an-evm-dashboard" className="text-fd-primary hover:underline">
             EVM dashboard tutorial
           </Link>{' '}

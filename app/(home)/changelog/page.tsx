@@ -15,6 +15,15 @@ const changelog: { date: string; entries: ReactNode[] }[] = [
     date: '2026-11-22',
     entries: [
       <>
+        New: <Link href="/docs/dax-patterns/earned-schedule">Earned Schedule</Link>, the time-based extension of
+        earned value. One DAX measure finds the date your baseline planned to reach today&apos;s EV; from it come
+        SPI(t), schedule variance in days, and a forecast finish date, which keep reporting a delay after money-based
+        SPI has drifted back to 1.0. The <Link href="/tutorials/build-an-evm-dashboard#step-6-add-earned-schedule">EVM
+        dashboard tutorial</Link> gains a Step 6 (its program is 41 days behind, heading for November 2), and the{' '}
+        <Link href="/tools/evm-calculator">EVM Calculator</Link> now takes a cumulative PV baseline and status date
+        and works out Earned Schedule for you.
+      </>,
+      <>
         Accuracy review of all 11 tutorials, the last part of the site-wide review. Six were corrected so they
         match the fixed docs: the <Link href="/tutorials/build-a-requirements-traceability-matrix">traceability
         matrix</Link> now explains why the Priority slicer doesn&apos;t move Pass Rate (and the one-line fix), the{' '}

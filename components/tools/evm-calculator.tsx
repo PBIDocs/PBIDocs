@@ -7,11 +7,18 @@ import { cn } from '@/lib/cn';
 import { highlightCode } from '@/lib/highlight-code';
 import {
   EAC_METHODS,
+  EARNED_SCHEDULE_DAX,
   TUTORIAL_INPUTS,
+  TUTORIAL_PV_CURVE_TEXT,
+  TUTORIAL_STATUS_DATE,
   calculate,
+  earnedSchedule,
+  fromDay,
   generateDax,
   indexHealth,
+  parsePvCurve,
   statusSummary,
+  toDay,
   type EacMethod,
   type EvmInputs,
   type Health,
@@ -48,18 +55,171 @@ function Tile({
   value,
   health,
   note,
+  keepCase = false,
+  compact = false,
 }: {
   label: string;
   value: string;
   health?: Health | null;
   note: string;
+  keepCase?: boolean; // for labels like SPI(t), where uppercasing changes the meaning
+  compact?: boolean; // for longer values such as dates
 }) {
   return (
     <div className="flex flex-col gap-1 rounded-lg border border-fd-border p-3">
-      <p className="text-xs font-semibold tracking-wide text-fd-muted-foreground uppercase">{label}</p>
-      <p className={cn('font-mono text-2xl font-bold', health && HEALTH_CLASS[health])}>{value}</p>
+      <p className={cn('text-xs font-semibold tracking-wide text-fd-muted-foreground', !keepCase && 'uppercase')}>
+        {label}
+      </p>
+      <p
+        className={cn(
+          'font-mono font-bold',
+          compact ? 'text-lg leading-8 whitespace-nowrap' : 'text-2xl',
+          health && HEALTH_CLASS[health],
+        )}
+      >
+        {value}
+      </p>
       <p className="text-xs text-fd-muted-foreground">{note}</p>
     </div>
+  );
+}
+
+function CopyButton({ text }: { text: string }) {
+  const [copied, setCopied] = useState(false);
+  return (
+    <button
+      type="button"
+      onClick={async () => {
+        await navigator.clipboard.writeText(text);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      }}
+      className="flex shrink-0 items-center gap-1.5 rounded-md border border-fd-border px-2.5 py-1 text-xs text-fd-muted-foreground transition-colors hover:bg-fd-accent"
+    >
+      {copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
+      {copied ? 'Copied' : 'Copy'}
+    </button>
+  );
+}
+
+function longDate(day: number): string {
+  return new Date(Math.round(day) * 86400000).toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    timeZone: 'UTC',
+  });
+}
+
+function EarnedSchedulePanel({ ev, spi }: { ev: number; spi: number | null }) {
+  const [curveText, setCurveText] = useState(TUTORIAL_PV_CURVE_TEXT);
+  const [statusDate, setStatusDate] = useState(TUTORIAL_STATUS_DATE);
+  const { points, error } = useMemo(() => parsePvCurve(curveText), [curveText]);
+  const statusDay = /^\d{4}-\d{2}-\d{2}$/.test(statusDate) ? toDay(statusDate) : NaN;
+  let problem = error;
+  if (!problem && !Number.isFinite(statusDay)) problem = 'Enter the status date as YYYY-MM-DD.';
+  if (!problem && statusDay <= points[0].day) problem = 'The status date has to be after the first baseline date.';
+  const r = problem ? null : earnedSchedule(points, ev, statusDay);
+  const spiTHealth = indexHealth(r?.spiT ?? null);
+
+  return (
+    <section className="flex flex-col gap-4 rounded-xl border border-fd-border p-5">
+      <div className="flex flex-col gap-1">
+        <h2 className="text-lg font-semibold">Earned Schedule: how late, in days</h2>
+        <p className="text-sm text-fd-muted-foreground">
+          SPI says how far behind you are in money. Earned Schedule finds the date your baseline planned to reach
+          today&apos;s EV, so the answer comes out in days, and it doesn&apos;t drift back to 1.0 at the end of a late
+          program. Uses the EV above.{' '}
+          <Link href="/docs/dax-patterns/earned-schedule" className="text-fd-primary hover:underline">
+            How it works
+          </Link>
+          .
+        </p>
+      </div>
+      <div className="grid gap-4 sm:grid-cols-[1fr_auto]">
+        <label className="flex flex-col gap-1.5 text-sm font-medium">
+          Baseline: cumulative PV by date
+          <textarea
+            value={curveText}
+            onChange={(e) => setCurveText(e.target.value)}
+            rows={8}
+            spellCheck={false}
+            className={cn(inputClass, 'font-mono')}
+          />
+          <span className="text-xs font-normal text-fd-muted-foreground">
+            One line per date: <span className="font-mono">YYYY-MM-DD, amount</span>. Start with the baseline start at
+            0 and end at the planned finish. Month-ends are enough.
+          </span>
+        </label>
+        <label className="flex flex-col gap-1.5 text-sm font-medium sm:w-44">
+          Status date
+          <input
+            type="text"
+            value={statusDate}
+            onChange={(e) => setStatusDate(e.target.value.trim())}
+            className={cn(inputClass, 'font-mono')}
+            placeholder="YYYY-MM-DD"
+          />
+          <span className="text-xs font-normal text-fd-muted-foreground">The date EV and AC were reported.</span>
+        </label>
+      </div>
+
+      {problem || !r ? (
+        <p className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-sm text-amber-700 dark:text-amber-300">
+          {problem}
+        </p>
+      ) : (
+        <>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <Tile
+              label="Earned schedule"
+              compact
+              value={longDate(r.esDay)}
+              note={`Day ${r.es.toFixed(1)}: when the plan expected today's EV.`}
+            />
+            <Tile
+              label="SPI(t)"
+              keepCase
+              value={ratio(r.spiT)}
+              health={spiTHealth}
+              note={spi !== null ? `ES ÷ AT. SPI in money is ${spi.toFixed(2)}.` : 'ES ÷ AT.'}
+            />
+            <Tile
+              label="SV(t)"
+              keepCase
+              value={`${r.svT >= 0 ? '+' : ''}${Math.round(r.svT)} days`}
+              health={r.svT >= 0 ? 'good' : r.svT >= -0.1 * r.pd ? 'watch' : 'poor'}
+              note={r.svT < 0 ? `Behind the plan, ${Math.round(r.at)} days in.` : 'At or ahead of the plan.'}
+            />
+            <Tile
+              label="Forecast finish"
+              compact
+              value={r.forecastFinish === null ? '—' : longDate(r.forecastFinish)}
+              health={r.forecastFinish === null ? null : r.forecastFinish <= r.plannedFinish + 0.5 ? 'good' : 'poor'}
+              note={`Plan: ${longDate(r.plannedFinish)}. Assumes today's pace continues.`}
+            />
+          </div>
+          {ev >= points[points.length - 1].pv && (
+            <p className="text-xs text-fd-muted-foreground">
+              EV has reached the end of the baseline, so ES is the planned finish ({fromDay(r.plannedFinish)}). Any
+              delay now shows only in SPI(t) and SV(t), not in SPI.
+            </p>
+          )}
+        </>
+      )}
+
+      <div className="flex flex-col gap-2">
+        <div className="flex items-start justify-between gap-3">
+          <p className="text-sm text-fd-muted-foreground">
+            The same measures in DAX, on the tutorial&apos;s daily PV measure and disconnected date table.
+          </p>
+          <CopyButton text={EARNED_SCHEDULE_DAX} />
+        </div>
+        <pre className="max-h-[22rem] overflow-auto rounded-lg bg-fd-secondary px-4 py-3 text-sm">
+          <code>{highlightCode(EARNED_SCHEDULE_DAX)}</code>
+        </pre>
+      </div>
+    </section>
   );
 }
 
@@ -128,8 +288,6 @@ export function EvmCalculator() {
   });
   const [mode, setMode] = useState<ProgressMode>('amount');
   const [method, setMethod] = useState<EacMethod>('cpi');
-  const [copied, setCopied] = useState(false);
-
   const bac = parse(fields.bac);
   const inputs: EvmInputs = {
     bac,
@@ -331,6 +489,8 @@ export function EvmCalculator() {
         </div>
       </fieldset>
 
+      <EarnedSchedulePanel ev={inputs.ev} spi={r.spi} />
+
       <div className="flex flex-col gap-3 rounded-xl border border-fd-border p-5">
         <div className="flex items-start justify-between gap-3">
           <div className="flex flex-col gap-1">
@@ -343,18 +503,7 @@ export function EvmCalculator() {
               , using the EAC you picked. Paste each one into <strong className="text-fd-foreground">New measure</strong>.
             </p>
           </div>
-          <button
-            type="button"
-            onClick={async () => {
-              await navigator.clipboard.writeText(dax);
-              setCopied(true);
-              setTimeout(() => setCopied(false), 2000);
-            }}
-            className="flex shrink-0 items-center gap-1.5 rounded-md border border-fd-border px-2.5 py-1 text-xs text-fd-muted-foreground transition-colors hover:bg-fd-accent"
-          >
-            {copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
-            {copied ? 'Copied' : 'Copy'}
-          </button>
+          <CopyButton text={dax} />
         </div>
         <pre className="max-h-[28rem] overflow-auto rounded-lg bg-fd-secondary px-4 py-3 text-sm">
           <code>{highlightCode(dax)}</code>

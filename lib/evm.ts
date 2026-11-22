@@ -131,3 +131,142 @@ export function generateDax(method: EacMethod): string {
     ')',
   ].join('\n');
 }
+
+// ---------------------------------------------------------------------------
+// Earned Schedule: schedule performance measured in time instead of money.
+// ES is the point on the baseline PV curve where planned value equals today's
+// EV; SPI(t) = ES / AT. Unlike SPI, it doesn't drift back to 1.0 at the end of
+// a late program. Dates are day serials (days since 1970-01-01, UTC).
+
+export interface PvPoint {
+  day: number;
+  pv: number;
+}
+
+export const toDay = (iso: string): number => Math.round(Date.parse(`${iso}T00:00:00Z`) / 86400000);
+export const fromDay = (day: number): string => new Date(Math.round(day) * 86400000).toISOString().slice(0, 10);
+
+// Cumulative PV at month ends from the tutorial's baseline (its PV measure evaluated on each date).
+export const TUTORIAL_PV_CURVE_TEXT = [
+  '2026-01-01, 0',
+  '2026-01-31, 49826',
+  '2026-02-28, 123848',
+  '2026-03-31, 227707',
+  '2026-04-30, 342766',
+  '2026-05-31, 417443',
+  '2026-06-30, 490668',
+  '2026-07-31, 525000',
+].join('\n');
+export const TUTORIAL_STATUS_DATE = '2026-05-15';
+
+export function parsePvCurve(text: string): { points: PvPoint[]; error: string | null } {
+  const points: PvPoint[] = [];
+  const lines = text.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+  for (const [i, line] of lines.entries()) {
+    const m = line.match(/^(\d{4}-\d{2}-\d{2})\s*[,;\t ]\s*\$?([\d,.]+)$/);
+    if (!m) return { points: [], error: `Line ${i + 1}: expected "YYYY-MM-DD, cumulative PV".` };
+    const day = toDay(m[1]);
+    const pv = Number(m[2].replace(/,/g, ''));
+    if (!Number.isFinite(day) || !Number.isFinite(pv)) return { points: [], error: `Line ${i + 1}: couldn't read that date or amount.` };
+    points.push({ day, pv });
+  }
+  if (points.length < 2) return { points: [], error: 'Enter at least a start date (PV 0) and one later date.' };
+  points.sort((a, b) => a.day - b.day);
+  for (let i = 1; i < points.length; i++) {
+    if (points[i].day === points[i - 1].day) return { points: [], error: `${fromDay(points[i].day)} appears twice.` };
+    if (points[i].pv < points[i - 1].pv) {
+      return { points: [], error: `PV falls at ${fromDay(points[i].day)}. Enter cumulative PV, which never goes down.` };
+    }
+  }
+  return { points, error: null };
+}
+
+export interface EsResults {
+  start: number;
+  plannedFinish: number;
+  esDay: number; // the date the earned work was planned to be done by
+  es: number; // days from start
+  at: number; // days from start to the status date
+  pd: number; // planned duration, days
+  spiT: number | null;
+  svT: number; // days, negative = behind
+  ieacT: number | null; // forecast duration, days
+  forecastFinish: number | null;
+}
+
+export function earnedSchedule(points: PvPoint[], ev: number, statusDay: number): EsResults {
+  const start = points[0].day;
+  const last = points[points.length - 1];
+  // The last point whose PV doesn't exceed EV, then interpolate to the next one.
+  let i = 0;
+  for (let k = 0; k < points.length; k++) if (points[k].pv <= ev) i = k;
+  let esDay = points[i].day;
+  if (i < points.length - 1) {
+    const a = points[i];
+    const b = points[i + 1];
+    const frac = b.pv === a.pv ? 0 : Math.min(1, Math.max(0, (ev - a.pv) / (b.pv - a.pv)));
+    esDay = a.day + frac * (b.day - a.day);
+  }
+  const es = esDay - start;
+  const at = statusDay - start;
+  const pd = last.day - start;
+  const spiT = at > 0 ? es / at : null;
+  const ieacT = spiT && spiT > 0 ? pd / spiT : null;
+  return {
+    start,
+    plannedFinish: last.day,
+    esDay,
+    es,
+    at,
+    pd,
+    spiT,
+    svT: es - at,
+    ieacT,
+    forecastFinish: ieacT === null ? null : start + ieacT,
+  };
+}
+
+// The Earned Schedule measures, on the tutorial's daily PV measure and disconnected DimDate.
+export const EARNED_SCHEDULE_DAX = [
+  'ES Date =',
+  'VAR EarnedValue = [EV (Earned Value)]',
+  'VAR Curve =',
+  '    ADDCOLUMNS(ALL(DimDate[Date]), "@PV", [PV (Planned Value)])',
+  'VAR LastDate =',
+  '    MAXX(FILTER(Curve, [@PV] <= EarnedValue), DimDate[Date])',
+  'VAR PVAtLast =',
+  '    MAXX(FILTER(Curve, DimDate[Date] = LastDate), [@PV])',
+  'VAR PVNext =',
+  '    MAXX(FILTER(Curve, DimDate[Date] = LastDate + 1), [@PV])',
+  'RETURN',
+  '    LastDate',
+  '        + IF(',
+  '            ISBLANK(PVNext),',
+  '            0,',
+  '            DIVIDE(EarnedValue - PVAtLast, PVNext - PVAtLast, 0)',
+  '        )',
+  '',
+  'Project Start =',
+  'MIN(Tasks[PlannedStart])',
+  '',
+  'Planned Finish =',
+  'MAX(Tasks[PlannedEnd])',
+  '',
+  'ES (Days) =',
+  'CONVERT([ES Date] - [Project Start], DOUBLE)',
+  '',
+  'AT (Days) =',
+  'CONVERT(MAX(DimDate[Date]) - [Project Start], DOUBLE)',
+  '',
+  'SPI(t) =',
+  'DIVIDE([ES (Days)], [AT (Days)])',
+  '',
+  'SV(t) (Days) =',
+  '[ES (Days)] - [AT (Days)]',
+  '',
+  'IEAC(t) (Days) =',
+  'DIVIDE(CONVERT([Planned Finish] - [Project Start], DOUBLE), [SPI(t)])',
+  '',
+  'Forecast Finish =',
+  '[Project Start] + [IEAC(t) (Days)]',
+].join('\n');
