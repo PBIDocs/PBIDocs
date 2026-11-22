@@ -355,6 +355,9 @@ export function ScheduleRiskSimulator() {
           <label className="flex flex-col gap-1.5 text-sm font-medium">
             <span>Target finish (optional)</span>
             <input type="date" value={target} onChange={(e) => setTarget(e.target.value)} className={inputClass} />
+            <span className="text-xs font-normal text-fd-muted-foreground">
+              A committed date, or your Earned Schedule forecast.
+            </span>
           </label>
         </div>
 

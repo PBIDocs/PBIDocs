@@ -152,7 +152,7 @@ const engineeringTutorials = [
   {
     href: '/tutorials/build-an-evm-dashboard',
     title: 'Earned Value Management',
-    hook: 'CPI 0.90, SPI 0.64: over budget and behind, from a plain task list.',
+    hook: 'CPI 0.90, SPI 0.64, and Earned Schedule: 41 days behind, heading for November 2.',
     icon: Gauge,
   },
   {

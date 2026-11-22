@@ -126,6 +126,21 @@ Once the planned finish date has passed, `PV` is stuck at `BAC`, so money-based 
 
 ---
 
+## Earned Schedule and Monte Carlo Answer Different Questions
+
+Both produce a finish date, and they're easy to confuse:
+
+| | Earned Schedule forecast | Monte Carlo P80 |
+|---|---|---|
+| Based on | Performance so far (EV against the baseline) | Three-point estimates and the task network |
+| Answers | Where does the pace so far lead? | How likely is each finish date, given the estimates? |
+| Available | Once work has started | Before work starts, and at any re-plan |
+| Blind spot | Assumes today's pace continues; ignores which tasks are left | Only as good as the estimates; knows nothing about actual progress |
+
+They're most useful together. Put the Earned Schedule forecast into the [Schedule Risk Simulator](/tools/schedule-risk-simulator) as its target finish date, using the same baseline estimates. If only a small share of runs finish that late, actual performance is outside what the estimates allowed for, and the original P80 is too optimistic: re-estimate the remaining work and simulate again.
+
+---
+
 ## Common Mistakes
 
 ### Computing ES From PV at Month Ends Without Interpolating

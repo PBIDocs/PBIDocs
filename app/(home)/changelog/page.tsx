@@ -21,7 +21,9 @@ const changelog: { date: string; entries: ReactNode[] }[] = [
         SPI has drifted back to 1.0. The <Link href="/tutorials/build-an-evm-dashboard#step-6-add-earned-schedule">EVM
         dashboard tutorial</Link> gains a Step 6 (its program is 41 days behind, heading for November 2), and the{' '}
         <Link href="/tools/evm-calculator">EVM Calculator</Link> now takes a cumulative PV baseline and status date
-        and works out Earned Schedule for you.
+        and works out Earned Schedule for you. The pattern page also explains how an Earned Schedule forecast and a
+        Monte Carlo P80 differ, and the <Link href="/tools/schedule-risk-simulator">Schedule Risk Simulator</Link>{' '}
+        shows how to check one against the other.
       </>,
       <>
         Accuracy review of all 11 tutorials, the last part of the site-wide review. Six were corrected so they

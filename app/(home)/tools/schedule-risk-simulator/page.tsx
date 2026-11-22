@@ -53,6 +53,17 @@ export default function ScheduleRiskSimulatorPage() {
           . Its percentile and S-curve measures read this tool&apos;s runs CSV unchanged.
         </p>
         <p>
+          <strong className="text-fd-foreground">Checking an Earned Schedule forecast.</strong> Once work is
+          under way, the{' '}
+          <Link href="/docs/dax-patterns/earned-schedule" className="text-fd-primary hover:underline">
+            Earned Schedule
+          </Link>{' '}
+          forecast says where the pace so far leads. Enter that date as the target finish here, with the
+          same baseline estimates. If only a few percent of runs finish that late, the program is running
+          worse than its estimates allowed for: re-estimate the remaining tasks rather than trusting the
+          original P80.
+        </p>
+        <p>
           SPI from the{' '}
           <Link href="/tutorials/build-an-evm-dashboard" className="text-fd-primary hover:underline">
             EVM dashboard tutorial
