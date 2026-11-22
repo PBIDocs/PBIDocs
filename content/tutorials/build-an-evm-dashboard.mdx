@@ -242,9 +242,9 @@ See [Charts](/docs/visuals/charts) and [Tables](/docs/visuals/tables) for config
 
 Multiplying total program budget by an overall "percent complete" produces a number that looks like EV but isn't — EVM is computed **per task**, then summed. A program that's 100% done on cheap tasks and 0% done on expensive ones is nowhere near 50% complete in EV terms, even if a naive average says so.
 
-### Confusing SPI With Actual Time Elapsed
+### Reading SPI as a Measure of Time
 
-`SPI` measures work completed against work planned — it isn't the same as "percent of the calendar elapsed." A program can be exactly on schedule by date and still have a poor `SPI` if the wrong tasks were prioritized.
+`SPI` compares the *value* of work completed with the value planned, not dates. At completion `EV` reaches `BAC` and so does `PV`, so `SPI` drifts back to 1.0 even on a program that finished months late; and work done early on non-critical tasks can hold `SPI` up while the critical path slips. Check the schedule itself alongside it.
 
 ### Leaving the Status Date Unset
 

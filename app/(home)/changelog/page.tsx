@@ -12,6 +12,20 @@ export const metadata: Metadata = {
 
 const changelog: { date: string; entries: ReactNode[] }[] = [
   {
+    date: '2026-11-22',
+    entries: [
+      <>
+        Accuracy review of all 11 tutorials, the last part of the site-wide review. Six were corrected so they
+        match the fixed docs: the <Link href="/tutorials/build-a-requirements-traceability-matrix">traceability
+        matrix</Link> now explains why the Priority slicer doesn&apos;t move Pass Rate (and the one-line fix), the{' '}
+        <Link href="/tutorials/build-a-fabric-lakehouse-dashboard">Fabric Lakehouse</Link> tutorial reflects
+        automatic reframing, and the <Link href="/tutorials/build-a-sales-analysis-report">sales report</Link>{' '}
+        tutorial no longer repeats the divide-by-zero myth or overstates what an unmarked date table breaks. EVM and
+        reliability tutorials got the same SPI and MTTR corrections as their pattern pages.
+      </>,
+    ],
+  },
+  {
     date: '2026-11-21',
     entries: [
       <>

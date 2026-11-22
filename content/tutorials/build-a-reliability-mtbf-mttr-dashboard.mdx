@@ -146,7 +146,7 @@ RETURN
     DATEDIFF(StartPoint, FactFailureEvents[FailureStart], HOUR)
 ```
 
-`RELATED()` pulls the asset's `CommissionedDate` across the relationship for that first-failure case — see [RELATED & RELATEDTABLE](/docs/dax/related) — and `DATEDIFF()` (with `HOUR` as the interval) turns the gap into a plain number of hours. `IF()` here is exactly the two-branch case it's meant for — see [IF](/docs/dax/if).
+`RELATED()` pulls the asset's `CommissionedDate` across the relationship for that first-failure case — see [RELATED & RELATEDTABLE](/docs/dax/related) — and `DATEDIFF()` (with `HOUR` as the interval) turns the gap into a plain number of hours. It counts hour boundaries crossed, so 10:59 to 11:01 is 1 hour; fine at this dataset's scale, but for minute-level logs use `(end - start) * 24` instead (see [DATEDIFF](/docs/dax/datediff)). `IF()` here is exactly the two-branch case it's meant for — see [IF](/docs/dax/if).
 
 ### Repair Hours (Calculated Column)
 
@@ -216,14 +216,14 @@ See [Charts](/docs/visuals/charts) and [Tables](/docs/visuals/tables) for config
 
 `AST-03`'s 480-hour MTBF is a real number, but it's based on one data point — statistically, it says almost nothing about how reliable the asset actually is going forward. A reliability figure needs enough failures behind it before it's worth acting on.
 
-### Averaging Repair Time Instead of Summing First
+### Letting AVERAGE Decide the Denominator
 
 ```dax lineNumbers
-MTTR (Wrong) =
+MTTR (Average) =
 AVERAGE(FactFailureEvents[Repair Hours])
 ```
 
-This happens to produce the same number as `DIVIDE([Total Repair Hours], [Total Failures])` at the total level, but breaks the moment `MTTR` needs to combine with other filtered totals (like blending across multiple assets with a weighted view) — building it from explicit sums keeps it consistent with `MTBF`, which can't be expressed as a simple `AVERAGE()` at all.
+This gives the same answer as `DIVIDE([Total Repair Hours], [Total Failures])` in any filter context, as long as every failure has a repair time. They part ways when one doesn't, such as a failure that's still open: `AVERAGE()` skips the blank, while `COUNTROWS()` still counts the failure. Building MTTR from explicit sums makes that choice visible, and keeps it consistent with MTBF, which has to be built the same way.
 
 ### Forgetting the First Failure Needs a Fallback
 

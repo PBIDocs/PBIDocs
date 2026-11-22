@@ -152,7 +152,7 @@ export const CALCS: CalcSpec[] = [
     suffix: 'YoY %',
     group: 'Growth',
     label: 'Year-over-year %',
-    description: 'Growth versus the prior year. DIVIDE returns blank instead of an error on zero.',
+    description: 'Growth versus the prior year. DIVIDE returns blank when last year is zero, where plain / would return Infinity.',
     percent: true,
     deps: ['py'],
     dax: (c) => changeDax(c, 'py', c.base, true),

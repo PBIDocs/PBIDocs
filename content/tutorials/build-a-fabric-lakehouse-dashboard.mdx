@@ -183,17 +183,17 @@ fact_events = (
 fact_events.write.format("delta").mode("overwrite").save("Tables/FactEvents")
 ```
 
-Refresh the Lakehouse's **Tables** pane and all four Delta tables should be visible and queryable through the SQL analytics endpoint immediately — no separate load step, the same point [Lakehouse](/docs/fabric/lakehouse#the-sql-analytics-endpoint) makes.
+Refresh the Lakehouse's **Tables** pane and all four Delta tables should be visible. There's no separate load step, though the SQL analytics endpoint can take a short while to sync new tables; see [Lakehouse](/docs/fabric/lakehouse#the-sql-analytics-endpoint).
 
 ---
 
 ## Step 5: Build the Semantic Model in Direct Lake
 
-From the Lakehouse, **New semantic model**, and select all four tables. This is the key difference from the sales tutorial: there's no **Get Data**, no **Refresh** button, and no wait for an import to finish — the model reads `Tables/` directly.
+From the Lakehouse, **New semantic model**, and select all four tables. This is the key difference from the sales tutorial: there's no **Get Data** and no wait for an import to finish — the model reads `Tables/` directly. A Direct Lake "refresh" only points the model at the latest version of each table, takes seconds, and by default happens automatically when the tables change.
 
 ```text
 Import mode:        Source -> copy into the model on refresh -> stale until refreshed
-Direct Lake mode:    OneLake Delta tables -> read directly -> always current
+Direct Lake mode:    OneLake Delta tables -> read directly -> current as of the last (automatic) reframe
 ```
 
 In the semantic model's **Model view**, draw the relationships exactly as the star schema diagram shows: `FactEvents[UserKey]` to `DimUser[UserKey]`, `FactEvents[FeatureKey]` to `DimFeature[FeatureKey]`, `FactEvents[Date]` to `DimDate[Date]` — all one-to-many, dimension tables on the "one" side. Then mark `DimDate` as the model's date table (**Table tools > Mark as Date Table**) exactly as in a normal Import model. See [Direct Lake Mode](/docs/fabric/direct-lake) for how framing and transcoding work under the hood — worth reading before this model goes anywhere near production data.
@@ -273,11 +273,11 @@ See [Charts](/docs/visuals/charts) and [Tables](/docs/visuals/tables) for choosi
 
 ### Adding a Calculated Column Instead of Fixing It Upstream
 
-Direct Lake doesn't support calculated columns or calculated tables directly — a column like a derived `UserDomain` needs to be added in the notebook (Step 3 or 4) before the table is written, not bolted on afterward in the semantic model. See [Direct Lake Limitations](/docs/fabric/direct-lake#limitations) for the full list of what doesn't carry over from Import.
+Direct Lake tables don't support calculated columns, and calculated tables can't reference them — a column like a derived `UserDomain` needs to be added in the notebook (Step 3 or 4) before the table is written, not bolted on afterward in the semantic model. See [Direct Lake Limitations](/docs/fabric/direct-lake#limitations) for the full list of what doesn't carry over from Import.
 
-### Forgetting to Reframe After New Data Lands
+### Expecting a Half-Written Load to Stay Hidden
 
-Re-running the notebook to add a new day's events doesn't automatically update the report — Direct Lake needs to **reframe** to pick up the change. See [Reframing Instead of Refresh](/docs/fabric/direct-lake#reframing-instead-of-refresh) for how that works and how to schedule it.
+With automatic updates on (the default), the model reframes when the Delta tables change, so re-running the notebook shows up in the report on its own. That includes the moment between writing `FactEvents` and writing the dimensions it depends on, when the report can briefly show facts with no matching user or feature. For a pipeline that rewrites several tables, turn off **Keep your Direct Lake data up to date** and refresh the model as the last step. See [Reframing Instead of Refresh](/docs/fabric/direct-lake#reframing-instead-of-refresh).
 
 ### Building Every Table as One Big Notebook Cell
 
