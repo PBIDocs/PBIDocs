@@ -20,6 +20,12 @@ const changelog: { date: string; entries: ReactNode[] }[] = [
         <Link href="/dax-practice#date-minus-date">DAX practice</Link> has a new fix-the-bug exercise: why
         subtracting two dates shows a date in 1901 instead of a number of days.
       </>,
+      <>
+        <Link href="/docs/dax-patterns/totals#comparing-the-patterns">Totals</Link> gets a diagram: four totals side
+        by side under a Region slicer, showing which filters each one keeps. ALL(FactSales) drops the slicer too, and
+        ALLEXCEPT only keeps a Category filter if Category is actually in the visual, which the page now says
+        explicitly.
+      </>,
     ],
   },
   {

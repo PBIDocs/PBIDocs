@@ -84,7 +84,7 @@ This keeps filters like Category or Date active, while ignoring whatever Region 
 
 ## Total Within a Group, Ignoring Sub-Filters
 
-`ALLEXCEPT()` removes all filters except the ones explicitly listed, useful for a subtotal that should stay fixed within a larger group.
+`ALLEXCEPT()` removes the filters on a table's columns except the ones listed, useful for a subtotal that should stay fixed within a larger group.
 
 ```dax lineNumbers
 Sales Within Category =
@@ -96,6 +96,8 @@ CALCULATE(
 
 This ignores filters on every `DimProduct` column except `Category`, producing a total for the whole category regardless of which specific product row is being evaluated.
 
+Two things it doesn't do. It only *keeps* a Category filter that already exists: with only `Product` on the rows and no `Category` in the visual or a slicer, there's no Category filter to keep, and every row shows the total for all products. And it only touches `DimProduct`, so filters on other tables, such as a Region slicer, still apply.
+
 ---
 
 ## Comparing the Patterns
@@ -103,9 +105,11 @@ This ignores filters on every `DimProduct` column except `Category`, producing a
 | Pattern | Function | Result |
 |---|---|---|
 | Basic total | `SUM()` | Respects all active filters |
-| Grand total | `ALL(table)` | Ignores every filter |
+| Grand total | `ALL(FactSales)` | Ignores every filter, including slicers on related dimension tables |
 | Total ignoring one column | `ALL(column)` | Ignores just that filter |
-| Total within a group | `ALLEXCEPT()` | Ignores all filters except the ones listed |
+| Total within a group | `ALLEXCEPT()` | Ignores that table's filters except the listed columns; other tables' filters still apply |
+
+<TotalsAnatomyDiagram />
 
 ---
 
