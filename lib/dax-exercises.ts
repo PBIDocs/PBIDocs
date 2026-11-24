@@ -497,6 +497,20 @@ const MORE: Exercise[] = [
     ],
     learn: { href: '/blog/totals-dont-add-up', label: 'Why totals don\'t add up' },
   },
+  {
+    id: 'date-minus-date',
+    level: 'Fix the bug',
+    title: 'Days between two dates',
+    setup: 'A card visual with no filters. The author wants the number of days from the first sale to the last.',
+    code: 'Days Selling =\nMAX ( Sales[Date] ) - MIN ( Sales[Date] )',
+    question: 'What does the card show?',
+    options: [
+      { text: '395', why: 'That is the right number of days, Jan 15, 2025 to Feb 14, 2026. But subtracting two dates in DAX gives a date/time, not a number, so the card doesn\'t show it as 395.' },
+      { text: 'A date: 1/29/1901', correct: true, why: 'Date minus date returns a date/time value: day 395 counted from DAX\'s day zero, Dec 30, 1899, which is Jan 29, 1901. Use DATEDIFF ( MIN ( Sales[Date] ), MAX ( Sales[Date] ), DAY ), or wrap the subtraction in INT, to get 395.' },
+      { text: 'An error', why: 'Subtracting dates is allowed. It just doesn\'t return the type you might expect.' },
+    ],
+    learn: { href: '/docs/dax/datediff', label: 'DATEDIFF' },
+  },
 ];
 
 // Sorted by level, keeping the original order within each level.

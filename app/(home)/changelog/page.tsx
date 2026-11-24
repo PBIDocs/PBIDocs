@@ -12,6 +12,17 @@ export const metadata: Metadata = {
 
 const changelog: { date: string; entries: ReactNode[] }[] = [
   {
+    date: '2026-11-24',
+    entries: [
+      <>
+        The <Link href="/blog/systems-engineering-dax-patterns-cheat-sheet">Systems &amp; Program Engineering DAX
+        Patterns Cheat Sheet</Link> gets an Earned Schedule section and a row in its decision table, and{' '}
+        <Link href="/dax-practice#date-minus-date">DAX practice</Link> has a new fix-the-bug exercise: why
+        subtracting two dates shows a date in 1901 instead of a number of days.
+      </>,
+    ],
+  },
+  {
     date: '2026-11-22',
     entries: [
       <>
