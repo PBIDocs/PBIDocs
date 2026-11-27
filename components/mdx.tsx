@@ -109,6 +109,7 @@ import { TimeIntelligenceAnatomyDiagram } from './time-intelligence-anatomy-diag
 import { RunningTotalAnatomyDiagram } from './running-total-anatomy-diagram';
 import { PercentOfTotalAnatomyDiagram } from './percent-of-total-anatomy-diagram';
 import { TotalsAnatomyDiagram } from './totals-anatomy-diagram';
+import { RefreshAnatomyDiagram } from './refresh-anatomy-diagram';
 import { RlsMatrixAnatomyDiagram } from './rls-matrix-anatomy-diagram';
 import { VariablesAnatomyDiagram } from './variables-anatomy-diagram';
 import { DateTableAnatomyDiagram } from './date-table-anatomy-diagram';
@@ -226,6 +227,7 @@ export function getMDXComponents(components?: MDXComponents) {
     RunningTotalAnatomyDiagram,
     PercentOfTotalAnatomyDiagram,
     TotalsAnatomyDiagram,
+    RefreshAnatomyDiagram,
     RlsMatrixAnatomyDiagram,
     VariablesAnatomyDiagram,
     DateTableAnatomyDiagram,

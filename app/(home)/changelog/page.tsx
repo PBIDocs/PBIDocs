@@ -12,6 +12,17 @@ export const metadata: Metadata = {
 
 const changelog: { date: string; entries: ReactNode[] }[] = [
   {
+    date: '2026-11-27',
+    entries: [
+      <>
+        <Link href="/docs/power-bi-service/refresh#refresh-failures">Refresh</Link> gets a diagram of the six stages
+        a scheduled refresh runs through, from the schedule firing to the time limit, each with the exact error it
+        produces and a link to the fix. Also: what happens after a failure, and why four in a row switch the schedule
+        off.
+      </>,
+    ],
+  },
+  {
     date: '2026-11-24',
     entries: [
       <>
